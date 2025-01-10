@@ -1,0 +1,22 @@
+{
+    bash leaks
+    Memcheck:Leak
+    ...
+    obj:/usr/bin/*
+    ...
+}
+{
+    Most libraries leak
+    Memcheck:Leak
+    ...
+    obj:/bin/*
+    ...
+}
+{
+   Ignore dlopen bug.
+   Memcheck:Leak
+   ...
+   fun:_dl_open
+   ...
+}
+

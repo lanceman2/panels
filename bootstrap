@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Download some files from github.com and verify them with sha512sum.
+
+
+qb_tag=master
+qb_url=https://raw.githubusercontent.com/lanceman2/quickbuild/$qb_tag/quickbuild.make
+qb_sha512sum=
+
+debug_tag=master
+debug_url=https://raw.githubusercontent.com/lanceman2/debug/$debug_tag/
+debug_c_sha512sum=
+debug_h_sha512sum=
+
+
+set -ex
+
+# Go to the directory there this script is.
+cd $(dirname ${BASH_SOURCE[0]})
+
+
+
+# GetFile DIR FILENAME URL [SHA512SUM]
+# $0      $1  $2       $3  $4
+function GetFile() {
+
+    [ -n "$3" ] || exit 1
+
+    cd $1
+
+    if [ ! -e "$2" ] ; then
+        wget --no-check-certificate "$3" -O "$2"
+    fi
+
+    if [ -n "$4" ] ; then
+        set +x
+        # We wanted a particular file, so we check its' sha512 sum.
+        echo "$4  $2" | sha512sum -c
+        set -x
+    else
+        sha512sum "$2"
+    fi
+
+    cd -
+}
+
+# GetFile DIR FILENAME URL [SHA512SUM]
+
+GetFile . quickbuild.make $qb_url $qb_sha512sum
+GetFile lib debug.c $debug_url/debug.c $debug_c_sha512sum
+GetFile lib debug.h $debug_url/debug.h $debug_h_sha512sum
+
+
+set +x
+echo -e "\n$0 Success"

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -ex
+
+# Go to the directory where this script is.
+cd $(dirname ${BASH_SOURCE[0]})
+
+
+if [ ! -e quickbuild.make ] ; then
+    set +x
+    echo -e "\n   Run: ./bootstrap before $0\n"
+    set -x
+    exit 1
+fi
+
+# File config.make is not checked in and it may have user
+# configuration information in it, so we do not want to
+# check it in.
+if [ ! -e config.make ] ; then
+    echo -e "# This is a generated file\n" > config.make
+    cat config.make.example >> config.make
+else
+    set +x
+    echo -e "config.make exists"
+    set -x
+fi
+
+
+set +x
+echo -e "\n$0 Success"
