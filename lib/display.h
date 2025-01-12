@@ -132,7 +132,7 @@ struct PnDisplay {
     void (*surface_damage_func)(struct wl_surface *wl_surface,
             int32_t x, int32_t y, int32_t width, int32_t height);
 
-    // GTK window border shit:
+    // GTK window border decoration shit:
     //
     // We're avoiding this for now.  libdecor.so leaks lots of system
     // resources, but it dynamically loads it's leaky libraries (like
@@ -152,7 +152,6 @@ struct PnDisplay {
     struct PnWindow *windows; // points to last window made.
 
     // TODO: widget (sub-window) focus?
-
 };
 
 

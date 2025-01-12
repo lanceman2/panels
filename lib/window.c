@@ -12,8 +12,9 @@
 #include  "display.h"
 
 
-// d.windows points to the last window made, win.
+// Add a window, win, to the window list in d.windows.
 //
+// d.windows points to the last window made, win.
 static inline void AddWindow(struct PnWindow *win) {
 
     DASSERT(d.wl_display);
@@ -28,6 +29,8 @@ static inline void AddWindow(struct PnWindow *win) {
 
     d.windows = win;
 }
+
+// Remove a window, win, from the window list in d.windows.
 //
 static inline void RemoveWindow(struct PnWindow *win) {
 
