@@ -5,13 +5,14 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <wayland-client.h>
 #include <cairo.h>
 #include <fontconfig/fontconfig.h>
 
 #include "../include/panels.h"
 
-#include  "display.h"
 #include "debug.h"
+#include  "display.h"
 
 
 static void __attribute__((constructor)) constructor(void) {
@@ -27,7 +28,7 @@ static void __attribute__((constructor)) constructor(void) {
 
 static void __attribute__((destructor)) destructor(void) {
 
-    if(pnDisplay.exists)
+    if(d.wl_display)
         pnDisplay_destroy();
 
     DSPEW("libpanels.so done");

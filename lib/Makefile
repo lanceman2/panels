@@ -36,7 +36,8 @@ libpanels.so_SOURCES :=\
  xdg-decoration-protocol.c\
  debug.c\
  constructor.c\
- display.c
+ display.c\
+ window.c
 
 libpanels.so_CPPFLAGS :=\
  $(GLIB_CFLAGS)\
@@ -59,9 +60,12 @@ libpanels.so_CFLAGS :=\
 # At some point we need an operating system package manager that
 # fixes this kind of (DSO dependency hell) shit, like NixOS.
 #
-# Run in a shell:
+# Handy commands to run in a shell:
 #
 #   readelf -d libpanels.so
+#
+#   nm --extern-only libpanels.so
+#   nm -D libpanels.so
 #
 libpanels.so_LDFLAGS :=\
  $(CAIRO_LDFLAGS)\
