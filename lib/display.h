@@ -59,9 +59,15 @@ struct PnAllocation {
 };
 
 
+// A widget or window has a surface.
+//
 struct PnSurface {
 
     enum PnSurfaceType type;
+
+    // API user requested size.  What they get may be different.
+    // These are constant after they are first set.
+    const uint32_t width, height;
 
     struct PnAllocation allocation;
 
@@ -149,7 +155,7 @@ struct PnDisplay {
     struct SlWindow *kbWindow;
 
     // List of windows.
-    struct PnWindow *windows; // points to last window made.
+    struct PnWindow *windows; // points to oldest window made.
 
     // TODO: widget (sub-window) focus?
 };
@@ -166,6 +172,7 @@ extern void pnDisplay_destroy(void);
 static inline bool CheckDisplay(void) {
     if(!d.wl_display) pnDisplay_create();
     // At this point this may be called from a window create function
-    // so we have to assume that we have a working display.
+    // so we have to assume that we have a working display, if not
+    // this returns true.
     return (bool) !d.wl_display;
 }

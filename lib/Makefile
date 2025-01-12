@@ -37,7 +37,8 @@ libpanels.so_SOURCES :=\
  debug.c\
  constructor.c\
  display.c\
- window.c
+ window.c\
+ surface.c
 
 libpanels.so_CPPFLAGS :=\
  $(GLIB_CFLAGS)\
