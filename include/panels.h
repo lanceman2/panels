@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+#define PN_PIXEL_SIZE  4 // bytes per pixel
+
 struct PnWindow;
 
 PN_EXPORT bool pnDisplay_dispatch(void);

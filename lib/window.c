@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <wayland-client.h>
 
@@ -101,6 +102,10 @@ struct PnWindow *pnWindow_create(uint32_t w, uint32_t h) {
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
     win->surface.type = PnSurfaceType_toplevel;
+    win->buffer[0].pixels = MAP_FAILED;
+    win->buffer[1].pixels = MAP_FAILED;
+    win->buffer[0].fd = -1;
+    win->buffer[1].fd = -1;
 
     AddWindow(win, d.windows, &d.windows);
 
@@ -180,6 +185,11 @@ void pnWindow_destroy(struct PnWindow *win) {
 
     if(win->wl_callback)
         wl_callback_destroy(win->wl_callback);
+
+    // Make sure both buffers are freed up.
+    FreeBuffer(win, win->buffer);
+    FreeBuffer(win, win->buffer + 1);
+
 
     if(win->decoration)
         zxdg_toplevel_decoration_v1_destroy(win->decoration);

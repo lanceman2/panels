@@ -101,9 +101,11 @@ struct PnBuffer {
     struct wl_buffer   *wl_buffer;
     struct wl_shm_pool *wl_shm_pool;
     size_t size; // total bytes of mapped shared memory file
+    uint32_t width, height;
+    // pixels is a pointer to the share memory pixel data.
+    uint32_t *pixels;
 
     int fd; // File descriptor to shared memory file
-
  
     bool busy; // the wayland compositor may be reading the buffer
 };
@@ -221,3 +223,9 @@ static inline bool CheckDisplay(void) {
 
 
 extern void GetSurfaceDamageFunction(struct PnWindow *win);
+
+
+extern int create_shm_file(size_t size);
+extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
+        uint32_t width, uint32_t height);
+extern void FreeBuffer(struct PnWindow *win, struct PnBuffer *buffer);
