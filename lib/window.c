@@ -175,6 +175,8 @@ void pnWindow_destroy(struct PnWindow *win) {
     DASSERT(win->surface.type < PnSurfaceType_widget);
 
 
+    // Clean up stuff in reverse order that stuff was created.
+
     if(win->wl_callback)
         wl_callback_destroy(win->wl_callback);
 
