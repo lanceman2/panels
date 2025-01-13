@@ -11,28 +11,48 @@ Wayland.
 Panels provides a C API (application programming interface) library
 and utility programs.  It can be used with C++.
 
-Panels is minimalistic.  We wanted to:
+Mostly "panels" is minimalistic.  We wanted to:
 
 1. divide windows into rectangular sub-sections called widgets,
 2. draw and color pixels in the widgets,
-3. receive keyboard events associated with these widgets, and
+3. receive keyboard events associated with these widgets,
 4. the libpanels.so can be loaded and unloaded without leaking
-   system resources.
+   system resources, and
+5. keep it small.
+
 
 ## Dependencies
 
 Panels only depends on libraries which we have found to be robust
 (not leaky), and with very little bloat:
 
+- wayland-client
+
 - cairo which depends on pixman and fontconfig, it's nice to build it
-  without X11 (but it works with the extra X11 kruft)
+  without X11 (but it works with the extra X11 cruft)
 
 - fontconfig which depends on freetype
 
-- wayland-client
+We have made the cairo and fontconfig dependencies optional.
+
+The use of cairo and fontconfig provide very basic 2D drawing, but we also
+keep the "panels" users ability to draw without using cairo (and
+fontconfig).  Though cairo draws in a pretty optimal way it can never be
+faster than drawing by just changing the pixel values by hand (as they
+say), in a large class of cases.  So, panels provides access to "raw"
+pixels.  Not doing a thing is always faster than doing a thing.
+
+There are other libraries that these depend on, but they are very
+robust and stable.  More below...
 
 
-## Ranting
+## Reference Examples
+
+ * [hello wayland](https://github.com/emersion/hello-wayland.git)
+ * [wleird](https://github.com/emersion/wleird.git)
+
+
+## Rambling and Ranting
 
 We have found that it is possible to get non-leaky code with these
 libraries: cairo, fontconfig, and wayland-client.  You just have to find
@@ -59,13 +79,15 @@ cleaning tests.
 
 Things like GTK and Qt can't be used because they leak lots of system
 resources, and I've talked with the developers and they are not interested
-in changing the design of their code. The GTK and Qt code is leaky by
-design.  They assume that users will run processes that never unlink from
-their code.  The GTK and Qt libraries will always leak lots of system
-resources, i.e. you can't unload them.  I've heard said that we should
-write code that for every object created there should be a way to
-destroy that object, but not in Qt and GTK.  Qt and GTK are so magical
-that they do not have to follow very basic standards of quality.  It bugs
-the fuck out of me, because I know if they just took a little more time in
-design and development these libraries could be unloaded.
+in changing the design of their code. The GTK and Qt code are leaky by
+design.  They assume that users will run processes that never unlink
+from their code.  The GTK and Qt libraries will always leak lots of system
+resources, i.e. you can't unload them.
+
+I've heard said that we should write code that for every object created
+there should be a way to destroy that object, but not in Qt and GTK.  Qt
+and GTK are so magical that they do not have to follow very basic
+standards of quality.  It bugs the fuck out of me, because I know if they
+just took a little more time in design and development these libraries
+could be unloaded.
 

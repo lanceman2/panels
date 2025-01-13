@@ -6,8 +6,11 @@
 #include <string.h>
 
 #include <wayland-client.h>
-#include <cairo.h>
-#include <fontconfig/fontconfig.h>
+
+#ifdef WITH_CAIRO
+#  include <cairo.h>
+#  include <fontconfig/fontconfig.h>
+#endif
 
 #include "../include/panels.h"
 
@@ -17,10 +20,13 @@
 
 static void __attribute__((constructor)) constructor(void) {
 
+#ifdef WITH_CAIRO
     // TODO: forcing us to need these two libraries at compile time; at
-    // least for DEBUG builds.
-    DSPEW("FcPatternGetString=%p", FcPatternGetString);
-    DSPEW("cairo_create=%p", cairo_create);
+    // least for DEBUG builds.  At least until other code that uses
+    // fontconfig and cairo is written.
+    fprintf(stderr, "FcPatternGetString=%p\n", FcPatternGetString);
+    fprintf(stderr, "cairo_create=%p\n", cairo_create);
+#endif
 
     DSPEW();
 }

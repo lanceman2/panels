@@ -1,5 +1,13 @@
 root := ..
 
+include $(root)/config.make
+
+ifdef WITH_CAIRO
+CPPFLAGS += -DWITH_CAIRO
+else
+$(warning Building WITHOUT CAIRO)
+endif
+
 include $(root)/pkg-cairo.make
 include $(root)/pkg-fontconfig.make
 include $(root)/pkg-waylandclient.make
@@ -7,6 +15,7 @@ include $(root)/pkg-waylandclient.make
 INSTALL_DIR = $(PREFIX)/lib
 
 SUBDIRS := pkgconfig
+
 
 
 xdg-shell-protocol.c:

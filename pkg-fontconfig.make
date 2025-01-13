@@ -1,4 +1,6 @@
 
+ifdef WITH_CAIRO
+
 # Get the fontconfig specific compiler options.
 
 libdir := $(shell pkg-config --variable=libdir fontconfig)
@@ -19,4 +21,6 @@ endif
 # Spew what fontconfig compiler options we have found
 #$(info FONTCONFIG_CFLAGS="$(FONTCONFIG_CFLAGS)" FONTCONFIG_LDFLAGS="$(FONTCONFIG_LDFLAGS)")
 
-undefine libdir 
+undefine libdir
+
+endif

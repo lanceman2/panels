@@ -35,7 +35,8 @@
 // come on, layering and exposing 5 objects down to get to coloring a
 // fucking pixel.
 //
-// Constrained by libwayland-client, we can only have one Pn Display.
+// Constrained by libwayland-client, we can only have one Pn Display
+// object in a process.
 
 
 // If we add surface types we'll need to check all the code.
@@ -45,7 +46,7 @@
 enum PnSurfaceType {
 
     // 2 Window Surface types:
-    PnSurfaceType_toplevel, // From xdg_surface_get_toplevel()
+    PnSurfaceType_toplevel = 1, // From xdg_surface_get_toplevel()
     PnSurfaceType_popup,    // From wl_shell_surface_set_popup()
 
     // 1 Widget Surface type
@@ -99,8 +100,12 @@ struct PnBuffer {
 
     struct wl_buffer   *wl_buffer;
     struct wl_shm_pool *wl_shm_pool;
+    size_t size; // total bytes of mapped shared memory file
 
+    int fd; // File descriptor to shared memory file
 
+ 
+    bool busy; // the wayland compositor may be reading the buffer
 };
 
 
@@ -110,7 +115,7 @@ struct PnWindow {
     // 1st inherit surface
     struct PnSurface surface;
 
-    // To keep
+    // To keep:
     //    1. a list of toplevel windows in the display, or
     //    2. a list of children popup windows in toplevel windows.
     struct PnWindow *next, *prev;
@@ -133,13 +138,13 @@ struct PnWindow {
         struct {
             struct xdg_positioner *xdg_positioner;
             struct xdg_popup *xdg_popup;
-            struct PnWindow *parent; // toplevel parent
+            //struct PnWindow *parent; // toplevel parent
         } popup;
     };
     //
     struct zxdg_toplevel_decoration_v1 *decoration;
     struct wl_callback *wl_callback;
-    struct PnBuffer buffer;
+    struct PnBuffer buffer[2];
 
 };
 

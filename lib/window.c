@@ -55,7 +55,6 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 };
 
 
-
 // Add a window, win, to the window list at the last.
 //
 static inline void AddWindow(struct PnWindow *win,
@@ -100,6 +99,8 @@ struct PnWindow *pnWindow_create(uint32_t w, uint32_t h) {
 
     struct PnWindow *win = calloc(1, sizeof(*win));
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
+
+    win->surface.type = PnSurfaceType_toplevel;
 
     AddWindow(win, d.windows, &d.windows);
 

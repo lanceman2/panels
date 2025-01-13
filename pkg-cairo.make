@@ -1,4 +1,6 @@
 
+ifdef WITH_CAIRO
+
 # Get the cairo specific compiler options if we can.
 
 libdir := $(shell pkg-config --variable=libdir cairo)
@@ -19,4 +21,6 @@ endif
 # Spew what cairo compiler options we have found
 #$(info CAIRO_CFLAGS="$(CAIRO_CFLAGS)" CAIRO_LDFLAGS="$(CAIRO_LDFLAGS)")
 
-undefine libdir 
+undefine libdir
+
+endif

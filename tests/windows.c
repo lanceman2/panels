@@ -22,11 +22,11 @@ int main(void) {
     while(pnDisplay_dispatch());
 #endif
 
+    fprintf(stderr, "win=%p\n", win);
     // This passes Valgrind with or without destroying all the windows
     // given the libpanels.so destructor cleans up the windows and display
     // if the user does not.
     pnWindow_destroy(win);
-    fprintf(stderr, "win=%p", win);
 
     return 0;
 }

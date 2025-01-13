@@ -1,6 +1,6 @@
-# This file defines possible make "configuration" variables.
+# This file defines possible make build "configuration" variables.
 
-PREFIX = /usr/local/encap/fix_glib
+PREFIX = /usr/local/encap/panels
 
 
 # Set CPPFLAGS for debug build options:
@@ -37,6 +37,11 @@ CPPFLAGS := -DDEBUG -DSPEW_LEVEL_DEBUG
 
 #CPPFLAGS := -DDEBUG -DSPEW_LEVEL_INFO
 
+
+# Build option: WITH_CAIRO
+# We default to with cairo.
+# Comment out next line to build without libcairo
+WITH_CAIRO := yes
 
 
 # C compiler option flags
