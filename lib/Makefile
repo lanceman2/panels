@@ -41,7 +41,6 @@ libpanels.so_SOURCES :=\
  surface.c
 
 libpanels.so_CPPFLAGS :=\
- $(GLIB_CFLAGS)\
  $(WL_CFLAGS)\
  $(CAIRO_CFLAGS)\
  $(FONTCONFIG_CFLAGS)\

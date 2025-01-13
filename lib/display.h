@@ -95,6 +95,14 @@ struct PnWidget {
     struct PnSurface surface;
 };
 
+struct PnBuffer {
+
+    struct wl_buffer   *wl_buffer;
+    struct wl_shm_pool *wl_shm_pool;
+
+
+};
+
 
 // type can be a toplevel or a popup
 struct PnWindow {
@@ -102,8 +110,37 @@ struct PnWindow {
     // 1st inherit surface
     struct PnSurface surface;
 
-    // To keep a list of windows in the display:
+    // To keep
+    //    1. a list of toplevel windows in the display, or
+    //    2. a list of children popup windows in toplevel windows.
     struct PnWindow *next, *prev;
+
+    size_t sharedBufferSize;
+
+    // Wayland client objects:
+    //
+    struct wl_surface  *wl_surface;
+    struct xdg_surface *xdg_surface;
+    //
+    union {
+        // for surface type toplevel
+        struct {
+            struct xdg_toplevel *xdg_toplevel;
+            // list of child popups
+            struct PnWindow *popups; // points to newest one
+        } toplevel;
+        // for surface type popup
+        struct {
+            struct xdg_positioner *xdg_positioner;
+            struct xdg_popup *xdg_popup;
+            struct PnWindow *parent; // toplevel parent
+        } popup;
+    };
+    //
+    struct zxdg_toplevel_decoration_v1 *decoration;
+    struct wl_callback *wl_callback;
+    struct PnBuffer buffer;
+
 };
 
 
@@ -155,7 +192,7 @@ struct PnDisplay {
     struct SlWindow *kbWindow;
 
     // List of windows.
-    struct PnWindow *windows; // points to oldest window made.
+    struct PnWindow *windows; // points to newest window made.
 
     // TODO: widget (sub-window) focus?
 };
@@ -176,3 +213,6 @@ static inline bool CheckDisplay(void) {
     // this returns true.
     return (bool) !d.wl_display;
 }
+
+
+extern void GetSurfaceDamageFunction(struct PnWindow *win);

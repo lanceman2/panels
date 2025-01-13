@@ -7,6 +7,7 @@
 int main(void) {
 
     struct PnWindow *win = pnWindow_create(400, 350);
+    ASSERT(win);
 
 #ifdef RUN
     while(pnDisplay_dispatch());

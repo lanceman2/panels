@@ -7,12 +7,15 @@
 int main(void) {
 
     struct PnWindow *win = pnWindow_create(400, 350);
+    ASSERT(win);
     pnWindow_destroy(win);
     pnWindow_create(400, 350);
     win = pnWindow_create(400, 350);
+    ASSERT(win);
     pnWindow_destroy(win);
     pnWindow_create(400, 350);
     win = pnWindow_create(400, 350);
+    ASSERT(win);
     pnWindow_create(400, 350);
 
 #ifdef RUN
