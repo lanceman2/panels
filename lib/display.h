@@ -45,12 +45,15 @@
 //
 enum PnSurfaceType {
 
+    // Yes, a popup window is in a sense a toplevel window,
+    // but we call it a popup and not a toplevel.
+
     // 2 Window Surface types:
     PnSurfaceType_toplevel = 1, // From xdg_surface_get_toplevel()
     PnSurfaceType_popup,    // From wl_shell_surface_set_popup()
 
     // 1 Widget Surface type
-    PnSurfaceType_widget    // a piece of a surface
+    PnSurfaceType_widget    // a rectangular piece of a surface
 };
 
 
@@ -86,6 +89,9 @@ struct PnSurface {
     struct PnSurface *parent;
     struct PnSurface *firstChild, *lastChild;
     struct PnSurface *nextSibling, *prevSibling;
+
+    // Number of pixels between widgets:
+    uint32_t borderWidth;
 
     enum PnGravity gravity;
 };
@@ -232,8 +238,15 @@ static inline bool CheckDisplay(void) {
 
 extern void GetSurfaceDamageFunction(struct PnWindow *win);
 
-
 extern int create_shm_file(size_t size);
 extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         uint32_t width, uint32_t height);
 extern void FreeBuffer(struct PnBuffer *buffer);
+
+
+extern bool InitToplevel(struct PnWindow *win);
+extern bool InitPopup(struct PnWindow *win);
+
+extern bool InitSurface(struct PnSurface *s);
+extern void DestroySurface(struct PnSurface *s);
+

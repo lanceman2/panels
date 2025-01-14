@@ -30,10 +30,12 @@ void GetSurfaceDamageFunction(struct PnWindow *win) {
         // 
         //  wl_display@1: error 1: invalid method 9 (since 1 < 4), object wl_surface@3
         //
-        // Or something like that.
+        // ...or something like that.
         //
         // Given it took me a month (at least) to find this (not so great
-        // fix) we're putting lots of comment-age here.
+        // fix) we're putting lots of comment-age here.  I had a hard time
+        // finding the point in the code where that broke it after it
+        // keeps running with no error some time after.
         //
         // This one may be correct. We would have hoped that
         // wl_proxy_get_version() would have used argument prototype const
@@ -68,3 +70,16 @@ void GetSurfaceDamageFunction(struct PnWindow *win) {
 }
 
 
+bool InitSurface(struct PnSurface *s) {
+
+    DASSERT(s);
+
+    return false;
+}
+
+
+void DestroySurface(struct PnSurface *s) {
+
+    DASSERT(s);
+
+}

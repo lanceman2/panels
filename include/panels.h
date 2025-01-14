@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
-#define PN_PIXEL_SIZE  4 // bytes per pixel
-
+#define PN_PIXEL_SIZE    4 // bytes per pixel
+#define PN_BORDER_width  6 // default border pixels wide
 
 // Child widget packing gravity (for lack of a better word)
 //
@@ -26,7 +26,7 @@ extern "C" {
 // Studying the behavior of gvim (the program) with changing multiple edit
 // views is very helpful in studying widget containerization.  Like for
 // example how it splits a edit wiew.  And, what happens when a view is
-// removed from in between views.  And, what happen when a view (widget)
+// removed from in between views.  And, what happens when a view (widget)
 // border is moved when there are a lot of views in a large grid of views.
 //
 // As in general relativity, gravity defines how space is distributed
@@ -37,6 +37,7 @@ enum PnGravity {
     // PnGravity is a attribute of a widget container (surface), be it a
     // widget or window.
 
+    // no gravity to hold widgets.
     PnGravity_None = 0, // For non-container widgets or windows
 
     // The container surface can only have zero or one widget, so it puts
@@ -53,6 +54,8 @@ enum PnGravity {
     PnGravity_LR, // child widgets float/align left to right
     PnGravity_RL,  // child widgets float/align right to left
 
+    // We could use this gravity to make a grid container widget
+    // or any packing method.
     PnGravity_Callback // The window or widget will define its own packing.
 };
 
@@ -66,7 +69,11 @@ struct PnSurface;
 PN_EXPORT bool pnDisplay_dispatch(void);
 PN_EXPORT bool pnDisplay_haveXDGDecoration(void);
 
-PN_EXPORT struct PnWindow *pnWindow_create(uint32_t w, uint32_t h,
+PN_EXPORT struct PnWindow *pnWindow_create(
+        // parent = 0 for toplevel
+        // parent != 0 for popup
+        struct PnWindow *parent,
+        uint32_t w, uint32_t h,
         enum PnGravity gravity);
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
 PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);

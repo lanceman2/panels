@@ -67,38 +67,6 @@ static const struct xdg_surface_listener xdg_surface_listener = {
     .configure = (void *) xdg_surface_handle_configure,
 };
 
-static void toplevel_configure(struct PnWindow *win,
-		struct xdg_toplevel *xdg_toplevel,
-                int32_t w, int32_t h,
-		struct wl_array *state) {
-    DASSERT(win);
-    DASSERT(xdg_toplevel);
-    DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
-
-    //DSPEW("w,h=%" PRIi32",%" PRIi32, w, h);
-
-    if(w <= 0 || h <= 0) return;
-
-    win->surface.allocation.width = w;
-    win->surface.allocation.height = h;
-}
-
-static void xdg_toplevel_handle_close(struct PnWindow *win,
-		struct xdg_toplevel *xdg_toplevel) {
-
-    DASSERT(win);
-    DASSERT(xdg_toplevel);
-    DASSERT(win->wl_surface);
-    DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
-
-    pnWindow_destroy(win);
-}
-
-static const struct xdg_toplevel_listener xdg_toplevel_listener = {
-	.configure = (void *) toplevel_configure,
-	.close = (void *) xdg_toplevel_handle_close,
-};
-
 
 // Add a window, win, to the window list at the last.
 //
@@ -138,20 +106,32 @@ static inline void RemoveWindow(struct PnWindow *win,
 }
 
 
-struct PnWindow *pnWindow_create(uint32_t w, uint32_t h,
+struct PnWindow *pnWindow_create(struct PnWindow *parent,
+        uint32_t w, uint32_t h,
         enum PnGravity gravity) {
+
+    // TODO: Can a popup window have a child popup window?
+    //
+    // Assume not:
+    DASSERT(!parent || parent->surface.type == PnSurfaceType_toplevel);
 
     if(CheckDisplay()) return 0;
 
     struct PnWindow *win = calloc(1, sizeof(*win));
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
-    win->surface.type = PnSurfaceType_toplevel;
+    if(parent)
+        win->surface.type = PnSurfaceType_popup;
+    else
+        win->surface.type = PnSurfaceType_toplevel;
+
     DASSERT(win->surface.type < PnSurfaceType_widget);
+
     win->buffer[0].pixels = MAP_FAILED;
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
+    win->surface.parent = &parent->surface;
     win->surface.gravity = gravity;
 
     AddWindow(win, d.windows, &d.windows);
@@ -180,20 +160,18 @@ struct PnWindow *pnWindow_create(uint32_t w, uint32_t h,
         goto fail;
     }
 
-    // Now create wayland toplevel specific stuff.
-    //
-    win->toplevel.xdg_toplevel = xdg_surface_get_toplevel(win->xdg_surface);
-    if(!win->toplevel.xdg_toplevel) {
-        ERROR("xdg_surface_get_toplevel() failed");
-        goto fail;
+    switch(win->surface.type) {
+        case PnSurfaceType_toplevel:
+            if(InitToplevel(win))
+                goto fail;
+            break;
+        case PnSurfaceType_popup:
+            if(InitPopup(win))
+                goto fail;
+            break;
+        default:
+            ASSERT(0, "Write more code here case=%d", win->surface.type);
     }
-    //
-    if(xdg_toplevel_add_listener(win->toplevel.xdg_toplevel,
-                &xdg_toplevel_listener, win)) {
-        ERROR("xdg_toplevel_add_listener(,,) failed");
-        goto fail;
-    }
-
 
     if(d.zxdg_decoration_manager) {
         // Let the compositor do window decoration management

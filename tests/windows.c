@@ -6,7 +6,7 @@
 
 static void CreateWindow(uint32_t w, uint32_t h) {
 
-    struct PnWindow *win = pnWindow_create(w, h, 0);
+    struct PnWindow *win = pnWindow_create(0, w, h, 0);
     ASSERT(win);
     pnWindow_show(win, true);
 }
