@@ -17,7 +17,7 @@
 static void buffer_handle_release(struct PnBuffer *buffer,
         struct wl_buffer *wl_buffer) {
 
-WARN();
+    //WARN();
     buffer->busy = false;
 }
 
@@ -37,6 +37,8 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     DASSERT(buffer->size);
     DASSERT(!buffer->busy);
     DASSERT(buffer->fd > -1);
+    DASSERT(buffer->size < size);
+    DASSERT(buffer->width * buffer->height * PN_PIXEL_SIZE == size);
 
     if(buffer->pixels != MAP_FAILED) {
         if(munmap(buffer->pixels, buffer->size))
@@ -84,7 +86,7 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
 
 fail:
 
-    FreeBuffer(win, buffer);
+    FreeBuffer(buffer);
 
     return true;
 }
@@ -134,7 +136,7 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
 
 fail:
 
-    FreeBuffer(win, buffer);
+    FreeBuffer(buffer);
 
     return true;
 }
@@ -169,6 +171,11 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     DASSERT(PN_PIXEL_SIZE == 4);
     size_t size = width * height * PN_PIXEL_SIZE;
 
+    if(buffer->wl_buffer && buffer->size > size)
+        // We can't decrease the size of the buffer without
+        // creating a different buffer.
+        FreeBuffer(buffer);
+
     // We could change the width and height without changing the size.
     // That would be okay, except we just need the values for any
     // redraws.
@@ -177,25 +184,25 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     if(buffer->height != height)
         buffer->height = height;
 
-    if(buffer->size != size) {
-        if(buffer->size) {
-            if(ResizeBuffer(win, buffer, size))
-                return 0;
-        } else {
-            if(CreateBuffer(win, buffer, size))
-                return 0;
-        }
-    }
+
+    if(buffer->wl_buffer && buffer->size == size)
+        // No buffer resize needed.
+        return buffer;
+
+    if(!buffer->wl_buffer) {
+        if(CreateBuffer(win, buffer, size))
+            return 0;
+    } else if(ResizeBuffer(win, buffer, size))
+        return 0;
 
     return buffer;
 }
 
 
-void FreeBuffer(struct PnWindow *win, struct PnBuffer *buffer) {
+void FreeBuffer(struct PnBuffer *buffer) {
 
-    DASSERT(win);
     DASSERT(buffer);
-    DASSERT(!buffer->busy);
+    //DASSERT(!buffer->busy);
 
     if(buffer->wl_buffer)
         wl_buffer_destroy(buffer->wl_buffer);

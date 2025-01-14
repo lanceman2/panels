@@ -22,6 +22,10 @@ PN_EXPORT bool pnDisplay_haveXDGDecoration(void);
 
 PN_EXPORT struct PnWindow *pnWindow_create(uint32_t w, uint32_t h);
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
+PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
+PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
+        void (*destroy)(struct PnWindow *window, void *userData),
+        void *userData);
 
 #ifdef __cplusplus
 }

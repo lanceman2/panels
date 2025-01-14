@@ -31,7 +31,7 @@ struct PnDisplay d = {0}; // very important to zero it.
 static void xdg_wm_base_handle_ping(void *data,
 		struct xdg_wm_base *xdg_wm_base, uint32_t serial) {
 
-    DSPEW("PING");
+    //DSPEW("PING");
     // The compositor will send us a ping event to check that we're
     // responsive.  We need to send back a pong request immediately.
     xdg_wm_base_pong(xdg_wm_base, serial);
@@ -53,8 +53,9 @@ static void enter(void *data,
 
     DASSERT(!d.pointerWindow);
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
+    DASSERT(d.pointerWindow->wl_surface == wl_surface);
 
-    DSPEW("wl_surface=%p x,y=%d,%d",wl_surface, x, y);
+    DSPEW("wl_surface=%p x,y=%u,%u",wl_surface, x, y);
 }
 
 static void leave(void *data, struct wl_pointer *p,
@@ -124,7 +125,7 @@ static void kb_map(void* data, struct wl_keyboard* kb,
     DASSERT(kb);
     DASSERT(d.wl_keyboard == kb);
 
-    DSPEW();
+    DSPEW("fd=%d", fd);
 }
 
 static void kb_enter(void* data, struct wl_keyboard* kb,
@@ -139,7 +140,7 @@ static void kb_enter(void* data, struct wl_keyboard* kb,
     DASSERT(!d.kbWindow);
 
     d.kbWindow = wl_surface_get_user_data(wl_surface);
-    DSPEW();
+    //DSPEW();
 }
 
 static void kb_leave(void* data, struct wl_keyboard* kb,
@@ -163,7 +164,7 @@ static void kb_key(void* data, struct wl_keyboard* kb,
     DASSERT(kb);
     DASSERT(d.wl_keyboard == kb);
 
-    DSPEW("key=%" PRIu32, key);
+    //DSPEW("key=%" PRIu32, key);
 }
 
 static void kb_mod(void* data, struct wl_keyboard* kb,
@@ -175,7 +176,7 @@ static void kb_mod(void* data, struct wl_keyboard* kb,
     DASSERT(kb);
     DASSERT(d.wl_keyboard == kb);
 
-    DSPEW();
+    //DSPEW();
 }
 
 static void kb_repeat(void* data, struct wl_keyboard* kb,
@@ -208,7 +209,6 @@ static void seat_handle_capabilities(void *data, struct wl_seat *seat,
     DASSERT(!d.wl_keyboard);
     DASSERT(capabilities & WL_SEAT_CAPABILITY_POINTER);
     DASSERT(capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
-DSPEW();
 
     if(capabilities & WL_SEAT_CAPABILITY_POINTER) {
         d.wl_pointer = wl_seat_get_pointer(seat);
@@ -297,8 +297,33 @@ static void handle_global_remove(void *data,
 
 static const struct wl_registry_listener registry_listener = {
     .global = handle_global,
-    .global_remove = handle_global_remove,
+    .global_remove = handle_global_remove
 };
+
+#if 0
+static void display_error(void *data,
+        struct wl_display *wl_display,
+	void *object_id, uint32_t code,
+	const char *message) {
+
+    DASSERT(d.wl_display == wl_display);
+
+    WARN("wl_display got error: \"%s\"", message);
+}
+
+static void display_delete_id(void *data,
+        struct wl_display *wl_display, uint32_t id) {
+ 
+    DASSERT(d.wl_display == wl_display);
+
+    WARN("deleted wayland object %" PRIu32, id);
+}
+
+struct wl_display_listener display_listener = {
+    .error = display_error,
+    .delete_id = display_delete_id
+};
+#endif
 
 
 #if 0
@@ -323,12 +348,18 @@ static int _pnDisplay_create(void) {
     d.wl_display = wl_display_connect(0);
     RET_ERROR(d.wl_display, 1, "wl_display_connect() failed");
 
+#if 0 // This does not seem to work
+    RET_ERROR(!wl_display_add_listener(d.wl_display,
+                &display_listener, 0),
+            2, "wl_display_add_listener() failed");
+#endif
+
     d.wl_registry = wl_display_get_registry(d.wl_display);
-    RET_ERROR(d.wl_registry, 2,
+    RET_ERROR(d.wl_registry, 3,
             "wl_display_get_registry(%p) failed", d.wl_display);
 
     RET_ERROR(!wl_registry_add_listener(d.wl_registry,
-                    &registry_listener, 0), 3,
+                    &registry_listener, 0), 4,
             "wl_registry_add_listener(%p, %p,) failed",
                 d.wl_registry, &registry_listener);
     
@@ -336,7 +367,7 @@ static int _pnDisplay_create(void) {
 
     // I'm guessing wl_display_roundtrip() can block.
     RET_ERROR(wl_display_roundtrip(d.wl_display) != -1 &&
-                    d.handle_global_error == 0, 4,
+                    d.handle_global_error == 0, 5,
             "wl_display_roundtrip(%p) failed handle_global_error=%"
                 PRIu32, d.wl_display, d.handle_global_error);
         // I needed a way to get an error value out of handle_global()
@@ -348,10 +379,10 @@ static int _pnDisplay_create(void) {
     //
     // The user is pretty well screwed if we fail to get any of these:
     //
-    RET_ERROR(d.wl_shm,        5, "cannot get wl_shm");
-    RET_ERROR(d.wl_compositor, 6, "cannot get wl_compositor");
-    RET_ERROR(d.xdg_wm_base,   7, "cannot get xdg_wm_base");
-    RET_ERROR(d.wl_seat,       8, "cannot get wl_seat");
+    RET_ERROR(d.wl_shm,        6, "cannot get wl_shm");
+    RET_ERROR(d.wl_compositor, 7, "cannot get wl_compositor");
+    RET_ERROR(d.xdg_wm_base,   8, "cannot get xdg_wm_base");
+    RET_ERROR(d.wl_seat,       9, "cannot get wl_seat");
 
     if(!d.zxdg_decoration_manager)
         // This will happen on a GNOME 3 wayland desktop.
@@ -366,8 +397,8 @@ static int _pnDisplay_create(void) {
             err = 11;
             break;
         }
-    RET_ERROR(d.wl_pointer,   9, "cannot get wl_pointer");
-    RET_ERROR(d.wl_keyboard, 10, "cannot get wl_keyboard");
+    RET_ERROR(d.wl_pointer,   10, "cannot get wl_pointer");
+    RET_ERROR(d.wl_keyboard, 11, "cannot get wl_keyboard");
 
     return err; // return 0 => success.
 }
@@ -492,7 +523,8 @@ bool pnDisplay_dispatch(void) {
             return false;
     }
 
-    if(wl_display_dispatch(d.wl_display) != -1)
+    if(wl_display_dispatch(d.wl_display) != -1 &&
+            d.windows/*we have at least one window*/)
         // We can keep going.
         return true;
 

@@ -26,7 +26,12 @@ int main(void) {
     // This passes Valgrind with or without destroying all the windows
     // given the libpanels.so destructor cleans up the windows and display
     // if the user does not.
+
+#ifndef RUN
+    // If this ran the desktop user could have already destroyed the
+    // window, so we don't want to try to destroy it again.
     pnWindow_destroy(win);
+#endif
 
     return 0;
 }

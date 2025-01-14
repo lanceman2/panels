@@ -148,6 +148,12 @@ struct PnWindow {
     struct wl_callback *wl_callback;
     struct PnBuffer buffer[2];
 
+    void (*destroy)(struct PnWindow *window, void *userData);
+    void *destroyUserData;
+
+    //const uint32_t width, height;
+
+    bool showing;
 };
 
 
@@ -194,9 +200,9 @@ struct PnDisplay {
     // events exist separately?
     //
     // Set the window with mouse pointer focus (from enter and leave):
-    struct SlWindow *pointerWindow;
+    struct PnWindow *pointerWindow;
     // Set the window with keyboard focus (from enter and leave):
-    struct SlWindow *kbWindow;
+    struct PnWindow *kbWindow;
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.
@@ -228,4 +234,4 @@ extern void GetSurfaceDamageFunction(struct PnWindow *win);
 extern int create_shm_file(size_t size);
 extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         uint32_t width, uint32_t height);
-extern void FreeBuffer(struct PnWindow *win, struct PnBuffer *buffer);
+extern void FreeBuffer(struct PnBuffer *buffer);

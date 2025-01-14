@@ -4,14 +4,41 @@
 #include <string.h>
 #include <wayland-client.h>
 
-#include "../include/panels.h"
-
 #include "xdg-shell-protocol.h"
 #include "xdg-decoration-protocol.h"
 
 #include "debug.h"
 #include  "display.h"
 
+#include "../include/panels.h"
+#include "../include/panels_drawingUtils.h"
+
+static void Render(struct PnWindow *win) {
+
+    DASSERT(win);
+    DASSERT(win->wl_surface);
+
+    struct PnBuffer *buffer = GetNextBuffer(win,
+            win->surface.allocation.width,
+            win->surface.allocation.height);
+    if(!buffer)
+        // I think this is okay.  The wayland compositor is just a little
+        // busy now.  I think will get this done later.
+        return;
+
+    pn_drawFilledRectangle(buffer->pixels/*surface starting pixel*/,
+        0/*x*/, 0/*y*/, buffer->width, buffer->height,
+        buffer->width * PN_PIXEL_SIZE/*stride*/,
+        0xFFFFFA00 /*color in ARGB*/);
+
+    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
+
+    d.surface_damage_func(win->wl_surface, 0, 0,
+            buffer->width, buffer->height);
+
+    wl_surface_commit(win->wl_surface);
+    buffer->busy = true;
+}
 
 
 static void xdg_surface_handle_configure(struct PnWindow *win,
@@ -21,10 +48,12 @@ static void xdg_surface_handle_configure(struct PnWindow *win,
     DASSERT(win->xdg_surface);
     DASSERT(win->xdg_surface == xdg_surface);
 
-    DSPEW("Got xdg_surface_configure events serial=%"
-                PRIu32 " for window=%p", serial, win);
+    //DSPEW("Got xdg_surface_configure events serial=%"
+    //            PRIu32 " for window=%p", serial, win);
 
     xdg_surface_ack_configure(win->xdg_surface, serial);
+
+    Render(win);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
@@ -32,12 +61,19 @@ static const struct xdg_surface_listener xdg_surface_listener = {
 };
 
 static void toplevel_configure(struct PnWindow *win,
-		struct xdg_toplevel *xdg_toplevel) {
+		struct xdg_toplevel *xdg_toplevel,
+                int32_t w, int32_t h,
+		struct wl_array *state) {
     DASSERT(win);
     DASSERT(xdg_toplevel);
     DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
 
-    DSPEW();
+    //DSPEW("w,h=%" PRIi32",%" PRIi32, w, h);
+
+    if(w <= 0 || h <= 0) return;
+
+    win->surface.allocation.width = w;
+    win->surface.allocation.height = h;
 }
 
 static void xdg_toplevel_handle_close(struct PnWindow *win,
@@ -45,9 +81,10 @@ static void xdg_toplevel_handle_close(struct PnWindow *win,
 
     DASSERT(win);
     DASSERT(xdg_toplevel);
+    DASSERT(win->wl_surface);
     DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
 
-    DSPEW();
+    pnWindow_destroy(win);
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
@@ -102,6 +139,7 @@ struct PnWindow *pnWindow_create(uint32_t w, uint32_t h) {
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
     win->surface.type = PnSurfaceType_toplevel;
+    DASSERT(win->surface.type < PnSurfaceType_widget);
     win->buffer[0].pixels = MAP_FAILED;
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
@@ -161,8 +199,14 @@ struct PnWindow *pnWindow_create(uint32_t w, uint32_t h) {
 		ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
     }
 
+    // TODO: Remove win->width and win->height??
+    //
+    // This is how we C casting to change const variables:
+    //*((uint32_t *) &win->width) = w;
+    //*((uint32_t *) &win->height) = h;
 
-
+    win->surface.allocation.width = w;
+    win->surface.allocation.height = h;
 
     return win;
 
@@ -174,12 +218,39 @@ fail:
 }
 
 
+void pnWindow_show(struct PnWindow *win, bool show) {
+
+    DASSERT(win);
+    DASSERT(win->wl_surface);
+    ASSERT(show, "WRITE MORE CODE FOR THIS CASE");
+
+    // During and after pnWindow_create() non of the wl_suface (and other
+    // wayland client window objects) callbacks are called yet.
+
+    if(win->showing) return;
+
+    // void wl_surface_commit().
+    wl_surface_commit(win->wl_surface);
+
+    win->showing = true;
+
+    // this will eventually cause wl_display_dispatch() to call
+    // toplevel_configure() for this window, win.
+    // and then xdg_surface_handle_configure()
+}
+
+
+
 void pnWindow_destroy(struct PnWindow *win) {
 
     DASSERT(win);
     DASSERT(d.wl_display);
     DASSERT(win->surface.type < PnSurfaceType_widget);
 
+    if(win->destroy)
+        win->destroy(win, win->destroyUserData);
+
+    RemoveWindow(win, d.windows, &d.windows);
 
     // Clean up stuff in reverse order that stuff was created.
 
@@ -187,8 +258,8 @@ void pnWindow_destroy(struct PnWindow *win) {
         wl_callback_destroy(win->wl_callback);
 
     // Make sure both buffers are freed up.
-    FreeBuffer(win, win->buffer);
-    FreeBuffer(win, win->buffer + 1);
+    FreeBuffer(win->buffer);
+    FreeBuffer(win->buffer + 1);
 
 
     if(win->decoration)
@@ -211,9 +282,18 @@ void pnWindow_destroy(struct PnWindow *win) {
         wl_surface_destroy(win->wl_surface);
 
 
-    RemoveWindow(win, d.windows, &d.windows);
 
     DZMEM(win, sizeof(*win));
     free(win);
 }
 
+
+void pnWindow_setCBDestroy(struct PnWindow *win,
+        void (*destroy)(struct PnWindow *window, void *userData),
+        void *userData) {
+
+    DASSERT(win);
+
+    win->destroy = destroy;
+    win->destroyUserData = userData;
+}
