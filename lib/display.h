@@ -89,7 +89,7 @@ struct PnSurface {
 };
 
 
-// type PnSurfaceType_widget
+// surface type PnSurfaceType_widget
 struct PnWidget {
 
     // 1st inherit surface
@@ -111,7 +111,7 @@ struct PnBuffer {
 };
 
 
-// type can be a toplevel or a popup
+// surface type can be a toplevel or a popup
 struct PnWindow {
 
     // 1st inherit surface
