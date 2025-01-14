@@ -81,7 +81,6 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         goto fail;
     }
 
-
     return false;
 
 fail:
@@ -164,7 +163,7 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         // later draw-like event that will make the windows pixels
         // current.  It appears that now there is an overflow of draw-like
         // events.
-        INFO("Buffers busy");
+        //INFO("Buffers busy");
         return 0;
     }
 

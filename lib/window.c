@@ -13,11 +13,19 @@
 #include "../include/panels.h"
 #include "../include/panels_drawingUtils.h"
 
-static void Render(struct PnWindow *win) {
+
+// We need to make it clear that this is a draw (render) caused by a
+// wayland compositor configure event.  So, it was not caused by
+// the API users code telling us to draw.
+//
+static void ConfigureRender(struct PnWindow *win) {
 
     DASSERT(win);
     DASSERT(win->wl_surface);
 
+    // GetNextBuffer() can reallocate the buffer
+    // if the width or height passed here is different than the
+    // width and height of the buffer it is getting.
     struct PnBuffer *buffer = GetNextBuffer(win,
             win->surface.allocation.width,
             win->surface.allocation.height);
@@ -29,7 +37,7 @@ static void Render(struct PnWindow *win) {
     pn_drawFilledRectangle(buffer->pixels/*surface starting pixel*/,
         0/*x*/, 0/*y*/, buffer->width, buffer->height,
         buffer->width * PN_PIXEL_SIZE/*stride*/,
-        0xFFFFFA00 /*color in ARGB*/);
+        0x0AAFAA00 /*color in ARGB*/);
 
     wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
 
@@ -53,7 +61,7 @@ static void xdg_surface_handle_configure(struct PnWindow *win,
 
     xdg_surface_ack_configure(win->xdg_surface, serial);
 
-    Render(win);
+    ConfigureRender(win);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
