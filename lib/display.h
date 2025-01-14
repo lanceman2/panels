@@ -86,6 +86,8 @@ struct PnSurface {
     struct PnSurface *parent;
     struct PnSurface *firstChild, *lastChild;
     struct PnSurface *nextSibling, *prevSibling;
+
+    enum PnGravity gravity;
 };
 
 

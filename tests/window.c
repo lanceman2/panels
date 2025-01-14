@@ -8,13 +8,14 @@
 // this code destroying it; the desktop user did it.
 static void destroy(struct PnWindow *window, void *userData) {
     struct PnWindow **win = userData;
+    ASSERT(window == *win);
     *win = 0;
 }
 
 
 int main(void) {
 
-    struct PnWindow *win = pnWindow_create(700, 350);
+    struct PnWindow *win = pnWindow_create(700, 350, 0);
     ASSERT(win);
 
     pnWindow_setCBDestroy(win, destroy, &win);

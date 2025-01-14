@@ -7,10 +7,9 @@
 #include "xdg-shell-protocol.h"
 #include "xdg-decoration-protocol.h"
 
+#include "../include/panels.h"
 #include "debug.h"
 #include  "display.h"
-
-#include "../include/panels.h"
 #include "../include/panels_drawingUtils.h"
 
 
@@ -139,7 +138,8 @@ static inline void RemoveWindow(struct PnWindow *win,
 }
 
 
-struct PnWindow *pnWindow_create(uint32_t w, uint32_t h) {
+struct PnWindow *pnWindow_create(uint32_t w, uint32_t h,
+        enum PnGravity gravity) {
 
     if(CheckDisplay()) return 0;
 
@@ -152,6 +152,7 @@ struct PnWindow *pnWindow_create(uint32_t w, uint32_t h) {
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
+    win->surface.gravity = gravity;
 
     AddWindow(win, d.windows, &d.windows);
 

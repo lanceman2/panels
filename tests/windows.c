@@ -4,33 +4,21 @@
 #include "../lib/debug.h"
 
 
+static void CreateWindow(uint32_t w, uint32_t h) {
+
+    struct PnWindow *win = pnWindow_create(w, h, 0);
+    ASSERT(win);
+    pnWindow_show(win, true);
+}
+
 int main(void) {
 
-    struct PnWindow *win = pnWindow_create(400, 350);
-    ASSERT(win);
-    pnWindow_destroy(win);
-    pnWindow_create(400, 350);
-    win = pnWindow_create(400, 350);
-    ASSERT(win);
-    pnWindow_destroy(win);
-    pnWindow_create(400, 350);
-    win = pnWindow_create(400, 350);
-    ASSERT(win);
-    pnWindow_create(400, 350);
+    CreateWindow(400, 600);
+    CreateWindow(700, 300);
+    CreateWindow(200, 500);
 
 #ifdef RUN
     while(pnDisplay_dispatch());
-#endif
-
-    fprintf(stderr, "win=%p\n", win);
-    // This passes Valgrind with or without destroying all the windows
-    // given the libpanels.so destructor cleans up the windows and display
-    // if the user does not.
-
-#ifndef RUN
-    // If this ran the desktop user could have already destroyed the
-    // window, so we don't want to try to destroy it again.
-    pnWindow_destroy(win);
 #endif
 
     return 0;
