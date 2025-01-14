@@ -14,7 +14,7 @@ static void destroy(struct PnWindow *window, void *userData) {
 
 int main(void) {
 
-    struct PnWindow *win = pnWindow_create(400, 350);
+    struct PnWindow *win = pnWindow_create(700, 350);
     ASSERT(win);
 
     pnWindow_setCBDestroy(win, destroy, &win);
