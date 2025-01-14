@@ -49,7 +49,7 @@ enum PnSurfaceType {
     // but we call it a popup and not a toplevel.
 
     // 2 Window Surface types:
-    PnSurfaceType_toplevel = 1, // From xdg_surface_get_toplevel()
+    PnSurfaceType_toplevel = 231, // From xdg_surface_get_toplevel()
     PnSurfaceType_popup,    // From wl_shell_surface_set_popup()
 
     // 1 Widget Surface type
@@ -63,7 +63,7 @@ struct PnAllocation {
 };
 
 
-// A widget or window has a surface.
+// A widget or window (toplevel window or popup window) has a surface.
 //
 struct PnSurface {
 
@@ -84,8 +84,17 @@ struct PnSurface {
     void *user_data;
 
     // We keep a linked list (tree like) graph of surfaces starting at a
-    // window with parent == 0.  The top level parent windows are owned by
-    // a PnDisplay (display).
+    // window with PnSurface::parent == 0.
+    //
+    // The toplevel parent windows are owned by and listed in PnDisplay
+    // (display).
+    //
+    // Popup windows also have PnSurface::parent == 0 here and popup
+    // windows are owned by their parent toplevel window, but listed in
+    // the with PnWindow::prev,next at PnWindow::toplevel.popups.
+    //
+    // So, this parent=0 for toplevel windows and popup windows.
+    //
     struct PnSurface *parent;
     struct PnSurface *firstChild, *lastChild;
     struct PnSurface *nextSibling, *prevSibling;
@@ -127,7 +136,7 @@ struct PnWindow {
 
     // To keep:
     //    1. a list of toplevel windows in the display, or
-    //    2. a list of children popup windows in toplevel windows.
+    //    2. a list of popup windows in toplevel windows.
     struct PnWindow *next, *prev;
 
     size_t sharedBufferSize;
@@ -138,17 +147,16 @@ struct PnWindow {
     struct xdg_surface *xdg_surface;
     //
     union {
-        // for surface type toplevel
+        // for surface window type toplevel
         struct {
             struct xdg_toplevel *xdg_toplevel;
             // list of child popups
             struct PnWindow *popups; // points to newest one
         } toplevel;
-        // for surface type popup
+        // for surface window type popup
         struct {
             struct xdg_positioner *xdg_positioner;
             struct xdg_popup *xdg_popup;
-            //struct PnWindow *parent; // toplevel parent
         } popup;
     };
     //

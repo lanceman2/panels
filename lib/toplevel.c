@@ -29,7 +29,6 @@ static void toplevel_configure(struct PnWindow *win,
     win->surface.allocation.height = h;
 }
 
-
 static void xdg_toplevel_handle_close(struct PnWindow *win,
 		struct xdg_toplevel *xdg_toplevel) {
 

@@ -120,10 +120,16 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     struct PnWindow *win = calloc(1, sizeof(*win));
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
-    if(parent)
+    if(parent) {
+        // A popup
         win->surface.type = PnSurfaceType_popup;
-    else
+        AddWindow(win, parent->toplevel.popups,
+                &parent->toplevel.popups);
+    } else {
+        // A toplevel
         win->surface.type = PnSurfaceType_toplevel;
+        AddWindow(win, d.windows, &d.windows);
+    }
 
     DASSERT(win->surface.type < PnSurfaceType_widget);
 
@@ -134,7 +140,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->surface.parent = &parent->surface;
     win->surface.gravity = gravity;
 
-    AddWindow(win, d.windows, &d.windows);
+
 
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
     if(!win->wl_surface) {
@@ -235,9 +241,24 @@ void pnWindow_destroy(struct PnWindow *win) {
     DASSERT(win->surface.type < PnSurfaceType_widget);
 
     if(win->destroy)
+        // This is called before we start destroying stuff.
         win->destroy(win, win->destroyUserData);
 
-    RemoveWindow(win, d.windows, &d.windows);
+
+    if(win->surface.type == PnSurfaceType_popup) {
+        // A popup
+        struct PnWindow *parent = (void *) win->surface.parent;
+        DASSERT(parent);
+        DASSERT(parent->surface.type == PnSurfaceType_toplevel);
+        // Remove this popup from the parents popup window list
+        RemoveWindow(win, parent->toplevel.popups,
+                &parent->toplevel.popups);
+    } else {
+        // A toplevel
+        DASSERT(win->surface.type == PnSurfaceType_toplevel);
+        // Remove this toplevel from the displays toplevel window list
+        RemoveWindow(win, d.windows, &d.windows);
+    }
 
     // Clean up stuff in reverse order that stuff was created.
 
@@ -251,6 +272,7 @@ void pnWindow_destroy(struct PnWindow *win) {
 
     if(win->decoration)
         zxdg_toplevel_decoration_v1_destroy(win->decoration);
+
 
     switch(win->surface.type) {
         case PnSurfaceType_toplevel:
@@ -269,8 +291,7 @@ void pnWindow_destroy(struct PnWindow *win) {
         wl_surface_destroy(win->wl_surface);
 
 
-
-    DZMEM(win, sizeof(*win));
+    memset(win, 0, sizeof(*win));
     free(win);
 }
 
