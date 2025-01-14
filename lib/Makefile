@@ -49,7 +49,8 @@ libpanels.so_SOURCES :=\
  window.c\
  surface.c\
  shm.c\
- buffer.c
+ buffer.c\
+ widget.c
 
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\
