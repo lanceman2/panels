@@ -14,7 +14,7 @@
 
 struct PnWidget *pnWidget_create(
         struct PnSurface *parent, uint32_t w, uint32_t h,
-        enum PnGravity gravity) {
+        enum PnGravity gravity, enum PnGreed greed) {
 
     return 0;
 }

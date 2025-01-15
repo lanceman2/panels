@@ -157,6 +157,7 @@ struct PnWindow {
         struct {
             struct xdg_positioner *xdg_positioner;
             struct xdg_popup *xdg_popup;
+            struct PnWindow *parent;
         } popup;
     };
     //
@@ -253,7 +254,10 @@ extern void FreeBuffer(struct PnBuffer *buffer);
 
 
 extern bool InitToplevel(struct PnWindow *win);
-extern bool InitPopup(struct PnWindow *win);
+extern bool InitPopup(struct PnWindow *win,
+        struct PnWindow *parent,
+        int32_t x, int32_t y,
+        int32_t w, int32_t h);
 
 extern bool InitSurface(struct PnSurface *s);
 extern void DestroySurface(struct PnSurface *s);

@@ -141,7 +141,6 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->surface.gravity = gravity;
 
 
-
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
     if(!win->wl_surface) {
         ERROR("wl_compositor_create_surface() failed");
@@ -172,24 +171,11 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
                 goto fail;
             break;
         case PnSurfaceType_popup:
-            if(InitPopup(win))
+            if(InitPopup(win, parent, 100, 100, w, h))
                 goto fail;
             break;
         default:
             ASSERT(0, "Write more code here case=%d", win->surface.type);
-    }
-
-    if(d.zxdg_decoration_manager) {
-        // Let the compositor do window decoration management
-	win->decoration =
-	        zxdg_decoration_manager_v1_get_toplevel_decoration(
-		        d.zxdg_decoration_manager, win->toplevel.xdg_toplevel);
-        if(!win->decoration) {
-            ERROR("zxdg_decoration_manager_v1_get_toplevel_decoration() failed");
-            goto fail;
-        }
-	zxdg_toplevel_decoration_v1_set_mode(win->decoration,
-		ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
     }
 
     // TODO: Remove win->width and win->height??
@@ -247,17 +233,20 @@ void pnWindow_destroy(struct PnWindow *win) {
 
     if(win->surface.type == PnSurfaceType_popup) {
         // A popup
-        struct PnWindow *parent = (void *) win->surface.parent;
-        DASSERT(parent);
-        DASSERT(parent->surface.type == PnSurfaceType_toplevel);
+        DASSERT(win->popup.parent);
+        DASSERT(win->popup.parent->surface.type ==
+                PnSurfaceType_toplevel);
         // Remove this popup from the parents popup window list
-        RemoveWindow(win, parent->toplevel.popups,
-                &parent->toplevel.popups);
+        RemoveWindow(win, win->popup.parent->toplevel.popups,
+                &win->popup.parent->toplevel.popups);
     } else {
         // A toplevel
         DASSERT(win->surface.type == PnSurfaceType_toplevel);
         // Remove this toplevel from the displays toplevel window list
         RemoveWindow(win, d.windows, &d.windows);
+        // Destroy any child popup windows that this toplevel owns.
+        while(win->toplevel.popups)
+            pnWindow_destroy(win->toplevel.popups);
     }
 
     // Clean up stuff in reverse order that stuff was created.
@@ -270,16 +259,23 @@ void pnWindow_destroy(struct PnWindow *win) {
     FreeBuffer(win->buffer + 1);
 
 
-    if(win->decoration)
-        zxdg_toplevel_decoration_v1_destroy(win->decoration);
-
-
     switch(win->surface.type) {
         case PnSurfaceType_toplevel:
+            if(win->decoration)
+                zxdg_toplevel_decoration_v1_destroy(
+                        win->decoration);
             if(win->toplevel.xdg_toplevel)
                 xdg_toplevel_destroy(win->toplevel.xdg_toplevel);
             break;
         case PnSurfaceType_popup:
+            if(win->popup.xdg_popup) {
+                xdg_popup_destroy(win->popup.xdg_popup);
+                win->popup.xdg_popup = 0;
+            }
+            if(win->popup.xdg_positioner) {
+                xdg_positioner_destroy(win->popup.xdg_positioner);
+                win->popup.xdg_positioner = 0;
+            }
             break;
         default:
     }

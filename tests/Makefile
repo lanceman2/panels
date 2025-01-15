@@ -22,6 +22,11 @@ windows_run_LDFLAGS := $(PN_LIB)
 windows_run_CPPFLAGS := -DRUN
 
 
+popup_run_SOURCES := popup.c
+popup_run_LDFLAGS := $(PN_LIB)
+popup_run_CPPFLAGS := -DRUN
+
+
 
 CLEANFILES := $(wildcard tmp_*)
 

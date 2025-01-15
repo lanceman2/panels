@@ -60,6 +60,26 @@ enum PnGravity {
 };
 
 
+// Widgets can be greedy for different kinds of space.
+// The greedy widget will take the space it can get, but it has
+// to share that space with other sibling greedy widgets.
+//
+// Q: If not, and no children in the tree are greedy in X (or Y too), then
+// does that mean that the window will not be expandable in the X (Y)
+// direction?  I'm thinking the answer is no; but there may be a need to
+// have the idea of a windows natural (X and Y) size for this case (a
+// TODO).
+//
+enum PnGreed {
+    // H Horizontal first bit, V Vertical second bit
+    PnGreed_None = 00, // The widget is not greedy for any space
+    PnGreed_H    = 01, // The widget is greedy for Horizontal space
+    PnGreed_V    = 02, // The widget is greedy for Vertical space
+    PnGreed_HV   = (01 & 02), // The widget is greedy for all 2D space
+    PnGreed_VH   = (01 & 02)  // The widget is greedy for all 2D space
+};
+
+
 struct PnWindow;
 struct PnWidget;
 // both PnWindow and PnWidget are PnSurface
@@ -83,7 +103,7 @@ PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
 
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnSurface *parent, uint32_t w, uint32_t h,
-        enum PnGravity gravity);
+        enum PnGravity gravity, enum PnGreed greed);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
 
 //PN_EXPORT struct PnSurface *pnWindow_getSurface(struct PnWindow *window);
