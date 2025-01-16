@@ -70,7 +70,8 @@ struct PnSurface {
     enum PnSurfaceType type;
 
     // API user requested size.  What they get may be different.
-    // These are constant after they are first set.
+    //
+    // width and height are CONSTANT after they are first set!!!
     //
     // For containers width is left and right border width, and height is
     // top and bottom border thickness.  A container with no children will
@@ -78,6 +79,7 @@ struct PnSurface {
     // of the border, so it draws them before the children are drawn.
     const uint32_t width, height;
 
+    // What they really get for surface size:
     struct PnAllocation allocation;
 
     // API user passed in draw function:
@@ -117,6 +119,8 @@ struct PnWidget {
 
     // 1st inherit surface
     struct PnSurface surface;
+
+    bool showing;
 };
 
 struct PnBuffer {

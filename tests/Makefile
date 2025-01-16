@@ -21,10 +21,21 @@ windows_run_SOURCES := windows.c
 windows_run_LDFLAGS := $(PN_LIB)
 windows_run_CPPFLAGS := -DRUN
 
+027_popup_SOURCES := popup.c
+027_popup_LDFLAGS := $(PN_LIB)
 
 popup_run_SOURCES := popup.c
 popup_run_LDFLAGS := $(PN_LIB)
 popup_run_CPPFLAGS := -DRUN
+
+033_widget_SOURCES := widget.c
+033_widget_LDFLAGS := $(PN_LIB)
+
+widget_run_SOURCES := widget.c
+widget_run_LDFLAGS := $(PN_LIB)
+widget_run_CPPFLAGS := -DRUN
+
+
 
 
 

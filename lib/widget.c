@@ -17,8 +17,23 @@ struct PnWidget *pnWidget_create(
         enum PnGravity gravity, enum PnGreed greed) {
 
     ASSERT(parent);
-    ASSERT(w);
-    ASSERT(h);
+    // If there will not be children in this new widget than
+    // we need width, w, and height, h.
+    ASSERT(gravity > PnGravity_None || (w && h),
+            "Widgets with no children must have width and height");
+    DASSERT(parent->gravity != PnGravity_None);
+    DASSERT(parent->gravity != PnGravity_One || !parent->firstChild);
+
+    if(parent->gravity == PnGravity_None) {
+        ERROR("Parent surface cannot have children");
+        return 0;
+    }
+
+    if(parent->gravity == PnGravity_One &&
+            parent->firstChild) {
+        ERROR("Parent surface cannot have more than one child");
+        return 0;
+    }
 
     struct PnWidget *widget = calloc(1, sizeof(*widget));
     ASSERT(widget, "calloc(1,%zu) failed", sizeof(*widget));
@@ -48,4 +63,13 @@ void pnWidget_destroy(struct PnWidget *widget) {
 
     DZMEM(widget, sizeof(*widget));
     free(widget);
+DSPEW();
+}
+
+void pnWidget_show(struct PnWidget *widget, bool show) {
+
+    DASSERT(widget);
+    DASSERT(widget->surface.type == PnSurfaceType_widget);
+
+    widget->showing = show;
 }

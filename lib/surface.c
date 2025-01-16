@@ -76,13 +76,12 @@ void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
 
     DASSERT(parent);
     DASSERT(s);
-    DASSERT(!s->parent);
+    DASSERT(s->parent);
+    DASSERT(s->parent == parent);
     DASSERT(!s->firstChild);
     DASSERT(!s->lastChild);
     DASSERT(!s->nextSibling);
     DASSERT(!s->prevSibling);
-
-    s->parent = parent;
 
     if(parent->firstChild) {
         DASSERT(parent->lastChild);
@@ -117,11 +116,13 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
     if(s->prevSibling) {
         DASSERT(parent->firstChild != s);
         s->prevSibling->nextSibling = s->nextSibling;
+        s->prevSibling = 0;
     } else {
         DASSERT(parent->firstChild == s);
         parent->firstChild = s->nextSibling;
     }
 
+    s->nextSibling = 0;
     s->parent = 0;
 }
 

@@ -42,24 +42,34 @@ enum PnGravity {
     // PnGravity is a attribute of a widget container (surface), be it a
     // widget or window.
 
-    // no gravity to hold widgets.
-    PnGravity_None = 0, // For non-container widgets or windows
+    // PnGravity_None and PnGravity_One just add failure modes for when
+    // the user adds extra children.
+
+    // no gravity to hold widgets.  Cannot have any children.
+    PnGravity_None = -2, // For non-container widgets or windows
 
     // The container surface can only have zero or one widget, so it puts
     // the child widget where ever it wants to on its surface.
-    PnGravity_One,
+    PnGravity_One = -1,
+
+    // Windows (and widgets) with all the below gravities can have zero
+    // or more children.
 
     // T Top, B Bottom, L Left, R Right
     //
+    // Horizontally row aligning child widgets:
+    //
+    // We use 0 so that PnGravity_LR is the default; it certainly made
+    // writing test code easier.
+    //
+    PnGravity_LR = 0, // child widgets float/align left to right
+    PnGravity_RL = 1,  // child widgets float/align right to left
+
     // Vertically column aligning child widgets
     // PnGravity_BT is like real world gravity pulling down where the
     // starting widget gets squished on the bottom.
-    PnGravity_BT, // child widgets float/align bottom to top
-    PnGravity_TB, // child widgets float/align top to bottom
-
-    // Horizontally row aligning child widgets
-    PnGravity_LR, // child widgets float/align left to right
-    PnGravity_RL,  // child widgets float/align right to left
+    PnGravity_BT = 2, // child widgets float/align bottom to top
+    PnGravity_TB = 3, // child widgets float/align top to bottom
 
     // We could use this gravity to make a grid, a notebook, or other
     // container packing method.
@@ -114,9 +124,12 @@ PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
 
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnSurface *parent,
-        uint32_t w, uint32_t h,
+        uint32_t width, uint32_t height,
         enum PnGravity gravity, enum PnGreed greed);
+PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
+
+
 
 PN_EXPORT void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor);

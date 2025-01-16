@@ -33,6 +33,9 @@ static inline void ConfigureRender(struct PnWindow *win) {
         // busy now.  I think we will get this done later.
         return;
 
+    DASSERT(win->surface.allocation.width == buffer->width);
+    DASSERT(win->surface.allocation.height == buffer->height);
+
     pn_drawFilledRectangle(buffer->pixels/*surface starting pixel*/,
         0/*x*/, 0/*y*/, buffer->width, buffer->height,
         buffer->width * PN_PIXEL_SIZE/*stride*/,
@@ -110,11 +113,24 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnGravity gravity) {
 
+    DASSERT(gravity != PnGravity_None || (w && h));
+
+    if(gravity == PnGravity_None && !(w && h)) {
+        ERROR("A window with no child widgets must have non-zero "
+                "width and height, w,h=%" PRIu32 ",%" PRIu32,
+                w, h);
+        return 0;
+    }
+
 
     if(CheckDisplay()) return 0;
 
     struct PnWindow *win = calloc(1, sizeof(*win));
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
+
+    // This is how we C casting to change const variables:
+    *((uint32_t *) &win->surface.width) = w;
+    *((uint32_t *) &win->surface.height) = h;
 
     if(parent) {
         // A popup
@@ -178,12 +194,6 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
             ASSERT(0, "Write more code here case=%d", win->surface.type);
     }
 
-    // TODO: Remove win->width and win->height??
-    //
-    // This is how we C casting to change const variables:
-    //*((uint32_t *) &win->width) = w;
-    //*((uint32_t *) &win->height) = h;
-
     win->surface.allocation.width = w;
     win->surface.allocation.height = h;
 
@@ -224,6 +234,9 @@ void pnWindow_destroy(struct PnWindow *win) {
         // This is called before we start destroying stuff.
         win->destroy(win, win->destroyUserData);
 
+    // Remove all child widgets in the list from win->surface.firstChild
+    while(win->surface.firstChild)
+        pnWidget_destroy((void *) win->surface.firstChild);
 
     if(win->surface.type == PnSurfaceType_popup) {
         // A popup
