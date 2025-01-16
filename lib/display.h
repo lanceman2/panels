@@ -71,6 +71,11 @@ struct PnSurface {
 
     // API user requested size.  What they get may be different.
     // These are constant after they are first set.
+    //
+    // For containers width is left and right border width, and height is
+    // top and bottom border thickness.  A container with no children will
+    // have width and height.  In this sense the container owns the pixels
+    // of the border, so it draws them before the children are drawn.
     const uint32_t width, height;
 
     struct PnAllocation allocation;
@@ -101,6 +106,7 @@ struct PnSurface {
 
     // Number of pixels between widgets:
     uint32_t borderWidth;
+    uint32_t backgroundColor;
 
     enum PnGravity gravity;
 };
@@ -117,9 +123,12 @@ struct PnBuffer {
 
     struct wl_buffer   *wl_buffer;
     struct wl_shm_pool *wl_shm_pool;
+
     size_t size; // total bytes of mapped shared memory file
+
     uint32_t width, height;
-    // pixels is a pointer to the share memory pixel data.
+
+    // pixels is a pointer to the share memory pixel data from mmap(2).
     uint32_t *pixels;
 
     int fd; // File descriptor to shared memory file
@@ -252,13 +261,13 @@ extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         uint32_t width, uint32_t height);
 extern void FreeBuffer(struct PnBuffer *buffer);
 
-
 extern bool InitToplevel(struct PnWindow *win);
 extern bool InitPopup(struct PnWindow *win,
-        struct PnWindow *parent,
-        int32_t x, int32_t y,
-        int32_t w, int32_t h);
+        int32_t w, int32_t h,
+        int32_t x, int32_t y);
 
 extern bool InitSurface(struct PnSurface *s);
 extern void DestroySurface(struct PnSurface *s);
+
+extern void GetWidgetAllocations(struct PnWindow *win);
 

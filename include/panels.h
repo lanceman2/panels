@@ -13,8 +13,10 @@
 extern "C" {
 #endif
 
-#define PN_PIXEL_SIZE    4 // bytes per pixel
-#define PN_BORDER_width  6 // default border pixels wide
+#define PN_PIXEL_SIZE     (4) // bytes per pixel
+// DEFAULTS
+#define PN_BORDER_WIDTH   (6) // default border pixels wide
+#define PN_WINDOW_BGCOLOR (0x09999900)
 
 // Child widget packing gravity (for lack of a better word)
 //
@@ -32,6 +34,9 @@ extern "C" {
 // As in general relativity, gravity defines how space is distributed
 // among its massive pieces.
 //
+// A better term might be "alignment", in place of "gravity".
+// Or how about "direction".
+//
 enum PnGravity {
 
     // PnGravity is a attribute of a widget container (surface), be it a
@@ -47,15 +52,17 @@ enum PnGravity {
     // T Top, B Bottom, L Left, R Right
     //
     // Vertically column aligning child widgets
-    PnGravity_TB, // child widgets float/align top to bottom
+    // PnGravity_BT is like real world gravity pulling down where the
+    // starting widget gets squished on the bottom.
     PnGravity_BT, // child widgets float/align bottom to top
+    PnGravity_TB, // child widgets float/align top to bottom
 
     // Horizontally row aligning child widgets
     PnGravity_LR, // child widgets float/align left to right
     PnGravity_RL,  // child widgets float/align right to left
 
-    // We could use this gravity to make a grid container widget
-    // or any packing method.
+    // We could use this gravity to make a grid, a notebook, or other
+    // container packing method.
     PnGravity_Callback // The window or widget will define its own packing.
 };
 
@@ -93,8 +100,12 @@ PN_EXPORT struct PnWindow *pnWindow_create(
         // parent = 0 for toplevel
         // parent != 0 for popup
         struct PnWindow *parent,
-        uint32_t w, uint32_t h,
+        /* For containers, width is left/right border thickness, height is
+         * top/bottom border thickness. */
+        uint32_t width, uint32_t height,
+        int32_t x, int32_t y,
         enum PnGravity gravity);
+
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
 PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
 PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
@@ -102,9 +113,23 @@ PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
         void *userData);
 
 PN_EXPORT struct PnWidget *pnWidget_create(
-        struct PnSurface *parent, uint32_t w, uint32_t h,
+        struct PnSurface *parent,
+        uint32_t w, uint32_t h,
         enum PnGravity gravity, enum PnGreed greed);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
+
+PN_EXPORT void pnSurface_setBackgroundColor(
+        struct PnSurface *s, uint32_t argbColor);
+
+static inline void pnWindow_setBackgroundColor(
+        struct PnWindow *window, uint32_t argbColor) {
+    pnSurface_setBackgroundColor((void *) window, argbColor);
+}
+static inline void pnWidget_setBackgroundColor(
+        struct PnWidget *widget, uint32_t argbColor) {
+    pnSurface_setBackgroundColor((void *) widget, argbColor);
+}
+
 
 //PN_EXPORT struct PnSurface *pnWindow_getSurface(struct PnWindow *window);
 //PN_EXPORT struct PnSurface *pnWidget_getSurface(struct PnWidget *window);

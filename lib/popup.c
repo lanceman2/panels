@@ -26,7 +26,7 @@
 // surface, in surface-local coordinates.
 
 
-void configure(void *data,
+static void configure(void *data,
         struct xdg_popup *xdg_popup,
 	int32_t x, int32_t y,
 	int32_t width, int32_t height) {
@@ -34,7 +34,7 @@ void configure(void *data,
     DSPEW();
 }
 
-void popup_done(void *data, struct xdg_popup *xdg_popup) {
+static void popup_done(void *data, struct xdg_popup *xdg_popup) {
 
     struct PnWindow *win = data;
 
@@ -43,7 +43,7 @@ void popup_done(void *data, struct xdg_popup *xdg_popup) {
     DSPEW();
 }
 
-void repositioned(void *data,
+static void repositioned(void *data,
         struct xdg_popup *xdg_popup,
 	uint32_t token) {
 
@@ -61,22 +61,21 @@ static struct xdg_popup_listener xdg_popup_listener = {
 
 
 bool InitPopup(struct PnWindow *win,
-        struct PnWindow *parent,
-        int32_t x, int32_t y,
-        int32_t w, int32_t h) {
+        int32_t w, int32_t h,
+        int32_t x, int32_t y) {
 
     DASSERT(win);
     DASSERT(win->surface.type == PnSurfaceType_popup);
+    struct PnWindow *parent = win->popup.parent;
     DASSERT(parent);
-    DASSERT(parent->surface.type == PnSurfaceType_toplevel);
-    DASSERT(!win->popup.parent);
+
+    // A user could do this accidentally, I did and I'm a developer.
+    ASSERT(parent->surface.type == PnSurfaceType_toplevel);
 
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);
     DASSERT(w > 0);
     DASSERT(h > 0);
-
-    win->popup.parent = parent;
 
     win->popup.xdg_positioner =
         xdg_wm_base_create_positioner(d.xdg_wm_base);
@@ -100,24 +99,6 @@ bool InitPopup(struct PnWindow *win,
         ERROR("xdg_positioner_add_listener(,,) failed");
         return true; // true ==> fail
     }
-
-#if 0
-    if(d.zxdg_decoration_manager) {
-        // Let the compositor do window decoration management
-	win->decoration =
-	        zxdg_decoration_manager_v1_get_toplevel_decoration(
-		        d.zxdg_decoration_manager,
-                        win->popup.xdg_popup);
-        if(!win->decoration) {
-            ERROR("zxdg_decoration_manager_v1_get_toplevel_decoration()"
-                    " failed");
-            return true;
-        }
-	zxdg_toplevel_decoration_v1_set_mode(win->decoration,
-		ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-    }
-#endif
-
 
     return false; // return false for success
 }

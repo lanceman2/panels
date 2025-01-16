@@ -70,9 +70,74 @@ void GetSurfaceDamageFunction(struct PnWindow *win) {
 }
 
 
+// Add the child, s, as the last child.
+static inline
+void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+
+    DASSERT(parent);
+    DASSERT(s);
+    DASSERT(!s->parent);
+    DASSERT(!s->firstChild);
+    DASSERT(!s->lastChild);
+    DASSERT(!s->nextSibling);
+    DASSERT(!s->prevSibling);
+
+    s->parent = parent;
+
+    if(parent->firstChild) {
+        DASSERT(parent->lastChild);
+        DASSERT(!parent->lastChild->nextSibling);
+        DASSERT(!parent->firstChild->prevSibling);
+
+        s->prevSibling = parent->lastChild;
+        parent->lastChild->nextSibling = s;
+    } else {
+        DASSERT(!parent->lastChild);
+        parent->firstChild = s;
+    }
+    parent->lastChild = s;
+
+}
+
+static inline
+void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+
+    DASSERT(s);
+    DASSERT(parent);
+    DASSERT(s->parent == parent);
+
+    if(s->nextSibling) {
+        DASSERT(parent->lastChild != s);
+        s->nextSibling->prevSibling = s->prevSibling;
+    } else {
+        DASSERT(parent->lastChild == s);
+        parent->lastChild = s->prevSibling;
+    }
+
+    if(s->prevSibling) {
+        DASSERT(parent->firstChild != s);
+        s->prevSibling->nextSibling = s->nextSibling;
+    } else {
+        DASSERT(parent->firstChild == s);
+        parent->firstChild = s->nextSibling;
+    }
+
+    s->parent = 0;
+}
+
+
+// Return false on success.
+//
 bool InitSurface(struct PnSurface *s) {
 
     DASSERT(s);
+    if(s->type != PnSurfaceType_widget) {
+        DASSERT(!s->parent);
+        return false;
+    }
+    DASSERT(s->parent);
+
+    AddChildSurface(s->parent, s);
 
     return false;
 }
@@ -81,5 +146,17 @@ bool InitSurface(struct PnSurface *s) {
 void DestroySurface(struct PnSurface *s) {
 
     DASSERT(s);
+    if(s->type != PnSurfaceType_widget) {
+        DASSERT(!s->parent);
+        return;
+    }
+    DASSERT(s->parent);
 
+    RemoveChildSurface(s->parent, s);
+}
+
+
+void pnSurface_setBackgroundColor(
+        struct PnSurface *s, uint32_t argbColor) {
+    s->backgroundColor = argbColor;
 }

@@ -14,7 +14,7 @@
 #include  "display.h"
 
 
-static void buffer_handle_release(struct PnBuffer *buffer,
+static void release(struct PnBuffer *buffer,
         struct wl_buffer *wl_buffer) {
 
     //WARN();
@@ -22,7 +22,7 @@ static void buffer_handle_release(struct PnBuffer *buffer,
 }
 
 static const struct wl_buffer_listener buffer_listener = {
-	.release = (void *) buffer_handle_release,
+    .release = (void *) release,
 };
 
 
@@ -170,10 +170,12 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     DASSERT(PN_PIXEL_SIZE == 4);
     size_t size = width * height * PN_PIXEL_SIZE;
 
-    if(buffer->wl_buffer && buffer->size > size)
+    if(buffer->wl_buffer && buffer->size > size) {
         // We can't decrease the size of the buffer without
         // creating a different buffer.
         FreeBuffer(buffer);
+        DASSERT(!buffer->wl_buffer);
+    }
 
     // We could change the width and height without changing the size.
     // That would be okay, except we just need the values for any
@@ -182,7 +184,6 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         buffer->width = width;
     if(buffer->height != height)
         buffer->height = height;
-
 
     if(buffer->wl_buffer && buffer->size == size)
         // No buffer resize needed.

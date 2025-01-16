@@ -6,3 +6,4 @@ pnWindow_show
 pnWindow_setCBDestroy
 pnWidget_create
 pnWidget_destroy
+pnSurface_setBackgroundColor

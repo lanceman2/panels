@@ -13,7 +13,7 @@
 #include "../include/panels_drawingUtils.h"
 
 
-static void toplevel_configure(struct PnWindow *win,
+static void configure(struct PnWindow *win,
 		struct xdg_toplevel *xdg_toplevel,
                 int32_t w, int32_t h,
 		struct wl_array *state) {
@@ -29,7 +29,7 @@ static void toplevel_configure(struct PnWindow *win,
     win->surface.allocation.height = h;
 }
 
-static void xdg_toplevel_handle_close(struct PnWindow *win,
+static void close(struct PnWindow *win,
 		struct xdg_toplevel *xdg_toplevel) {
 
     DASSERT(win);
@@ -41,8 +41,8 @@ static void xdg_toplevel_handle_close(struct PnWindow *win,
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
-	.configure = (void *) toplevel_configure,
-	.close = (void *) xdg_toplevel_handle_close,
+    .configure = (void *) configure,
+    .close = (void *) close,
 };
 
 

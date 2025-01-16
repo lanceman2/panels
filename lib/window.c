@@ -14,29 +14,29 @@
 
 
 // We need to make it clear that this is a draw (render) caused by a
-// wayland compositor configure event.  So, it was not caused by
-// the API users code telling us to draw.
+// wayland compositor configure event.  So, it was not caused by the API
+// users code telling us to draw (queue a draw on a surface).
 //
-static void ConfigureRender(struct PnWindow *win) {
+static inline void ConfigureRender(struct PnWindow *win) {
 
     DASSERT(win);
     DASSERT(win->wl_surface);
 
-    // GetNextBuffer() can reallocate the buffer
-    // if the width or height passed here is different than the
-    // width and height of the buffer it is getting.
+    // GetNextBuffer() can reallocate the buffer if the width or height
+    // passed here is different from the width and height of the buffer it
+    // is getting.
     struct PnBuffer *buffer = GetNextBuffer(win,
             win->surface.allocation.width,
             win->surface.allocation.height);
     if(!buffer)
         // I think this is okay.  The wayland compositor is just a little
-        // busy now.  I think will get this done later.
+        // busy now.  I think we will get this done later.
         return;
 
     pn_drawFilledRectangle(buffer->pixels/*surface starting pixel*/,
         0/*x*/, 0/*y*/, buffer->width, buffer->height,
         buffer->width * PN_PIXEL_SIZE/*stride*/,
-        0x0AAFAA00 /*color in ARGB*/);
+        win->surface.backgroundColor /*color in ARGB*/);
 
     wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
 
@@ -48,7 +48,7 @@ static void ConfigureRender(struct PnWindow *win) {
 }
 
 
-static void xdg_surface_handle_configure(struct PnWindow *win,
+static void configure(struct PnWindow *win,
 	    struct xdg_surface *xdg_surface, uint32_t serial) {
 
     DASSERT(win);
@@ -64,7 +64,7 @@ static void xdg_surface_handle_configure(struct PnWindow *win,
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
-    .configure = (void *) xdg_surface_handle_configure,
+    .configure = (void *) configure,
 };
 
 
@@ -107,13 +107,9 @@ static inline void RemoveWindow(struct PnWindow *win,
 
 
 struct PnWindow *pnWindow_create(struct PnWindow *parent,
-        uint32_t w, uint32_t h,
+        uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnGravity gravity) {
 
-    // TODO: Can a popup window have a child popup window?
-    //
-    // Assume not:
-    DASSERT(!parent || parent->surface.type == PnSurfaceType_toplevel);
 
     if(CheckDisplay()) return 0;
 
@@ -122,6 +118,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
 
     if(parent) {
         // A popup
+        win->popup.parent = parent;
         win->surface.type = PnSurfaceType_popup;
         AddWindow(win, parent->toplevel.popups,
                 &parent->toplevel.popups);
@@ -137,9 +134,11 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
-    win->surface.parent = &parent->surface;
-    win->surface.gravity = gravity;
 
+    win->surface.gravity = gravity;
+    win->surface.borderWidth = PN_BORDER_WIDTH;
+    win->surface.backgroundColor = PN_WINDOW_BGCOLOR;
+    InitSurface(&win->surface);
 
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
     if(!win->wl_surface) {
@@ -171,7 +170,8 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
                 goto fail;
             break;
         case PnSurfaceType_popup:
-            if(InitPopup(win, parent, 100, 100, w, h))
+            DASSERT(parent);
+            if(InitPopup(win, w, h, x, y))
                 goto fail;
             break;
         default:
@@ -208,17 +208,11 @@ void pnWindow_show(struct PnWindow *win, bool show) {
 
     if(win->showing) return;
 
-    // void wl_surface_commit().
+    // This has no error return.
     wl_surface_commit(win->wl_surface);
 
     win->showing = true;
-
-    // this will eventually cause wl_display_dispatch() to call
-    // toplevel_configure() for this window, win.
-    // and then xdg_surface_handle_configure()
 }
-
-
 
 void pnWindow_destroy(struct PnWindow *win) {
 

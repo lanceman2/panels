@@ -52,7 +52,8 @@ libpanels.so_SOURCES :=\
  buffer.c\
  widget.c\
  toplevel.c\
- popup.c
+ popup.c\
+ allocation.c
 
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\
