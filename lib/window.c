@@ -22,6 +22,9 @@ static inline void ConfigureRender(struct PnWindow *win) {
     DASSERT(win);
     DASSERT(win->wl_surface);
 
+    if(win->needAllocate)
+        GetWidgetAllocations(win);
+
     // GetNextBuffer() can reallocate the buffer if the width or height
     // passed here is different from the width and height of the buffer it
     // is getting.
@@ -216,12 +219,25 @@ void pnWindow_show(struct PnWindow *win, bool show) {
     // During and after pnWindow_create() non of the wl_suface (and other
     // wayland client window objects) callbacks are called yet.
 
-    if(win->showing) return;
+    // Make it be one of two values.
+    show = show ? true: false;
 
-    // This has no error return.
-    wl_surface_commit(win->wl_surface);
+    if(win->surface.showing == show)
+        // No change.
+        //
+        // TODO: Nothing to do unless we can pop up the window that is
+        // hidden by the desktop window manager.
+        return;
 
-    win->showing = true;
+    win->surface.showing = show;
+
+    if(show && !win->buffer[0].wl_buffer)
+        // This is the first surface commit.
+        //
+        // This has no error return.
+        wl_surface_commit(win->wl_surface);
+    else
+        pnWindow_queueDraw(win);
 }
 
 void pnWindow_destroy(struct PnWindow *win) {
@@ -298,7 +314,6 @@ void pnWindow_destroy(struct PnWindow *win) {
     free(win);
 }
 
-
 void pnWindow_setCBDestroy(struct PnWindow *win,
         void (*destroy)(struct PnWindow *window, void *userData),
         void *userData) {
@@ -307,4 +322,11 @@ void pnWindow_setCBDestroy(struct PnWindow *win,
 
     win->destroy = destroy;
     win->destroyUserData = userData;
+}
+
+void pnWindow_queueDraw(struct PnWindow *win) {
+
+    if(!win->surface.showing) return;
+
+    ASSERT("WRITE MORE CODE HERE");
 }

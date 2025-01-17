@@ -18,7 +18,7 @@ struct PnWidget *pnWidget_create(
 
     ASSERT(parent);
     // If there will not be children in this new widget than
-    // we need width, w, and height, h.
+    // we need width, w, and height, h to be nonzero.
     ASSERT(gravity > PnGravity_None || (w && h),
             "Widgets with no children must have width and height");
     DASSERT(parent->gravity != PnGravity_None);
@@ -40,6 +40,9 @@ struct PnWidget *pnWidget_create(
 
     widget->surface.parent = parent;
     widget->surface.type = PnSurfaceType_widget;
+    // Not like GTK; we default to widgets showing; but the window
+    // default to not showing after pnWindow_create().
+    widget->surface.showing = true;
 
     if(InitSurface((void *) widget))
         goto fail;
@@ -71,5 +74,21 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     DASSERT(widget);
     DASSERT(widget->surface.type == PnSurfaceType_widget);
 
-    widget->showing = show;
+    // Make it be one of two values.  Because things like (3) == true too.
+    show = show ? true : false;
+
+    if(widget->surface.showing == show)
+        // No change.
+        return;
+
+    widget->surface.showing = show;
+    pnWindow_queueDraw(widget->window);
+    // This change may change the size of the window and many of the
+    // widgets in the window.
+    widget->window->needAllocate = true;
+}
+
+void pnWidget_queueDraw(struct PnWidget *widget) {
+
+    ASSERT("WRITE THIS CODE");
 }

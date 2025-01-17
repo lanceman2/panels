@@ -111,16 +111,26 @@ struct PnSurface {
     uint32_t backgroundColor;
 
     enum PnGravity gravity;
+
+    // Windows are not showing after pnWindow_create(). Widgets
+    // are showing after pnWidget_create(), but they cannot
+    // really 
+    bool showing;
 };
 
 
 // surface type PnSurfaceType_widget
+//
+// Widgets do not have a wayland surface (wl_surface) or other related
+// wayland client objects in them.  Widgets use the parent window (parent
+// most) objects wayland client stuff to draw to.
 struct PnWidget {
 
     // 1st inherit surface
     struct PnSurface surface;
 
-    bool showing;
+    // The window this widget is part of.
+    struct PnWindow *window;
 };
 
 struct PnBuffer {
@@ -181,9 +191,9 @@ struct PnWindow {
     void (*destroy)(struct PnWindow *window, void *userData);
     void *destroyUserData;
 
-    //const uint32_t width, height;
 
-    bool showing;
+    bool needAllocate; // need to recompute all widget allocations
+    bool needDraw;
 };
 
 

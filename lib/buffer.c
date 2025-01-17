@@ -180,10 +180,14 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     // We could change the width and height without changing the size.
     // That would be okay, except we just need the values for any
     // redraws.
-    if(buffer->width != width)
+    if(buffer->width != width) {
+        win->needAllocate = true;
         buffer->width = width;
-    if(buffer->height != height)
+    }
+    if(buffer->height != height) {
+        win->needAllocate = true;
         buffer->height = height;
+    }
 
     if(buffer->wl_buffer && buffer->size == size)
         // No buffer resize needed.

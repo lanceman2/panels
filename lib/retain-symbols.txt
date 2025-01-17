@@ -2,9 +2,11 @@ pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
 pnWindow_create
 pnWindow_destroy
+pnWindow_queueDraw
 pnWindow_show
 pnWindow_setCBDestroy
 pnWidget_create
 pnWidget_show
 pnWidget_destroy
 pnSurface_setBackgroundColor
+pnWidget_queueDraw

@@ -121,12 +121,14 @@ PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
 PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
         void (*destroy)(struct PnWindow *window, void *userData),
         void *userData);
+PN_EXPORT void pnWindow_queueDraw(struct PnWindow *window);
 
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnSurface *parent,
         uint32_t width, uint32_t height,
         enum PnGravity gravity, enum PnGreed greed);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
+PN_EXPORT void pnWidget_queueDraw(struct PnWidget *widget);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
 
 
