@@ -7,7 +7,7 @@
 int main(void) {
 
     struct PnWindow *win = pnWindow_create(0, 40, 40,
-            0/*x*/, 0/*y*/, PnGravity_LR/*gravity*/);
+            0/*x*/, 0/*y*/, PnGravity_TB/*gravity*/);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create((struct PnSurface *) win/*parent*/,
@@ -23,8 +23,8 @@ int main(void) {
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
 
     struct PnWidget *cw = pnWidget_create((struct PnSurface *) win/*parent*/,
-            10/*width*/, 10/*height*/,
-            PnGravity_TB/*gravity*/, 0/*greed*/);
+            40/*width*/, 40/*height*/,
+            PnGravity_RL/*gravity*/, 0/*greed*/);
     ASSERT(cw);
     pnWidget_setBackgroundColor(cw, 0xCC0000CF);
 

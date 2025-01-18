@@ -97,6 +97,20 @@ enum PnGreed {
 };
 
 
+// Widget container attribute Align:
+//
+// If there is extra space for a widget that will not be filled, we
+// align (float) the widget into position.
+enum PnAlign {
+
+    PnAlign_L = 0, // Left (default horizontal)
+    PnAlign_R = 1, // Right
+    PnAlign_C = 2, // Center for both horizontal and vertical
+    PnAlign_T = 0, // Top (default vertical)
+    PnAlign_B = 1  // Bottom
+};
+
+
 struct PnWindow;
 struct PnWidget;
 // both PnWindow and PnWidget are PnSurface
