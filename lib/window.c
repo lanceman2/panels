@@ -10,14 +10,13 @@
 #include "../include/panels.h"
 #include "debug.h"
 #include  "display.h"
-#include "../include/panels_drawingUtils.h"
 
 
 // We need to make it clear that this is a draw (render) caused by a
 // wayland compositor configure event.  So, it was not caused by the API
 // users code telling us to draw (queue a draw on a surface).
 //
-static inline void ConfigureRender(struct PnWindow *win) {
+static inline void DrawAll(struct PnWindow *win) {
 
     DASSERT(win);
     DASSERT(win->wl_surface);
@@ -39,10 +38,7 @@ static inline void ConfigureRender(struct PnWindow *win) {
     DASSERT(win->surface.allocation.width == buffer->width);
     DASSERT(win->surface.allocation.height == buffer->height);
 
-    pn_drawFilledRectangle(buffer->pixels/*surface starting pixel*/,
-        0/*x*/, 0/*y*/, buffer->width, buffer->height,
-        buffer->width * PN_PIXEL_SIZE/*stride*/,
-        win->surface.backgroundColor /*color in ARGB*/);
+    pnSurface_draw(&win->surface, buffer);
 
     wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
 
@@ -66,7 +62,7 @@ static void configure(struct PnWindow *win,
 
     xdg_surface_ack_configure(win->xdg_surface, serial);
 
-    ConfigureRender(win);
+    DrawAll(win);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
@@ -153,6 +149,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
+    win->needAllocate = true;
 
     win->surface.gravity = gravity;
     win->surface.borderWidth = PN_BORDER_WIDTH;
@@ -230,6 +227,9 @@ void pnWindow_show(struct PnWindow *win, bool show) {
         return;
 
     win->surface.showing = show;
+
+    if(win->needAllocate)
+        GetWidgetAllocations(win);
 
     if(show && !win->buffer[0].wl_buffer)
         // This is the first surface commit.

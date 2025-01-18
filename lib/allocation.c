@@ -21,6 +21,7 @@ void AddRequestedSizes(struct PnSurface *s) {
     //
     s->allocation.width = 0;
     s->allocation.height = 0;
+WARN("s->firstChild=%p", s->firstChild);
 
     bool gotOne = false;
 
@@ -70,8 +71,10 @@ void AddRequestedSizes(struct PnSurface *s) {
     // Add the last border or first size if no children.
     s->allocation.width += s->width;
     s->allocation.height += s->height;
+INFO("s->allocation.width=%" PRIu32, s->allocation.width);
 }
 
+#if 0
 static inline
 void GrowWidth(struct PnSurface *s, uint32_t width) {
 
@@ -103,14 +106,185 @@ void ShrinkHeight(struct PnSurface *s, uint32_t height) {
 
 WARN("MORE CODE HERE");
 }
+#endif
 
 
-static inline
-void GetXY(struct PnSurface *s) {
-WARN("MORE CODE HERE");
+// Set the value of the surface, s, allocation, a.x, a.y.
+//
+// The parent, p, allocation, pa, is set up already, and so is the
+// "adjacent sibling" allocation in a sibling direction given by the
+// packing gravity of the parent.  So it could be the nextSibling or the
+// prevSibling is set up.  It depends on the packing gravity of the
+// parent.  We set the lesser x and y values first.
+//
+static inline void GetX(struct PnSurface *s, struct PnAllocation *a,
+        /*p is parent*/ /*pa is parent allocation is set up*/
+        struct PnSurface *p, struct PnAllocation *pa) {
 
+    DASSERT(s);
+    DASSERT(a);
+    DASSERT(p);
+    DASSERT(pa);
+    DASSERT(pa->width);
+    DASSERT(pa->height);
+    DASSERT(s->parent == p);
+
+    // widget allocation coordinates, x and y, are all relative to the
+    // window.
+
+    switch(p->gravity) {
+
+        case PnGravity_BT:
+        case PnGravity_TB: 
+        case PnGravity_One:
+NOTICE();
+            a->x = pa->x + p->width;
+            break;
+
+        case PnGravity_LR:
+            if(s->prevSibling)
+                a->x = s->prevSibling->allocation.x +
+                    s->prevSibling->allocation.width +
+                    p->width;
+            else
+                a->x = pa->x + p->width;
+            break;
+
+        case PnGravity_RL:
+            if(s->nextSibling)
+                a->x = s->nextSibling->allocation.x +
+                    s->nextSibling->allocation.width +
+                    p->width;
+            else
+                a->x = pa->x + p->width;
+            break;
+
+        case PnGravity_Callback:
+            ASSERT(0, "WRITE MORE CODE HERE");
+            break;
+        case PnGravity_None:
+            ASSERT(0, "NOT GOOD CODE");
+            break;
+    }
+
+    WARN("parent=%p parent->gravity=%d a->x=%" PRIu32, p, p->gravity, a->x);
 }
 
+static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
+        /*p is parent*/ /*pa is parent allocation is set up*/
+        struct PnSurface *p, struct PnAllocation *pa) {
+
+    DASSERT(s);
+    DASSERT(a);
+    DASSERT(p);
+    DASSERT(pa);
+    DASSERT(pa->width);
+    DASSERT(pa->height);
+    DASSERT(s->parent == p);
+
+    // widget allocation coordinates are all relative to the window.
+
+    switch(p->gravity) {
+
+        case PnGravity_LR:
+        case PnGravity_RL:
+        case PnGravity_One:
+            a->y = pa->y + p->height;
+            break;
+
+        case PnGravity_TB:
+            if(s->prevSibling)
+                a->y = s->prevSibling->allocation.y +
+                    s->prevSibling->allocation.height +
+                    p->height;
+            else
+                a->y = pa->y + p->height;
+            break;
+
+        case PnGravity_BT:
+            if(s->nextSibling)
+                a->y = s->nextSibling->allocation.y +
+                    s->nextSibling->allocation.height +
+                    p->height;
+            else
+                a->y = pa->y + p->height;
+            break;
+
+        case PnGravity_Callback:
+            ASSERT(0, "WRITE MORE CODE HERE");
+            break;
+        case PnGravity_None:
+            ASSERT(0, "NOT GOOD CODE");
+            break;
+    }
+
+    ERROR("a->y=%" PRIu32, a->y);
+}
+
+static
+void GetChildrenX(struct PnSurface *s, struct PnAllocation *a) {
+
+    if(s->parent)
+        GetX(s, a, s->parent, &s->parent->allocation);
+
+    if(!s->firstChild) {
+        DASSERT(!s->lastChild);
+        return;
+    }
+
+    switch(s->gravity) {
+
+        case PnGravity_One:
+        case PnGravity_LR:
+        case PnGravity_BT:
+        case PnGravity_TB:
+            for(struct PnSurface *c = s->firstChild; c;
+                    c = c->nextSibling)
+                GetChildrenX(c, &c->allocation);
+            break;
+
+        case PnGravity_RL:
+            for(struct PnSurface *c = s->lastChild; c;
+                    c = c->prevSibling)
+                GetChildrenX(c, &c->allocation);
+            break;
+
+        case PnGravity_None:
+        default:
+            ASSERT(0);
+            break;
+    }
+}
+
+static
+void GetChildrenY(struct PnSurface *s, struct PnAllocation *a) {
+
+    if(s->parent)
+        GetY(s, a, s->parent, &s->parent->allocation);
+
+    switch(s->gravity) {
+
+        case PnGravity_One:
+        case PnGravity_LR:
+        case PnGravity_RL:
+        case PnGravity_TB:
+            for(struct PnSurface *c = s->firstChild; c;
+                    c = c->nextSibling)
+                GetChildrenY(c, &c->allocation);
+            break;
+
+        case PnGravity_BT:
+            for(struct PnSurface *c = s->lastChild; c;
+                    c = c->prevSibling)
+                GetChildrenY(c, &c->allocation);
+            break;
+
+        case PnGravity_None:
+        default:
+            ASSERT(0);
+            break;
+    }
+}
 
 // Get the positions and sizes of all the widgets in the window.
 //
@@ -119,7 +293,9 @@ void GetWidgetAllocations(struct PnWindow *win) {
     DASSERT(win);
     DASSERT(win->surface.type == PnSurfaceType_toplevel ||
             win->surface.type == PnSurfaceType_popup);
-WARN();
+    DASSERT(!win->surface.allocation.x);
+    DASSERT(!win->surface.allocation.y);
+
 
     if(!win->surface.firstChild) return;
 
@@ -129,11 +305,14 @@ WARN();
     // win->surface.allocation.width and win->surface.allocation.height
     // have been set at this time.
 
+#if 0
     uint32_t width = win->surface.allocation.width;
     uint32_t height = win->surface.allocation.height;
+#endif
 
     AddRequestedSizes(&win->surface);
 
+#if 0
     if(width > win->surface.allocation.width)
         GrowWidth(&win->surface, width);
     else if(width < win->surface.allocation.width)
@@ -143,9 +322,21 @@ WARN();
         GrowHeight(&win->surface, height);
     else if(height < win->surface.allocation.height)
         ShrinkHeight(&win->surface, height);
+#endif
 
-    // Get x and y positions:
-    GetXY(&win->surface);
+    WARN();
+
+    DASSERT(!win->surface.allocation.x);
+    DASSERT(!win->surface.allocation.y);
+
+    // Get children x and y positions:
+    if(win->surface.lastChild) {
+        DASSERT(win->surface.firstChild->parent == &win->surface);
+        DASSERT(win->surface.lastChild->parent == &win->surface);
+        DASSERT(!win->surface.parent);
+        GetChildrenX(&win->surface, &win->surface.allocation);
+        GetChildrenY(&win->surface, &win->surface.allocation);
+    }
 
     win->needAllocate = false;
 }

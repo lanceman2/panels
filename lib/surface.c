@@ -11,6 +11,8 @@
 #include "debug.h"
 #include  "display.h"
 
+#include "../include/panels_drawingUtils.h"
+
 
 void GetSurfaceDamageFunction(struct PnWindow *win) {
 
@@ -127,6 +129,37 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
 }
 
 
+// This function calls itself.
+//
+void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
+
+    if(!s->draw) {
+
+INFO("x,y,w,h=%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32,
+        s->allocation.x, s->allocation.y, 
+        s->allocation.width, s->allocation.height);
+
+        pn_drawFilledRectangle(buffer->pixels,
+                s->allocation.x, s->allocation.y, 
+                s->allocation.width, s->allocation.height,
+                buffer->stride,
+                s->backgroundColor /*color in ARGB*/);
+    } else {
+
+        s->draw(s,
+                buffer->pixels + s->allocation.y * buffer->stride +
+                s->allocation.x * PN_PIXEL_SIZE,
+                s->allocation.width, s->allocation.height,
+                buffer->stride, s->user_data);
+    }
+
+    // Now draw children (widgets).
+    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
+        pnSurface_draw(c, buffer);
+}
+
+
+
 // Return false on success.
 //
 bool InitSurface(struct PnSurface *s) {
@@ -161,3 +194,5 @@ void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor) {
     s->backgroundColor = argbColor;
 }
+
+

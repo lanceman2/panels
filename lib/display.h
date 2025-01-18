@@ -59,6 +59,8 @@ enum PnSurfaceType {
 
 struct PnAllocation {
 
+    // These x, y values are measured relative to the window, NOT parent
+    // widgets.
     uint32_t x, y, width, height;
 };
 
@@ -73,10 +75,11 @@ struct PnSurface {
     //
     // width and height are CONSTANT after they are first set!!!
     //
-    // For containers width is left and right border width, and height is
-    // top and bottom border thickness.  A container with no children will
-    // have width and height.  In this sense the container owns the pixels
-    // of the border, so it draws them before the children are drawn.
+    // For container windows and widgets width is left and right border
+    // width, and height is top and bottom border thickness.  A container
+    // with no children will have width and height.  In this sense the
+    // container owns the pixels of the border, so it draws them before
+    // the children are drawn.
     const uint32_t width, height;
 
     // What they really get for surface size:
@@ -116,6 +119,10 @@ struct PnSurface {
     // are showing after pnWidget_create(), but they cannot
     // really 
     bool showing;
+
+    // culled is set to true if the top window surface is not large
+    // enough to show this surface.
+    bool culled;
 };
 
 
@@ -140,7 +147,7 @@ struct PnBuffer {
 
     size_t size; // total bytes of mapped shared memory file
 
-    uint32_t width, height;
+    uint32_t width, height, stride;
 
     // pixels is a pointer to the share memory pixel data from mmap(2).
     uint32_t *pixels;
@@ -193,7 +200,7 @@ struct PnWindow {
 
 
     bool needAllocate; // need to recompute all widget allocations
-    bool needDraw;
+    //bool needDraw;
 };
 
 
@@ -284,4 +291,7 @@ extern bool InitSurface(struct PnSurface *s);
 extern void DestroySurface(struct PnSurface *s);
 
 extern void GetWidgetAllocations(struct PnWindow *win);
+
+extern void pnSurface_draw(struct PnSurface *s,
+        struct PnBuffer *buffer);
 

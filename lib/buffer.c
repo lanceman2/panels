@@ -183,6 +183,7 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     if(buffer->width != width) {
         win->needAllocate = true;
         buffer->width = width;
+        buffer->stride = width * PN_PIXEL_SIZE;
     }
     if(buffer->height != height) {
         win->needAllocate = true;

@@ -6,21 +6,42 @@
 
 int main(void) {
 
-    struct PnWindow *win = pnWindow_create(0, 10, 30,
-            0/*x*/, 0/*y*/, 0/*gravity*/);
+    struct PnWindow *win = pnWindow_create(0, 40, 40,
+            0/*x*/, 0/*y*/, PnGravity_LR/*gravity*/);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create((struct PnSurface *) win/*parent*/,
-            100/*width*/, 200/*height*/,
-            0/*gravity*/, 0/*greed*/);
-    ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xFAA99999);
-
-    w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 100/*height*/,
             0/*gravity*/, 0/*greed*/);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xFAA99999);
+    pnWidget_setBackgroundColor(w, 0xCCCF0000);
+
+    w = pnWidget_create((struct PnSurface *) win/*parent*/,
+            100/*width*/, 300/*height*/,
+            0/*gravity*/, 0/*greed*/);
+    ASSERT(w);
+    pnWidget_setBackgroundColor(w, 0xCC00CF00);
+
+    struct PnWidget *cw = pnWidget_create((struct PnSurface *) win/*parent*/,
+            10/*width*/, 10/*height*/,
+            PnGravity_TB/*gravity*/, 0/*greed*/);
+    ASSERT(cw);
+    pnWidget_setBackgroundColor(cw, 0xCC0000CF);
+
+    {
+        w = pnWidget_create((struct PnSurface *) cw/*parent*/,
+            130/*width*/, 100/*height*/,
+            0/*gravity*/, 0/*greed*/);
+        ASSERT(w);
+        pnWidget_setBackgroundColor(w, 0xCCCF0000);
+
+        w = pnWidget_create((struct PnSurface *) cw/*parent*/,
+            100/*width*/, 100/*height*/,
+            0/*gravity*/, 0/*greed*/);
+        ASSERT(w);
+        pnWidget_setBackgroundColor(w, 0xCC00CF00);
+    }
+
 
     pnWindow_show(win, true);
 

@@ -39,10 +39,15 @@ struct PnWidget *pnWidget_create(
     ASSERT(widget, "calloc(1,%zu) failed", sizeof(*widget));
 
     widget->surface.parent = parent;
+    widget->surface.gravity = gravity;
     widget->surface.type = PnSurfaceType_widget;
     // Not like GTK; we default to widgets showing; but the window
     // default to not showing after pnWindow_create().
     widget->surface.showing = true;
+
+    // This is how we C casting to change const variables:
+    *((uint32_t *) &widget->surface.width) = w;
+    *((uint32_t *) &widget->surface.height) = h;
 
     if(InitSurface((void *) widget))
         goto fail;
@@ -62,11 +67,13 @@ void pnWidget_destroy(struct PnWidget *widget) {
     DASSERT(widget->surface.parent);
     ASSERT(widget->surface.type == PnSurfaceType_widget);
 
+    while(widget->surface.firstChild)
+        pnWidget_destroy((void *) widget->surface.firstChild);
+
     DestroySurface((void *) widget);
 
     DZMEM(widget, sizeof(*widget));
     free(widget);
-DSPEW();
 }
 
 void pnWidget_show(struct PnWidget *widget, bool show) {

@@ -66,10 +66,10 @@ enum PnGravity {
     PnGravity_RL = 1,  // child widgets float/align right to left
 
     // Vertically column aligning child widgets
+    PnGravity_TB = 2, // child widgets float/align top to bottom
     // PnGravity_BT is like real world gravity pulling down where the
     // starting widget gets squished on the bottom.
-    PnGravity_BT = 2, // child widgets float/align bottom to top
-    PnGravity_TB = 3, // child widgets float/align top to bottom
+    PnGravity_BT = 3, // child widgets float/align bottom to top
 
     // We could use this gravity to make a grid, a notebook, or other
     // container packing method.
