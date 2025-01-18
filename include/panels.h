@@ -104,7 +104,7 @@ enum PnExpand {
 };
 
 
-// Container  widget attribute Align:
+// Container widget attribute Align:
 //
 // If there is extra space for a widget that will not be filled, we
 // align (float) the widget into position.

@@ -217,6 +217,70 @@ static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
     }
 }
 
+
+static
+void ExpandChildrenX(struct PnSurface *s, struct PnAllocation *a) {
+
+
+    switch(s->direction) {
+
+        case PnDirection_One:
+        case PnDirection_LR:
+        case PnDirection_BT:
+        case PnDirection_TB:
+            for(struct PnSurface *c = s->firstChild; c;
+                    c = c->nextSibling);
+            break;
+
+        case PnDirection_RL:
+            for(struct PnSurface *c = s->lastChild; c;
+                    c = c->prevSibling);
+            break;
+
+        case PnDirection_None:
+        default:
+            ASSERT(0);
+            break;
+    }
+}
+
+static
+void ExpandChildrenY(struct PnSurface *s, struct PnAllocation *a) {
+}
+
+
+// Move widget position without changing its size.
+//
+static
+void AlignChildrenX(struct PnSurface *s, struct PnAllocation *a) {
+
+
+    switch(s->direction) {
+
+        case PnDirection_One:
+        case PnDirection_LR:
+        case PnDirection_BT:
+        case PnDirection_TB:
+            for(struct PnSurface *c = s->firstChild; c;
+                    c = c->nextSibling);
+            break;
+
+        case PnDirection_RL:
+            for(struct PnSurface *c = s->lastChild; c;
+                    c = c->prevSibling);
+            break;
+
+        case PnDirection_None:
+        default:
+            ASSERT(0);
+            break;
+    }
+}
+
+static
+void AlignChildrenY(struct PnSurface *s, struct PnAllocation *a) {
+}
+
 static
 void GetChildrenX(struct PnSurface *s, struct PnAllocation *a) {
 
@@ -326,8 +390,15 @@ void GetWidgetAllocations(struct PnWindow *win) {
         DASSERT(win->surface.firstChild->parent == &win->surface);
         DASSERT(win->surface.lastChild->parent == &win->surface);
         DASSERT(!win->surface.parent);
+
         GetChildrenX(&win->surface, &win->surface.allocation);
         GetChildrenY(&win->surface, &win->surface.allocation);
+
+        ExpandChildrenX(&win->surface, &win->surface.allocation);
+        ExpandChildrenY(&win->surface, &win->surface.allocation);
+
+        AlignChildrenX(&win->surface, &win->surface.allocation);
+        AlignChildrenY(&win->surface, &win->surface.allocation);
     }
 
     win->needAllocate = false;
