@@ -135,9 +135,11 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
     if(!s->draw) {
 
+#if 0
 INFO("x,y,w,h=%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32,
         s->allocation.x, s->allocation.y, 
         s->allocation.width, s->allocation.height);
+#endif
 
         pn_drawFilledRectangle(buffer->pixels,
                 s->allocation.x, s->allocation.y, 

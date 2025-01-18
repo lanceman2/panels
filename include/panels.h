@@ -18,7 +18,14 @@ extern "C" {
 #define PN_BORDER_WIDTH   (6) // default border pixels wide
 #define PN_WINDOW_BGCOLOR (0x09999900)
 
-// Child widget packing gravity (for lack of a better word)
+
+// We make default enumeration values be 0.  That saves a ton of
+// development time.
+
+
+// Child widget direction packing order
+//
+// Container widget attribute PnDirection.
 //
 // Is there a "field/branch" in mathematics that we can know that will
 // give use a more optimal way to parametrise widget rectangle packing?
@@ -27,30 +34,31 @@ extern "C" {
 //
 // Studying the behavior of gvim (the program) with changing multiple edit
 // views is very helpful in studying widget containerization.  Like for
-// example how it splits a edit wiew.  And, what happens when a view is
+// example how it splits a edit view.  And, what happens when a view is
 // removed from in between views.  And, what happens when a view (widget)
 // border is moved when there are a lot of views in a large grid of views.
 //
-// As in general relativity, gravity defines how space is distributed
-// among its massive pieces.
+// Like text flow direction.  Example: in English words of on the page
+// from left to right, the first word read is on the left.
 //
-// A better term might be "alignment", in place of "gravity".
-// Or how about "direction".
+// Packing order direction: example PnDirection_RL means the first added
+// goes to the right side, second added goes next to the first just to the
+// left of the first.
 //
-enum PnGravity {
+enum PnDirection {
 
-    // PnGravity is a attribute of a widget container (surface), be it a
+    // PnDirection is a attribute of a widget container (surface), be it a
     // widget or window.
 
-    // PnGravity_None and PnGravity_One just add failure modes for when
+    // PnDirection_None and PnDirection_One just add failure modes for when
     // the user adds extra children.
 
     // no gravity to hold widgets.  Cannot have any children.
-    PnGravity_None = -2, // For non-container widgets or windows
+    PnDirection_None = -2, // For non-container widgets or windows
 
     // The container surface can only have zero or one widget, so it puts
     // the child widget where ever it wants to on its surface.
-    PnGravity_One = -1,
+    PnDirection_One = -1,
 
     // Windows (and widgets) with all the below gravities can have zero
     // or more children.
@@ -59,55 +67,58 @@ enum PnGravity {
     //
     // Horizontally row aligning child widgets:
     //
-    // We use 0 so that PnGravity_LR is the default; it certainly made
+    // We use 0 so that PnDirection_LR is the default; it certainly made
     // writing test code easier.
     //
-    PnGravity_LR = 0, // child widgets float/align left to right
-    PnGravity_RL = 1,  // child widgets float/align right to left
+    PnDirection_LR = 0, // child widgets assemble from left to right
+    PnDirection_RL = 1, // child widgets assemble from right to left
 
-    // Vertically column aligning child widgets
-    PnGravity_TB = 2, // child widgets float/align top to bottom
-    // PnGravity_BT is like real world gravity pulling down where the
+    // Vertically column aligning child widgets:
+    //
+    PnDirection_TB = 2, // child widgets assemble top to bottom
+    //
+    // PnDirection_BT is like real world gravity pulling down where the
     // starting widget gets squished on the bottom.
-    PnGravity_BT = 3, // child widgets float/align bottom to top
+    PnDirection_BT = 3, // child widgets assemble bottom to top
 
-    // We could use this gravity to make a grid, a notebook, or other
+    // We could use this direction to make a grid, a notebook, or other
     // container packing method.
-    PnGravity_Callback // The window or widget will define its own packing.
+    PnDirection_Callback // The window or widget will define its own packing.
 };
 
 
-// Widgets can be greedy for different kinds of space.
-// The greedy widget will take the space it can get, but it has
-// to share that space with other sibling greedy widgets.
+// Expansiveness (space greed) is an attribute of a widget and not the
+// container it is in.  Hence, expansiveness (expand) is not an attribute
+// of a window since windows are never contained (in this API).
 //
-// Q: If not, and no children in the tree are greedy in X (or Y too), then
-// does that mean that the window will not be expandable in the X (Y)
-// direction?  I'm thinking the answer is no; but there may be a need to
-// have the idea of a windows natural (X and Y) size for this case (a
-// TODO).
+// Sibling widgets (widgets in the same container) that can expand share
+// the extra space.
 //
-enum PnGreed {
+enum PnExpand {
     // H Horizontal first bit, V Vertical second bit
-    PnGreed_None = 00, // The widget is not greedy for any space
-    PnGreed_H    = 01, // The widget is greedy for Horizontal space
-    PnGreed_V    = 02, // The widget is greedy for Vertical space
-    PnGreed_HV   = (01 & 02), // The widget is greedy for all 2D space
-    PnGreed_VH   = (01 & 02)  // The widget is greedy for all 2D space
+    PnExpand_None = 00, // The widget is not greedy for any space
+    PnExpand_H    = 01, // The widget is greedy for Horizontal space
+    PnExpand_V    = 02, // The widget is greedy for Vertical space
+    PnExpand_HV   = (01 & 02), // The widget is greedy for all 2D space
+    PnExpand_VH   = (01 & 02)  // The widget is greedy for all 2D space
 };
 
 
-// Widget container attribute Align:
+// Container  widget attribute Align:
 //
 // If there is extra space for a widget that will not be filled, we
 // align (float) the widget into position.
+//
+// If any of the widgets in the container can expand, than the Align
+// value of the container is not considered.
 enum PnAlign {
 
     PnAlign_L = 0, // Left (default horizontal)
     PnAlign_R = 1, // Right
     PnAlign_C = 2, // Center for both horizontal and vertical
     PnAlign_T = 0, // Top (default vertical)
-    PnAlign_B = 1  // Bottom
+    PnAlign_B = 1, // Bottom
+    PnAlign_J = 3  // Justified
 };
 
 
@@ -128,7 +139,8 @@ PN_EXPORT struct PnWindow *pnWindow_create(
          * top/bottom border thickness. */
         uint32_t width, uint32_t height,
         int32_t x, int32_t y,
-        enum PnGravity gravity);
+        enum PnDirection direction,
+        enum PnAlign align);
 
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
 PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
@@ -140,7 +152,9 @@ PN_EXPORT void pnWindow_queueDraw(struct PnWindow *window);
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnSurface *parent,
         uint32_t width, uint32_t height,
-        enum PnGravity gravity, enum PnGreed greed);
+        enum PnDirection direction,
+        enum PnAlign align,
+        enum PnExpand expand);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_queueDraw(struct PnWidget *widget);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);

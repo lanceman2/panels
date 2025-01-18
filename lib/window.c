@@ -110,11 +110,11 @@ static inline void RemoveWindow(struct PnWindow *win,
 
 struct PnWindow *pnWindow_create(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
-        enum PnGravity gravity) {
+        enum PnDirection direction, enum PnAlign align) {
 
-    DASSERT(gravity != PnGravity_None || (w && h));
+    DASSERT(direction != PnDirection_None || (w && h));
 
-    if(gravity == PnGravity_None && !(w && h)) {
+    if(direction == PnDirection_None && !(w && h)) {
         ERROR("A window with no child widgets must have non-zero "
                 "width and height, w,h=%" PRIu32 ",%" PRIu32,
                 w, h);
@@ -151,7 +151,8 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->buffer[1].fd = -1;
     win->needAllocate = true;
 
-    win->surface.gravity = gravity;
+    win->surface.direction = direction;
+    win->surface.align = align;
     win->surface.borderWidth = PN_BORDER_WIDTH;
     win->surface.backgroundColor = PN_WINDOW_BGCOLOR;
     InitSurface(&win->surface);

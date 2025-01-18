@@ -113,7 +113,8 @@ struct PnSurface {
     uint32_t borderWidth;
     uint32_t backgroundColor;
 
-    enum PnGravity gravity;
+    enum PnDirection direction;
+    enum PnAlign align;
 
     // Windows are not showing after pnWindow_create(). Widgets
     // are showing after pnWidget_create(), but they cannot

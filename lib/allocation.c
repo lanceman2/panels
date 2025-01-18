@@ -21,23 +21,22 @@ void AddRequestedSizes(struct PnSurface *s) {
     //
     s->allocation.width = 0;
     s->allocation.height = 0;
-WARN("s->firstChild=%p", s->firstChild);
 
     bool gotOne = false;
 
-    switch(s->gravity) {
-        case PnGravity_None:
+    switch(s->direction) {
+        case PnDirection_None:
             DASSERT(!s->firstChild);
             break;
-        case PnGravity_One:
+        case PnDirection_One:
             DASSERT((!s->firstChild && !s->lastChild)
                     || s->firstChild == s->lastChild);
             if(!s->firstChild || !s->firstChild->showing)
                 break;
-            // Same as PnGravity_LR and PnGravity_RL but with one in child
+            // Same as PnDirection_LR and PnDirection_RL but with one in child
             // list.
-        case PnGravity_LR:
-        case PnGravity_RL:
+        case PnDirection_LR:
+        case PnDirection_RL:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
                 if(!c->showing) continue;
@@ -50,8 +49,8 @@ WARN("s->firstChild=%p", s->firstChild);
             if(gotOne)
                 s->allocation.height += s->height;
             break;
-        case PnGravity_BT:
-        case PnGravity_TB:
+        case PnDirection_BT:
+        case PnDirection_TB:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
                 if(!c->showing) continue;
@@ -71,14 +70,14 @@ WARN("s->firstChild=%p", s->firstChild);
     // Add the last border or first size if no children.
     s->allocation.width += s->width;
     s->allocation.height += s->height;
-INFO("s->allocation.width=%" PRIu32, s->allocation.width);
+//INFO("s->allocation.width=%" PRIu32, s->allocation.width);
 }
 
-#if 0
+
 static inline
 void GrowWidth(struct PnSurface *s, uint32_t width) {
 
-    s->allocation.width = width;
+    //s->allocation.width = width;
 
 WARN("MORE CODE HERE");
 }
@@ -86,11 +85,13 @@ WARN("MORE CODE HERE");
 static inline
 void ShrinkWidth(struct PnSurface *s, uint32_t width) {
 
-    s->allocation.width = width;
+    //s->allocation.width = width;
 
 WARN("MORE CODE HERE");
 }
 
+
+#if 0
 static inline
 void GrowHeight(struct PnSurface *s, uint32_t height) {
 
@@ -113,8 +114,8 @@ WARN("MORE CODE HERE");
 //
 // The parent, p, allocation, pa, is set up already, and so is the
 // "adjacent sibling" allocation in a sibling direction given by the
-// packing gravity of the parent.  So it could be the nextSibling or the
-// prevSibling is set up.  It depends on the packing gravity of the
+// packing direction of the parent.  So it could be the nextSibling or the
+// prevSibling is set up.  It depends on the packing direction of the
 // parent.  We set the lesser x and y values first.
 //
 static inline void GetX(struct PnSurface *s, struct PnAllocation *a,
@@ -132,16 +133,15 @@ static inline void GetX(struct PnSurface *s, struct PnAllocation *a,
     // widget allocation coordinates, x and y, are all relative to the
     // window.
 
-    switch(p->gravity) {
+    switch(p->direction) {
 
-        case PnGravity_BT:
-        case PnGravity_TB: 
-        case PnGravity_One:
-NOTICE();
+        case PnDirection_BT:
+        case PnDirection_TB: 
+        case PnDirection_One:
             a->x = pa->x + p->width;
             break;
 
-        case PnGravity_LR:
+        case PnDirection_LR:
             if(s->prevSibling)
                 a->x = s->prevSibling->allocation.x +
                     s->prevSibling->allocation.width +
@@ -150,7 +150,7 @@ NOTICE();
                 a->x = pa->x + p->width;
             break;
 
-        case PnGravity_RL:
+        case PnDirection_RL:
             if(s->nextSibling)
                 a->x = s->nextSibling->allocation.x +
                     s->nextSibling->allocation.width +
@@ -159,15 +159,13 @@ NOTICE();
                 a->x = pa->x + p->width;
             break;
 
-        case PnGravity_Callback:
+        case PnDirection_Callback:
             ASSERT(0, "WRITE MORE CODE HERE");
             break;
-        case PnGravity_None:
+        case PnDirection_None:
             ASSERT(0, "NOT GOOD CODE");
             break;
     }
-
-    WARN("parent=%p parent->gravity=%d a->x=%" PRIu32, p, p->gravity, a->x);
 }
 
 static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
@@ -184,15 +182,15 @@ static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
 
     // widget allocation coordinates are all relative to the window.
 
-    switch(p->gravity) {
+    switch(p->direction) {
 
-        case PnGravity_LR:
-        case PnGravity_RL:
-        case PnGravity_One:
+        case PnDirection_LR:
+        case PnDirection_RL:
+        case PnDirection_One:
             a->y = pa->y + p->height;
             break;
 
-        case PnGravity_TB:
+        case PnDirection_TB:
             if(s->prevSibling)
                 a->y = s->prevSibling->allocation.y +
                     s->prevSibling->allocation.height +
@@ -201,7 +199,7 @@ static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
                 a->y = pa->y + p->height;
             break;
 
-        case PnGravity_BT:
+        case PnDirection_BT:
             if(s->nextSibling)
                 a->y = s->nextSibling->allocation.y +
                     s->nextSibling->allocation.height +
@@ -210,15 +208,13 @@ static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
                 a->y = pa->y + p->height;
             break;
 
-        case PnGravity_Callback:
+        case PnDirection_Callback:
             ASSERT(0, "WRITE MORE CODE HERE");
             break;
-        case PnGravity_None:
+        case PnDirection_None:
             ASSERT(0, "NOT GOOD CODE");
             break;
     }
-
-    ERROR("a->y=%" PRIu32, a->y);
 }
 
 static
@@ -232,24 +228,24 @@ void GetChildrenX(struct PnSurface *s, struct PnAllocation *a) {
         return;
     }
 
-    switch(s->gravity) {
+    switch(s->direction) {
 
-        case PnGravity_One:
-        case PnGravity_LR:
-        case PnGravity_BT:
-        case PnGravity_TB:
+        case PnDirection_One:
+        case PnDirection_LR:
+        case PnDirection_BT:
+        case PnDirection_TB:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling)
                 GetChildrenX(c, &c->allocation);
             break;
 
-        case PnGravity_RL:
+        case PnDirection_RL:
             for(struct PnSurface *c = s->lastChild; c;
                     c = c->prevSibling)
                 GetChildrenX(c, &c->allocation);
             break;
 
-        case PnGravity_None:
+        case PnDirection_None:
         default:
             ASSERT(0);
             break;
@@ -262,24 +258,24 @@ void GetChildrenY(struct PnSurface *s, struct PnAllocation *a) {
     if(s->parent)
         GetY(s, a, s->parent, &s->parent->allocation);
 
-    switch(s->gravity) {
+    switch(s->direction) {
 
-        case PnGravity_One:
-        case PnGravity_LR:
-        case PnGravity_RL:
-        case PnGravity_TB:
+        case PnDirection_One:
+        case PnDirection_LR:
+        case PnDirection_RL:
+        case PnDirection_TB:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling)
                 GetChildrenY(c, &c->allocation);
             break;
 
-        case PnGravity_BT:
+        case PnDirection_BT:
             for(struct PnSurface *c = s->lastChild; c;
                     c = c->prevSibling)
                 GetChildrenY(c, &c->allocation);
             break;
 
-        case PnGravity_None:
+        case PnDirection_None:
         default:
             ASSERT(0);
             break;
@@ -305,26 +301,22 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // win->surface.allocation.width and win->surface.allocation.height
     // have been set at this time.
 
-#if 0
     uint32_t width = win->surface.allocation.width;
-    uint32_t height = win->surface.allocation.height;
-#endif
+    //uint32_t height = win->surface.allocation.height;
 
     AddRequestedSizes(&win->surface);
 
-#if 0
     if(width > win->surface.allocation.width)
         GrowWidth(&win->surface, width);
     else if(width < win->surface.allocation.width)
         ShrinkWidth(&win->surface, width);
 
+#if 0
     if(height > win->surface.allocation.height)
         GrowHeight(&win->surface, height);
     else if(height < win->surface.allocation.height)
         ShrinkHeight(&win->surface, height);
 #endif
-
-    WARN();
 
     DASSERT(!win->surface.allocation.x);
     DASSERT(!win->surface.allocation.y);
