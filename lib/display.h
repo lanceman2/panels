@@ -115,6 +115,7 @@ struct PnSurface {
 
     enum PnDirection direction;
     enum PnAlign align;
+    enum PnExpand expand;
 
     // Windows are not showing after pnWindow_create(). Widgets
     // are showing after pnWidget_create(), but they cannot

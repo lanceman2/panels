@@ -229,8 +229,6 @@ void pnWindow_show(struct PnWindow *win, bool show) {
 
     win->surface.showing = show;
 
-    if(win->needAllocate)
-        GetWidgetAllocations(win);
 
     if(show && !win->buffer[0].wl_buffer)
         // This is the first surface commit.

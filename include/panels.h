@@ -99,8 +99,8 @@ enum PnExpand {
     PnExpand_None = 00, // The widget is not greedy for any space
     PnExpand_H    = 01, // The widget is greedy for Horizontal space
     PnExpand_V    = 02, // The widget is greedy for Vertical space
-    PnExpand_HV   = (01 & 02), // The widget is greedy for all 2D space
-    PnExpand_VH   = (01 & 02)  // The widget is greedy for all 2D space
+    PnExpand_HV   = (01 | 02), // The widget is greedy for all 2D space
+    PnExpand_VH   = (01 | 02)  // The widget is greedy for all 2D space
 };
 
 

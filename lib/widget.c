@@ -41,6 +41,7 @@ struct PnWidget *pnWidget_create(
     widget->surface.parent = parent;
     widget->surface.direction = direction;
     widget->surface.align = align;
+    widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;
     // Not like GTK; we default to widgets showing; but the window
     // default to not showing after pnWindow_create().
