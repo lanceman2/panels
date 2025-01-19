@@ -7,6 +7,7 @@
 
 
 
+static
 uint32_t GetColor(void) {
 
     return 0xF2000000 | (rand() & 0x00FFFFFF);
@@ -17,15 +18,16 @@ static
 struct PnWidget *W(void *container, enum PnDirection direction) {
 
     struct PnWidget *w = pnWidget_create((void *) container,
-            20/*width*/, 20/*height*/,
-            direction, 0/*align*/, PnExpand_V/*expand*/);
+            10/*width*/, 10/*height*/,
+            direction, 0/*align*/,
+            PnExpand_H | PnExpand_V/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, GetColor());
     return w;
 }
 
 
-void catcher(int sig) {
+static void catcher(int sig) {
 
     ASSERT(0, "caught signal number %d", sig);
 }
@@ -39,23 +41,33 @@ int main(void) {
 
     srand(89);
 
-    struct PnWindow *win = pnWindow_create(0, 20, 20,
+    struct PnWindow *win = pnWindow_create(0, 10, 10,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0);
     ASSERT(win);
     //pnWindow_setBackgroundColor(win, GetColor());
     struct PnWidget *w[30];
 
     w[0] = W(win, PnDirection_LR);
-    w[0] = W(win, PnDirection_TB);
+    w[29] = W(win, PnDirection_TB);
     w[1] = W(win, PnDirection_LR);
     w[2] = W(win, PnDirection_BT);
     w[3] = W(w[1], PnDirection_LR);
     w[4] = W(w[1], PnDirection_BT);
     w[5] = W(w[4], PnDirection_BT);
     w[6] = W(w[4], PnDirection_TB);
+    w[6] = W(w[6], PnDirection_TB);
+    w[6] = W(w[4], PnDirection_TB);
+    w[6] = W(w[1], PnDirection_TB);
     w[7] = W(w[2], PnDirection_LR);
     w[8] = W(w[7], PnDirection_LR);
     w[9] = W(w[7], PnDirection_LR);
+    w[10] = W(w[9], PnDirection_LR);
+    w[5] = W(w[4], PnDirection_BT);
+    w[6] = W(w[4], PnDirection_TB);
+    w[7] = W(w[2], PnDirection_LR);
+    w[8] = W(w[7], PnDirection_BT);
+    w[9] = W(w[7], PnDirection_LR);
+    w[10] = W(w[9], PnDirection_LR);
     w[10] = W(w[9], PnDirection_LR);
     w[5] = W(w[4], PnDirection_BT);
     w[6] = W(w[4], PnDirection_TB);
@@ -70,9 +82,9 @@ int main(void) {
     w[3] = W(w[1], PnDirection_LR);
     w[4] = W(w[1], PnDirection_BT);
     w[5] = W(w[4], PnDirection_BT);
-    w[6] = W(w[4], PnDirection_TB);
+    w[6] = W(w[4], PnDirection_LR);
     w[7] = W(w[2], PnDirection_LR);
-    w[8] = W(w[7], PnDirection_LR);
+    w[8] = W(w[7], PnDirection_TB);
     w[9] = W(w[7], PnDirection_LR);
     w[10] = W(w[9], PnDirection_LR);
     w[5] = W(w[4], PnDirection_BT);

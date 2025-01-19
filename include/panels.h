@@ -17,6 +17,10 @@ extern "C" {
 // DEFAULTS
 #define PN_BORDER_WIDTH   (6) // default border pixels wide
 #define PN_WINDOW_BGCOLOR (0x09999900)
+#define PN_DEFAULT_WINDOW_WIDTH  (400)
+#define PN_DEFAULT_WINDOW_HEIGHT (400)
+#define PN_DEFAULT_WIDGET_WIDTH  (40)
+#define PN_DEFAULT_WIDGET_HEIGHT (40)
 
 
 // We make default enumeration values be 0.  That saves a ton of

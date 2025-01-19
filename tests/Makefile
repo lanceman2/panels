@@ -39,6 +39,9 @@ widgets_run_SOURCES := widgets.c
 widgets_run_LDFLAGS := $(PN_LIB)
 widgets_run_CPPFLAGS := -DRUN
 
+040_widgets_SOURCES := widgets.c
+040_widgets_LDFLAGS := $(PN_LIB)
+
 
 
 

@@ -21,7 +21,8 @@ int main(void) {
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0);
     ASSERT(win);
 
-    struct PnWidget *w = pnWidget_create((struct PnSurface *) win/*parent*/,
+    struct PnWidget *w = pnWidget_create(
+            (struct PnSurface *) win/*parent*/,
             100/*width*/, 200/*height*/,
             0/*direction*/, 0/*align*/, 0/*expand*/);
     ASSERT(w);
@@ -33,9 +34,11 @@ int main(void) {
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
 #if 1
-    struct PnWidget *cw = pnWidget_create((struct PnSurface *) win/*parent*/,
+    struct PnWidget *cw = pnWidget_create(
+            (struct PnSurface *) win/*parent*/,
             30/*width*/, 30/*height*/,
-            PnDirection_RL/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
+            PnDirection_RL/*direction*/, 0/*align*/,
+            PnExpand_V/*expand*/);
     ASSERT(cw);
     pnWidget_setBackgroundColor(cw, 0xCC0000CF);
 

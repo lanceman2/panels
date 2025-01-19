@@ -17,10 +17,6 @@ struct PnWidget *pnWidget_create(
         enum PnDirection direction, enum PnAlign align, enum PnExpand expand) {
 
     ASSERT(parent);
-    // If there will not be children in this new widget than
-    // we need width, w, and height, h to be nonzero.
-    ASSERT(direction > PnDirection_None || (w && h),
-            "Widgets with no children must have width and height");
     DASSERT(parent->direction != PnDirection_None);
     DASSERT(parent->direction != PnDirection_One || !parent->firstChild);
 
@@ -35,6 +31,14 @@ struct PnWidget *pnWidget_create(
         return 0;
     }
 
+    // If there will not be children in this new widget than
+    // we need width, w, and height, h to be nonzero.
+    if(direction == PnDirection_None) {
+        w = PN_DEFAULT_WIDGET_WIDTH;
+        h = PN_DEFAULT_WIDGET_HEIGHT;
+    }
+
+
     struct PnWidget *widget = calloc(1, sizeof(*widget));
     ASSERT(widget, "calloc(1,%zu) failed", sizeof(*widget));
 
@@ -43,9 +47,6 @@ struct PnWidget *pnWidget_create(
     widget->surface.align = align;
     widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;
-    // Not like GTK; we default to widgets showing; but the window
-    // default to not showing after pnWindow_create().
-    widget->surface.showing = true;
 
     // This is how we C casting to change const variables:
     *((uint32_t *) &widget->surface.width) = w;
@@ -83,18 +84,33 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     DASSERT(widget);
     DASSERT(widget->surface.type == PnSurfaceType_widget);
 
-    // Make it be one of two values.  Because things like (3) == true too.
+    // Make it be one of two values.  Because we can have things like (3) == true
+    //
+    // I just do not want to assume how many bits are set in the value of
+    // true.  Maybe true is 0xFF of maybe it's 0x01.  Hell, I don't
+    // necessarily know number of byte in the value of true and false.  I
+    // don't even know if C casting fixes its value to just true and false
+    // (I doubt it does).
+    //
     show = show ? true : false;
 
-    if(widget->surface.showing == show)
+    if(widget->surface.hiding == !show)
         // No change.
         return;
 
-    widget->surface.showing = show;
-    pnWindow_queueDraw(widget->window);
+    widget->surface.hiding = !show;
     // This change may change the size of the window and many of the
     // widgets in the window.
+
+    if(widget->surface.hiding || widget->surface.culled)
+        widget->surface.hidingOrCulled = true;
+    else
+        widget->surface.hidingOrCulled = false;
+
+
     widget->window->needAllocate = true;
+
+    pnWindow_queueDraw(widget->window);
 }
 
 void pnWidget_queueDraw(struct PnWidget *widget) {

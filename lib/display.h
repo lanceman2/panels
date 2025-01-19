@@ -1,18 +1,30 @@
 
+
+// It looks like most GUI (graphical user interface) based programs
+// (wayland compositor included), as we shrink a window, cull out the
+// parts of the window to the right and bottom, keeping the left and top
+// most part of the window.  This is just convention, and "panels" follows
+// this convention.  Hence, we cull out widgets to the right and bottom
+// as windows shrink.  Widgets that cannot get there requested size due to
+// this window shrink culling will not be drawn, and the background
+// drawing of the window will be shown to the GUI user where widgets are
+// culled out and there is not large enough room in the lower right
+// corner of the window.
+
 // It turns out that the Wayland client has per process global data that
 // we are forced, by the wayland design, to have in this code.  This is
-// not what we prefer but we did not want to make our own windowing
-// standard.
+// not a limitation that we prefer but we did not want to make our own
+// windowing standard.  We had to start somewhere.
 //
-// The wayland C client interface exposes an order of magnitude more
-// interfaces than libpanels.  I just want to make a thing that lets me
-// quickly color pixels in a window (and sub-windows) without writing ten
-// thousand lines of compiled source code.  Just a stupid little wrapper
-// library.
-//
+// I just want to make a thing that lets me quickly color pixels in a
+// window (and sub-windows) without writing ten thousand lines of compiled
+// source code.  Just a stupid little wrapper library.  "panels" is an
+// order of magnitude smaller than GTK and Qt (leaky bloat monsters).
+
+
 // Consolidate what would be many globals into one structure so as make
 // finding and understanding all these singleton objects easier.  We
-// appear to be trying to make what was in libX11 called a "display"
+// appear to be trying to make what was in libX11 was called a "display"
 // object; but in libX11 the display was not necessarily a singleton
 // object: you could make as many X11 client display connections in a
 // given process as you wanted (or so it appeared given the interface).
@@ -34,25 +46,25 @@
 // without any fucking pixels?  Yes, yes, layers give you control, but
 // come on, layering and exposing 5 objects down to get to coloring a
 // fucking pixel.
-//
+
 // Constrained by libwayland-client, we can only have one Pn Display
 // object in a process.
 
 
-// If we add surface types we'll need to check all the code.
+// If we add more surface types we'll need to check all the code.
 //
 // TODO: Add a wayland subsurface to this type thingy?
 //
 enum PnSurfaceType {
 
-    // Yes, a popup window is in a sense a toplevel window,
-    // but we call it a popup and not a toplevel.
+    // Yes, a popup window is in a sense a toplevel window; but we call it
+    // a popup, and not a toplevel, and so does wayland-client.
 
     // 2 Window Surface types:
     PnSurfaceType_toplevel = 231, // From xdg_surface_get_toplevel()
     PnSurfaceType_popup,    // From wl_shell_surface_set_popup()
 
-    // 1 Widget Surface type
+    // 1 Widget Surface type.  Not a wayland thing.
     PnSurfaceType_widget    // a rectangular piece of a surface
 };
 
@@ -60,7 +72,7 @@ enum PnSurfaceType {
 struct PnAllocation {
 
     // These x, y values are measured relative to the window, NOT parent
-    // widgets.
+    // widgets (like in GTK).
     uint32_t x, y, width, height;
 };
 
@@ -117,13 +129,18 @@ struct PnSurface {
     enum PnAlign align;
     enum PnExpand expand;
 
-    // Windows are not showing after pnWindow_create(). Widgets
-    // are showing after pnWidget_create(), but they cannot
-    // really 
-    bool showing;
+    bool hidingOrCulled;
 
-    // culled is set to true if the top window surface is not large
-    // enough to show this surface.
+    // Windows are NOT showing after pnWindow_create().
+    //
+    // Widgets are showing after pnWidget_create().  The user sets this
+    // with PnWidget_show().
+    bool hiding;
+
+    // culled is set to true if the top window surface is not large enough
+    // to show this surface.  It not showing because we don't have the
+    // space for it, not because the user deliberately chooses not to show
+    // it.
     bool culled;
 };
 
@@ -199,7 +216,6 @@ struct PnWindow {
 
     void (*destroy)(struct PnWindow *window, void *userData);
     void *destroyUserData;
-
 
     bool needAllocate; // need to recompute all widget allocations
     //bool needDraw;

@@ -155,6 +155,11 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->surface.align = align;
     win->surface.borderWidth = PN_BORDER_WIDTH;
     win->surface.backgroundColor = PN_WINDOW_BGCOLOR;
+
+    // Default for windows so that user build the window before showing
+    // it.
+    win->surface.hiding = true;
+
     InitSurface(&win->surface);
 
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
@@ -195,8 +200,8 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
             ASSERT(0, "Write more code here case=%d", win->surface.type);
     }
 
-    win->surface.allocation.width = w;
-    win->surface.allocation.height = h;
+    //win->surface.allocation.width = w;
+    //win->surface.allocation.height = h;
 
     return win;
 
@@ -220,15 +225,17 @@ void pnWindow_show(struct PnWindow *win, bool show) {
     // Make it be one of two values.
     show = show ? true: false;
 
-    if(win->surface.showing == show)
+    if(win->surface.hiding == !show)
         // No change.
         //
         // TODO: Nothing to do unless we can pop up the window that is
         // hidden by the desktop window manager.
         return;
 
-    win->surface.showing = show;
+    win->surface.hiding = !show;
+    win->surface.hidingOrCulled = win->surface.hiding;
 
+    // The win->surface.culled variable is not used in windows.
 
     if(show && !win->buffer[0].wl_buffer)
         // This is the first surface commit.
@@ -325,7 +332,7 @@ void pnWindow_setCBDestroy(struct PnWindow *win,
 
 void pnWindow_queueDraw(struct PnWindow *win) {
 
-    if(!win->surface.showing) return;
+    if(win->surface.hiding) return;
 
     ASSERT("WRITE MORE CODE HERE");
 }
