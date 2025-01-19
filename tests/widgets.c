@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <signal.h>
 
 #include "../include/panels.h"
 
@@ -17,14 +18,24 @@ struct PnWidget *W(void *container, enum PnDirection direction) {
 
     struct PnWidget *w = pnWidget_create((void *) container,
             20/*width*/, 20/*height*/,
-            direction, 0/*align*/, 0/*expand*/);
+            direction, 0/*align*/, PnExpand_V/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, GetColor());
     return w;
 }
 
 
+void catcher(int sig) {
+
+    ASSERT(0, "caught signal number %d", sig);
+}
+
+
+
 int main(void) {
+
+
+    ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
     srand(89);
 
@@ -52,7 +63,7 @@ int main(void) {
     w[8] = W(w[7], PnDirection_BT);
     w[9] = W(w[7], PnDirection_LR);
     w[10] = W(w[9], PnDirection_LR);
-
+#if 1
     w[0] = W(win, PnDirection_LR);
     w[1] = W(win, PnDirection_LR);
     w[2] = W(win, PnDirection_BT);
@@ -86,7 +97,7 @@ int main(void) {
     w[8] = W(w[7], PnDirection_LR);
     w[9] = W(w[7], PnDirection_LR);
     w[10] = W(w[9], PnDirection_LR);
-
+#endif
 
     pnWindow_show(win, true);
 

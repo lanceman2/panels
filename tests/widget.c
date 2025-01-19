@@ -5,6 +5,7 @@
 #include "../lib/debug.h"
 
 
+static
 void catcher(int sig) {
 
     ASSERT(0, "caught signal number %d", sig);
@@ -22,7 +23,7 @@ int main(void) {
 
     struct PnWidget *w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 200/*height*/,
-            0/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
+            0/*direction*/, 0/*align*/, 0/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCCCF0000);
 
@@ -34,14 +35,14 @@ int main(void) {
 #if 1
     struct PnWidget *cw = pnWidget_create((struct PnSurface *) win/*parent*/,
             30/*width*/, 30/*height*/,
-            PnDirection_RL/*direction*/, 0/*align*/, 0/*expand*/);
+            PnDirection_RL/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
     ASSERT(cw);
     pnWidget_setBackgroundColor(cw, 0xCC0000CF);
 
     {
         w = pnWidget_create((struct PnSurface *) cw/*parent*/,
             130/*width*/, 100/*height*/,
-            0/*direction*/, 0/*align*/, 0/*expand*/);
+            0/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCCCFFF00);
 

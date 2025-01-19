@@ -217,62 +217,71 @@ static inline void GetY(struct PnSurface *s, struct PnAllocation *a,
     }
 }
 
+struct PnSurface *Next(struct PnSurface *s) {
+    return s->nextSibling;
+}
 
-static inline void ExpandChildrenY(struct PnSurface *s, struct PnAllocation *a,
-        struct PnSurface *firstChild, struct PnSurface *lastChild) {
+struct PnSurface *Prev(struct PnSurface *s) {
+    return s->prevSibling;
+}
 
-    // May change y and height.
 
-    // lastChild is on the bottom.
-    uint32_t add = lastChild->allocation.y + lastChild->allocation.height + s->height;
-    uint32_t space = a->y + a->height;
-    // The "add" is the position of the widget area if the widgets are
-    // shrink wrapped, without widget expanding.
-    // Note: "add" can be greater than "space" if there was not enough
-    // space to fix the widgets in a resize event.  It pretty likely they
-    // are the same.
-    if(add >= space) return;
-    space -= add;
-WARN("  PnExpand_V=%d  firstChild(%p)->expand=%d  add=%" PRIu32 " height=%" PRIu32 ", space=%" PRIu32,
-        PnExpand_V, firstChild, firstChild->expand, add, firstChild->height, space);
-    uint32_t num = 0;
-    // Now "space" is the extra space to be added to child widgets if it can.
-    for(struct PnSurface *c = firstChild; c; c = c->nextSibling)
+// This function needs to recompute all children Y positions and heights.
+//
+void ExpandChildrenY(const struct PnSurface *s, const struct PnAllocation *a,
+        struct PnSurface *firstChild, struct PnSurface *lastChild,
+        struct PnSurface *(*next)(struct PnSurface *c)) {
+
+    // first get the total height needed, thn.
+    uint32_t thn = s->height/*border*/;
+    uint32_t numExpand = 0;
+
+    for(struct PnSurface *c = firstChild; c; c = next(c)) {
+        thn += c->allocation.height + s->height/*border*/;
         if(c->expand & PnExpand_V)
-            ++num;
+            ++numExpand;
+    }
 
-ERROR("                                  num=%" PRIu32 ", space=%" PRIu32, num, space);
-    // Now "num" is the number of widgets that can be expanded in this
-    // container widget, s.
-    if(!num) return;
-    add = space/num;
-INFO("                                  num=%" PRIu32 ", space=%" PRIu32, num, space);
-    // Now "add" is what we add to each expandable widget.
-    // Since widgets can only have integer sizes:
-    uint32_t extra = space - add * num; // extra space added to last widget
+    uint32_t add = 0;
+    uint32_t extra = 0;
+    if(a->height > thn) {
+        if(numExpand) {
+            add = (a->height - thn)/numExpand;
+            extra = a->height - thn - add * numExpand;
+        }
+    } else if(a->height < thn) {
+        ASSERT(0, "More CODE HERE");
+    } else
+        numExpand = 0;
+
+WARN("    thn=%" PRIu32 " numExpand=%" PRIu32 "  add=%"  PRIu32
+        "  extra=%" PRIu32, thn, numExpand, add, extra);
+
     uint32_t y = a->y + s->height/*border*/;
-    // Calculate/save the new y positions and heights of all children.
-    for(struct PnSurface *c = firstChild; c; c = c->nextSibling) {
+
+    for(struct PnSurface *c = firstChild; c; c = next(c)) {
+WARN("                                 y=%" PRIu32, y);
         c->allocation.y = y;
-        if(c->expand & PnExpand_V) {
-            --num;
-            c->allocation.height += space;
-            if(!num)
-                // the last one.
+        if(numExpand && c->expand & PnExpand_V) {
+            c->allocation.height += add;
+            --numExpand;
+            if(!numExpand && extra)
+                // last one with expand set get the extra
                 c->allocation.height += extra;
         }
         y += c->allocation.height + s->height;
     }
+    DASSERT(a->y + a->height == y,
+            "a->y(%" PRIu32 ") + a->height(%" PRIu32 ") != y(%" PRIu32 ") \n"
+            "                                thn=%" PRIu32,
+            a->y, a->height, y, thn);
 }
-
-
-
 
 
 // Change the x and width, or y and height of widgets.
 //
 static
-void ExpandChildren(struct PnSurface *s, struct PnAllocation *a) {
+void ExpandChildren(const struct PnSurface *s, const struct PnAllocation *a) {
 
     uint32_t d;
 
@@ -280,22 +289,25 @@ void ExpandChildren(struct PnSurface *s, struct PnAllocation *a) {
 
         case PnDirection_One:
         case PnDirection_TB:
-            ExpandChildrenY(s, a, s->firstChild, s->lastChild);
+            ExpandChildrenY(s, a, s->firstChild, s->lastChild, Next);
             break;
 
         case PnDirection_BT:
-            ExpandChildrenY(s, a, s->lastChild, s->firstChild);
+            // With children in reverse order.
+            ExpandChildrenY(s, a, s->lastChild, s->firstChild, Prev);
             break;
 
         case PnDirection_LR:
         case PnDirection_RL:
-            DASSERT(!s->firstChild || a->height >= 2 * s->height);
+            DASSERT(a->height >= 2 * s->height);
             d = a->height - 2 * s->height;
             // The widgets are lad along the X direction so we can extend
             // them down.
-            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
+            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+                c->allocation.y = a->y + s->height;
                 if((c->expand & PnExpand_V) && (c->allocation.height < d))
                     c->allocation.height = d;
+            }
             break;
 
         case PnDirection_None:
