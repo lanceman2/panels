@@ -31,7 +31,7 @@ int main(void) {
             0/*direction*/, 0/*align*/, 0/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
-
+#if 1
     struct PnWidget *cw = pnWidget_create((struct PnSurface *) win/*parent*/,
             30/*width*/, 30/*height*/,
             PnDirection_RL/*direction*/, 0/*align*/, 0/*expand*/);
@@ -51,7 +51,7 @@ int main(void) {
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCC00CFFF);
     }
-
+#endif
 
     pnWindow_show(win, true);
 

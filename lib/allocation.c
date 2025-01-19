@@ -265,10 +265,16 @@ INFO("                                  num=%" PRIu32 ", space=%" PRIu32, num, s
     }
 }
 
+
+
+
+
 // Change the x and width, or y and height of widgets.
 //
 static
 void ExpandChildren(struct PnSurface *s, struct PnAllocation *a) {
+
+    uint32_t d;
 
     switch(s->direction) {
 
@@ -278,9 +284,18 @@ void ExpandChildren(struct PnSurface *s, struct PnAllocation *a) {
             break;
 
         case PnDirection_BT:
+            ExpandChildrenY(s, a, s->lastChild, s->firstChild);
+            break;
+
         case PnDirection_LR:
         case PnDirection_RL:
-            ExpandChildrenY(s, a, s->lastChild, s->firstChild);
+            DASSERT(!s->firstChild || a->height >= 2 * s->height);
+            d = a->height - 2 * s->height;
+            // The widgets are lad along the X direction so we can extend
+            // them down.
+            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
+                if((c->expand & PnExpand_V) && (c->allocation.height < d))
+                    c->allocation.height = d;
             break;
 
         case PnDirection_None:
