@@ -25,8 +25,14 @@ static void configure(struct PnWindow *win,
 
     if(w <= 0 || h <= 0) return;
 
-    win->surface.allocation.width = w;
-    win->surface.allocation.height = h;
+    if(win->surface.allocation.width != w ||
+            win->surface.allocation.height != h) {
+
+        win->surface.allocation.width = w;
+        win->surface.allocation.height = h;
+        if(!win->needAllocate)
+            win->needAllocate = true;
+    }
 }
 
 static void close(struct PnWindow *win,

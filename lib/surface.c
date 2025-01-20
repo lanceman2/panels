@@ -157,7 +157,8 @@ INFO("x,y,w,h=%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32,
 
     // Now draw children (widgets).
     for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
-        pnSurface_draw(c, buffer);
+        if(!c->culled)
+            pnSurface_draw(c, buffer);
 }
 
 

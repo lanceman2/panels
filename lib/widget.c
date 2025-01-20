@@ -102,11 +102,6 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     // This change may change the size of the window and many of the
     // widgets in the window.
 
-    if(widget->surface.hiding || widget->surface.culled)
-        widget->surface.hidingOrCulled = true;
-    else
-        widget->surface.hidingOrCulled = false;
-
 
     widget->window->needAllocate = true;
 

@@ -129,7 +129,7 @@ struct PnSurface {
     enum PnAlign align;
     enum PnExpand expand;
 
-    bool hidingOrCulled;
+    //bool hidingOrCulled; // surface not being drawn.
 
     // Windows are NOT showing after pnWindow_create().
     //

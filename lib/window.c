@@ -233,7 +233,6 @@ void pnWindow_show(struct PnWindow *win, bool show) {
         return;
 
     win->surface.hiding = !show;
-    win->surface.hidingOrCulled = win->surface.hiding;
 
     // The win->surface.culled variable is not used in windows.
 
