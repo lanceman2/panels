@@ -248,6 +248,23 @@ static void GetChildrenXY(const struct PnSurface *s,
     }
 }
 
+static
+void Cull(struct PnSurface *s, struct PnAllocation *a) {
+
+    if(s->culled) return;
+
+
+}
+
+static
+void Expand(struct PnSurface *s, struct PnAllocation *a) {
+
+    if(s->culled) return;
+
+
+}
+
+
 
 // Move widget position without changing its size.
 //
@@ -340,7 +357,6 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     uint32_t width = a->width;
     uint32_t height = a->height;
 
-
     // This shrink wraps the widgets, only getting the widgets widths and
     // heights.  Without the culled widgets.
     AddRequestedSizes(s, a);
@@ -348,18 +364,19 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     // No x, y allocations yet.
     GetChildrenXY(s, a);
 
-    // Still shrink wrapped.
+    // Still shrink wrapped and the top surface width and height are
+    // set to the "shrink wrapped" width and height.
 
-    // These may have changed.
     if(width && height) {
         a->width = width;
         a->height = height;
     }
 
-    // Now we need to expand or cull widget due to the width and height
-    // not being the shrink wrapped width and height.
+    // Cull widgets that do not fix.
+    Cull(s, a);
 
-
+    // Expand widgets that can be expanded.
+    Expand(s, a);
 
     // Without extra space in the containers these do nothing.  These may
     // change the widgets x and y positions, but will not change widget
