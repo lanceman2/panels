@@ -59,7 +59,6 @@ static struct xdg_popup_listener xdg_popup_listener = {
 };
 
 
-
 bool InitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y) {

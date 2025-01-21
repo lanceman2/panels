@@ -21,15 +21,23 @@ static void configure(struct PnWindow *win,
     DASSERT(xdg_toplevel);
     DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
 
-    //DSPEW("w,h=%" PRIi32",%" PRIi32, w, h);
-
     if(w <= 0 || h <= 0) return;
+
+    // Make it like it would be if we could not change width or height
+    // based on the API user window surface PnExpand setting.
+    if(!(win->surface.expand & PnExpand_H) &&
+            win->surface.allocation.width)
+        w = win->surface.allocation.width;
+    //
+    if(!(win->surface.expand & PnExpand_V) &&
+            win->surface.allocation.height)
+        h = win->surface.allocation.height;
 
     if(win->surface.allocation.width != w ||
             win->surface.allocation.height != h) {
-
         win->surface.allocation.width = w;
         win->surface.allocation.height = h;
+WARN("w,h=%" PRIi32",%" PRIi32, w, h);
         if(!win->needAllocate)
             win->needAllocate = true;
     }

@@ -18,7 +18,8 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
     struct PnWindow *win = pnWindow_create(0, 30, 30,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0);
+            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
+            PnExpand_HV);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create(
@@ -27,13 +28,14 @@ int main(void) {
             0/*direction*/, 0/*align*/, 0/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCCCF0000);
+#if 1
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 300/*height*/,
             0/*direction*/, 0/*align*/, 0/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
-#if 1
+    
     struct PnWidget *cw = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             30/*width*/, 30/*height*/,

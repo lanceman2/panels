@@ -92,11 +92,22 @@ enum PnDirection {
 
 
 // Expansiveness (space greed) is an attribute of a widget and not the
-// container it is in.  Hence, expansiveness (expand) is not an attribute
-// of a window since windows are never contained (in this API).
+// container it is in.  A container that contains a widget that can
+// expand, can also expand given space to the contained widget while not
+// expanding it's border sizes.  The expand attribute of a container
+// widget does not effect the container widgets border size as more space
+// is given to the container, it just changes size to accommodate the
+// contained widgets changing size.
+//
+// The expand attribute of a container widget does not effect it until all
+// contained widgets are removed.  The expand attribute of a containing
+// widgets does effect container widgets that contain them.
 //
 // Sibling widgets (widgets in the same container) that can expand share
 // the extra space.
+//
+// Exception: A top level window that cannot expand (resize) unless the
+// user set its expand flag; in pnWindow_create() or other function.
 //
 enum PnExpand {
     // H Horizontal first bit, V Vertical second bit
@@ -113,16 +124,36 @@ enum PnExpand {
 // If there is extra space for a widget that will not be filled, we
 // align (float) the widget into position.
 //
+// The default is PnAlign_LT will push the widgets to the top left corner
+// which is were the window manager (compositor) puts the x and y
+// positions at zero and zero.  That's just a given convention that we go
+// with the flow with.
+//
 // If any of the widgets in the container can expand, than the Align
 // value of the container is not considered.
+//
 enum PnAlign {
+                    //  X   ,  Y
+                    //////////////
+    PnAlign_LT = 0, // Left, Top (default = 0)
+    PnAlign_RT,     // Right, Top
+    PnAlign_CT,     // Center alone x, Top
+    PnAlign_JT,     // Justified, Top
 
-    PnAlign_L = 0, // Left (default horizontal)
-    PnAlign_R = 1, // Right
-    PnAlign_C = 2, // Center for both horizontal and vertical
-    PnAlign_T = 0, // Top (default vertical)
-    PnAlign_B = 1, // Bottom
-    PnAlign_J = 3  // Justified
+    PnAlign_LB,     // Left, Bottom
+    PnAlign_RB,     // Right, Bottom
+    PnAlign_CB,     // Center alone x, Bottom
+    PnAlign_JB,     // Justified, Bottom
+
+    PnAlign_LC,     // Left, Center alone y
+    PnAlign_RC,     // Right, Center alone y
+    PnAlign_CC,     // Center alone x, Center alone y
+    PnAlign_JC,     // Justified, Center
+
+    PnAlign_LJ,     // Left, Justified
+    PnAlign_RJ,     // Right, Justified
+    PnAlign_CJ,     // Center alone x, Justified
+    PnAlign_JJ      // Justified, Justified
 };
 
 
@@ -144,7 +175,8 @@ PN_EXPORT struct PnWindow *pnWindow_create(
         uint32_t width, uint32_t height,
         int32_t x, int32_t y,
         enum PnDirection direction,
-        enum PnAlign align);
+        enum PnAlign align,
+        enum PnExpand expand);
 
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
 PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);

@@ -15,20 +15,96 @@
 // We use lots of recursion to get widget positions and sizes.
 
 
+// This function calls itself.
+//
+// If a parent is culled: then we do not need to think about culling
+// the children, they are implied to be culled without setting the
+// "culled" flag for the children.
+//
+static void ResetChildrenCull(struct PnSurface *s) {
+
+    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+            c->culled = c->hidden;
+        if(!c->culled)
+            ResetChildrenCull(c);
+    }
+}
+
+// This expandability attribute passes from child to parent, unlike
+// culling that works from parent to child.  That is, if a child can
+// expand than so can its parent (unrelated to the parent container
+// surface user set expand flag).
+//
+// The parent container surface user set expand flag is ignored until the
+// surface becomes a non-container widget (with no children).
+//
+// "panels" does not so much distinguish between container widgets and
+// non-container widgets.  Panels widgets can change between being a
+// container and non-container widget just by removing or adding child
+// widgets from them, without recreating the widget.
+//
+static bool ResetCanExpand(struct PnSurface *s) {
+
+    if(s->firstChild)
+        // We may add changes to this later:
+        s->canExpand = 0;
+    else {
+        // This is a leaf node.  We can at an end of the function call
+        // stack.
+        s->canExpand = s->expand;
+        return s->canExpand;
+    }
+
+    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+        if(c->culled)
+            // Skip culled widgets.
+            continue;
+        // If any of the children can expand than "s" can expand:
+        s->canExpand |= ResetCanExpand(c);
+    }
+
+    // Return if we have any leaf children that can expand.
+    return s->canExpand;
+}
+
+
+// This lets us have container widgets (and windows) with 
+// zero width and/or height.  We only let it be zero if
+// it's a container (has children).
+//
 static inline uint32_t GetWidth(const struct PnSurface *s) {
 
     if(s->firstChild || s->width)
         return s->width;
-    else
-        return PN_DEFAULT_WIDGET_WIDTH;
-}
 
+    if(s->type == PnSurfaceType_widget)
+        return PN_DEFAULT_WIDGET_WIDTH;
+
+    DASSERT(s->type == PnSurfaceType_popup ||
+            s->type == PnSurfaceType_toplevel);
+    return PN_DEFAULT_WINDOW_WIDTH;
+}
+//
 static inline uint32_t GetHeight(const struct PnSurface *s) {
 
     if(s->firstChild || s->height)
         return s->height;
-    else
+
+    if(s->type == PnSurfaceType_widget)
         return PN_DEFAULT_WIDGET_HEIGHT;
+
+    DASSERT(s->type == PnSurfaceType_popup ||
+            s->type == PnSurfaceType_toplevel);
+    return PN_DEFAULT_WINDOW_HEIGHT;
+}
+
+
+struct PnSurface *Next(const struct PnSurface *s) {
+    return s->nextSibling;
+}
+// The backwards next.
+struct PnSurface *Prev(const struct PnSurface *s) {
+    return s->prevSibling;
 }
 
 
@@ -39,16 +115,16 @@ static inline uint32_t GetHeight(const struct PnSurface *s) {
 // set to false.
 //
 static
-void AddRequestedSizes(struct PnSurface *s) {
+void AddRequestedSizes(struct PnSurface *s, struct PnAllocation *a) {
 
     DASSERT(!s->culled);
 
     // We start at 0 and sum from there.
     //
-    s->allocation.width = 0;
-    s->allocation.height = 0;
-    s->allocation.x = 0;
-    s->allocation.y = 0;
+    a->width = 0;
+    a->height = 0;
+    a->x = 0;
+    a->y = 0;
 
     bool gotOne = false;
 
@@ -63,213 +139,105 @@ void AddRequestedSizes(struct PnSurface *s) {
         case PnDirection_RL:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
-                c->culled = false;
-                if(c->hiding) {
-                    c->culled = true;
-                    continue;
-                }
+                if(c->culled) continue;
                 if(!gotOne) gotOne = true;
-                AddRequestedSizes(c);
+                AddRequestedSizes(c, &c->allocation);
                 // Now we have all "s" children and descendent sizes.
-                s->allocation.width += c->allocation.width + GetWidth(s);
-                if(s->allocation.height < c->allocation.height)
-                    s->allocation.height = c->allocation.height;
+                a->width += c->allocation.width +
+                        GetWidth(s);
+                if(a->height < c->allocation.height)
+                    a->height = c->allocation.height;
             }
             if(gotOne)
-                s->allocation.height += GetHeight(s);
+                a->height += GetHeight(s);
             break;
         case PnDirection_BT:
         case PnDirection_TB:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
-                c->culled = false;
-                if(c->hiding) {
-                    c->culled = true;
-                    continue;
-                }
+                if(c->culled) continue;
                 if(!gotOne) gotOne = true;
-                AddRequestedSizes(c);
+                AddRequestedSizes(c, &c->allocation);
                 // Now we have all "s" children and descendent sizes.
-                s->allocation.height += c->allocation.height +
-                    GetHeight(s);
-                if(s->allocation.width < c->allocation.width)
-                    s->allocation.width = c->allocation.width;
+                a->height += c->allocation.height +
+                        GetHeight(s);
+                if(a->width < c->allocation.width)
+                    a->width = c->allocation.width;
             }
             if(gotOne)
-                s->allocation.width += GetWidth(s);
+                a->width += GetWidth(s);
             break;
         default:
     }
 
     // Add the last border or first size if no children.
-    s->allocation.width += GetWidth(s);
-    s->allocation.height += GetHeight(s);
-}
-
-struct PnSurface *Next(const struct PnSurface *s) {
-    return s->nextSibling;
-}
-
-struct PnSurface *Prev(const struct PnSurface *s) {
-    return s->prevSibling;
+    a->width += GetWidth(s);
+    a->height += GetHeight(s);
 }
 
 
-// This function needs to recompute all children widget X positions and
-// widths.
-//
-void AllocateChildrenX(const struct PnSurface *s, const struct PnAllocation *a,
-        struct PnSurface *firstChild, struct PnSurface *lastChild,
-        struct PnSurface *(*next)(const struct PnSurface *c)) {
+static void GetChildrenXY(const struct PnSurface *s,
+        const struct PnAllocation *a) {
 
+    DASSERT(!s->culled);
+    DASSERT(s->firstChild);
+    DASSERT(a->width);
+    DASSERT(a->height);
 
-    // first get the total width needed, thn.
-    uint32_t thn = GetWidth(s)/*border*/;
-    uint32_t numExpand = 0;// to count the number of widgets that can
-                           // expand.
+    uint32_t borderX = GetWidth(s);
+    uint32_t borderY = GetHeight(s);
+    uint32_t x = a->x + borderX;
+    uint32_t y = a->y + borderY;
 
-    for(struct PnSurface *c = firstChild; c; c = next(c)) {
-        thn += c->allocation.width + GetWidth(s)/*border*/;
-        if(c->expand & PnExpand_H)
-            ++numExpand;
-    }
-
-    uint32_t add = 0;
-    uint32_t extra = 0;
-    if(a->width > thn) {
-        if(numExpand) {
-            add = (a->width - thn)/numExpand;
-            extra = a->width - thn - add * numExpand;
-        }
-    } else
-        // There is no extra space to expand to.  There could be culling.
-        numExpand = 0;
-
-
-    uint32_t x = a->x + GetWidth(s)/*border*/;
-    uint32_t xMax = a->x + a->width - GetWidth(s);
-
-    for(struct PnSurface *c = firstChild; c; c = next(c)) {
-        if(x > xMax) {
-            // The rest of the children are culled.
-            c->culled = true;
-            continue;
-        }
-        c->allocation.x = x;
-        if(numExpand && c->expand & PnExpand_H) {
-            c->allocation.width += add;
-            --numExpand;
-            if(!numExpand && extra)
-                // last one with expand set get the extra
-                c->allocation.width += extra;
-        }
-        x += c->allocation.width + GetWidth(s);
-    }
-
-#ifdef DEBUG
-    if(a->width >= thn)
-        // We did not cull anything so:
-        DASSERT(a->x + a->width == x,
-                "a->x(%" PRIu32 ") + a->width(%" PRIu32
-                ") != x(%" PRIu32 ") "
-                "thn=%" PRIu32, a->x, a->width, x, thn);
-#endif
-}
-
-
-// This function needs to recompute all children widget Y positions and
-// heights.
-//
-void AllocateChildrenY(const struct PnSurface *s, const struct PnAllocation *a,
-        struct PnSurface *firstChild, struct PnSurface *lastChild,
-        struct PnSurface *(*next)(const struct PnSurface *c)) {
-
-    // first get the total height needed, thn.
-    uint32_t thn = GetHeight(s)/*border*/;
-    uint32_t numExpand = 0;// to count the number of widgets that can
-                           // expand.
-
-    for(struct PnSurface *c = firstChild; c; c = next(c)) {
-        thn += c->allocation.height + GetHeight(s)/*border*/;
-        if(c->expand & PnExpand_V)
-            ++numExpand;
-    }
-
-    uint32_t add = 0;
-    uint32_t extra = 0;
-    if(a->height > thn) {
-        if(numExpand) {
-            add = (a->height - thn)/numExpand;
-            extra = a->height - thn - add * numExpand;
-        }
-    } else
-        // There is no extra space to expand to.  There could be culling.
-        numExpand = 0;
-
-    uint32_t y = a->y + GetHeight(s)/*border*/;
-    uint32_t yMax = a->y + a->height - GetHeight(s);
-
-    for(struct PnSurface *c = firstChild; c; c = next(c)) {
-        if(y + c->allocation.height > yMax) {
-            // The rest of the children are culled.
-            c->culled = true;
-            continue;
-        }
-        c->allocation.y = y;
-        if(numExpand && c->expand & PnExpand_V) {
-            c->allocation.height += add;
-            --numExpand;
-            if(!numExpand && extra)
-                // last one with expand set get the extra
-                c->allocation.height += extra;
-        }
-        y += c->allocation.height + GetHeight(s);
-    }
-
-#ifdef DEBUG
-    if(a->height >= thn)
-        // We did not cull anything so:
-        DASSERT(a->y + a->height == y,
-                "a->y(%" PRIu32 ") + a->height(%" PRIu32
-                ") != y(%" PRIu32 ") "
-                "thn=%" PRIu32, a->y, a->height, y, thn);
-#endif
-}
-
-// Get the x and width, or y and height of widgets.
-//
-static
-void AllocateChildren(const struct PnSurface *s, const struct PnAllocation *a) {
-
-    if(s->culled) return;
-
-    uint32_t d;
 
     switch(s->direction) {
 
         case PnDirection_One:
         case PnDirection_TB:
-            AllocateChildrenY(s, a, s->firstChild, s->lastChild, Next);
+            for(struct PnSurface *c = s->firstChild; c;
+                    c = c->nextSibling) {
+                if(c->culled) continue;
+                c->allocation.x = x;
+                c->allocation.y = y;
+                if(c->firstChild)
+                    GetChildrenXY(c, &c->allocation);
+                y += c->allocation.height + borderY;
+            }
             break;
 
         case PnDirection_BT:
-            // With children in reverse order.
-            AllocateChildrenY(s, a, s->lastChild, s->firstChild, Prev);
+            for(struct PnSurface *c = s->lastChild; c;
+                    c = c->prevSibling) {
+                if(c->culled) continue;
+                c->allocation.x = x;
+                c->allocation.y = y;
+                if(c->firstChild)
+                    GetChildrenXY(c, &c->allocation);
+                y += c->allocation.height + borderY;
+            }
             break;
 
         case PnDirection_LR:
+            for(struct PnSurface *c = s->firstChild; c;
+                    c = c->nextSibling) {
+                if(c->culled) continue;
+                c->allocation.x = x;
+                c->allocation.y = y;
+                if(c->firstChild)
+                    GetChildrenXY(c, &c->allocation);
+                x += c->allocation.width + borderX;
+            }
+            break;
+
         case PnDirection_RL:
-            d = a->height - 2 * GetHeight(s);
-            // The widgets are lad along the X direction at the top so we
-            // can extend them down.
-            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
-                if(d < c->allocation.height) {
-                    c->culled = true;
-                    continue;
-                }
-                c->allocation.y = a->y + GetHeight(s);
-                if((c->expand & PnExpand_V) && (c->allocation.height < d))
-                    c->allocation.height = d;
+            for(struct PnSurface *c = s->lastChild; c;
+                    c = c->prevSibling) {
+                if(c->culled) continue;
+                c->allocation.x = x;
+                c->allocation.y = y;
+                if(c->firstChild)
+                    GetChildrenXY(c, &c->allocation);
+                x += c->allocation.width + borderX;
             }
             break;
 
@@ -278,44 +246,6 @@ void AllocateChildren(const struct PnSurface *s, const struct PnAllocation *a) {
             ASSERT(0);
             break;
     }
-
-    switch(s->direction) {
-
-        case PnDirection_One:
-        case PnDirection_LR:
-            AllocateChildrenX(s, a, s->firstChild, s->lastChild, Next);
-            break;
-
-        case PnDirection_RL:
-            // With children in reverse order.
-            AllocateChildrenX(s, a, s->lastChild, s->firstChild, Prev);
-            break;
-
-        case PnDirection_TB:
-        case PnDirection_BT:
-            d = a->width - 2 * GetWidth(s);
-            // The widgets are lad along Y direction to the right so we
-            // can extend them to the right.
-            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
-                if(d < c->allocation.width) {
-                    c->culled = true;
-                    continue;
-                }
-                c->allocation.x = a->x + GetWidth(s);
-                if((c->expand & PnExpand_H) && (c->allocation.width < d))
-                    c->allocation.width = d;
-            }
-            break;
-
-        case PnDirection_None:
-        default:
-            ASSERT(0);
-            break;
-    }
-
-    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
-        if(c->firstChild)
-            AllocateChildren(c, &c->allocation);
 }
 
 
@@ -359,86 +289,83 @@ void AlignChildrenY(struct PnSurface *s, struct PnAllocation *a) {
 
 // Get the positions and sizes of all the widgets in the window.
 //
+// This does not allocate any memory.  The "Allocations" part of the name
+// it borrowed from the GDK part of the GTK API, which has a rectangular
+// space "allocation" class which gets setup when the widgets are
+// "allocated" (find the position and size of widgets).
+//
 void GetWidgetAllocations(struct PnWindow *win) {
 
     DASSERT(win);
-    DASSERT(win->surface.type == PnSurfaceType_toplevel ||
-            win->surface.type == PnSurfaceType_popup);
-    DASSERT(!win->surface.allocation.x);
-    DASSERT(!win->surface.allocation.y);
-    DASSERT(!win->surface.hiding);
+    struct PnSurface *s = &win->surface;
+    struct PnAllocation *a = &s->allocation;
+    DASSERT(s->type == PnSurfaceType_toplevel ||
+            s->type == PnSurfaceType_popup);
+    DASSERT(!a->x);
+    DASSERT(!a->y);
+    DASSERT(!s->hidden);
+    DASSERT(!s->parent);
+    DASSERT(!s->culled);
 
-    if(!win->surface.firstChild) {
+    win->needAllocate = false;
+
+    if(!a->width && !s->firstChild) {
+        DASSERT(!a->height);
+        a->width = GetWidth(s);
+        a->height = GetHeight(s);
+    }
+
+    // We already handled not letting the window resize if the user set
+    // the expand flags so it cannot expand, in toplevel.c.
+    //
+    // TODO: This for popup windows?
+
+
+    if(!s->firstChild) {
+        DASSERT(!s->lastChild);
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
-        // this API.
-        
-        if(win->surface.allocation.width && win->surface.allocation.height)
-            return;
-
-        if(win->surface.width)
-            win->surface.allocation.width = win->surface.width;
-        else
-            // This is the default size if the window has no size
-            // or widgets in it.
-            win->surface.allocation.width = PN_DEFAULT_WINDOW_WIDTH;
-
-        if(win->surface.height)
-            win->surface.allocation.height = win->surface.height;
-        else
-            // This is the default size if the window has no size
-            // or widgets in it.
-            win->surface.allocation.height = PN_DEFAULT_WINDOW_HEIGHT;
-
+        // this API is to do simple shit like draw pixels.
+INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         return;
     }
 
-    DASSERT(win->surface.firstChild->parent == &win->surface);
-    DASSERT(win->surface.lastChild->parent == &win->surface);
-    DASSERT(!win->surface.parent);
-    DASSERT(!win->surface.allocation.x);
-    DASSERT(!win->surface.allocation.y);
+    DASSERT(s->firstChild->parent == s);
+    DASSERT(s->lastChild->parent == s);
+
+    ResetChildrenCull(s);
+    ResetCanExpand(s);
+
+    // Save the width and height.
+    uint32_t width = a->width;
+    uint32_t height = a->height;
 
 
+    // This shrink wraps the widgets, only getting the widgets widths and
+    // heights.  Without the culled widgets.
+    AddRequestedSizes(s, a);
 
-    // The size of the window is set in the users call to
-    // PnWindow_create(), from a xdg_toplevel configure (resize) or
-    // xdg_popup configure (resize) event.  So, we assume that
-    // win->surface.allocation.width and win->surface.allocation.height
-    // have been set at this time.
+    // No x, y allocations yet.
+    GetChildrenXY(s, a);
 
-    // win->surface.allocation.width and win->surface.allocation.height
-    // are the user requested sizes.  We save them for now.
+    // Still shrink wrapped.
 
-    uint32_t width = win->surface.allocation.width;
-    uint32_t height = win->surface.allocation.height;
-
-    AddRequestedSizes(&win->surface);
-
-    // Now we have the shrink wrapped window and widgets with no widgets
-    // culled or expanded.  The window allocation is likely not the
-    // size that was requested from the values before the call to
-    // AddRequestedSizes().  This shrink wrapped size is what we can
-    // start with and understand well.  We will start there and fix it.
-
+    // These may have changed.
     if(width && height) {
-        win->surface.allocation.width = width;
-        win->surface.allocation.height = height;
+        a->width = width;
+        a->height = height;
     }
 
-    // We do not have widget x and y positions at this point.
-    //
-    // Get children x and y positions and recompute widths and heights all
-    // while taking into account the widget's expand attribute (that is
-    // whither or not the widget can expand to take up unused space in its
-    // container.  And also cull out widgets that do not fit.
-    AllocateChildren(&win->surface, &win->surface.allocation);
+    // Now we need to expand or cull widget due to the width and height
+    // not being the shrink wrapped width and height.
+
+
 
     // Without extra space in the containers these do nothing.  These may
     // change the widgets x and y positions, but will not change widget
     // widths and heights.
-    AlignChildrenX(&win->surface, &win->surface.allocation);
-    AlignChildrenY(&win->surface, &win->surface.allocation);
+    AlignChildrenX(s, a);
+    AlignChildrenY(s, a);
 
-    win->needAllocate = false;
+INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 }

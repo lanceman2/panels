@@ -181,14 +181,11 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     // That would be okay, except we just need the values for any
     // redraws.
     if(buffer->width != width) {
-        win->needAllocate = true;
         buffer->width = width;
         buffer->stride = width * PN_PIXEL_SIZE;
     }
-    if(buffer->height != height) {
-        win->needAllocate = true;
+    if(buffer->height != height)
         buffer->height = height;
-    }
 
     if(buffer->wl_buffer && buffer->size == size)
         // No buffer resize needed.
@@ -227,4 +224,3 @@ void FreeBuffer(struct PnBuffer *buffer) {
     buffer->pixels = MAP_FAILED;
     buffer->fd = -1;
 }
-

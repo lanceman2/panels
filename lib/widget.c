@@ -45,7 +45,7 @@ struct PnWidget *pnWidget_create(
     widget->surface.parent = parent;
     widget->surface.direction = direction;
     widget->surface.align = align;
-    widget->surface.expand = expand;
+    * (enum PnExpand *) &widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;
 
     // This is how we C casting to change const variables:
@@ -94,16 +94,13 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     //
     show = show ? true : false;
 
-    if(widget->surface.hiding == !show)
+    if(widget->surface.hidden == !show)
         // No change.
         return;
 
-    widget->surface.hiding = !show;
+    widget->surface.hidden = !show;
     // This change may change the size of the window and many of the
     // widgets in the window.
-
-
-    widget->window->needAllocate = true;
 
     pnWindow_queueDraw(widget->window);
 }

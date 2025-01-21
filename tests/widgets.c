@@ -42,7 +42,8 @@ int main(void) {
     srand(89);
 
     struct PnWindow *win = pnWindow_create(0, 10, 10,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0);
+            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
+            PnExpand_HV);
     ASSERT(win);
     //pnWindow_setBackgroundColor(win, GetColor());
     struct PnWidget *w[30];

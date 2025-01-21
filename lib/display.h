@@ -127,20 +127,28 @@ struct PnSurface {
 
     enum PnDirection direction;
     enum PnAlign align;
-    enum PnExpand expand;
+    const enum PnExpand expand;
 
-    //bool hidingOrCulled; // surface not being drawn.
+    // "canExpand" is used to mark container widgets as expandable while
+    // we calculate all the widget positions and sizes.
+    // A container widget can be expandable because its children widgets
+    // are expandable.
+    //
+    enum PnExpand canExpand;
 
     // Windows are NOT showing after pnWindow_create().
     //
     // Widgets are showing after pnWidget_create().  The user sets this
     // with PnWidget_show().
-    bool hiding;
+    bool hidden;
 
-    // culled is set to true if the top window surface is not large enough
-    // to show this surface.  It not showing because we don't have the
-    // space for it, not because the user deliberately chooses not to show
-    // it.
+    // "culled" is set to true if the top window surface is not large
+    // enough (and hence the container is not large enough) to show this
+    // surface.  It is not showing because we don't have the space for it,
+    // not because the user deliberately chooses not to show it.
+    //
+    // top window surfaces do not use this variable.
+    //
     bool culled;
 };
 

@@ -62,6 +62,9 @@ static void configure(struct PnWindow *win,
 
     xdg_surface_ack_configure(win->xdg_surface, serial);
 
+    if(!win->surface.allocation.width || !win->surface.allocation.height)
+        win->needAllocate = true;
+
     DrawAll(win);
 }
 
@@ -110,7 +113,8 @@ static inline void RemoveWindow(struct PnWindow *win,
 
 struct PnWindow *pnWindow_create(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
-        enum PnDirection direction, enum PnAlign align) {
+        enum PnDirection direction, enum PnAlign align,
+        enum PnExpand expand) {
 
     DASSERT(direction != PnDirection_None || (w && h));
 
@@ -149,8 +153,8 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
-    win->needAllocate = true;
 
+    * (enum PnExpand *) &win->surface.expand = expand;
     win->surface.direction = direction;
     win->surface.align = align;
     win->surface.borderWidth = PN_BORDER_WIDTH;
@@ -158,7 +162,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
 
     // Default for windows so that user build the window before showing
     // it.
-    win->surface.hiding = true;
+    win->surface.hidden = true;
 
     InitSurface(&win->surface);
 
@@ -225,14 +229,14 @@ void pnWindow_show(struct PnWindow *win, bool show) {
     // Make it be one of two values.
     show = show ? true: false;
 
-    if(win->surface.hiding == !show)
+    if(win->surface.hidden == !show)
         // No change.
         //
         // TODO: Nothing to do unless we can pop up the window that is
         // hidden by the desktop window manager.
         return;
 
-    win->surface.hiding = !show;
+    win->surface.hidden = !show;
 
     // The win->surface.culled variable is not used in windows.
 
@@ -331,7 +335,7 @@ void pnWindow_setCBDestroy(struct PnWindow *win,
 
 void pnWindow_queueDraw(struct PnWindow *win) {
 
-    if(win->surface.hiding) return;
+    if(win->surface.hidden) return;
 
     ASSERT("WRITE MORE CODE HERE");
 }
