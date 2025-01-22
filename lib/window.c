@@ -337,5 +337,5 @@ void pnWindow_queueDraw(struct PnWindow *win) {
 
     if(win->surface.hidden) return;
 
-    ASSERT("WRITE MORE CODE HERE");
+    ASSERT(0, "WRITE MORE CODE HERE");
 }

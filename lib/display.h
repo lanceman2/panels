@@ -121,6 +121,8 @@ struct PnSurface {
     struct PnSurface *firstChild, *lastChild;
     struct PnSurface *nextSibling, *prevSibling;
 
+    struct PnWindow *window; // The top most surface is a this window.
+
     // Number of pixels between widgets:
     uint32_t borderWidth;
     uint32_t backgroundColor;

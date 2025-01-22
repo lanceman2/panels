@@ -48,6 +48,11 @@ struct PnWidget *pnWidget_create(
     * (enum PnExpand *) &widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;
 
+    if(parent->type == PnSurfaceType_widget)
+        widget->surface.window = parent->window;
+    else
+        widget->surface.window = (void *) parent;
+
     // This is how we C casting to change const variables:
     *((uint32_t *) &widget->surface.width) = w;
     *((uint32_t *) &widget->surface.height) = h;
@@ -84,7 +89,8 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     DASSERT(widget);
     DASSERT(widget->surface.type == PnSurfaceType_widget);
 
-    // Make it be one of two values.  Because we can have things like (3) == true
+// Make it be one of two values.  Because we can have things like (3)
+    // == true
     //
     // I just do not want to assume how many bits are set in the value of
     // true.  Maybe true is 0xFF of maybe it's 0x01.  Hell, I don't
@@ -102,7 +108,9 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     // This change may change the size of the window and many of the
     // widgets in the window.
 
-    pnWindow_queueDraw(widget->window);
+    widget->surface.window->needAllocate = true; 
+
+    //pnWindow_queueDraw(widget->window);
 }
 
 void pnWidget_queueDraw(struct PnWidget *widget) {

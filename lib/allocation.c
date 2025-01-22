@@ -21,13 +21,38 @@
 // the children, they are implied to be culled without setting the
 // "culled" flag for the children.
 //
-static void ResetChildrenCull(struct PnSurface *s) {
+// Returns true if s is culled.
+//
+// If a container is hidden than all its children are effectively culled
+// and we do not bother marking the children as culled.
+//
+// Here we are resetting the culled flags so we just use the hidden
+// flags.
+//
+static bool ResetChildrenCull(struct PnSurface *s) {
+
+    bool culled = s->hidden;
+
+    if(culled || !s->firstChild)
+        return culled;
+
+    // "s" is not culled yet, but it may get culled if no children
+    // are not culled.
+
+    culled = true;
+    // It's culled unless a child is not culled.
 
     for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
-            c->culled = c->hidden;
-        if(!c->culled)
-            ResetChildrenCull(c);
+        c->culled = ResetChildrenCull(c);
+
+        if(!c->culled && culled)
+            // We have at least one child not culled and the container "s"
+            // is not hidden.
+            culled = false;
+        // We will set all children's children.
     }
+
+    return culled;
 }
 
 // This expandability attribute passes from child to parent, unlike
@@ -67,12 +92,15 @@ static bool ResetCanExpand(struct PnSurface *s) {
     return s->canExpand;
 }
 
-
-// This lets us have container widgets (and windows) with 
-// zero width and/or height.  We only let it be zero if
-// it's a container (has children).
+// This lets us have container widgets (and windows) with zero width
+// and/or height.  We only let it be zero if it's a container (has
+// children).  If it's a leaf widget we force it to have non-zero width.
 //
-static inline uint32_t GetWidth(const struct PnSurface *s) {
+// If it's a container widget (surface), get this left and right widget
+// border width, else if it's a leaf widget (surface) return the minimum
+// width of the widget (surface).
+//
+static inline uint32_t GetBWidth(const struct PnSurface *s) {
 
     if(s->firstChild || s->width)
         return s->width;
@@ -84,8 +112,15 @@ static inline uint32_t GetWidth(const struct PnSurface *s) {
             s->type == PnSurfaceType_toplevel);
     return PN_DEFAULT_WINDOW_WIDTH;
 }
+
+// Get this upper (lower) widget border width, of a container.  If it's a
+// leaf widget we force it to have non-zero height.
 //
-static inline uint32_t GetHeight(const struct PnSurface *s) {
+// If it's a container widget (surface), get this upper and lower widget
+// border width, else if it's a leaf widget (surface) this returns the
+// minimum height of the widget.
+
+static inline uint32_t GetBHeight(const struct PnSurface *s) {
 
     if(s->firstChild || s->height)
         return s->height;
@@ -115,7 +150,7 @@ struct PnSurface *Prev(const struct PnSurface *s) {
 // set to false.
 //
 static
-void AddRequestedSizes(struct PnSurface *s, struct PnAllocation *a) {
+void TallyRequestedSizes(struct PnSurface *s, struct PnAllocation *a) {
 
     DASSERT(!s->culled);
 
@@ -141,15 +176,15 @@ void AddRequestedSizes(struct PnSurface *s, struct PnAllocation *a) {
                     c = c->nextSibling) {
                 if(c->culled) continue;
                 if(!gotOne) gotOne = true;
-                AddRequestedSizes(c, &c->allocation);
+                TallyRequestedSizes(c, &c->allocation);
                 // Now we have all "s" children and descendent sizes.
                 a->width += c->allocation.width +
-                        GetWidth(s);
+                        GetBWidth(s);
                 if(a->height < c->allocation.height)
                     a->height = c->allocation.height;
             }
             if(gotOne)
-                a->height += GetHeight(s);
+                a->height += GetBHeight(s);
             break;
         case PnDirection_BT:
         case PnDirection_TB:
@@ -157,22 +192,22 @@ void AddRequestedSizes(struct PnSurface *s, struct PnAllocation *a) {
                     c = c->nextSibling) {
                 if(c->culled) continue;
                 if(!gotOne) gotOne = true;
-                AddRequestedSizes(c, &c->allocation);
+                TallyRequestedSizes(c, &c->allocation);
                 // Now we have all "s" children and descendent sizes.
                 a->height += c->allocation.height +
-                        GetHeight(s);
+                        GetBHeight(s);
                 if(a->width < c->allocation.width)
                     a->width = c->allocation.width;
             }
             if(gotOne)
-                a->width += GetWidth(s);
+                a->width += GetBWidth(s);
             break;
         default:
     }
 
     // Add the last border or first size if no children.
-    a->width += GetWidth(s);
-    a->height += GetHeight(s);
+    a->width += GetBWidth(s);
+    a->height += GetBHeight(s);
 }
 
 
@@ -184,8 +219,8 @@ static void GetChildrenXY(const struct PnSurface *s,
     DASSERT(a->width);
     DASSERT(a->height);
 
-    uint32_t borderX = GetWidth(s);
-    uint32_t borderY = GetHeight(s);
+    uint32_t borderX = GetBWidth(s);
+    uint32_t borderY = GetBHeight(s);
     uint32_t x = a->x + borderX;
     uint32_t y = a->y + borderY;
 
@@ -247,6 +282,8 @@ static void GetChildrenXY(const struct PnSurface *s,
             break;
     }
 }
+
+
 
 static
 void Cull(struct PnSurface *s, struct PnAllocation *a) {
@@ -328,8 +365,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
     if(!a->width && !s->firstChild) {
         DASSERT(!a->height);
-        a->width = GetWidth(s);
-        a->height = GetHeight(s);
+        a->width = GetBWidth(s);
+        a->height = GetBHeight(s);
     }
 
     // We already handled not letting the window resize if the user set
@@ -359,7 +396,7 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 
     // This shrink wraps the widgets, only getting the widgets widths and
     // heights.  Without the culled widgets.
-    AddRequestedSizes(s, a);
+    TallyRequestedSizes(s, a);
 
     // No x, y allocations yet.
     GetChildrenXY(s, a);
@@ -372,7 +409,7 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         a->height = height;
     }
 
-    // Cull widgets that do not fix.
+    // Cull widgets that do not fit.
     Cull(s, a);
 
     // Expand widgets that can be expanded.

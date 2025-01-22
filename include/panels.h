@@ -86,8 +86,9 @@ enum PnDirection {
     PnDirection_BT = 3, // child widgets assemble bottom to top
 
     // We could use this direction to make a grid, a notebook, or other
-    // container packing method.
-    PnDirection_Callback // The window or widget will define its own packing.
+    // container packing method. The window or widget will define its own
+    // packing.
+    PnDirection_Callback
 };
 
 
