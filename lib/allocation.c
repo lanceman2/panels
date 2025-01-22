@@ -284,13 +284,76 @@ static void GetChildrenXY(const struct PnSurface *s,
 }
 
 
+// Cull widgets that do not fit. This is the hard part. If we (newly) cull
+// a widget do we have to go back and reposition all widgets?  This window
+// can have arbitrarily complex (can of worms) shapes.  Maybe after
+// culling each widget we go up just one parent level and reshape the
+// widgets; and iterate like that until there are no more new culls in the
+// tree traversal.
+//
+// Returns true if a child of "s" is newly culled.
+//
+// // Clip borders and cull until we can't cull.
+//
+// So, if there is a new clip or cull in a parent node we return (pop the
+// ClipOrCullChildren() call stack).  If we clip or cull a leaf, we
+// keeping clipping and culling that family of all leaf children until we
+// can't and then pop the ClipOrCullChildren() call stack.
+//
+// Parent widgets without any showing children are culled as we pop the
+// function call stack.
+//
+static bool ClipOrCullChildren(const struct PnSurface *s,
+        const struct PnAllocation *a) {
 
-static
-void Cull(struct PnSurface *s, struct PnAllocation *a) {
+    DASSERT(!s->culled);
+    DASSERT(s->firstChild);
 
-    if(s->culled) return;
+#if 0
+    uint32_t borderX = GetBWidth(s);
+    uint32_t borderY = GetBHeight(s);
+    // Start at extreme positions:
+    uint32_t xMax = a->x + a->width;
+    uint32_t yMax = a->y + a->height;
+#endif
 
+    // Initialize return value.
+    bool haveClipOrCulled = false;
 
+    switch(s->direction) {
+
+        case PnDirection_One:
+        case PnDirection_TB:
+            for(struct PnSurface *c = s->lastChild; c; c = c->prevSibling) {
+                if(c->culled) continue;
+            }
+            break;
+
+        case PnDirection_BT:
+            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+                if(c->culled) continue;
+            }
+            break;
+
+        case PnDirection_LR:
+            for(struct PnSurface *c = s->lastChild; c; c = c->prevSibling) {
+                if(c->culled) continue;
+            }
+            break;
+
+        case PnDirection_RL:
+            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+                if(c->culled) continue;
+            }
+            break;
+
+        case PnDirection_None:
+        default:
+            ASSERT(0);
+            break;
+    }
+
+    return haveClipOrCulled;
 }
 
 static
@@ -374,7 +437,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
     //
     // TODO: This for popup windows?
 
-
     if(!s->firstChild) {
         DASSERT(!s->lastChild);
         // This is the case where an API user wants to draw on a simple
@@ -390,29 +452,68 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     ResetChildrenCull(s);
     ResetCanExpand(s);
 
-    // Save the width and height.
-    uint32_t width = a->width;
-    uint32_t height = a->height;
+    uint32_t loopCount = 0;
 
-    // This shrink wraps the widgets, only getting the widgets widths and
-    // heights.  Without the culled widgets.
-    TallyRequestedSizes(s, a);
+    do {
+        // Save the width and height.
+        uint32_t width = a->width;
+        uint32_t height = a->height;
 
-    // No x, y allocations yet.
-    GetChildrenXY(s, a);
+        // This shrink wraps the widgets, only getting the widgets widths
+        // and heights.  Without the culled widgets.
+        TallyRequestedSizes(s, a);
 
-    // Still shrink wrapped and the top surface width and height are
-    // set to the "shrink wrapped" width and height.
+        // No x and y allocations yet.
+        GetChildrenXY(s, a);
+        // Now we have  x and y allocations.
 
-    if(width && height) {
-        a->width = width;
-        a->height = height;
-    }
+        // Still shrink wrapped and the top surface width and height are
+        // set to the "shrink wrapped" width and height.
+        //
+        // If this is the first call, width and height will be zero.
+        //
+        // So:
+        if(width && height) {
+            a->width = width;
+            a->height = height;
+        }
 
-    // Cull widgets that do not fit.
-    Cull(s, a);
+        DASSERT(a->width && a->height);
+    
+        // Clip and cull until we can't clip or cull.  After a clip or
+        // cull we need to fix the widget packing; shrink wrapping and
+        // re-positioning widgets.  Hence this loops until widgets do not
+        // change how they are shown.
+        //
+        // The widgets can have a very complex structure. Basically the
+        // window is a pile of worms.  If we resize or remove a worm we
+        // need to shake the worms into a new positions refilling new
+        // empty spaces as they come to be.  This looping will converge
+        // (terminate) so long as there is a finite number of widgets in
+        // the window.  The worst case would be that we cull or resize one
+        // widget per loop; but it more likely that many widgets will cull
+        // or resize in each loop.
+        //
+        // I wonder if GTK and/or Qt do optimal widget culling and resizing
+        // like this.  I know that for most apps that we see the widget
+        // layout is simple, and this would finish culling and resizing in
+        // just one loop.  I'd guess they do it better then this, but then
+        // again they leak memory and don't give a shit; so I would not
+        // be surprised that if they fucked it up ...
+        //
+        // tests/random_widgets.c is a test that should work this loop.
 
-    // Expand widgets that can be expanded.
+        if(loopCount) {
+            // TODO: change this to DSPEW() or remove loopCount.
+            WARN("called ClipOrCullChildren() %" PRIu32 " times",
+                    loopCount);
+        }
+        ++loopCount;
+
+    } while(ClipOrCullChildren(s, a));
+
+    // Expand widgets that can be expanded.  Note this only fills
+    // otherwise blank spaces.
     Expand(s, a);
 
     // Without extra space in the containers these do nothing.  These may
