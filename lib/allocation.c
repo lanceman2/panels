@@ -284,6 +284,45 @@ static void GetChildrenXY(const struct PnSurface *s,
 }
 
 
+static inline bool TryCullY(const struct PnSurface *s,
+            const struct PnAllocation *sa,
+            struct PnSurface *c, struct PnAllocation *ca) {
+
+    bool haveCull = false;
+
+    if(ca->y + ca->height > a->y + a->height) {
+        // Now c needs to change something, it currently does not fit.
+        if(c->firstChild) {
+            // This child "c" may not be culled if it has children,
+            // but some of it's descendants may be culled.
+            if(ClipOrCullChildren(c, ca)) {
+                // We culled some children.
+                haveCull = true;
+                if(!c->firstChild)
+                    // "c" has no children left so cull it.
+                    c->culled = true;
+                else {
+                    // No children of "c" were culled.  So, "c" still
+                    // has children.
+                    DASSERT(c->firstChild);
+                    // Trim it to the edge.  Note we may lose this trimming.
+                    DASSERT(ca->y > a->y);
+                    DASSERT(a->y + a->height > ca->y);
+                    ca->height = a->y + a->height - ca->y;
+                    // TODO: does this effect the return value?????
+                }
+            }
+
+        } else {
+            // No children to start with so just cull "c"
+            haveCull = true;
+            c->culled = true;
+        }
+    }
+    return haveCull;
+}
+
+
 // Cull widgets that do not fit. This is the hard part. If we (newly) cull
 // a widget do we have to go back and reposition all widgets?  This window
 // can have arbitrarily complex (can of worms) shapes.  Maybe after
@@ -291,7 +330,7 @@ static void GetChildrenXY(const struct PnSurface *s,
 // widgets; and iterate like that until there are no more new culls in the
 // tree traversal.
 //
-// Returns true if a child of "s" is newly culled.
+// Returns true if there is a descendent of "s" is trimmed or culled.
 //
 // // Clip borders and cull until we can't cull.
 //
@@ -303,11 +342,19 @@ static void GetChildrenXY(const struct PnSurface *s,
 // Parent widgets without any showing children are culled as we pop the
 // function call stack.
 //
+// The windows widgets are no longer shrink wrapped.
+//
 static bool ClipOrCullChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     DASSERT(!s->culled);
     DASSERT(s->firstChild);
+
+    return false;
+
+    // Keep in your head that right and bottom borders can get trimmed in
+    // container widgets.  In the first call (from GetWidgetAllocations())
+    // to this none of them where trimmed at this point in the code.
 
 #if 0
     uint32_t borderX = GetBWidth(s);
@@ -316,17 +363,35 @@ static bool ClipOrCullChildren(const struct PnSurface *s,
     uint32_t xMax = a->x + a->width;
     uint32_t yMax = a->y + a->height;
 #endif
+    struct PnSurface *c; // child iterator.
 
     // Initialize return value.
-    bool haveClipOrCulled = false;
+    bool haveCull = false;
 
     switch(s->direction) {
 
         case PnDirection_One:
         case PnDirection_TB:
-            for(struct PnSurface *c = s->lastChild; c; c = c->prevSibling) {
+            c = s->lastChild;
+            while(c && c->culled)
+                c = c->prevSibling;
+            // We must have at least one child in this widget container,
+            // otherwise it would be culled.
+            DASSERT(c);
+
+            haveCull = TryCullY(s, a, c, &c->allocation);
+
+            /////////////////////////////////////////////
+            // Now cull in the x direction.
+            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
                 if(c->culled) continue;
+
+                if(c->allocation x + c->allocation.width > a->x + a->width)
+
+
             }
+
+
             break;
 
         case PnDirection_BT:
@@ -353,7 +418,7 @@ static bool ClipOrCullChildren(const struct PnSurface *s,
             break;
     }
 
-    return haveClipOrCulled;
+    return haveCull;
 }
 
 static
@@ -462,6 +527,7 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         // This shrink wraps the widgets, only getting the widgets widths
         // and heights.  Without the culled widgets.
         TallyRequestedSizes(s, a);
+        // So now a->width and a->height may have changed.
 
         // No x and y allocations yet.
         GetChildrenXY(s, a);
@@ -470,38 +536,61 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         // Still shrink wrapped and the top surface width and height are
         // set to the "shrink wrapped" width and height.
         //
-        // If this is the first call, width and height will be zero.
-        //
-        // So:
-        if(width && height) {
+        // If this is the first call to GetWidgetAllocations(), width and
+        // height will be zero.  The shrink wrapped value of a->width and
+        // a->height will always be greater than zero (that's just due to
+        // how we define things).
+
+        if(width >= a->width && height >= a->height) {
             a->width = width;
             a->height = height;
+            // Done culling widgets, we have enough space in the window
+            // for all showing widgets.  The window may be a little large
+            // now, but after this loop we may expand some of the widgets
+            // to fill the extra space in addition to "aligning" them.
+            break;
+
+        } else if(width) {
+            // If one is set then both width and height are set.
+            DASSERT(height);
+            a->width = width;
+            a->height = height;
+        } else {
+            // This is the first call to GetWidgetAllocations() for this
+            // window and a->width and a->height where both zero at the
+            // start of this "do" loop.
+            //
+            // If one is not set than both are not set.
+            DASSERT(!width && !height);
         }
 
         DASSERT(a->width && a->height);
-    
+
         // Clip and cull until we can't clip or cull.  After a clip or
         // cull we need to fix the widget packing; shrink wrapping and
         // re-positioning widgets.  Hence this loops until widgets do not
         // change how they are shown.
         //
         // The widgets can have a very complex structure. Basically the
-        // window is a pile of worms.  If we resize or remove a worm we
-        // need to shake the worms into a new positions refilling new
-        // empty spaces as they come to be.  This looping will converge
-        // (terminate) so long as there is a finite number of widgets in
-        // the window.  The worst case would be that we cull or resize one
-        // widget per loop; but it more likely that many widgets will cull
-        // or resize in each loop.
+        // window is a pile of worms (widgets).  If we resize or remove a
+        // worm we need to shake the worms into a new positions refilling
+        // new empty spaces as they come to be.  This looping will
+        // converge (terminate) so long as there is a finite number of
+        // widgets in the window.  The worst case would be that we cull or
+        // resize one widget per loop; but it likely that many widgets
+        // will cull or resize in each loop, if there is any culling.
         //
-        // I wonder if GTK and/or Qt do optimal widget culling and resizing
-        // like this.  I know that for most apps that we see the widget
-        // layout is simple, and this would finish culling and resizing in
-        // just one loop.  I'd guess they do it better then this, but then
-        // again they leak memory and don't give a shit; so I would not
-        // be surprised that if they fucked it up ...
+        // I wonder if GTK and/or Qt do optimal widget culling and
+        // resizing like this.  I know that for most apps that we see the
+        // widget layout is simple, and this would finish culling and
+        // resizing in just one loop.  I'd guess they do it better then
+        // this, but then again they leak memory and don't give a shit; so
+        // I would not be surprised that if they fucked it up ... I don't
+        // like fixing other peoples buggy code.  I'll fix my own buggy
+        // code.
         //
-        // tests/random_widgets.c is a test that should work this loop.
+        // tests/random_widgets.c is a test that should work this loop
+        // through its paces.
 
         if(loopCount) {
             // TODO: change this to DSPEW() or remove loopCount.
