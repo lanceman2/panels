@@ -284,42 +284,110 @@ static void GetChildrenXY(const struct PnSurface *s,
 }
 
 
-static inline bool TryCullY(const struct PnSurface *s,
-            const struct PnAllocation *sa,
-            struct PnSurface *c, struct PnAllocation *ca) {
+static bool ClipOrCullChildren(const struct PnSurface *s,
+        const struct PnAllocation *a);
 
-    bool haveCull = false;
+
+static inline bool TryCullX(
+        /*parent space allocation*/
+        const struct PnAllocation *a,
+        struct PnSurface *c, struct PnAllocation *ca) {
+
+    DASSERT(!c->culled);
+
+    if(ca->x > a->x + a->width) {
+        // The inner edge does not even fit.
+        // Cull this whole widget.
+        c->culled = true;
+        return true;
+    }
+
+    if(ca->x + ca->width > a->x + a->width) {
+        // The outer edge does not fit.
+
+        if(!c->firstChild) {
+            // This is a leaf that does not fit so we just cull it.
+            c->culled = true;
+            return true;
+        }
+
+        // We may cull some of this widget.
+        // First make c fit.
+        ca->width = a->x + a->width - ca->x;
+
+        // This child "c" may not be culled if it has children that fit.
+        if(ClipOrCullChildren(c, ca)) {
+            // We culled some children from "c".
+            if(!c->firstChild)
+                // "c" has no children any more so cull it.
+                c->culled = true;
+            //else: "c" has children that still fit.
+            //      We had a culling of some of the children of "c".
+
+            return true;
+
+        } //else {
+            // "c" had no children culled, so we must have just trimmed
+            // the end border of "c".  So this is not a culling, it's just
+            // a container border trimming.  We'll come here again if cull
+            // searching the other direction (Y) makes this loop again.
+            // }
+    }
+
+    return false; // no culling.
+}
+
+
+// Returns true if any widget is culled in this call.
+//
+//
+static inline bool TryCullY(
+        /*parent space allocation*/
+        const struct PnAllocation *a,
+        struct PnSurface *c, struct PnAllocation *ca) {
+
+    DASSERT(!c->culled);
+
+    if(ca->y > a->y + a->height) {
+        // The inner edge does not even fit.
+        // Cull this whole widget.
+        c->culled = true;
+        return true;
+    }
 
     if(ca->y + ca->height > a->y + a->height) {
-        // Now c needs to change something, it currently does not fit.
-        if(c->firstChild) {
-            // This child "c" may not be culled if it has children,
-            // but some of it's descendants may be culled.
-            if(ClipOrCullChildren(c, ca)) {
-                // We culled some children.
-                haveCull = true;
-                if(!c->firstChild)
-                    // "c" has no children left so cull it.
-                    c->culled = true;
-                else {
-                    // No children of "c" were culled.  So, "c" still
-                    // has children.
-                    DASSERT(c->firstChild);
-                    // Trim it to the edge.  Note we may lose this trimming.
-                    DASSERT(ca->y > a->y);
-                    DASSERT(a->y + a->height > ca->y);
-                    ca->height = a->y + a->height - ca->y;
-                    // TODO: does this effect the return value?????
-                }
-            }
+        // The outer edge does not fit.
 
-        } else {
-            // No children to start with so just cull "c"
-            haveCull = true;
+        if(!c->firstChild) {
+            // This is a leaf that does not fit so we just cull it.
             c->culled = true;
+            return true;
         }
+
+        // We may cull some of this widget.
+        // First make c fit.
+        ca->height = a->y + a->height - ca->y;
+
+        // This child "c" may not be culled if it has children that fit.
+        if(ClipOrCullChildren(c, ca)) {
+            // We culled some children from "c".
+            if(!c->firstChild)
+                // "c" has no children any more so cull it.
+                c->culled = true;
+            //else: "c" has children that still fit.
+            //      We had a culling of some of the children of "c".
+
+            return true;
+
+        } //else {
+            // "c" had no children culled, so we must have just trimmed
+            // the end border of "c".  So this is not a culling, it's just
+            // a container border trimming.  We'll come here again if cull
+            // searching the other direction (X) makes this loop again.
+            // }
     }
-    return haveCull;
+
+    return false; // no culling.
 }
 
 
@@ -344,6 +412,8 @@ static inline bool TryCullY(const struct PnSurface *s,
 //
 // The windows widgets are no longer shrink wrapped.
 //
+// This function indirectly calls itself.
+//
 static bool ClipOrCullChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
@@ -352,21 +422,12 @@ static bool ClipOrCullChildren(const struct PnSurface *s,
 
     return false;
 
-    // Keep in your head that right and bottom borders can get trimmed in
-    // container widgets.  In the first call (from GetWidgetAllocations())
-    // to this none of them where trimmed at this point in the code.
 
-#if 0
-    uint32_t borderX = GetBWidth(s);
-    uint32_t borderY = GetBHeight(s);
-    // Start at extreme positions:
-    uint32_t xMax = a->x + a->width;
-    uint32_t yMax = a->y + a->height;
-#endif
     struct PnSurface *c; // child iterator.
 
     // Initialize return value.
     bool haveCull = false;
+
 
     switch(s->direction) {
 
@@ -378,39 +439,62 @@ static bool ClipOrCullChildren(const struct PnSurface *s,
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
-
-            haveCull = TryCullY(s, a, c, &c->allocation);
-
-            /////////////////////////////////////////////
+            haveCull = TryCullY(a, c, &c->allocation);
+            while(!c->culled && TryCullY(a, c, &c->allocation));
             // Now cull in the x direction.
             for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
                 if(c->culled) continue;
-
-                if(c->allocation x + c->allocation.width > a->x + a->width)
-
-
+                haveCull = TryCullX(a, c, &c->allocation);
             }
-
-
-            break;
+            return haveCull;
 
         case PnDirection_BT:
+            c = s->firstChild;
+            while(c && c->culled)
+                c = c->nextSibling;
+            // We must have at least one child in this widget container,
+            // otherwise it would be culled.
+            DASSERT(c);
+            haveCull = TryCullY(a, c, &c->allocation);
+            while(!c->culled && TryCullY(a, c, &c->allocation));
+            // Now cull in the x direction.
             for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
                 if(c->culled) continue;
+                haveCull = TryCullX(a, c, &c->allocation);
             }
-            break;
+            return haveCull;
 
         case PnDirection_LR:
-            for(struct PnSurface *c = s->lastChild; c; c = c->prevSibling) {
-                if(c->culled) continue;
-            }
-            break;
-
-        case PnDirection_RL:
+            c = s->lastChild;
+            while(c && c->culled)
+                c = c->prevSibling;
+            // We must have at least one child in this widget container,
+            // otherwise it would be culled.
+            DASSERT(c);
+            haveCull = TryCullX(a, c, &c->allocation);
+            while(!c->culled && TryCullX(a, c, &c->allocation));
+            // Now cull in the y direction.
             for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
                 if(c->culled) continue;
+                haveCull = TryCullY(a, c, &c->allocation);
             }
-            break;
+            return haveCull;
+
+        case PnDirection_RL:
+            c = s->firstChild;
+            while(c && c->culled)
+                c = c->nextSibling;
+            // We must have at least one child in this widget container,
+            // otherwise it would be culled.
+            DASSERT(c);
+            haveCull = TryCullX(a, c, &c->allocation);
+            while(!c->culled && TryCullY(a, c, &c->allocation));
+            // Now cull in the y direction.
+            for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+                if(c->culled) continue;
+                haveCull = TryCullY(a, c, &c->allocation);
+            }
+            return haveCull;
 
         case PnDirection_None:
         default:
