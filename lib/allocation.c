@@ -602,22 +602,18 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
 }
 
 struct PnSurface *Next(struct PnSurface *s) {
+    DASSERT(s);
     return s->nextSibling;
 }
 
 struct PnSurface *Prev(struct PnSurface *s) {
+    DASSERT(s);
     return s->prevSibling;
 }
-
 
 static inline void ExpandHShared(const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
-
-}
-
-static inline void ExpandH(const struct PnAllocation *a,
-        struct PnSurface *s) {
 
 }
 
@@ -627,16 +623,20 @@ static inline void ExpandVShared(const struct PnAllocation *a,
 
 }
 
+static inline void ExpandH(const struct PnAllocation *a,
+        struct PnSurface *c, struct PnAllocation *ca) {
+
+}
+
 static inline void ExpandV(const struct PnAllocation *a,
-        struct PnSurface *s) {
+        struct PnSurface *c, struct PnAllocation *ca) {
 
 }
 
 
-
-
-static
-void ExpandChildren(const struct PnSurface *s,
+// This function indirectly calls itself.
+//
+static void ExpandChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     // "s" has a correct allocation, "a".
@@ -658,7 +658,7 @@ void ExpandChildren(const struct PnSurface *s,
                 ExpandHShared(a, s->firstChild, Next);
             if(s->canExpand & PnExpand_V)
                 for(c = s->firstChild; c; c = c->nextSibling)
-                    ExpandV(a, c);
+                    ExpandV(a, c, &c->allocation);
             return;
 
         case PnDirection_BT:
