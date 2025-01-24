@@ -296,7 +296,7 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
 // true -> c or a descendent was culled
 // false -> nothing was culled
 //
-static inline bool TryCullX(
+static inline bool RecurseCullX(
         /*parent space allocation*/
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
@@ -318,7 +318,6 @@ static inline bool TryCullX(
             c->culled = true;
             return true;
         }
-
         // We may cull some of this widget.
         // First make c fit.
         ca->width = a->x + a->width - ca->x;
@@ -352,7 +351,7 @@ static inline bool TryCullX(
 // true -> c or a descendent was culled
 // false -> nothing was culled
 //
-static inline bool TryCullY(
+static inline bool RecurseCullY(
         /*parent space allocation*/
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
@@ -407,8 +406,7 @@ static inline bool TryCullY(
 // is vertical.
 //
 static inline
-uint32_t CullX(const struct PnAllocation *a,
-        struct PnSurface *c, uint32_t haveCullRet) {
+uint32_t CullX(const struct PnAllocation *a, struct PnSurface *c) {
 
     DASSERT(c);
     DASSERT(c->parent);
@@ -416,11 +414,12 @@ uint32_t CullX(const struct PnAllocation *a,
             c->parent->direction == PnDirection_BT);
 
     bool haveChildShowing = false;
+    uint32_t haveCullRet = 0;
 
     // Now cull in the x direction.
     for(; c; c = c->nextSibling) {
         if(c->culled) continue;
-        if(TryCullX(a, c, &c->allocation))
+        if(RecurseCullX(a, c, &c->allocation))
             haveCullRet |= GOT_CULL;
         if(!c->culled)
             // At least one child still shows.
@@ -434,8 +433,7 @@ uint32_t CullX(const struct PnAllocation *a,
 // is horizontal.
 //
 static inline
-uint32_t CullY(const struct PnAllocation *a,
-        struct PnSurface *c, uint32_t haveCullRet) {
+uint32_t CullY(const struct PnAllocation *a, struct PnSurface *c) {
 
     DASSERT(c);
     DASSERT(c->parent);
@@ -443,11 +441,12 @@ uint32_t CullY(const struct PnAllocation *a,
             c->parent->direction == PnDirection_RL);
 
     bool haveChildShowing = false;
+    uint32_t haveCullRet = 0;
 
     // Now cull in the y direction.
     for(; c; c = c->nextSibling) {
         if(c->culled) continue;
-        if(TryCullY(a, c, &c->allocation))
+        if(RecurseCullY(a, c, &c->allocation))
             haveCullRet |= GOT_CULL;
         if(!c->culled)
             // At least one child still shows.
@@ -502,68 +501,76 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
 
         case PnDirection_One:
         case PnDirection_TB:
+            haveCullRet = CullX(a, s->firstChild);
+            if(haveCullRet) return haveCullRet;
             c = s->lastChild;
             while(c && c->culled)
                 c = c->prevSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
-            haveCullRet = TryCullY(a, c, &c->allocation) ? GOT_CULL : 0;
+            haveCullRet = RecurseCullY(a, c, &c->allocation) ? GOT_CULL : 0;
             while(c->culled && c->prevSibling) {
                 c = c->prevSibling;
                 if(!c->culled)
-                    TryCullY(a, c, &c->allocation);
+                    RecurseCullY(a, c, &c->allocation);
             }
-            // Now cull in the x direction.
-            return CullX(a, s->firstChild, haveCullRet);
+            if(c->culled) haveCullRet = NO_SHOWING_CHILD;
+            return haveCullRet;
 
         case PnDirection_BT:
+            haveCullRet = CullX(a, s->firstChild);
+            if(haveCullRet) return haveCullRet;
             c = s->firstChild;
             while(c && c->culled)
                 c = c->nextSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
-            haveCullRet = TryCullY(a, c, &c->allocation) ? GOT_CULL : 0;
+            haveCullRet = RecurseCullY(a, c, &c->allocation) ? GOT_CULL : 0;
             while(c->culled && c->nextSibling) {
                 c = c->nextSibling;
                 if(!c->culled)
-                    TryCullY(a, c, &c->allocation);
+                    RecurseCullY(a, c, &c->allocation);
             }
-            // Now cull in the x direction.
-            return CullX(a, s->firstChild, haveCullRet);
+            if(c->culled) haveCullRet = NO_SHOWING_CHILD;
+            return haveCullRet;
 
         case PnDirection_LR:
+            haveCullRet = CullY(a, s->firstChild);
+            if(haveCullRet) return haveCullRet;
             c = s->lastChild;
             while(c && c->culled)
                 c = c->prevSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
-            haveCullRet = TryCullX(a, c, &c->allocation) ? GOT_CULL : 0;
+            haveCullRet = RecurseCullX(a, c, &c->allocation) ? GOT_CULL : 0;
             while(c->culled && c->prevSibling) {
                 c = c->prevSibling;
                 if(!c->culled)
-                    TryCullX(a, c, &c->allocation);
+                    RecurseCullX(a, c, &c->allocation);
             }
-            // Now cull in the y direction.
-            return CullY(a, s->firstChild, haveCullRet);
+            if(c->culled) haveCullRet = NO_SHOWING_CHILD;
+            return haveCullRet;
 
         case PnDirection_RL:
+            haveCullRet = CullY(a, s->firstChild);
+            if(haveCullRet) return haveCullRet;
             c = s->firstChild;
             while(c && c->culled)
                 c = c->nextSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
-            haveCullRet = TryCullX(a, c, &c->allocation) ? GOT_CULL : 0;
+            haveCullRet = RecurseCullX(a, c, &c->allocation) ? GOT_CULL : 0;
             while(c->culled && c->nextSibling) {
                 c = c->nextSibling;
                 if(!c->culled)
-                    TryCullX(a, c, &c->allocation);
+                    RecurseCullX(a, c, &c->allocation);
             }
-            // Now cull in the Y direction.
-            return CullY(a, s->firstChild, haveCullRet);
+            if(c->culled) haveCullRet = NO_SHOWING_CHILD;
+            return haveCullRet;
 
         case PnDirection_None:
         default:
@@ -738,24 +745,16 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         // resize one widget per loop; but it likely that many widgets
         // will cull or resize in each loop, if there is any culling.
         //
-        // I wonder if GTK and/or Qt do optimal widget culling and
-        // resizing like this.  I know that for most apps that we see the
-        // widget layout is simple, and this would finish culling and
-        // resizing in just one loop.  I'd guess they do it better then
-        // this, but then again they leak memory and don't give a shit; so
-        // I would not be surprised that if they fucked it up ... I don't
-        // like fixing other peoples buggy code.  I'll fix my own buggy
-        // code.
-        //
         // tests/random_widgets.c is a test that should work this loop
         // through its paces.
 
-        if(loopCount) {
+        ++loopCount;
+
+        if(loopCount >= 4) {
             // TODO: change this to DSPEW() or remove loopCount.
-            WARN("called ClipOrCullChildren() %" PRIu32 " times",
+            INFO("calling ClipOrCullChildren() %" PRIu32 " times",
                     loopCount);
         }
-        ++loopCount;
 
         haveChildShowing = false;
         for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
@@ -776,5 +775,5 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     AlignChildrenX(s, a);
     AlignChildrenY(s, a);
 
-INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
+//INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 }
