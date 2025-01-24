@@ -17,7 +17,7 @@ static
 struct PnWidget *W(void *container, enum PnDirection direction) {
 
     struct PnWidget *w = pnWidget_create((void *) container,
-            10/*width*/, 10/*height*/,
+            14/*width*/, 14/*height*/,
             direction, 0/*align*/,
             PnExpand_H | PnExpand_V/*expand*/);
     ASSERT(w);

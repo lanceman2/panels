@@ -16,7 +16,7 @@ extern "C" {
 #define PN_PIXEL_SIZE     (4) // bytes per pixel
 // DEFAULTS
 #define PN_BORDER_WIDTH   (6) // default border pixels wide
-#define PN_WINDOW_BGCOLOR (0x09999900)
+#define PN_WINDOW_BGCOLOR (0xFF999900)
 #define PN_DEFAULT_WINDOW_WIDTH  (400)
 #define PN_DEFAULT_WINDOW_HEIGHT (400)
 #define PN_DEFAULT_WIDGET_WIDTH  (40)
@@ -101,8 +101,16 @@ enum PnDirection {
 // contained widgets changing size.
 //
 // The expand attribute of a container widget does not effect it until all
-// contained widgets are removed.  The expand attribute of a containing
-// widgets does effect container widgets that contain them.
+// contained widgets are removed (and it becomes a leaf).  Leaf widgets
+// that can expand effect their parent (container) widgets if the parent
+// has directions PnDirection_LR, PnDirection_LR, PnDirection_TB, or
+// PnDirection_BT.
+//
+// It does not make sense to say that a PnDirection_LR, PnDirection_LR,
+// PnDirection_TB, or PnDirection_BT container can't expand, otherwise how
+// can you put any number of child widgets in them.  The container would
+// need more attributes for them to have children given the children can
+// have any size.  That's just how we define things in the "panels" API.
 //
 // Sibling widgets (widgets in the same container) that can expand share
 // the extra space.
@@ -195,7 +203,6 @@ PN_EXPORT struct PnWidget *pnWidget_create(
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_queueDraw(struct PnWidget *widget);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
-
 
 
 PN_EXPORT void pnSurface_setBackgroundColor(

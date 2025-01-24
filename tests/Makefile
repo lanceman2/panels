@@ -42,7 +42,12 @@ widgets_run_CPPFLAGS := -DRUN
 040_widgets_SOURCES := widgets.c
 040_widgets_LDFLAGS := $(PN_LIB)
 
+rand_widgets_run_SOURCES := rand_widgets.c
+rand_widgets_run_LDFLAGS := $(PN_LIB)
+rand_widgets_run_CPPFLAGS := -DRUN
 
+050_rand_widgets_SOURCES := rand_widgets.c
+050_rand_widgets_LDFLAGS := $(PN_LIB)
 
 
 

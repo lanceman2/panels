@@ -12,10 +12,16 @@
 #include  "display.h"
 
 
-// We use lots of recursion to get widget positions and sizes.
+// We use lots of function recursion to get widget positions, sizes, and
+// culling.  This code may hurt your head.
 
 
 // This function calls itself.
+//
+// This culling got with this PnSurface::culled flag is just effecting the
+// showing (and not showing) of widgets: due to the window size not being
+// large enough, or the panel's API (application programming interface)
+// user hiding the widget.
 //
 // If a parent is culled: then we do not need to think about culling
 // the children, they are implied to be culled without setting the
@@ -27,7 +33,10 @@
 // and we do not bother marking the children as culled.
 //
 // Here we are resetting the culled flags so we just use the hidden
-// flags.
+// flags until after we compare widget sizes with the window size.
+//
+// Think of PnSurface::culled as a temporary flag that is only used when
+// we are allocating widget sizes and positions.
 //
 static bool ResetChildrenCull(struct PnSurface *s) {
 
@@ -61,24 +70,41 @@ static bool ResetChildrenCull(struct PnSurface *s) {
 // surface user set expand flag).
 //
 // The parent container surface user set expand flag is ignored until the
-// surface becomes a non-container widget (with no children).
+// surface becomes a non-container widget (with no children, a leaf).
 //
 // "panels" does not so much distinguish between container widgets and
 // non-container widgets.  Panels widgets can change between being a
 // container and non-container widget just by removing or adding child
 // widgets from them, without recreating the widget.
 //
-static bool ResetCanExpand(struct PnSurface *s) {
+// Note: a container widget does not change to being a leaf widget by
+// having all its children culled.  If a container widget has all
+// its children culled, then the container will be culled too.
+//
+// Think of PnSurface::canExpand as a temporary flag that is only used
+// when we are allocating widget sizes and positions.
+//
+// Note: enum PnExpand is a bits flag with two bits, it's not a bool.
+//
+static uint32_t ResetCanExpand(struct PnSurface *s) {
+
+    DASSERT(s);
+    DASSERT(!s->culled);
 
     if(s->firstChild)
         // We may add changes to this later:
         s->canExpand = 0;
     else {
-        // This is a leaf node.  We can at an end of the function call
+        // This is a leaf node.  We are at an end of the function call
         // stack.
         s->canExpand = s->expand;
         return s->canExpand;
     }
+
+    // TODO: deal with containers that are not PnDirection_LR,
+    // PnDirection_RL, PnDirection_TB, or PnDirection_BT.
+    ASSERT(s->direction >= PnDirection_LR ||
+            s->direction <= PnDirection_BT, "WRITE MORE CODE");
 
     for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
         if(c->culled)
@@ -134,23 +160,15 @@ static inline uint32_t GetBHeight(const struct PnSurface *s) {
 }
 
 
-struct PnSurface *Next(const struct PnSurface *s) {
-    return s->nextSibling;
-}
-// The backwards next.
-struct PnSurface *Prev(const struct PnSurface *s) {
-    return s->prevSibling;
-}
-
-
 // This function calls itself.  I don't think we'll blow the function call
 // stack here.  How many layers of widgets do we have?
 //
-// The not showing widget has it's culling flag set true here, if not it's
-// set to false.
+// A not showing widget has it's "culling" flag set to true (before this
+// function call), if not it's false (before this function call).
 //
 static
-void TallyRequestedSizes(struct PnSurface *s, struct PnAllocation *a) {
+void TallyRequestedSizes(const struct PnSurface *s,
+        struct PnAllocation *a) {
 
     DASSERT(!s->culled);
 
@@ -583,12 +601,83 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
     return 0;
 }
 
+struct PnSurface *Next(struct PnSurface *s) {
+    return s->nextSibling;
+}
+
+struct PnSurface *Prev(struct PnSurface *s) {
+    return s->prevSibling;
+}
+
+
+static inline void ExpandHShared(const struct PnAllocation *a,
+        struct PnSurface *first,
+        struct PnSurface *(*next)(struct PnSurface *s)) {
+
+}
+
+static inline void ExpandH(const struct PnAllocation *a,
+        struct PnSurface *s) {
+
+}
+
+static inline void ExpandVShared(const struct PnAllocation *a,
+        struct PnSurface *first,
+        struct PnSurface *(*next)(struct PnSurface *s)) {
+
+}
+
+static inline void ExpandV(const struct PnAllocation *a,
+        struct PnSurface *s) {
+
+}
+
+
+
+
 static
-void Expand(struct PnSurface *s, struct PnAllocation *a) {
+void ExpandChildren(const struct PnSurface *s,
+        const struct PnAllocation *a) {
+
+    // "s" has a correct allocation, "a".
+
+    DASSERT(s);
+    DASSERT(s->firstChild);
+    DASSERT(s->lastChild);
 
     if(s->culled) return;
+    if(!s->canExpand) return;
 
+    struct PnSurface *c;
 
+    switch(s->direction) {
+
+        case PnDirection_One:
+        case PnDirection_LR:
+            if(s->canExpand & PnExpand_H)
+                ExpandHShared(a, s->firstChild, Next);
+            if(s->canExpand & PnExpand_V)
+                for(c = s->firstChild; c; c = c->nextSibling)
+                    ExpandV(a, c);
+            return;
+
+        case PnDirection_BT:
+
+            return;
+
+        case PnDirection_TB:
+
+            return;
+
+        case PnDirection_RL:
+
+            return;
+
+        case PnDirection_None:
+        default:
+            ASSERT(0);
+            break;
+    }
 }
 
 
@@ -677,7 +766,6 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     DASSERT(s->lastChild->parent == s);
 
     ResetChildrenCull(s);
-    ResetCanExpand(s);
 
     uint32_t loopCount = 0;
 
@@ -765,9 +853,11 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 
     } while(haveChildShowing && ClipOrCullChildren(s, a));
 
-    // Expand widgets that can be expanded.  Note this only fills
-    // otherwise blank spaces.
-    Expand(s, a);
+    ResetCanExpand(s);
+
+    // Expand widgets that can be expanded.  Note this only fills in
+    // otherwise blank container spaces.
+    ExpandChildren(s, a);
 
     // Without extra space in the containers these do nothing.  These may
     // change the widgets x and y positions, but will not change widget
