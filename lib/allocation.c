@@ -630,7 +630,7 @@ static inline void ExpandHShared(const struct PnSurface *s,
     DASSERT(first);
     DASSERT(next);
     DASSERT(s);
-    DASSERT(a);
+    DASSERT(a == &s->allocation);
     DASSERT(s->canExpand & PnExpand_H);
 
     uint32_t numExpand = 0;
@@ -656,9 +656,11 @@ static inline void ExpandHShared(const struct PnSurface *s,
     // When we expand we do not fill the container right edge border.
     // But, it may be filled in a little already.
     if(lastA->x + lastA->width + border >= a->x + a->width)
+        // expand children's children
         goto finish;
 
-    // We will change these children.
+    // We will change these children and then go on to expand children's
+    // children.
 
     uint32_t extra = a->x + a->width -
             (lastA->x + lastA->width + border);
