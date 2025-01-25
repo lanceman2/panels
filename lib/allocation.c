@@ -653,6 +653,7 @@ static void ExpandChildren(const struct PnSurface *s,
     switch(s->direction) {
 
         case PnDirection_One:
+            DASSERT(s->firstChild == s->lastChild);
         case PnDirection_LR:
             if(s->canExpand & PnExpand_H)
                 ExpandHShared(a, s->firstChild, Next);
