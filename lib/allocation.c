@@ -622,6 +622,9 @@ static void ExpandChildren(const struct PnSurface *s,
 // Note: if the right side of "s" was trimmed we will still pad that
 // edge.
 //
+// Child positions are no longer valid an must be computed from the parent
+// "s" positions in "a".  The child widths may increase.
+//
 static inline void ExpandHShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
@@ -633,62 +636,63 @@ static inline void ExpandHShared(const struct PnSurface *s,
     DASSERT(a == &s->allocation);
     DASSERT(s->canExpand & PnExpand_H);
 
+    uint32_t border = GetBWidth(s);
     uint32_t numExpand = 0;
-    struct PnAllocation *lastA = 0;
+    uint32_t neededWidth = 0;
     struct PnSurface *c;
     for(c = first; c; c = next(c)) {
         if(c->culled) continue;
-        lastA = &c->allocation;
+        neededWidth += border + c->allocation.width;
         if(c->canExpand & PnExpand_H)
             ++numExpand;
     }
 
     // If ResetCanExpand() was written correctly:
-    DASSERT(lastA);
-    // TODO: I think this next line is pointless.
-    if(!lastA) goto finish;
-
-    uint32_t border = GetBWidth(s);
+    DASSERT(numExpand);
 
     // If this is not so, then allocations are inconsistent.
-    DASSERT(lastA->x + lastA->width <= a->x + a->width);
+    DASSERT(neededWidth <= a->width);
 
     // When we expand we do not fill the container right edge border.
     // But, it may be filled in a little already.
-    if(lastA->x + lastA->width + border >= a->x + a->width)
-        // expand children's children
-        goto finish;
+
+    // It may be that the none of the widgets increase their width because
+    // surface "s" is squeezing them to their limit; but we still need to
+    // recalculate the children x positions.
 
     // We will change these children and then go on to expand children's
     // children.
 
-    uint32_t extra = a->x + a->width -
-            (lastA->x + lastA->width + border);
+    uint32_t extra = 0;
+    if(neededWidth + border < a->width)
+        extra = a->width - (neededWidth + border);
     uint32_t padPer = extra/numExpand;
+    // endPiece is the leftover pixels from extra not being a integer
+    // multiple of padPer.  It's added to the last widget width.
     uint32_t endPiece = extra - numExpand * padPer;
+    // Starting left side position, smallest x position.
     uint32_t x = a->x + border;
+
     for(c = first; c; c = next(c)) {
         if(c->culled) continue;
         struct PnAllocation *ca = &c->allocation;
         ca->x = x;
+        // Add to the width if we can.
         if(c->canExpand & PnExpand_H) {
             ca->width += padPer;
             --numExpand;
             if(!numExpand)
+                // endPiece can be zero.
                 ca->width += endPiece;
         } // else ca->width does not change.
         x += ca->width + border;
     }
-    DASSERT(x > border);
     DASSERT(x - border <= a->x + a->width);
-
-finish:
-
-    for(c = first; c; c = next(c))
-        if(!c->culled && c->canExpand && c->firstChild)
-            ExpandChildren(c, &c->allocation);
 }
 
+// Child positions are no longer valid an must be computed from the parent
+// "s" positions in "a".
+//
 static inline void ExpandVShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
@@ -700,19 +704,63 @@ static inline void ExpandVShared(const struct PnSurface *s,
 
 }
 
-static inline void ExpandH(const struct PnAllocation *a,
+// allocation a is the parent allocation and it is correct.
+//
+// Fix the x and width of ca.
+//
+static inline void ExpandH(const struct PnSurface *s,
+        const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
+    DASSERT(a);
+    DASSERT(c);
+    DASSERT(ca == &c->allocation);
+    DASSERT(s);
+    DASSERT(&s->allocation == a);
+    DASSERT(!c->culled);
+    DASSERT(c->expand & PnExpand_H);
+ 
+    
 
 }
 
-static inline void ExpandV(const struct PnAllocation *a,
+// "s" is the parent of "c".  "a" is the allocation of "s".
+// "a" is correct.
+//
+// Fix the y and height of "ca" which is the allocation of "c".
+// "c" fills all the space of "s" in this y direction.
+//
+static inline void ExpandV(const struct PnSurface *s,
+        const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
+    DASSERT(a);
+    DASSERT(c);
+    DASSERT(ca == &c->allocation);
+    DASSERT(s);
+    DASSERT(&s->allocation == a);
+    DASSERT(!c->culled);
+    DASSERT(c->expand & PnExpand_V);
+
+    uint32_t border = GetBHeight(s);
+    ca->y = a->y + border;
+
+    DASSERT(ca->height);
+    DASSERT(ca->height <= a->height + border);
+    DASSERT(a->height > border);
+    // The height of "ca" could be correct already, and may have
+    // this "correct" size by "trimming", so we do not change it
+    // if it is already has some height based on this logic.
+
+    if(a->height < 2 * border) {
+        // "s" was trimmed.  The end border (at the bottom of the window)
+        // was cut; so there is not a possibly of expanding "c".
+        DASSERT(ca->height == GetBWidth(c));
+    } else if(ca->height < a->height - 2 * border)
+        ca->height = a->height - 2 * border;
 
 }
 
 
-// This function indirectly calls itself.  Or, directly if you think of an
-// inline function as being inserted.
+// This function calls itself.
 //
 // At this call "s" has it's position and size set "correctly" and so do
 // all the parent levels of "s".
@@ -744,7 +792,7 @@ static void ExpandChildren(const struct PnSurface *s,
             if(s->canExpand & PnExpand_V)
                 for(c = s->firstChild; c; c = c->nextSibling)
                     if(!c->culled && (c->canExpand & PnExpand_V))
-                        ExpandV(a, c, &c->allocation);
+                        ExpandV(s, a, c, &c->allocation);
             return;
 
         case PnDirection_BT:
@@ -764,6 +812,13 @@ static void ExpandChildren(const struct PnSurface *s,
             ASSERT(0);
             break;
     }
+
+    // Now that all the children of "s" have correct allocations we can
+    // expand (fix) the children's children allocations.
+
+    for(c = s->firstChild; c; c = c->nextSibling)
+        if(!c->culled && c->canExpand && c->firstChild)
+            ExpandChildren(c, &c->allocation);
 }
 
 

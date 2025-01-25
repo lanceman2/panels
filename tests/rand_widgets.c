@@ -7,7 +7,7 @@
 #include "../lib/debug.h"
 
 // For a given seed we get different repeatable results.
-#define SEED            (7)
+#define SEED            (8)
 #define MAX_CONTAINERS  (4)
 #define TOTAL_WIDGETS   (100)
 
@@ -124,7 +124,7 @@ static struct PnWidget *Widget() {
             Unit * Rand(1,2)/*width*/,
             Unit * Rand(1,2)/*height*/,
             Rand(0,1) + SkewMinRand(0, 2, 2) /*direction*/,
-            0/*align*/, PnExpand_HV & 0/*expand*/);
+            0/*align*/, PnExpand_HV/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 
