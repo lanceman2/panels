@@ -611,15 +611,90 @@ struct PnSurface *Prev(struct PnSurface *s) {
     return s->prevSibling;
 }
 
-static inline void ExpandHShared(const struct PnAllocation *a,
+
+static void ExpandChildren(const struct PnSurface *s,
+        const struct PnAllocation *a);
+
+// Expand children of "s" while taking space to the right.  This will pad
+// (border) the right edge by GetBWidth(s).  If it can't pad the right
+// edge, it will not change anything.
+//
+// Note: if the right side of "s" was trimmed we will still pad that
+// edge.
+//
+static inline void ExpandHShared(const struct PnSurface *s,
+        const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
 
+    DASSERT(first);
+    DASSERT(next);
+    DASSERT(s);
+    DASSERT(a);
+    DASSERT(s->canExpand & PnExpand_H);
+
+    uint32_t numExpand = 0;
+    struct PnAllocation *lastA = 0;
+    struct PnSurface *c;
+    for(c = first; c; c = next(c)) {
+        if(c->culled) continue;
+        lastA = &c->allocation;
+        if(c->canExpand & PnExpand_H)
+            ++numExpand;
+    }
+
+    // If ResetCanExpand() was written correctly:
+    DASSERT(lastA);
+    // TODO: I think this next line is pointless.
+    if(!lastA) goto finish;
+
+    uint32_t border = GetBWidth(s);
+
+    // If this is not so, then allocations are inconsistent.
+    DASSERT(lastA->x + lastA->width <= a->x + a->width);
+
+    // When we expand we do not fill the container right edge border.
+    // But, it may be filled in a little already.
+    if(lastA->x + lastA->width + border >= a->x + a->width)
+        goto finish;
+
+    // We will change these children.
+
+    uint32_t extra = a->x + a->width -
+            (lastA->x + lastA->width + border);
+    uint32_t padPer = extra/numExpand;
+    uint32_t endPiece = extra - numExpand * padPer;
+    uint32_t x = a->x + border;
+    for(c = first; c; c = next(c)) {
+        if(c->culled) continue;
+        struct PnAllocation *ca = &c->allocation;
+        ca->x = x;
+        if(c->canExpand & PnExpand_H) {
+            ca->width += padPer;
+            --numExpand;
+            if(!numExpand)
+                ca->width += endPiece;
+        } // else ca->width does not change.
+        x += ca->width + border;
+    }
+    DASSERT(x > border);
+    DASSERT(x - border <= a->x + a->width);
+
+finish:
+
+    for(c = first; c; c = next(c))
+        if(!c->culled && c->canExpand && c->firstChild)
+            ExpandChildren(c, &c->allocation);
 }
 
-static inline void ExpandVShared(const struct PnAllocation *a,
+static inline void ExpandVShared(const struct PnSurface *s,
+        const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
+
+    DASSERT(s);
+    DASSERT(s->canExpand & PnExpand_V);
+
 
 }
 
@@ -634,7 +709,15 @@ static inline void ExpandV(const struct PnAllocation *a,
 }
 
 
-// This function indirectly calls itself.
+// This function indirectly calls itself.  Or, directly if you think of an
+// inline function as being inserted.
+//
+// At this call "s" has it's position and size set "correctly" and so do
+// all the parent levels of "s".
+//
+// We are changing the position and size of the children of "s", and
+// the children's children, the children's children's children, and so
+// on.
 //
 static void ExpandChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
@@ -644,9 +727,8 @@ static void ExpandChildren(const struct PnSurface *s,
     DASSERT(s);
     DASSERT(s->firstChild);
     DASSERT(s->lastChild);
-
-    if(s->culled) return;
-    if(!s->canExpand) return;
+    DASSERT(!s->culled);
+    DASSERT(s->canExpand);
 
     struct PnSurface *c;
 
@@ -656,10 +738,11 @@ static void ExpandChildren(const struct PnSurface *s,
             DASSERT(s->firstChild == s->lastChild);
         case PnDirection_LR:
             if(s->canExpand & PnExpand_H)
-                ExpandHShared(a, s->firstChild, Next);
+                ExpandHShared(s, a, s->firstChild, Next);
             if(s->canExpand & PnExpand_V)
                 for(c = s->firstChild; c; c = c->nextSibling)
-                    ExpandV(a, c, &c->allocation);
+                    if(!c->culled && (c->canExpand & PnExpand_V))
+                        ExpandV(a, c, &c->allocation);
             return;
 
         case PnDirection_BT:
@@ -858,7 +941,8 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 
     // Expand widgets that can be expanded.  Note this only fills in
     // otherwise blank container spaces.
-    ExpandChildren(s, a);
+    if(s->canExpand)
+        ExpandChildren(s, a);
 
     // Without extra space in the containers these do nothing.  These may
     // change the widgets x and y positions, but will not change widget
