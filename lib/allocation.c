@@ -612,18 +612,33 @@ struct PnSurface *Prev(struct PnSurface *s) {
 }
 
 
-static void ExpandChildren(const struct PnSurface *s,
-        const struct PnAllocation *a);
-
-// Expand children of "s" while taking space to the right.  This will pad
-// (border) the right edge by GetBWidth(s).  If it can't pad the right
-// edge, it will not change anything.
+// Expand children of "s" while taking space to the right.  It's to the
+// right because that's the convention that window managers and widget
+// APIs have chosen before me.  All operating systems do this.
 //
-// Note: if the right side of "s" was trimmed we will still pad that
-// edge.
+// Shrink a window and if that program lets you (shrink it) you'll see it
+// culls widgets to the right and bottom; on any common operating system.
+// That's why (or consistent with) +x is to the right and +y is in the
+// down direction.
 //
-// Child positions are no longer valid an must be computed from the parent
-// "s" positions in "a".  The child widths may increase.
+// This will pad (border) the right edge by GetBWidth(s).  If it can't pad
+// the right edge (put the container full right border in), it will not
+// change anything, except maybe the x positions.
+//
+// For a horizontal container widget "trimming" is when the window is not
+// large enough to show all the right border of the container widget.
+// Leaf widgets do not get trimmed, if they do not have their minimum
+// required size they get culled.  Culling happens before this function
+// call.
+//
+// So now child positions are no longer valid and must be computed from
+// the parent "s" positions in "a".  The child widths may increase here,
+// but do not decrease.  Hence the term Expand.
+//
+// And, the surface "s" positions and sizes, "a", are correct and hence
+// constant in this function prototype.  "Correct" in this case, is only a
+// matter of how we define it here, correct is relative to context.  Yes,
+// I'm insane.
 //
 static inline void ExpandHShared(const struct PnSurface *s,
         const struct PnAllocation *a,
@@ -654,9 +669,10 @@ static inline void ExpandHShared(const struct PnSurface *s,
     DASSERT(neededWidth <= a->width);
 
     // When we expand we do not fill the container right edge border.
-    // But, it may be filled in a little already.
+    // But, it may be filled in a little already, via what we called
+    // "trimming".
 
-    // It may be that the none of the widgets increase their width because
+    // It may be that none of the widgets increase their width because
     // surface "s" is squeezing them to their limit; but we still need to
     // recalculate the children x positions.
 
@@ -690,16 +706,17 @@ static inline void ExpandHShared(const struct PnSurface *s,
     DASSERT(x - border <= a->x + a->width);
 }
 
+
 // Child positions are no longer valid an must be computed from the parent
-// "s" positions in "a".
+// "s" positions in "a" (which are correct).
+//
+// See comments in and above ExpandHShared().  There's symmetry here.
 //
 static inline void ExpandVShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
 
-    DASSERT(s);
-    DASSERT(s->canExpand & PnExpand_V);
 
 
 }
@@ -736,6 +753,8 @@ static inline void ExpandV(const struct PnSurface *s,
     DASSERT(c);
     DASSERT(ca == &c->allocation);
     DASSERT(s);
+    DASSERT(s->firstChild);
+    DASSERT(s->lastChild);
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
     DASSERT(c->expand & PnExpand_V);
@@ -750,20 +769,20 @@ static inline void ExpandV(const struct PnSurface *s,
     // this "correct" size by "trimming", so we do not change it
     // if it is already has some height based on this logic.
 
-    if(a->height < 2 * border) {
+    if(a->height < 2 * border) return;
         // "s" was trimmed.  The end border (at the bottom of the window)
         // was cut; so there is not a possibly of expanding "c".
-        DASSERT(ca->height == GetBWidth(c));
-    } else if(ca->height < a->height - 2 * border)
+        // Only containers get trimmed.
+    if(ca->height < a->height - 2 * border)
         ca->height = a->height - 2 * border;
-
 }
 
 
 // This function calls itself.
 //
 // At this call "s" has it's position and size set "correctly" and so do
-// all the parent levels of "s".
+// all the parent levels above "s" (grand parents, great grand parents,
+// and so on).
 //
 // We are changing the position and size of the children of "s", and
 // the children's children, the children's children's children, and so
@@ -867,6 +886,8 @@ void AlignChildrenY(struct PnSurface *s, struct PnAllocation *a) {
 // it borrowed from the GDK part of the GTK API, which has a rectangular
 // space "allocation" class which gets setup when the widgets are
 // "allocated" (find the position and size of widgets).
+// A better function name may be GetWdigetPositionAndSize().
+// And the struct PnAllocation should be struct PositionAndSize.
 //
 void GetWidgetAllocations(struct PnWindow *win) {
 
@@ -986,6 +1007,8 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         }
 
         haveChildShowing = false;
+        // It can happen that the window is so small that no widget can
+        // fix in it: all the widgets get culled.
         for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
             if(!c->culled) {
                 haveChildShowing = true;
@@ -993,6 +1016,7 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
             }
 
     } while(haveChildShowing && ClipOrCullChildren(s, a));
+
 
     ResetCanExpand(s);
 
