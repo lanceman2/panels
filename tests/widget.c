@@ -11,6 +11,7 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
+#define EXPAND  (PnExpand_HV)
 
 
 int main(void) {
@@ -25,13 +26,13 @@ int main(void) {
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             100/*width*/, 200/*height*/,
-            0/*direction*/, 0/*align*/, 0/*expand*/);
+            0/*direction*/, 0/*align*/, EXPAND/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCCCF0000);
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 300/*height*/,
-            0/*direction*/, 0/*align*/, 0/*expand*/);
+            0/*direction*/, 0/*align*/, EXPAND/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
     //pnWidget_show(w, false);
@@ -40,24 +41,25 @@ int main(void) {
             (struct PnSurface *) win/*parent*/,
             100/*width*/, 100/*height*/,
             PnDirection_LR/*direction*/, 0/*align*/,
-            PnExpand_V/*expand*/);
+            EXPAND/*expand*/);
     ASSERT(cw);
     pnWidget_setBackgroundColor(cw, 0xCC0000CF);
 
-#if 0
+#if 1
     {
         w = pnWidget_create((struct PnSurface *) cw/*parent*/,
             130/*width*/, 100/*height*/,
             0/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCCCFFF00);
-        pnWidget_show(w, false);
+        //pnWidget_show(w, false);
 
         w = pnWidget_create((struct PnSurface *) cw/*parent*/,
             100/*width*/, 100/*height*/,
-            0/*direction*/, 0/*align*/, 0/*expand*/);
+            0/*direction*/, 0/*align*/, EXPAND/*expand*/);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCC00CFFF);
+        pnWidget_show(w, false);
     }
 #endif
 

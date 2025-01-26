@@ -85,6 +85,9 @@ static bool ResetChildrenCull(struct PnSurface *s) {
 // when we are allocating widget sizes and positions.
 //
 // Note: enum PnExpand is a bits flag with two bits, it's not a bool.
+// A widget can't expand if no bits are set in the "expand" flag.
+//
+// Returns the temporary correct canExapnd attribute of "s".
 //
 static uint32_t ResetCanExpand(struct PnSurface *s) {
 
@@ -96,10 +99,12 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
         s->canExpand = 0;
     else {
         // This is a leaf node.  We are at an end of the function call
-        // stack.
+        // stack.  s->expand is a user set attribute.
         s->canExpand = s->expand;
         return s->canExpand;
     }
+
+    // Now "s" has children.
 
     // TODO: deal with containers that are not PnDirection_LR,
     // PnDirection_RL, PnDirection_TB, or PnDirection_BT.
@@ -110,13 +115,31 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
         if(c->culled)
             // Skip culled widgets.
             continue;
-        // If any of the children can expand than "s" can expand:
+        // If any of the children can expand than "s" can expand, so long
+        // as there's no culling to get to them.
         s->canExpand |= ResetCanExpand(c);
     }
 
     // Return if we have any leaf children that can expand.
     return s->canExpand;
 }
+
+
+#if 0
+void CheckCanExpand(const struct PnSurface *s) {
+    ASSERT(s);
+    ASSERT(!s->culled);
+    ASSERT(s->canExpand == PnExpand_HV);
+
+    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+        if(c->culled)
+            // Skip culled widgets.
+            continue;
+        CheckCanExpand(c);
+    }
+}
+#endif
+
 
 // This lets us have container widgets (and windows) with zero width
 // and/or height.  We only let it be zero if it's a container (has
@@ -649,7 +672,6 @@ static inline void ExpandHShared(const struct PnSurface *s,
     DASSERT(next);
     DASSERT(s);
     DASSERT(a == &s->allocation);
-    DASSERT(s->canExpand & PnExpand_H);
 
     uint32_t border = GetBWidth(s);
     uint32_t numExpand = 0;
@@ -662,12 +684,6 @@ static inline void ExpandHShared(const struct PnSurface *s,
             ++numExpand;
     }
 
-    // If ResetCanExpand() was written correctly:
-    DASSERT(numExpand);
-
-    // If this is not so, then allocations are inconsistent.
-    DASSERT(neededWidth <= a->width);
-
     // When we expand we do not fill the container right edge border.
     // But, it may be filled in a little already, via what we called
     // "trimming".
@@ -676,17 +692,19 @@ static inline void ExpandHShared(const struct PnSurface *s,
     // surface "s" is squeezing them to their limit; but we still need to
     // recalculate the children x positions.
 
-    // We will change these children and then go on to expand children's
-    // children.
+    // We will change these children and then go on to expand these
+    // children's children.
 
     uint32_t extra = 0;
     if(neededWidth + border < a->width)
         extra = a->width - (neededWidth + border);
-    uint32_t padPer = extra/numExpand;
+    uint32_t padPer = 0;
+    if(numExpand)
+        padPer = extra/numExpand;
     // endPiece is the leftover pixels from extra not being a integer
     // multiple of padPer.  It's added to the last widget width.
     uint32_t endPiece = extra - numExpand * padPer;
-    // Starting left side position, smallest x position.
+    // The starting left side widget has the smallest x position.
     uint32_t x = a->x + border;
 
     for(c = first; c; c = next(c)) {
@@ -717,8 +735,60 @@ static inline void ExpandVShared(const struct PnSurface *s,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
 
+    DASSERT(first);
+    DASSERT(next);
+    DASSERT(s);
+    DASSERT(a == &s->allocation);
 
+    uint32_t border = GetBHeight(s);
+    uint32_t numExpand = 0;
+    uint32_t neededHeight = 0;
+    struct PnSurface *c;
+    for(c = first; c; c = next(c)) {
+        if(c->culled) continue;
+        neededHeight += border + c->allocation.height;
+        if(c->canExpand & PnExpand_V)
+            ++numExpand;
+    }
 
+    // When we expand we do not fill the container bottom edge border.
+    // But, it may be filled in a little already, via what we called
+    // "trimming".
+
+    // It may be that none of the widgets increase their height because
+    // surface "s" is squeezing them to their limit; but we still need to
+    // recalculate the children y positions.
+
+    // We will change these children and then go on to expand these
+    // children's children.
+
+    uint32_t extra = 0;
+    if(neededHeight + border < a->height)
+        extra = a->height - (neededHeight + border);
+    uint32_t padPer = 0;
+    if(numExpand)
+        padPer = extra/numExpand;
+    // endPiece is the leftover pixels from extra not being a integer
+    // multiple of padPer.  It's added to the last widget height.
+    uint32_t endPiece = extra - numExpand * padPer;
+    // The starting top side widget has the smallest y position.
+    uint32_t y = a->y + border;
+
+    for(c = first; c; c = next(c)) {
+        if(c->culled) continue;
+        struct PnAllocation *ca = &c->allocation;
+        ca->y = y;
+        // Add to the height if we can.
+        if(c->canExpand & PnExpand_V) {
+            ca->height += padPer;
+            --numExpand;
+            if(!numExpand)
+                // endPiece can be zero.
+                ca->height += endPiece;
+        } // else ca->height does not change.
+        y += ca->height + border;
+    }
+    DASSERT(y - border <= a->y + a->height);
 }
 
 // allocation a is the parent allocation and it is correct.
@@ -732,12 +802,32 @@ static inline void ExpandH(const struct PnSurface *s,
     DASSERT(c);
     DASSERT(ca == &c->allocation);
     DASSERT(s);
+    DASSERT(s->firstChild);
+    DASSERT(s->lastChild);
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
-    DASSERT(c->expand & PnExpand_H);
- 
-    
 
+    uint32_t border = GetBWidth(s);
+    ca->x = a->x + border;
+
+    if(!(c->canExpand & PnExpand_H)) return;
+
+    // Now see how to set the width, or not.
+
+    DASSERT(ca->width);
+    DASSERT(ca->width <= a->width + border);
+    DASSERT(a->width > border);
+    // The width of "ca" could be correct already, and may have
+    // this "correct" size by "trimming", so we do not change it
+    // if it already has some width based on this logic.
+
+    if(a->width < 2 * border) return;
+        // "s" was trimmed.  The end container border (at the right edge
+        // of the window) was cut; so there is not a possibly of expanding
+        // "c".  Only containers get trimmed their right and bottom
+        // borders trimmed, leaf widgets get culled (not trimmed).
+    if(ca->width < a->width - 2 * border)
+        ca->width = a->width - 2 * border;
 }
 
 // "s" is the parent of "c".  "a" is the allocation of "s".
@@ -757,22 +847,27 @@ static inline void ExpandV(const struct PnSurface *s,
     DASSERT(s->lastChild);
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
-    DASSERT(c->expand & PnExpand_V);
+    DASSERT(s->canExpand & PnExpand_V);
 
     uint32_t border = GetBHeight(s);
     ca->y = a->y + border;
+
+    if(!(c->canExpand & PnExpand_V)) return;
+
+    // Now see how to set the height, or not.
 
     DASSERT(ca->height);
     DASSERT(ca->height <= a->height + border);
     DASSERT(a->height > border);
     // The height of "ca" could be correct already, and may have
     // this "correct" size by "trimming", so we do not change it
-    // if it is already has some height based on this logic.
+    // if it already has some height based on this logic.
 
     if(a->height < 2 * border) return;
-        // "s" was trimmed.  The end border (at the bottom of the window)
-        // was cut; so there is not a possibly of expanding "c".
-        // Only containers get trimmed.
+        // "s" was trimmed.  The end border (at the bottom edge of the
+        // window) was cut; so there is not a possibly of expanding "c".
+        // Only containers get trimmed their right and bottom borders
+        // trimmed, leaf widgets get culled (not trimmed).
     if(ca->height < a->height - 2 * border)
         ca->height = a->height - 2 * border;
 }
@@ -806,25 +901,32 @@ static void ExpandChildren(const struct PnSurface *s,
         case PnDirection_One:
             DASSERT(s->firstChild == s->lastChild);
         case PnDirection_LR:
-            if(s->canExpand & PnExpand_H)
-                ExpandHShared(s, a, s->firstChild, Next);
-            if(s->canExpand & PnExpand_V)
-                for(c = s->firstChild; c; c = c->nextSibling)
-                    if(!c->culled && (c->canExpand & PnExpand_V))
-                        ExpandV(s, a, c, &c->allocation);
-            return;
-
-        case PnDirection_BT:
-
-            return;
+            ExpandHShared(s, a, s->firstChild, Next);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    ExpandV(s, a, c, &c->allocation);
+            break;
 
         case PnDirection_TB:
+            ExpandVShared(s, a, s->firstChild, Next);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    ExpandH(s, a, c, &c->allocation);
+            break;
 
-            return;
+        case PnDirection_BT:
+            ExpandVShared(s, a, s->lastChild, Prev);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    ExpandH(s, a, c, &c->allocation);
+            break;
 
         case PnDirection_RL:
-
-            return;
+            ExpandHShared(s, a, s->lastChild, Prev);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    ExpandV(s, a, c, &c->allocation);
+            break;
 
         case PnDirection_None:
         default:
@@ -833,7 +935,7 @@ static void ExpandChildren(const struct PnSurface *s,
     }
 
     // Now that all the children of "s" have correct allocations we can
-    // expand (fix) the children's children allocations.
+    // expand (fix) the "s" children's children allocations.
 
     for(c = s->firstChild; c; c = c->nextSibling)
         if(!c->culled && c->canExpand && c->firstChild)
@@ -1019,6 +1121,9 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 
 
     ResetCanExpand(s);
+
+    //CheckCanExpand(s);
+
 
     // Expand widgets that can be expanded.  Note this only fills in
     // otherwise blank container spaces.

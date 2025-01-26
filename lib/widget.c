@@ -38,7 +38,6 @@ struct PnWidget *pnWidget_create(
         h = PN_DEFAULT_WIDGET_HEIGHT;
     }
 
-
     struct PnWidget *widget = calloc(1, sizeof(*widget));
     ASSERT(widget, "calloc(1,%zu) failed", sizeof(*widget));
 
