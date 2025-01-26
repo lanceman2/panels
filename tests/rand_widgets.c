@@ -7,13 +7,13 @@
 #include "../lib/debug.h"
 
 // For a given seed we get different repeatable results.
-#define SEED            (1)
+#define SEED            (2)
 #define MAX_CONTAINERS  (3)
-#define TOTAL_WIDGETS   (100)
+#define TOTAL_WIDGETS   (43)
 
 // Make rectangles that are a multiple of this size in pixels:
 // Unit must be greater than 0.
-static const uint32_t Unit = 4;
+static const uint32_t Unit = 10;
 
 
 
@@ -121,10 +121,10 @@ static struct PnWidget *Widget() {
 
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) parent,
-            Unit * Rand(1,1)/*width*/,
-            Unit * Rand(1,1)/*height*/,
+            Unit * Rand(1,2)/*width*/,
+            Unit * Rand(1,2)/*height*/,
             Rand(0,1) + SkewMinRand(0, 2, 2) /*direction*/,
-            0/*align*/, PnExpand_HV/*expand*/);
+            0/*align*/, Rand(0,3)/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 

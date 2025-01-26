@@ -847,7 +847,6 @@ static inline void ExpandV(const struct PnSurface *s,
     DASSERT(s->lastChild);
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
-    DASSERT(s->canExpand & PnExpand_V);
 
     uint32_t border = GetBHeight(s);
     ca->y = a->y + border;
@@ -892,7 +891,7 @@ static void ExpandChildren(const struct PnSurface *s,
     DASSERT(s->firstChild);
     DASSERT(s->lastChild);
     DASSERT(!s->culled);
-    DASSERT(s->canExpand);
+    //DASSERT(s->canExpand);
 
     struct PnSurface *c;
 
@@ -938,7 +937,7 @@ static void ExpandChildren(const struct PnSurface *s,
     // expand (fix) the "s" children's children allocations.
 
     for(c = s->firstChild; c; c = c->nextSibling)
-        if(!c->culled && c->canExpand && c->firstChild)
+        if(!c->culled && c->firstChild)
             ExpandChildren(c, &c->allocation);
 }
 
