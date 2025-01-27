@@ -152,6 +152,16 @@ struct PnSurface {
     // top window surfaces do not use this variable.
     //
     bool culled;
+
+    // If a container widget has 0 width borders and no size open between
+    // children widgets we set this flag, so that we do not call a widget
+    // draw function for a container widget that has none of its own area
+    // showing, though it has children widgets showing and their draw
+    // functions get called.
+    //
+    // The "culled" acts before this, "noDrawing" flag.
+    //
+    bool noDrawing; // true if zero size showing.
 };
 
 

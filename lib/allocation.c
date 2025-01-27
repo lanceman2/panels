@@ -647,7 +647,7 @@ struct PnSurface *Prev(struct PnSurface *s) {
 // matter of how we define it here, correct is relative to context.  Yes,
 // I'm insane.
 //
-static inline void ExpandHShared(const struct PnSurface *s,
+static inline void ExpandHShared(struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -706,6 +706,10 @@ static inline void ExpandHShared(const struct PnSurface *s,
         x += ca->width + border;
     }
     DASSERT(x - border <= a->x + a->width);
+
+    if(s->noDrawing && extra)
+        // There will be part of "s" container showing to draw.
+        s->noDrawing = false;
 }
 
 
@@ -714,7 +718,7 @@ static inline void ExpandHShared(const struct PnSurface *s,
 //
 // See comments in and above ExpandHShared().  There's symmetry here.
 //
-static inline void ExpandVShared(const struct PnSurface *s,
+static inline void ExpandVShared(struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -773,13 +777,17 @@ static inline void ExpandVShared(const struct PnSurface *s,
         y += ca->height + border;
     }
     DASSERT(y - border <= a->y + a->height);
+
+    if(s->noDrawing && extra)
+        // There will be part of "s" container showing to draw.
+        s->noDrawing = false;
 }
 
 // allocation a is the parent allocation and it is correct.
 //
 // Fix the x and width of ca.
 //
-static inline void ExpandH(const struct PnSurface *s,
+static inline void ExpandH(struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
     DASSERT(a);
@@ -794,11 +802,19 @@ static inline void ExpandH(const struct PnSurface *s,
     uint32_t border = GetBWidth(s);
     ca->x = a->x + border;
 
-    if(!(c->canExpand & PnExpand_H)) return;
+    DASSERT(ca->width);
+
+    if(!(c->canExpand & PnExpand_H)) {
+        // If we have not unset s->noDrawing already and
+        // there is part of the "s" showing to draw then.
+        if(s->noDrawing && ca->width < a->width)
+            // There will be part of "s" container showing to draw.
+            s->noDrawing = false;
+        return;
+    }
 
     // Now see how to set the width, or not.
 
-    DASSERT(ca->width);
     DASSERT(ca->width <= a->width + border);
     DASSERT(a->width > border);
     // The width of "ca" could be correct already, and may have
@@ -821,7 +837,7 @@ static inline void ExpandH(const struct PnSurface *s,
 // Fix the y and height of "ca" which is the allocation of "c".
 // "c" fills all the space of "s" in this y direction.
 //
-static inline void ExpandV(const struct PnSurface *s,
+static inline void ExpandV(struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
     DASSERT(a);
@@ -836,11 +852,19 @@ static inline void ExpandV(const struct PnSurface *s,
     uint32_t border = GetBHeight(s);
     ca->y = a->y + border;
 
-    if(!(c->canExpand & PnExpand_V)) return;
+    DASSERT(ca->height);
+
+    if(!(c->canExpand & PnExpand_V)) {
+        // If we have not unset s->noDrawing already and
+        // there is part of the "s" showing to draw then.
+        if(s->noDrawing && ca->height < a->height)
+            // There will be part of "s" container showing to draw.
+            s->noDrawing = false;
+        return;
+    }
 
     // Now see how to set the height, or not.
 
-    DASSERT(ca->height);
     DASSERT(ca->height <= a->height + border);
     DASSERT(a->height > border);
     // The height of "ca" could be correct already, and may have
@@ -868,7 +892,7 @@ static inline void ExpandV(const struct PnSurface *s,
 // the children's children, the children's children's children, and so
 // on.
 //
-static void ExpandChildren(const struct PnSurface *s,
+static void ExpandChildren(struct PnSurface *s,
         const struct PnAllocation *a) {
 
     // "s" has a correct allocation, "a".
@@ -877,6 +901,18 @@ static void ExpandChildren(const struct PnSurface *s,
     DASSERT(s->firstChild);
     DASSERT(s->lastChild);
     DASSERT(!s->culled);
+
+    if(GetBWidth(s) || GetBHeight(s))
+        // This container has a top and/or left border showing, so it has
+        // non-zero area showing; so it will need some drawing.
+        s->noDrawing = false;
+    else
+        // No showing surface yet, but it may get set later in this
+        // function call, in ExpandHShared() or in ExpandV() where we
+        // check if any part of this container "s" is showing between its
+        // children.
+        s->noDrawing = true;
+
 
     struct PnSurface *c;
 
@@ -1010,10 +1046,38 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         return;
     }
 
+
+    // We do many passes through the widget (surface) tree data structure.
+    // Each pass does a different thing, read on.  I think it's impossible
+    // to do all these calculations in one pass through the widget tree
+    // data structure.
+    //
+    // A simple example of the conundrum we are solving is: a parent
+    // container widget can't know it's size until it adds up the sizes of
+    // its showing children; but also a parent container widget can't know
+    // how many of its children are showing until it knows what its size
+    // is.  So, it's a kind of bootstrap like thing.
+    //
+    // This may not be the most optimal solution, but I can follow it and
+    // it seems to work.
+    //
+    // Yes. No shit, this is a solved problem, but there is no fucking way
+    // anyone can extract someone else's solution into a form that codes
+    // this shit.  Trying to "reform" a proven given solution is a way
+    // harder problem than writing this fucking code from scratch.  That
+    // is the nature of software... 
+    //
+    // So far, I see no performance issues.  Tested thousands of widgets
+    // randomly laid out in a window, and randomly varying parameters.
+    // See ../tests/rand_widgets.c
+    //
+    // We count widget tree passes, but note: widget passes can get
+    // quicker as widget passes cull and so on.
+
     DASSERT(s->firstChild->parent == s);
     DASSERT(s->lastChild->parent == s);
 
-    ResetChildrenCull(s);
+    ResetChildrenCull(s); // PASS 1
 
     uint32_t loopCount = 0;
 
@@ -1027,11 +1091,11 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 
         // This shrink wraps the widgets, only getting the widgets widths
         // and heights.  Without the culled widgets.
-        TallyRequestedSizes(s, a);
+        TallyRequestedSizes(s, a); // PASS 2 plus loop repeats
         // So now a->width and a->height may have changed.
 
         // No x and y allocations yet.
-        GetChildrenXY(s, a);
+        GetChildrenXY(s, a); // PASS 3 plus loop repeats
         // Now we have  x and y allocations.
 
         // Still shrink wrapped and the top surface width and height are
@@ -1040,7 +1104,9 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         // If this is the first call to GetWidgetAllocations(), width and
         // height will be zero.  The shrink wrapped value of a->width and
         // a->height will always be greater than zero (that's just due to
-        // how we define things).
+        // how we define things).   Widget containers can have no space
+        // showing, but leaf widgets are required to take up space if they
+        // are not culled (for some reason).
 
         if(width >= a->width && height >= a->height) {
             a->width = width;
@@ -1095,26 +1161,46 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         haveChildShowing = false;
         // It can happen that the window is so small that no widget can
         // fix in it: all the widgets get culled.
+        //
+        // NOT A FULL PASS through the widget tree.
         for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
             if(!c->culled) {
                 haveChildShowing = true;
                 break;
             }
 
-    } while(haveChildShowing && ClipOrCullChildren(s, a));
+    } while(haveChildShowing &&
+            // PASS 4 plus loop repeats
+            ClipOrCullChildren(s, a));
 
+    // TOTAL PASSES (so far) = 1 + 3 * loopCount
 
+    // Recursively resets "canExpand" flags used in ExpandChildren().
+    // We had to do widget culling stuff before this stage.
+    //
+    // PASS 5
     ResetCanExpand(s);
 
     // Expand widgets that can be expanded.  Note: this only fills in
-    // otherwise blank container spaces.
+    // otherwise blank container spaces; but by doing so has to move the
+    // child widgets; they push each other around when they expand.
+    //
+    // PASS 6
     ExpandChildren(s, a);
 
     // Without extra space in the containers these do nothing.  These may
-    // change the widgets x and y positions, but will not change widget
-    // widths and heights.
+    // change the widgets x and y positions, but will not change any
+    // widget widths and heights.
+    // PASS 7 and 8?
     AlignChildrenX(s, a);
     AlignChildrenY(s, a);
+
+    // TOTAL PASSES = 5 + 3 * loopCount
+
+    // TODO: Mash more widget passes together?  I'd expect that would be
+    // prone to introducing bugs.  It's currently doing a very ordered
+    // logical progression.  Switching the order of any of the operations
+    // will break it.
 
 //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 }
