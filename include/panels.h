@@ -136,33 +136,55 @@ enum PnExpand {
 // The default is PnAlign_LT will push the widgets to the top left corner
 // which is were the window manager (compositor) puts the x and y
 // positions at zero and zero.  That's just a given convention that we go
-// with the flow with.
+// along with.  All popular operating systems with windowing follow that
+// convention.
 //
 // If any of the widgets in the container can expand, than the Align
 // value of the container is not considered.
 //
+// Put another way: the "align" widget attribute does not adjust the child
+// widget sizes, it can just change the child widgets positions; but only
+// if none of the sibling widgets expand to take all the "extra" space.
+
+// The default "align" is:
+//     Left X-direction (horizontal) and Top Y-direction (vertical).
+//
+
+// x -> first 3 bits  y -> next 3 bits
+//
+#define PN_ALIGN_X_LEFT      (00)
+#define PN_ALIGN_X_RIGHT     (01) 
+#define PN_ALIGN_X_CENTER    (02)
+#define PN_ALIGN_X_JUSTIFIED (04)
+
+#define PN_ALIGN_Y_TOP       (00)
+#define PN_ALIGN_Y_BOTTOM    (01 << 3)
+#define PN_ALIGN_Y_CENTER    (02 << 3)
+#define PN_ALIGN_Y_JUSTIFIED (04 << 3)
+
 enum PnAlign {
-                    //  X   ,  Y
-                    //////////////
-    PnAlign_LT = 0, // Left, Top (default = 0)
-    PnAlign_RT,     // Right, Top
-    PnAlign_CT,     // Center alone x, Top
-    PnAlign_JT,     // Justified, Top
 
-    PnAlign_LB,     // Left, Bottom
-    PnAlign_RB,     // Right, Bottom
-    PnAlign_CB,     // Center alone x, Bottom
-    PnAlign_JB,     // Justified, Bottom
+    // x -> first 3 bits  y -> next 3 bits
 
-    PnAlign_LC,     // Left, Center alone y
-    PnAlign_RC,     // Right, Center alone y
-    PnAlign_CC,     // Center alone x, Center alone y
-    PnAlign_JC,     // Justified, Center
+    PnAlign_LT = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_TOP), // note: = 0
+    PnAlign_RT = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_TOP),
+    PnAlign_CT = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_TOP),
+    PnAlign_JT = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_TOP),
 
-    PnAlign_LJ,     // Left, Justified
-    PnAlign_RJ,     // Right, Justified
-    PnAlign_CJ,     // Center alone x, Justified
-    PnAlign_JJ      // Justified, Justified
+    PnAlign_LB = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_BOTTOM),
+    PnAlign_RB = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_BOTTOM),
+    PnAlign_CB = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_BOTTOM),
+    PnAlign_JB = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_BOTTOM),
+
+    PnAlign_LC = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_CENTER),
+    PnAlign_RC = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_CENTER),
+    PnAlign_CC = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_CENTER),
+    PnAlign_JC = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_CENTER),
+
+    PnAlign_LJ = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_JUSTIFIED),
+    PnAlign_RJ = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_JUSTIFIED),
+    PnAlign_CJ = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_JUSTIFIED),
+    PnAlign_JJ = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_JUSTIFIED)
 };
 
 

@@ -821,11 +821,12 @@ static inline void ExpandH(const struct PnSurface *s,
     // this "correct" size by "trimming", so we do not change it
     // if it already has some width based on this logic.
 
-    if(a->width < 2 * border) return;
+    if(a->width < 2 * border)
         // "s" was trimmed.  The end container border (at the right edge
         // of the window) was cut; so there is not a possibly of expanding
         // "c".  Only containers get trimmed their right and bottom
         // borders trimmed, leaf widgets get culled (not trimmed).
+        return;
     if(ca->width < a->width - 2 * border)
         ca->width = a->width - 2 * border;
 }
@@ -862,11 +863,12 @@ static inline void ExpandV(const struct PnSurface *s,
     // this "correct" size by "trimming", so we do not change it
     // if it already has some height based on this logic.
 
-    if(a->height < 2 * border) return;
+    if(a->height < 2 * border)
         // "s" was trimmed.  The end border (at the bottom edge of the
         // window) was cut; so there is not a possibly of expanding "c".
         // Only containers get trimmed their right and bottom borders
         // trimmed, leaf widgets get culled (not trimmed).
+        return;
     if(ca->height < a->height - 2 * border)
         ca->height = a->height - 2 * border;
 }
@@ -891,7 +893,6 @@ static void ExpandChildren(const struct PnSurface *s,
     DASSERT(s->firstChild);
     DASSERT(s->lastChild);
     DASSERT(!s->culled);
-    //DASSERT(s->canExpand);
 
     struct PnSurface *c;
 
@@ -1124,10 +1125,9 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     //CheckCanExpand(s);
 
 
-    // Expand widgets that can be expanded.  Note this only fills in
+    // Expand widgets that can be expanded.  Note: this only fills in
     // otherwise blank container spaces.
-    if(s->canExpand)
-        ExpandChildren(s, a);
+    ExpandChildren(s, a);
 
     // Without extra space in the containers these do nothing.  These may
     // change the widgets x and y positions, but will not change widget

@@ -7,13 +7,14 @@
 #include "../lib/debug.h"
 
 // For a given seed we get different repeatable results.
-#define SEED            (2)
-#define MAX_CONTAINERS  (3)
-#define TOTAL_WIDGETS   (43)
+#define SEED            (1)
+#define MAX_CONTAINERS  (15)
+// TOTAL_WIDGETS 1000 => program was a little sluggish but worked.
+#define TOTAL_WIDGETS   (80)
 
 // Make rectangles that are a multiple of this size in pixels:
 // Unit must be greater than 0.
-static const uint32_t Unit = 10;
+static const uint32_t Unit = 15;
 
 
 
@@ -33,7 +34,7 @@ static int32_t Rand(int32_t min, int32_t max) {
     DASSERT(max >= min);
     DASSERT(max - min >= 0);
     // My brain cannot think through integer arithmetic today so
-    // I'll just use floating point and convert back.
+    // I'll just use floating point and convert back to integer.
     double x = max - min;
     x /= RAND_MAX;
     x *= rand();
@@ -61,7 +62,7 @@ static int32_t Rand(int32_t min, int32_t max) {
 // Random color
 static uint32_t Color(void) {
 
-    uint32_t c = rand() & 0xFFFFFF;
+    uint32_t c = (rand() >> 1) & 0xFFFFFF;
     return c | 0xFF000000;
 }
 
@@ -121,8 +122,8 @@ static struct PnWidget *Widget() {
 
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) parent,
-            Unit * Rand(1,2)/*width*/,
-            Unit * Rand(1,2)/*height*/,
+            Unit * Rand(0,2)/*width*/,
+            Unit * Rand(0,2)/*height*/,
             Rand(0,1) + SkewMinRand(0, 2, 2) /*direction*/,
             0/*align*/, Rand(0,3)/*expand*/);
     ASSERT(w);
@@ -149,10 +150,11 @@ int main(void) {
     return 0;
 #endif
 
-    win = pnWindow_create(0, 10/*width*/, 10/*height*/,
+    win = pnWindow_create(0, 3/*width*/, 3/*height*/,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
+    pnWindow_setBackgroundColor(win, 0xFF000000);
     containers[0] = (void *) win;
     num_containers = 1;
 
