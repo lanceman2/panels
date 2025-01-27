@@ -25,10 +25,9 @@ void catcher(int sig) {
 }
 
 
-// TODO: We could use all the random bits that are generated and not just
-// throw away unused random bits.  Note we get at most 31 random bits,
-// with last printing of RAND_MAX.  Also we don't need thread safety or a
-// great amount of entropy (true randomness) here.
+// We don't need thread safety or a great amount of entropy (true
+// randomness) here.  So, rand(3) is good enough.
+//
 static int32_t Rand(int32_t min, int32_t max) {
 
     DASSERT(max >= min);

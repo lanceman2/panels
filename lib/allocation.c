@@ -125,22 +125,6 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
 }
 
 
-#if 0
-void CheckCanExpand(const struct PnSurface *s) {
-    ASSERT(s);
-    ASSERT(!s->culled);
-    ASSERT(s->canExpand == PnExpand_HV);
-
-    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
-        if(c->culled)
-            // Skip culled widgets.
-            continue;
-        CheckCanExpand(c);
-    }
-}
-#endif
-
-
 // This lets us have container widgets (and windows) with zero width
 // and/or height.  We only let it be zero if it's a container (has
 // children).  If it's a leaf widget we force it to have non-zero width.
@@ -1121,9 +1105,6 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 
 
     ResetCanExpand(s);
-
-    //CheckCanExpand(s);
-
 
     // Expand widgets that can be expanded.  Note: this only fills in
     // otherwise blank container spaces.
