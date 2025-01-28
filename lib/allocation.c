@@ -518,8 +518,6 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
     DASSERT(!s->culled);
     DASSERT(s->firstChild);
 
-    //return 0;
-
     struct PnSurface *c; // child iterator.
 
     // Initialize return value.
