@@ -123,18 +123,35 @@ struct PnSurface {
 
     struct PnWindow *window; // The top most surface is a this window.
 
-    // Number of pixels between widgets:
-    uint32_t borderWidth;
+    // rightBorderWidth and bottomBorderHeight are only used in the
+    // determining of a container widget position and size allocation.
+    // Because we start the widget position and size allocations with the
+    // widgets aligned to the left and top, the right and bottom borders
+    // of container widgets are needed as we traverse the widget tree data
+    // structure.  These may get set to something different than the
+    // default container widget border width (height) if the container can
+    // expand, but the widgets contained in the container can't expand, so
+    // the right (and/or bottom) border needs to expand for the container
+    // to expand.
+    //
+    // It cuts down on extra widget tree data structure traversals that
+    // are needed to figure out why container borders are what they are.
+    uint32_t rightBorderWidth;
+    uint32_t bottomBorderHeight;
+
     uint32_t backgroundColor;
 
     enum PnDirection direction;
     enum PnAlign align;
     const enum PnExpand expand;
 
-    // "canExpand" is used to mark container widgets as expandable while
-    // we calculate all the widget positions and sizes.
+    // "canExpand" is used to mark container widgets as expandable, due to
+    // leaf widgets being expandable (and not directly the container being
+    // expandable), while we calculate all the widget positions and sizes.
     // A container widget can be expandable because its children widgets
-    // are expandable.
+    // are expandable; even if it does not mark it's own expand flag.  How
+    // else could the container widgets hold an arbitrary number of child
+    // widgets?
     //
     enum PnExpand canExpand;
 

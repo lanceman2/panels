@@ -96,21 +96,8 @@ enum PnDirection {
 // container it is in.  A container that contains a widget that can
 // expand, can also expand given space to the contained widget while not
 // expanding it's border sizes.  The expand attribute of a container
-// widget does not effect the container widgets border size as more space
-// is given to the container, it just changes size to accommodate the
-// contained widgets changing size.
-//
-// The expand attribute of a container widget does not effect it until all
-// contained widgets are removed (and it becomes a leaf).  Leaf widgets
-// that can expand effect their parent (container) widgets if the parent
-// has directions PnDirection_LR, PnDirection_LR, PnDirection_TB, or
-// PnDirection_BT.
-//
-// It does not make sense to say that a PnDirection_LR, PnDirection_LR,
-// PnDirection_TB, or PnDirection_BT container can't expand, otherwise how
-// can you put any number of child widgets in them.  The container would
-// need more attributes for them to have children given the children can
-// have any size.  That's just how we define things in the "panels" API.
+// widget does not effect the container widgets border size unless all
+// the children widgets do not expand (in the direction of interest).
 //
 // Sibling widgets (widgets in the same container) that can expand share
 // the extra space.
@@ -151,7 +138,11 @@ enum PnExpand {
 //
 
 // x -> first 3 bits  y -> next 3 bits
-//
+
+#define PN_ALIGN_X  (07)
+#define PN_ALIGN_y  (07 << 3)
+
+
 #define PN_ALIGN_X_LEFT      (00)
 #define PN_ALIGN_X_RIGHT     (01) 
 #define PN_ALIGN_X_CENTER    (02)

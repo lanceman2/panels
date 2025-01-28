@@ -91,9 +91,16 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     DASSERT(s);
     DASSERT(!s->culled);
 
+    // We added a reset of these two variables in this past through the
+    // widget tree.  So change the function name from ResetCanExpand() to
+    // ResetCanExpandAndRightBorderWidthAndBottomBorderHeight(), NOT!
+    //
+    s->rightBorderWidth = 0;
+    s->bottomBorderHeight = 0;
+
     if(s->firstChild)
         // We may add changes to this later:
-        s->canExpand = 0;
+        s->canExpand = s->expand;
     else {
         // This is a leaf node.  We are at an end of the function call
         // stack.  s->expand is a user set attribute.
@@ -961,41 +968,106 @@ static void ExpandChildren(struct PnSurface *s,
             ExpandChildren(c, &c->allocation);
 }
 
-
-
-// Move widget position without changing its size.
+// We must set the positions even if the relative positions do not appear
+// to change, because if a grand parent (or greater) moves for a past
+// call, these children need to reposition too, even if the alignment in
+// this container does not change.  So:
 //
-static
-void AlignChildrenX(struct PnSurface *s, struct PnAllocation *a) {
+// Position the children.
+//
+// The positions and size of the container is fixed and correct.
+//
+static inline void AlignXRight(const struct PnSurface *s,
+        const struct PnAllocation *a,
+        struct PnSurface *first,
+        struct PnSurface *(*next)(struct PnSurface *s)) {
 
-    if(s->culled) return;
+    uint32_t border = GetBWidth(s);
+    // childrenWidth is the sum of children width with a border added.
+    uint32_t childrenWidth = 0;
+    struct PnSurface *c;
+
+    for(c = first; c ; c = next(c)) {
+        if(c->culled) continue;
+        childrenWidth += c->width + border;
+    }
+
+}
+
+
+// The container, "s", allocation "a" is correct.
+//
+// Only change children's X positions.
+//
+static inline void AlignChildrenXRight(const struct PnSurface *s,
+        const struct PnAllocation *a) {
 
     switch(s->direction) {
 
         case PnDirection_One:
         case PnDirection_LR:
-        case PnDirection_BT:
-        case PnDirection_TB:
-            for(struct PnSurface *c = s->firstChild; c;
-                    c = c->nextSibling);
+            AlignXRight(s, a, s->lastChild, Prev);
             break;
 
         case PnDirection_RL:
-            for(struct PnSurface *c = s->lastChild; c;
-                    c = c->prevSibling);
+            AlignXRight(s, a, s->firstChild, Next);
             break;
 
-        case PnDirection_None:
+        case PnDirection_TB:
+            break;
+
+        case PnDirection_BT:
+            break;
+
         default:
-            ASSERT(0);
+            ASSERT(0, "BAD CASE");
             break;
     }
 }
 
-static
-void AlignChildrenY(struct PnSurface *s, struct PnAllocation *a) {
 
-    if(s->culled) return;
+
+// This function calls itself.
+//
+// Move child widgets X position without changing its size.
+//
+static
+void AlignChildrenX(const struct PnSurface *s, const struct PnAllocation *a) {
+
+    // "s" has a correct allocation, "a".
+    DASSERT(s);
+    DASSERT(s->firstChild);
+    DASSERT(s->lastChild);
+    DASSERT(!s->culled);
+
+    struct PnSurface *c;
+
+    switch(s->align & PN_ALIGN_X) {
+
+        //case PN_ALIGN_X_LEFT: the default is done already.
+
+        case PN_ALIGN_X_RIGHT:
+            AlignChildrenXRight(s, a);
+            break;
+
+        case PN_ALIGN_X_CENTER:
+        case PN_ALIGN_X_JUSTIFIED:
+            for(c = s->firstChild; c; c = c->nextSibling) {
+                if(c->culled) continue;
+
+            }
+            break;
+    }
+
+    for(c = s->firstChild; c; c = c->nextSibling)
+        if(!c->culled && c->firstChild)
+            AlignChildrenX(c, &c->allocation);
+}
+
+static
+void AlignChildrenY(const struct PnSurface *s, const struct PnAllocation *a) {
+
+
 
 
 }

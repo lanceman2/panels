@@ -51,6 +51,12 @@ rand_widgets_run_CPPFLAGS := -DRUN
 
 rand_SOURCES := rand.c ../lib/debug.c
 
+060_align_widget_SOURCES := align_widget.c
+060_align_widget_LDFLAGS := $(PN_LIB)
+
+align_widget_run_SOURCES := align_widget.c
+align_widget_run_LDFLAGS := $(PN_LIB)
+align_widget_run_CPPFLAGS := -DRUN
 
 
 

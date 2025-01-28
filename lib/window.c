@@ -157,7 +157,6 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     * (enum PnExpand *) &win->surface.expand = expand;
     win->surface.direction = direction;
     win->surface.align = align;
-    win->surface.borderWidth = PN_BORDER_WIDTH;
     win->surface.backgroundColor = PN_WINDOW_BGCOLOR;
 
     // Default for windows so that user build the window before showing
