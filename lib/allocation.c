@@ -623,9 +623,7 @@ struct PnSurface *Prev(struct PnSurface *s) {
 }
 
 
-// Expand children of "s" while taking space to the right.  It's to the
-// right because that's the convention that window managers and widget
-// APIs have chosen before me.  All operating systems do this.
+// Expand children of "s" while taking space to the right.
 //
 // Shrink a window and if that program lets you (shrink it) you'll see it
 // culls widgets to the right and bottom; on any common operating system.
