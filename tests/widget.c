@@ -49,17 +49,17 @@ int main(void) {
     {
         w = pnWidget_create((struct PnSurface *) cw/*parent*/,
             130/*width*/, 100/*height*/,
-            0/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
+            0/*direction*/, 0/*align*/, PnExpand_V & 0/*expand*/);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCCCFFF00);
         //pnWidget_show(w, false);
 
         w = pnWidget_create((struct PnSurface *) cw/*parent*/,
             100/*width*/, 100/*height*/,
-            0/*direction*/, 0/*align*/, EXPAND/*expand*/);
+            0/*direction*/, 0/*align*/, EXPAND & 0/*expand*/);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCC00CFFF);
-        pnWidget_show(w, false);
+        pnWidget_show(w, true);
     }
 #endif
 
