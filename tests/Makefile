@@ -49,6 +49,9 @@ rand_widgets_run_CPPFLAGS := -DRUN
 050_rand_widgets_SOURCES := rand_widgets.c
 050_rand_widgets_LDFLAGS := $(PN_LIB)
 
+rand_SOURCES := rand.c ../lib/debug.c
+
+
 
 
 

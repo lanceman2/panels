@@ -133,28 +133,24 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
 //
 void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
-    if(!s->draw) {
+    // All parent surfaces, including the window, could have nothing to draw
+    // if their children widgets completely cover them.
+    if(s->noDrawing) goto drawChildren;
 
-#if 0
-INFO("x,y,w,h=%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32,
-        s->allocation.x, s->allocation.y, 
-        s->allocation.width, s->allocation.height);
-#endif
-
+    if(!s->draw)
         pn_drawFilledRectangle(buffer->pixels,
                 s->allocation.x, s->allocation.y, 
                 s->allocation.width, s->allocation.height,
                 buffer->stride,
                 s->backgroundColor /*color in ARGB*/);
-    } else {
-
+    else
         s->draw(s,
                 buffer->pixels + s->allocation.y * buffer->stride +
                 s->allocation.x * PN_PIXEL_SIZE,
                 s->allocation.width, s->allocation.height,
                 buffer->stride, s->user_data);
-    }
 
+drawChildren:
     // Now draw children (widgets).
     for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
         if(!c->culled)

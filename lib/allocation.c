@@ -5,9 +5,6 @@
 
 #include "../include/panels.h"
 
-#include "xdg-shell-protocol.h"
-#include "xdg-decoration-protocol.h"
-
 #include "debug.h"
 #include  "display.h"
 
@@ -27,7 +24,7 @@
 // the children, they are implied to be culled without setting the
 // "culled" flag for the children.
 //
-// Returns true if s is culled.
+// Returns true if "s" is culled.
 //
 // If a container is hidden than all its children are effectively culled
 // and we do not bother marking the children as culled.
@@ -608,11 +605,13 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
     return 0;
 }
 
+static
 struct PnSurface *Next(struct PnSurface *s) {
     DASSERT(s);
     return s->nextSibling;
 }
 
+static
 struct PnSurface *Prev(struct PnSurface *s) {
     DASSERT(s);
     return s->prevSibling;
@@ -1008,7 +1007,7 @@ void AlignChildrenY(struct PnSurface *s, struct PnAllocation *a) {
 // it borrowed from the GDK part of the GTK API, which has a rectangular
 // space "allocation" class which gets setup when the widgets are
 // "allocated" (find the position and size of widgets).
-// A better function name may be GetWdigetPositionAndSize().
+// A better function name may be GetWidgetPositionAndSize().
 // And the struct PnAllocation should be struct PositionAndSize.
 //
 void GetWidgetAllocations(struct PnWindow *win) {
@@ -1035,7 +1034,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // We already handled not letting the window resize if the user set
     // the expand flags so it cannot expand, in toplevel.c.
     //
-    // TODO: This for popup windows?
+    // TODO: Do this for popup windows in popup.c?
+    //
 
     if(!s->firstChild) {
         DASSERT(!s->lastChild);
@@ -1046,7 +1046,6 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         return;
     }
 
-
     // We do many passes through the widget (surface) tree data structure.
     // Each pass does a different thing, read on.  I think it's impossible
     // to do all these calculations in one pass through the widget tree
@@ -1056,7 +1055,7 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     // container widget can't know it's size until it adds up the sizes of
     // its showing children; but also a parent container widget can't know
     // how many of its children are showing until it knows what its size
-    // is.  So, it's a kind of bootstrap like thing.
+    // is.  So, it's kind of a bootstrap like thing.
     //
     // This may not be the most optimal solution, but I can follow it and
     // it seems to work.
