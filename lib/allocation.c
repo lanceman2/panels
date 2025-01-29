@@ -91,13 +91,6 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     DASSERT(s);
     DASSERT(!s->culled);
 
-    // We added a reset of these two variables in this past through the
-    // widget tree.  So change the function name from ResetCanExpand() to
-    // ResetCanExpandAndRightBorderWidthAndBottomBorderHeight(), NOT!
-    //
-    s->rightBorderWidth = 0;
-    s->bottomBorderHeight = 0;
-
     if(s->firstChild)
         // We may add changes to this later:
         s->canExpand = s->expand;
@@ -646,8 +639,8 @@ struct PnSurface *Prev(struct PnSurface *s) {
 //
 // And, the surface "s" positions and sizes, "a", are correct and hence
 // constant in this function prototype.  "Correct" in this case, is only a
-// matter of how we define it here, correct is relative to context.  Yes,
-// I'm insane.
+// matter of how we define it here, correct is relative to this context,
+// whatever the hell that is.
 //
 static inline void ExpandHShared(struct PnSurface *s,
         const struct PnAllocation *a,
@@ -691,12 +684,12 @@ static inline void ExpandHShared(struct PnSurface *s,
     // multiple of padPer.  It's added to the last widget width.
     uint32_t endPiece = extra - numExpand * padPer;
     // The starting left side widget has the smallest x position.
-    uint32_t x = a->x + border;
+    uint32_t x = a->x;
 
     for(c = first; c; c = next(c)) {
         if(c->culled) continue;
         struct PnAllocation *ca = &c->allocation;
-        ca->x = x;
+        ca->x = (x += border);
         // Add to the width if we can.
         if(c->canExpand & PnExpand_H) {
             ca->width += padPer;
@@ -705,9 +698,12 @@ static inline void ExpandHShared(struct PnSurface *s,
                 // endPiece can be zero.
                 ca->width += endPiece;
         } // else ca->width does not change.
-        x += ca->width + border;
+        x += ca->width;
     }
-    DASSERT(x - border <= a->x + a->width);
+    DASSERT(x <= a->x + a->width);
+    DASSERT(a->x + a->width >= x);
+
+    s->rightBorderWidth = a->x + a->width - x;
 
     if(s->noDrawing && extra)
         // There will be part of "s" container showing to draw.
@@ -762,12 +758,12 @@ static inline void ExpandVShared(struct PnSurface *s,
     // multiple of padPer.  It's added to the last widget height.
     uint32_t endPiece = extra - numExpand * padPer;
     // The starting top side widget has the smallest y position.
-    uint32_t y = a->y + border;
+    uint32_t y = a->y;
 
     for(c = first; c; c = next(c)) {
         if(c->culled) continue;
         struct PnAllocation *ca = &c->allocation;
-        ca->y = y;
+        ca->y = (y += border);
         // Add to the height if we can.
         if(c->canExpand & PnExpand_V) {
             ca->height += padPer;
@@ -776,9 +772,12 @@ static inline void ExpandVShared(struct PnSurface *s,
                 // endPiece can be zero.
                 ca->height += endPiece;
         } // else ca->height does not change.
-        y += ca->height + border;
+        y += ca->height;
     }
     DASSERT(y - border <= a->y + a->height);
+    DASSERT(a->y + a->height >= y);
+
+    s->bottomBorderHeight = a->y + a->height - y;
 
     if(s->noDrawing && extra)
         // There will be part of "s" container showing to draw.
@@ -805,6 +804,11 @@ static inline void ExpandH(struct PnSurface *s,
     ca->x = a->x + border;
 
     DASSERT(ca->width);
+    DASSERT(a->width >= border + ca->width);
+
+    uint32_t rightBorder = a->width - border - ca->width;
+    if(s->rightBorderWidth > rightBorder)
+        s->rightBorderWidth = rightBorder;
 
     if(!(c->canExpand & PnExpand_H)) {
         // If we have not unset s->noDrawing already and
@@ -829,8 +833,15 @@ static inline void ExpandH(struct PnSurface *s,
         // "c".  Only containers get trimmed their right and bottom
         // borders trimmed, leaf widgets get culled (not trimmed).
         return;
+
     if(ca->width < a->width - 2 * border)
         ca->width = a->width - 2 * border;
+
+    DASSERT(a->width >= border + ca->width);
+
+    rightBorder = a->width - border - ca->width;
+    if(s->rightBorderWidth > rightBorder)
+        s->rightBorderWidth = rightBorder;
 }
 
 // "s" is the parent of "c".  "a" is the allocation of "s".
@@ -855,6 +866,11 @@ static inline void ExpandV(struct PnSurface *s,
     ca->y = a->y + border;
 
     DASSERT(ca->height);
+    DASSERT(a->height >= border + ca->height);
+
+    uint32_t bottomBorder = a->height - border - ca->height;
+    if(s->bottomBorderHeight > bottomBorder)
+        s->bottomBorderHeight = bottomBorder;
 
     if(!(c->canExpand & PnExpand_V)) {
         // If we have not unset s->noDrawing already and
@@ -879,8 +895,15 @@ static inline void ExpandV(struct PnSurface *s,
         // Only containers get trimmed their right and bottom borders
         // trimmed, leaf widgets get culled (not trimmed).
         return;
+
     if(ca->height < a->height - 2 * border)
         ca->height = a->height - 2 * border;
+
+    DASSERT(a->height >= border + ca->height);
+
+    bottomBorder = a->height - border - ca->height;
+    if(s->bottomBorderHeight > bottomBorder)
+        s->bottomBorderHeight = bottomBorder;
 }
 
 
@@ -906,7 +929,7 @@ static void ExpandChildren(struct PnSurface *s,
 
     if(GetBWidth(s) || GetBHeight(s))
         // This container has a top and/or left border showing, so it has
-        // non-zero area showing; so it will need some drawing.
+        // non-zero area showing; so it will need some drawing for sure.
         s->noDrawing = false;
     else
         // No showing surface yet, but it may get set later in this
@@ -914,7 +937,6 @@ static void ExpandChildren(struct PnSurface *s,
         // check if any part of this container "s" is showing between its
         // children.
         s->noDrawing = true;
-
 
     struct PnSurface *c;
 
@@ -924,6 +946,7 @@ static void ExpandChildren(struct PnSurface *s,
             DASSERT(s->firstChild == s->lastChild);
         case PnDirection_LR:
             ExpandHShared(s, a, s->firstChild, Next);
+            s->bottomBorderHeight = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
                     ExpandV(s, a, c, &c->allocation);
@@ -931,6 +954,7 @@ static void ExpandChildren(struct PnSurface *s,
 
         case PnDirection_TB:
             ExpandVShared(s, a, s->firstChild, Next);
+            s->rightBorderWidth = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
                     ExpandH(s, a, c, &c->allocation);
@@ -938,6 +962,7 @@ static void ExpandChildren(struct PnSurface *s,
 
         case PnDirection_BT:
             ExpandVShared(s, a, s->lastChild, Prev);
+            s->rightBorderWidth = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
                     ExpandH(s, a, c, &c->allocation);
@@ -945,6 +970,7 @@ static void ExpandChildren(struct PnSurface *s,
 
         case PnDirection_RL:
             ExpandHShared(s, a, s->lastChild, Prev);
+            s->bottomBorderHeight = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
                     ExpandV(s, a, c, &c->allocation);

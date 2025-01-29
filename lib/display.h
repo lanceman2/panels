@@ -135,7 +135,8 @@ struct PnSurface {
     // to expand.
     //
     // It cuts down on extra widget tree data structure traversals that
-    // are needed to figure out why container borders are what they are.
+    // are needed to figure out where container borders are, and what size
+    // they are.
     uint32_t rightBorderWidth;
     uint32_t bottomBorderHeight;
 
