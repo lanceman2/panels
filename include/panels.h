@@ -137,25 +137,25 @@ enum PnExpand {
 //     Left X-direction (horizontal) and Top Y-direction (vertical).
 //
 
-// x -> first 3 bits  y -> next 3 bits
+// x -> first 2 bits  y -> next 2 bits
 
-#define PN_ALIGN_X  (07)
-#define PN_ALIGN_y  (07 << 3)
+#define PN_ALIGN_X  (03)
+#define PN_ALIGN_Y  (03 << 2)
 
 
-#define PN_ALIGN_X_LEFT      (00)
+#define PN_ALIGN_X_LEFT      (00) // default
 #define PN_ALIGN_X_RIGHT     (01) 
 #define PN_ALIGN_X_CENTER    (02)
-#define PN_ALIGN_X_JUSTIFIED (04)
+#define PN_ALIGN_X_JUSTIFIED (03)
 
-#define PN_ALIGN_Y_TOP       (00)
-#define PN_ALIGN_Y_BOTTOM    (01 << 3)
-#define PN_ALIGN_Y_CENTER    (02 << 3)
-#define PN_ALIGN_Y_JUSTIFIED (04 << 3)
+#define PN_ALIGN_Y_TOP       (00) // default
+#define PN_ALIGN_Y_BOTTOM    (01 << 2)
+#define PN_ALIGN_Y_CENTER    (02 << 2)
+#define PN_ALIGN_Y_JUSTIFIED (03 << 2)
 
 enum PnAlign {
 
-    // x -> first 3 bits  y -> next 3 bits
+    // x -> first 2 bits  y -> next 2 bits
 
     PnAlign_LT = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_TOP), // note: = 0
     PnAlign_RT = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_TOP),

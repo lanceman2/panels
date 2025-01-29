@@ -616,6 +616,85 @@ struct PnSurface *Prev(struct PnSurface *s) {
 }
 
 
+static inline void AlignXJustified(struct PnSurface *first,
+        struct PnSurface *(*next)(struct PnSurface *c),
+        uint32_t extraWidth) {
+
+    DASSERT(first);
+    DASSERT(extraWidth);
+
+    uint32_t num = 0;
+    struct PnSurface *c;
+
+    for(c = first; c; c = next(c))
+        if(!c->culled)
+            ++num;
+    DASSERT(num);
+
+    if(num == 1) {
+        extraWidth /= 2;
+        for(c = first; c; c = next(c))
+            if(!c->culled) {
+                first->allocation.x += extraWidth;
+                break;
+            }
+        return;
+    }
+
+    uint32_t delta = extraWidth/(num - 1);
+    uint32_t end = extraWidth - delta * (num - 1);
+    uint32_t i = 0;
+
+    for(c = first; c; c = next(c)) {
+        if(c->culled) continue;
+        --num;
+        c->allocation.x += i;
+        if(!num && end)
+            c->allocation.x += end;
+        i += delta;
+    }
+}
+
+static inline void AlignYJustified(struct PnSurface *first,
+        struct PnSurface *(*next)(struct PnSurface *c),
+        uint32_t extraHeight) {
+
+    DASSERT(first);
+    DASSERT(extraHeight);
+
+    uint32_t num = 0;
+    struct PnSurface *c;
+
+    for(c = first; c; c = next(c))
+        if(!c->culled)
+            ++num;
+    DASSERT(num);
+
+    if(num == 1) {
+        extraHeight /= 2;
+        for(c = first; c; c = next(c))
+            if(!c->culled) {
+                first->allocation.y += extraHeight;
+                break;
+            }
+        return;
+    }
+
+    uint32_t delta = extraHeight/(num - 1);
+    uint32_t end = extraHeight - delta * (num - 1);
+    uint32_t i = 0;
+
+    for(c = first; c; c = next(c)) {
+        if(c->culled) continue;
+        --num;
+        c->allocation.y += i;
+        if(!num && end)
+            c->allocation.y += end;
+        i += delta;
+    }
+}
+
+
 // Expand children of "s" while taking space to the right.
 //
 // Shrink a window and if that program lets you (shrink it) you'll see it
@@ -642,7 +721,7 @@ struct PnSurface *Prev(struct PnSurface *s) {
 // matter of how we define it here, correct is relative to this context,
 // whatever the hell that is.
 //
-static inline void ExpandHShared(struct PnSurface *s,
+static inline void ExpandHShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -703,11 +782,44 @@ static inline void ExpandHShared(struct PnSurface *s,
     DASSERT(x <= a->x + a->width);
     DASSERT(a->x + a->width >= x);
 
-    s->rightBorderWidth = a->x + a->width - x;
+    uint32_t rightBorderWidth = a->x + a->width - x;
 
     if(s->noDrawing && extra)
         // There will be part of "s" container showing to draw.
-        s->noDrawing = false;
+        ((struct PnSurface *)s)->noDrawing = false;
+
+    if(!(s->align & PN_ALIGN_X) || rightBorderWidth <= border)
+        return;
+
+    // Now we move the children based on the "Align" attribute of "s".
+    // The default "align" was PN_ALIGN_X_LEFT which is 0.
+    // The container "s" is now aligned left.
+
+    rightBorderWidth -= border;
+
+    DASSERT(!padPer);
+    DASSERT(extra);
+
+    switch(s->align & PN_ALIGN_X) {
+
+        case PN_ALIGN_X_RIGHT:
+            for(c = first; c; c = next(c)) {
+                if(c->culled) continue;
+                c->allocation.x += rightBorderWidth;
+            }
+            break;
+
+        case PN_ALIGN_X_CENTER:
+            rightBorderWidth /= 2;
+            for(c = first; c; c = next(c)) {
+                if(c->culled) continue;
+                c->allocation.x += rightBorderWidth;
+            }
+            break;
+
+        case PN_ALIGN_X_JUSTIFIED:
+            AlignXJustified(first, next, rightBorderWidth);
+    }
 }
 
 
@@ -716,7 +828,7 @@ static inline void ExpandHShared(struct PnSurface *s,
 //
 // See comments in and above ExpandHShared().  There's symmetry here.
 //
-static inline void ExpandVShared(struct PnSurface *s,
+static inline void ExpandVShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -774,23 +886,58 @@ static inline void ExpandVShared(struct PnSurface *s,
         } // else ca->height does not change.
         y += ca->height;
     }
-    DASSERT(y - border <= a->y + a->height);
+    DASSERT(y <= a->y + a->height);
     DASSERT(a->y + a->height >= y);
 
-    s->bottomBorderHeight = a->y + a->height - y;
+    uint32_t bottomBorderHeight = a->y + a->height - y;
 
     if(s->noDrawing && extra)
         // There will be part of "s" container showing to draw.
-        s->noDrawing = false;
+        ((struct PnSurface *)s)->noDrawing = false;
+
+    if(!(s->align & PN_ALIGN_Y) || bottomBorderHeight <= border)
+        return;
+
+    // Now we move the children based on the "Align" attribute of "s".
+    // The default "align" was PN_ALIGN_Y_TOP which is 0.
+    // The container "s" is now aligned top.
+
+    bottomBorderHeight -= border;
+
+    DASSERT(!padPer);
+    DASSERT(extra);
+
+    switch(s->align & PN_ALIGN_Y) {
+
+        case PN_ALIGN_Y_BOTTOM:
+            for(c = first; c; c = next(c)) {
+                if(c->culled) continue;
+                c->allocation.y += bottomBorderHeight;
+            }
+            break;
+
+        case PN_ALIGN_Y_CENTER:
+            bottomBorderHeight /= 2;
+            for(c = first; c; c = next(c)) {
+                if(c->culled) continue;
+                c->allocation.y += bottomBorderHeight;
+            }
+            break;
+
+        case PN_ALIGN_Y_JUSTIFIED:
+            AlignYJustified(first, next, bottomBorderHeight);
+    }
 }
+
 
 // allocation a is the parent allocation and it is correct.
 //
 // Fix the x and width of ca.
 //
-static inline void ExpandH(struct PnSurface *s,
+static inline void ExpandH(const struct PnSurface *s,
         const struct PnAllocation *a,
-        struct PnSurface *c, struct PnAllocation *ca) {
+        struct PnSurface *c, struct PnAllocation *ca,
+        uint32_t *rightBorderWidth) {
     DASSERT(a);
     DASSERT(c);
     DASSERT(ca == &c->allocation);
@@ -807,15 +954,15 @@ static inline void ExpandH(struct PnSurface *s,
     DASSERT(a->width >= border + ca->width);
 
     uint32_t rightBorder = a->width - border - ca->width;
-    if(s->rightBorderWidth > rightBorder)
-        s->rightBorderWidth = rightBorder;
+    if(*rightBorderWidth > rightBorder)
+        *rightBorderWidth = rightBorder;
 
     if(!(c->canExpand & PnExpand_H)) {
         // If we have not unset s->noDrawing already and
         // there is part of the "s" showing to draw then.
         if(s->noDrawing && ca->width < a->width)
             // There will be part of "s" container showing to draw.
-            s->noDrawing = false;
+            ((struct PnSurface *)s)->noDrawing = false;
         return;
     }
 
@@ -840,8 +987,8 @@ static inline void ExpandH(struct PnSurface *s,
     DASSERT(a->width >= border + ca->width);
 
     rightBorder = a->width - border - ca->width;
-    if(s->rightBorderWidth > rightBorder)
-        s->rightBorderWidth = rightBorder;
+    if(*rightBorderWidth > rightBorder)
+        *rightBorderWidth = rightBorder;
 }
 
 // "s" is the parent of "c".  "a" is the allocation of "s".
@@ -850,9 +997,10 @@ static inline void ExpandH(struct PnSurface *s,
 // Fix the y and height of "ca" which is the allocation of "c".
 // "c" fills all the space of "s" in this y direction.
 //
-static inline void ExpandV(struct PnSurface *s,
+static inline void ExpandV(const struct PnSurface *s,
         const struct PnAllocation *a,
-        struct PnSurface *c, struct PnAllocation *ca) {
+        struct PnSurface *c, struct PnAllocation *ca,
+        uint32_t *bottomBorderHeight) {
     DASSERT(a);
     DASSERT(c);
     DASSERT(ca == &c->allocation);
@@ -869,15 +1017,15 @@ static inline void ExpandV(struct PnSurface *s,
     DASSERT(a->height >= border + ca->height);
 
     uint32_t bottomBorder = a->height - border - ca->height;
-    if(s->bottomBorderHeight > bottomBorder)
-        s->bottomBorderHeight = bottomBorder;
+    if(*bottomBorderHeight > bottomBorder)
+        *bottomBorderHeight = bottomBorder;
 
     if(!(c->canExpand & PnExpand_V)) {
         // If we have not unset s->noDrawing already and
         // there is part of the "s" showing to draw then.
         if(s->noDrawing && ca->height < a->height)
             // There will be part of "s" container showing to draw.
-            s->noDrawing = false;
+            ((struct PnSurface *)s)->noDrawing = false;
         return;
     }
 
@@ -902,8 +1050,67 @@ static inline void ExpandV(struct PnSurface *s,
     DASSERT(a->height >= border + ca->height);
 
     bottomBorder = a->height - border - ca->height;
-    if(s->bottomBorderHeight > bottomBorder)
-        s->bottomBorderHeight = bottomBorder;
+    if(*bottomBorderHeight > bottomBorder)
+        *bottomBorderHeight = bottomBorder;
+}
+
+
+// This is a case where we are aligning one widget.
+//
+static inline void AlignX(const struct PnSurface *s,
+        const struct PnAllocation *a,
+        struct PnAllocation *ca,
+        uint32_t endBorder) {
+
+    uint32_t border = GetBWidth(s);
+
+    if(endBorder > border)
+        endBorder = border;
+
+    DASSERT(a->width >= border + endBorder + ca->width);
+
+    uint32_t extra = a->width - (border + endBorder + ca->width);
+    if(!extra) return;
+
+    switch(s->align & PN_ALIGN_X) {
+
+        case PN_ALIGN_X_RIGHT:
+            ca->x += extra;
+            break;
+
+        case PN_ALIGN_X_CENTER:
+        case PN_ALIGN_X_JUSTIFIED:
+            ca->x += extra/2;
+        }
+}
+
+// This is a case where we are aligning one widget.
+//
+static inline void AlignY(const struct PnSurface *s,
+        const struct PnAllocation *a,
+        struct PnAllocation *ca,
+        uint32_t endBorder) {
+
+    uint32_t border = GetBHeight(s);
+
+    if(endBorder > border)
+        endBorder = border;
+
+    DASSERT(a->height >= border + endBorder + ca->height);
+
+    uint32_t extra = a->height - (border + endBorder + ca->height);
+    if(!extra) return;
+
+    switch(s->align & PN_ALIGN_Y) {
+
+        case PN_ALIGN_Y_BOTTOM:
+            ca->y += extra;
+            break;
+
+        case PN_ALIGN_Y_CENTER:
+        case PN_ALIGN_Y_JUSTIFIED:
+            ca->y += extra/2;
+        }
 }
 
 
@@ -917,7 +1124,9 @@ static inline void ExpandV(struct PnSurface *s,
 // the children's children, the children's children's children, and so
 // on.
 //
-static void ExpandChildren(struct PnSurface *s,
+// const struct PnSurface *s  is mostly constant.  Oh well.
+//
+static void ExpandChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     // "s" has a correct allocation, "a".
@@ -927,16 +1136,20 @@ static void ExpandChildren(struct PnSurface *s,
     DASSERT(s->lastChild);
     DASSERT(!s->culled);
 
+    // This will be either the container "s" right edge border padding
+    // size, or the bottom edge border padding size (in pixels).
+    uint32_t endBorder = UINT32_MAX;
+
     if(GetBWidth(s) || GetBHeight(s))
         // This container has a top and/or left border showing, so it has
         // non-zero area showing; so it will need some drawing for sure.
-        s->noDrawing = false;
+        ((struct PnSurface *)s)->noDrawing = false;
     else
         // No showing surface yet, but it may get set later in this
         // function call, in ExpandHShared() or in ExpandV() where we
         // check if any part of this container "s" is showing between its
         // children.
-        s->noDrawing = true;
+        ((struct PnSurface *)s)->noDrawing = true;
 
     struct PnSurface *c;
 
@@ -946,34 +1159,42 @@ static void ExpandChildren(struct PnSurface *s,
             DASSERT(s->firstChild == s->lastChild);
         case PnDirection_LR:
             ExpandHShared(s, a, s->firstChild, Next);
-            s->bottomBorderHeight = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
-                    ExpandV(s, a, c, &c->allocation);
+                    ExpandV(s, a, c, &c->allocation, &endBorder);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnDirection_TB:
             ExpandVShared(s, a, s->firstChild, Next);
-            s->rightBorderWidth = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
-                    ExpandH(s, a, c, &c->allocation);
+                    ExpandH(s, a, c, &c->allocation, &endBorder);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    AlignX(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnDirection_BT:
             ExpandVShared(s, a, s->lastChild, Prev);
-            s->rightBorderWidth = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
-                    ExpandH(s, a, c, &c->allocation);
+                    ExpandH(s, a, c, &c->allocation, &endBorder);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    AlignX(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnDirection_RL:
             ExpandHShared(s, a, s->lastChild, Prev);
-            s->bottomBorderHeight = UINT32_MAX;
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
-                    ExpandV(s, a, c, &c->allocation);
+                    ExpandV(s, a, c, &c->allocation, &endBorder);
+            for(c = s->firstChild; c; c = c->nextSibling)
+                if(!c->culled)
+                    AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnDirection_None:
@@ -1013,85 +1234,6 @@ static inline void AlignXRight(const struct PnSurface *s,
         if(c->culled) continue;
         childrenWidth += c->width + border;
     }
-
-}
-
-
-// The container, "s", allocation "a" is correct.
-//
-// Only change children's X positions.
-//
-static inline void AlignChildrenXRight(const struct PnSurface *s,
-        const struct PnAllocation *a) {
-
-    switch(s->direction) {
-
-        case PnDirection_One:
-        case PnDirection_LR:
-            AlignXRight(s, a, s->lastChild, Prev);
-            break;
-
-        case PnDirection_RL:
-            AlignXRight(s, a, s->firstChild, Next);
-            break;
-
-        case PnDirection_TB:
-            break;
-
-        case PnDirection_BT:
-            break;
-
-        default:
-            ASSERT(0, "BAD CASE");
-            break;
-    }
-}
-
-
-
-// This function calls itself.
-//
-// Move child widgets X position without changing its size.
-//
-static
-void AlignChildrenX(const struct PnSurface *s, const struct PnAllocation *a) {
-
-    // "s" has a correct allocation, "a".
-    DASSERT(s);
-    DASSERT(s->firstChild);
-    DASSERT(s->lastChild);
-    DASSERT(!s->culled);
-
-    struct PnSurface *c;
-
-    switch(s->align & PN_ALIGN_X) {
-
-        //case PN_ALIGN_X_LEFT: the default is done already.
-
-        case PN_ALIGN_X_RIGHT:
-            AlignChildrenXRight(s, a);
-            break;
-
-        case PN_ALIGN_X_CENTER:
-        case PN_ALIGN_X_JUSTIFIED:
-            for(c = s->firstChild; c; c = c->nextSibling) {
-                if(c->culled) continue;
-
-            }
-            break;
-    }
-
-    for(c = s->firstChild; c; c = c->nextSibling)
-        if(!c->culled && c->firstChild)
-            AlignChildrenX(c, &c->allocation);
-}
-
-static
-void AlignChildrenY(const struct PnSurface *s, const struct PnAllocation *a) {
-
-
-
-
 }
 
 
@@ -1281,14 +1423,8 @@ INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
     // PASS 6
     ExpandChildren(s, a);
 
-    // Without extra space in the containers these do nothing.  These may
-    // change the widgets x and y positions, but will not change any
-    // widget widths and heights.
-    // PASS 7 and 8?
-    AlignChildrenX(s, a);
-    AlignChildrenY(s, a);
 
-    // TOTAL PASSES = 5 + 3 * loopCount
+    // TOTAL PASSES = 3 + 3 * loopCount
 
     // TODO: Mash more widget passes together?  I'd expect that would be
     // prone to introducing bugs.  It's currently doing a very ordered

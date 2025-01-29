@@ -123,23 +123,6 @@ struct PnSurface {
 
     struct PnWindow *window; // The top most surface is a this window.
 
-    // rightBorderWidth and bottomBorderHeight are only used in the
-    // determining of a container widget position and size allocation.
-    // Because we start the widget position and size allocations with the
-    // widgets aligned to the left and top, the right and bottom borders
-    // of container widgets are needed as we traverse the widget tree data
-    // structure.  These may get set to something different than the
-    // default container widget border width (height) if the container can
-    // expand, but the widgets contained in the container can't expand, so
-    // the right (and/or bottom) border needs to expand for the container
-    // to expand.
-    //
-    // It cuts down on extra widget tree data structure traversals that
-    // are needed to figure out where container borders are, and what size
-    // they are.
-    uint32_t rightBorderWidth;
-    uint32_t bottomBorderHeight;
-
     uint32_t backgroundColor;
 
     enum PnDirection direction;

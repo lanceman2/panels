@@ -25,9 +25,9 @@ static struct PnWidget *Widget(void *parent) {
             50/*width*/,
             50/*height*/,
             0/*direction*/,
-            PnAlign_RT/*align*/,
-            PnExpand_V * Rand(0, 1));
-            //PnExpand_HV/*expand*/);
+            0/*align*/,
+            //PnExpand_H * Rand(0, 1));
+            PnExpand_HV & 0/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 
@@ -42,7 +42,7 @@ int main(void) {
 
     struct PnWindow *win = pnWindow_create(0,\
             20/*width*/, 20/*height*/,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/,
+            0/*x*/, 0/*y*/, PnDirection_TB/*direction*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
     pnWindow_setBackgroundColor(win, 0xFF000000);
@@ -52,25 +52,25 @@ int main(void) {
             40/*width*/,
             40/*height*/,
             PnDirection_LR/*direction*/,
-            0/*align*/, PnExpand_H/*expand*/);
+            PnAlign_RC/*align*/, PnExpand_HV/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 
 
-    for(uint32_t i=0; i<5; ++i)
+    for(uint32_t i=0; i<3; ++i)
         Widget(w);
 
     w = pnWidget_create(
             (struct PnSurface *) win,
             40/*width*/,
             40/*height*/,
-            PnDirection_LR/*direction*/,
-            0/*align*/, PnExpand_H & 0/*expand*/);
+            PnDirection_BT/*direction*/,
+            PnAlign_JC/*align*/, PnExpand_H/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 
 
-    for(uint32_t i=0; i<5; ++i)
+    for(uint32_t i=0; i<2; ++i)
         Widget(w);
 
 

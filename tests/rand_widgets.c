@@ -8,7 +8,7 @@
 #include "rand.h"
 
 // For a given seed we get different repeatable results.
-#define SEED            (1)
+#define SEED            (3)
 #define MAX_CONTAINERS  (15)
 // TOTAL_WIDGETS 1000 => program was a little sluggish but worked.
 #define TOTAL_WIDGETS   (80)
@@ -67,7 +67,9 @@ static struct PnWidget *Widget() {
             Unit * Rand(0,2)/*width*/,
             Unit * Rand(0,2)/*height*/,
             Rand(0,1) + SkewMinRand(0, 2, 2) /*direction*/,
-            0/*align*/, Rand(0,3)/*expand*/);
+            // enum PnAlign goes from 0 to 15.
+            SkewMinRand(0, 15, 2)/*align*/,
+            Rand(0,3)/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 
