@@ -61,7 +61,7 @@ enum PnSurfaceType {
     // a popup, and not a toplevel, and so does wayland-client.
 
     // 2 Window Surface types:
-    PnSurfaceType_toplevel = 231, // From xdg_surface_get_toplevel()
+    PnSurfaceType_toplevel = 0x156c271, // From xdg_surface_get_toplevel()
     PnSurfaceType_popup,    // From wl_shell_surface_set_popup()
 
     // 1 Widget Surface type.  Not a wayland thing.
@@ -99,11 +99,11 @@ struct PnSurface {
 
     // API user passed in draw function:
     int (*draw)(struct PnSurface *surface, uint32_t *pixels,
-            uint32_t w, uint32_t h, uint32_t stride,
-            void *user_data);
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData);
 
     // To pass to draw():
-    void *user_data;
+    void *userData;
 
     // We keep a linked list (tree like) graph of surfaces starting at a
     // window with PnSurface::parent == 0.
@@ -187,6 +187,7 @@ struct PnBuffer {
 
     size_t size; // total bytes of mapped shared memory file
 
+    // stride is the distance in uint32_t (4 byte) chunks.
     uint32_t width, height, stride;
 
     // pixels is a pointer to the share memory pixel data from mmap(2).

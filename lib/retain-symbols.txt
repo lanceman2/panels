@@ -10,3 +10,4 @@ pnWidget_show
 pnWidget_destroy
 pnSurface_setBackgroundColor
 pnWidget_queueDraw
+pnSurface_setDraw

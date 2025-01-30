@@ -24,17 +24,14 @@ void pn_drawFilledRectangle(uint32_t *pix/*surface starting pixel*/,
     DASSERT(width);
     DASSERT(height);
     DASSERT(stride);
-    DASSERT(width <= stride/PIXEL_SIZE);
-    DASSERT(stride % PIXEL_SIZE == 0);
+    DASSERT(width <= stride);
 #endif
 
 
     // Note: we did not want to add many new variables, so we recycled the
     // function parameter variables.
 
-    // convert stride from number of bytes to number of 4 byte unsigned
-    // integer.
-    stride /= PIXEL_SIZE;
+    // stride is number of 4 bytes to next row.
 
     // We start drawing at this pixel:
     pix += x + y * stride;

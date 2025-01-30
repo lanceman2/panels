@@ -157,7 +157,7 @@ enum PnAlign {
 
     // x -> first 2 bits  y -> next 2 bits
 
-    PnAlign_LT = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_TOP), // note: = 0
+    PnAlign_LT = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_TOP), // = 0
     PnAlign_RT = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_TOP),
     PnAlign_CT = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_TOP),
     PnAlign_JT = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_TOP),
@@ -230,9 +230,26 @@ static inline void pnWidget_setBackgroundColor(
     pnSurface_setBackgroundColor((void *) widget, argbColor);
 }
 
+PN_EXPORT void pnSurface_setDraw(struct PnSurface *s,
+        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData);
+static inline void pnWindow_setDraw(struct PnWindow *window,
+        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData) {
+     pnSurface_setDraw((void *) window, draw, userData);
+}
+static inline void pnWidget_setDraw(struct PnWidget *widget,
+        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData) {
+     pnSurface_setDraw((void *) widget, draw, userData);
+}
+
 
 //PN_EXPORT struct PnSurface *pnWindow_getSurface(struct PnWindow *window);
-//PN_EXPORT struct PnSurface *pnWidget_getSurface(struct PnWidget *window);
+//PN_EXPORT struct PnSurface *pnWidget_getSurface(struct PnWidget *widget);
 
 
 

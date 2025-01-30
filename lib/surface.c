@@ -128,6 +128,18 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
     s->parent = 0;
 }
 
+void pnSurface_setDraw(
+        struct PnSurface *s,
+        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride,
+            void *userData), void *userData) {
+    DASSERT(s);
+    DASSERT(s->type >= PnSurfaceType_toplevel &&
+            s->type <= PnSurfaceType_widget);
+
+    s->draw = draw;
+    s->userData = userData;
+}
 
 // This function calls itself.
 //
@@ -137,6 +149,7 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
     // if their children widgets completely cover them.
     if(s->noDrawing) goto drawChildren;
 
+
     if(!s->draw)
         pn_drawFilledRectangle(buffer->pixels,
                 s->allocation.x, s->allocation.y, 
@@ -145,10 +158,12 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
                 s->backgroundColor /*color in ARGB*/);
     else
         s->draw(s,
-                buffer->pixels + s->allocation.y * buffer->stride +
-                s->allocation.x * PN_PIXEL_SIZE,
+                buffer->pixels +
+                s->allocation.y * buffer->stride +
+                s->allocation.x,
                 s->allocation.width, s->allocation.height,
-                buffer->stride, s->user_data);
+                buffer->stride, s->userData);
+
 
 drawChildren:
     // Now draw children (widgets).
@@ -156,7 +171,6 @@ drawChildren:
         if(!c->culled)
             pnSurface_draw(c, buffer);
 }
-
 
 
 // Return false on success.

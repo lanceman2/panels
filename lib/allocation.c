@@ -1278,7 +1278,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.
-INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
+        //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         return;
     }
 

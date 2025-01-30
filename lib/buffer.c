@@ -68,7 +68,7 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     buffer->wl_buffer = wl_shm_pool_create_buffer(
             buffer->wl_shm_pool, 0,
 	    buffer->width, buffer->height,
-            buffer->width * PN_PIXEL_SIZE/*stride*/,
+            buffer->width * PN_PIXEL_SIZE/*stride in bytes*/,
             WL_SHM_FORMAT_ARGB8888);
     if(!buffer->wl_buffer) {
         ERROR("wl_shm_pool_create_buffer() failed");
@@ -118,7 +118,7 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     }
     buffer->wl_buffer = wl_shm_pool_create_buffer(buffer->wl_shm_pool, 0,
 			buffer->width, buffer->height,
-                        buffer->width*PN_PIXEL_SIZE /*stride*/,
+                        buffer->width*PN_PIXEL_SIZE /*stride in bytes*/,
                         WL_SHM_FORMAT_ARGB8888);
     if(!buffer->wl_buffer) {
         ERROR("wl_shm_pool_create_buffer() failed");
@@ -182,7 +182,7 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     // redraws.
     if(buffer->width != width) {
         buffer->width = width;
-        buffer->stride = width * PN_PIXEL_SIZE;
+        buffer->stride = width; // in 4 byte chunks (uint32_t)
     }
     if(buffer->height != height)
         buffer->height = height;

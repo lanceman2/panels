@@ -58,6 +58,15 @@ align_widget_run_SOURCES := align_widget.c
 align_widget_run_LDFLAGS := $(PN_LIB)
 align_widget_run_CPPFLAGS := -DRUN
 
+065_draw_widget_SOURCES := draw_widget.c
+065_draw_widget_LDFLAGS := $(PN_LIB)
+
+draw_widget_run_SOURCES := draw_widget.c
+draw_widget_run_LDFLAGS := $(PN_LIB)
+draw_widget_run_CPPFLAGS := -DRUN
+
+
+
 
 
 
