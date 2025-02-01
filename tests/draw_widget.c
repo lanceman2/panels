@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "../include/panels.h"
 #include "../lib/debug.h"
@@ -14,10 +15,30 @@ void catcher(int sig) {
 
 #define EXPAND  (PnExpand_HV)
 
+const static uint32_t halfPeriod = 422;
+const static uint32_t period = halfPeriod * 2;
+const static uint32_t thirdPeriod = period/3;
+const static uint32_t thirdPeriod2 = (2*period)/3;
 
+
+static uint32_t theta = 0;
+
+uint32_t Saw(uint32_t x) {
+
+    x = x % period;
+
+    if(x <= halfPeriod)
+        return 255 * x / halfPeriod;
+    //else (x > 128)
+    return 255 - (x - halfPeriod) * 255/halfPeriod;
+}
+
+
+static
 int draw1(struct PnSurface *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
+
 
     // stride is in pixels.
 
@@ -26,16 +47,34 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
 
     uint32_t *pix = pixels;
 
+    uint32_t phi = theta;
+
     for(uint32_t y = 0; y < h; ++y) {
+        uint32_t c = 0xFF000000 |
+            (Saw(phi) << 16) |
+            (Saw(phi + thirdPeriod)) |
+            (Saw(phi + thirdPeriod2) << 8);
         for(uint32_t x = 0; x < w; ++x)
-            *pix++ = 0x1C000000 | Rand(0, 0xFFFFFF);
+            *pix++ = c;
         pix += stride;
+        phi += 1;
+    }
+
+    theta += 4;
+
+// Seem to print at about 60 Hz
+//static uint32_t count = 0;
+//fprintf(stderr, "  %" PRIu32, count++);
+
+    if(theta > period) {
+        theta = 0;
+        return 0;
     }
 
     return 1;
 }
 
-
+static
 int draw2(struct PnSurface *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
@@ -47,7 +86,7 @@ int draw2(struct PnSurface *surface, uint32_t *pixels,
 
     uint32_t *pix = pixels;
 
-    uint32_t color = 0xCC000000 | Rand(0, 0xFFFFFF);
+    uint32_t color = 0xCC334499;
 
     for(uint32_t y = 0; y < h; ++y) {
         for(uint32_t x = 0; x < w; ++x)
@@ -71,46 +110,19 @@ int main(void) {
 
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
-            100/*width*/, 200/*height*/,
+            500/*width*/, 400/*height*/,
             0/*direction*/, 0/*align*/, EXPAND/*expand*/);
     ASSERT(w);
     pnWidget_setDraw(w, draw1, 0);
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
-            100/*width*/, 300/*height*/,
+            100/*width*/, 400/*height*/,
             0/*direction*/, 0/*align*/, EXPAND/*expand*/);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
+    pnWidget_setDraw(w, draw2, 0);
 
-    //pnWidget_show(w, false);
 
-    struct PnWidget *cw = pnWidget_create(
-            (struct PnSurface *) win/*parent*/,
-            100/*width*/, 100/*height*/,
-            PnDirection_LR/*direction*/, 0/*align*/,
-            EXPAND/*expand*/);
-    ASSERT(cw);
-    pnWidget_setBackgroundColor(cw, 0xCC0000CF);
-
-#if 1
-    {
-        w = pnWidget_create((struct PnSurface *) cw/*parent*/,
-            130/*width*/, 100/*height*/,
-            0/*direction*/, 0/*align*/, PnExpand_V & 0/*expand*/);
-        ASSERT(w);
-        pnWidget_setBackgroundColor(w, 0xCCCFFF00);
-        pnWidget_setDraw(w, draw2, 0);
-
-        //pnWidget_show(w, false);
-
-        w = pnWidget_create((struct PnSurface *) cw/*parent*/,
-            100/*width*/, 100/*height*/,
-            0/*direction*/, 0/*align*/, EXPAND & 0/*expand*/);
-        ASSERT(w);
-        pnWidget_setBackgroundColor(w, 0xCC00CFFF);
-        pnWidget_show(w, true);
-    }
-#endif
 
     pnWindow_show(win, true);
 
