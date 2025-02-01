@@ -145,6 +145,8 @@ void pnSurface_setDraw(
 //
 void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
+    if(s->culled) return;
+
     // All parent surfaces, including the window, could have nothing to draw
     // if their children widgets completely cover them.
     if(s->noDrawing) goto drawChildren;
@@ -157,12 +159,13 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
                 buffer->stride,
                 s->backgroundColor /*color in ARGB*/);
     else
-        s->draw(s,
+        if(s->draw(s,
                 buffer->pixels +
                 s->allocation.y * buffer->stride +
                 s->allocation.x,
                 s->allocation.width, s->allocation.height,
-                buffer->stride, s->userData);
+                buffer->stride, s->userData) == 1)
+            pnSurface_queueDraw(s);
 
 
 drawChildren:
@@ -207,5 +210,3 @@ void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor) {
     s->backgroundColor = argbColor;
 }
-
-

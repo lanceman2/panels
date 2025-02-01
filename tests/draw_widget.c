@@ -32,7 +32,7 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
         pix += stride;
     }
 
-    return 0;
+    return 1;
 }
 
 

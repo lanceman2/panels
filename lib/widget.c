@@ -88,7 +88,7 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     DASSERT(widget);
     DASSERT(widget->surface.type == PnSurfaceType_widget);
 
-// Make it be one of two values.  Because we can have things like (3)
+    // Make it be one of two values.  Because we can have things like (3)
     // == true
     //
     // I just do not want to assume how many bits are set in the value of
@@ -110,9 +110,4 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     widget->surface.window->needAllocate = true; 
 
     //pnWindow_queueDraw(widget->window);
-}
-
-void pnWidget_queueDraw(struct PnWidget *widget) {
-
-    ASSERT("WRITE THIS CODE");
 }

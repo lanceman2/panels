@@ -12,33 +12,7 @@
 #include  "display.h"
 
 
-// We need to make it clear that this is a draw (render) caused by a
-// wayland compositor configure event.  So, it was not caused by the API
-// users code telling us to draw (queue a draw on a surface).
-//
-static inline void DrawAll(struct PnWindow *win) {
-
-    DASSERT(win);
-    DASSERT(win->wl_surface);
-
-    if(win->needAllocate)
-        GetWidgetAllocations(win);
-
-    // GetNextBuffer() can reallocate the buffer if the width or height
-    // passed here is different from the width and height of the buffer it
-    // is getting.
-    struct PnBuffer *buffer = GetNextBuffer(win,
-            win->surface.allocation.width,
-            win->surface.allocation.height);
-    if(!buffer)
-        // I think this is okay.  The wayland compositor is just a little
-        // busy now.  I think we will get this done later.
-        return;
-
-    DASSERT(win->surface.allocation.width == buffer->width);
-    DASSERT(win->surface.allocation.height == buffer->height);
-
-    pnSurface_draw(&win->surface, buffer);
+void PostDraw(struct PnWindow *win, struct PnBuffer *buffer) {
 
     wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
 
@@ -47,6 +21,65 @@ static inline void DrawAll(struct PnWindow *win) {
 
     wl_surface_commit(win->wl_surface);
     buffer->busy = true;
+}
+
+
+// We need to make it clear that this is a draw (render) caused by a
+// wayland compositor configure event.  So, it was not caused by the API
+// users code telling us to draw (queue a draw on a surface).
+//
+void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
+
+    DASSERT(win);
+    DASSERT(win->wl_surface);
+    DASSERT(win->needDraw || buffer);
+    DASSERT(win->dqRead);
+    DASSERT(win->dqWrite);
+    DASSERT(win->dqRead != win->dqWrite);
+    // The read queue should be empty
+    DASSERT(!win->dqRead->first);
+    DASSERT(!win->dqRead->last);
+
+    if(win->needAllocate)
+        GetWidgetAllocations(win);
+    DASSERT(!win->needAllocate);
+
+
+    // GetNextBuffer() can reallocate the buffer if the width or height
+    // passed here is different from the width and height of the buffer it
+    // is getting.
+    if(!buffer)
+        buffer = GetNextBuffer(win,
+                win->surface.allocation.width,
+                win->surface.allocation.height);
+
+    if(!buffer)
+        // I think this is okay.  The wayland compositor is just a little
+        // busy now.  I think we will get this done later.
+        return;
+
+    win->needDraw = false;
+    buffer->needDraw = false;
+
+    if(win->dqWrite->first) {
+        // We no longer need to save the past queued draw requests given
+        // we will now draw all widgets in this window; at least the ones
+        // that are showing.  There's no reason to switch the read and
+        // write draw queues, given we are not dequeuing as we draw.
+        DASSERT(win->dqWrite->last);
+        FlushDrawQueue(win);
+        // New draw queue requests will be added to this now empty write
+        // queue.
+    } else {
+        DASSERT(!win->dqWrite->last);
+    }
+
+    DASSERT(win->surface.allocation.width == buffer->width);
+    DASSERT(win->surface.allocation.height == buffer->height);
+
+    pnSurface_draw(&win->surface, buffer);
+
+    PostDraw(win, buffer);
 }
 
 
@@ -65,7 +98,8 @@ static void configure(struct PnWindow *win,
     if(!win->surface.allocation.width || !win->surface.allocation.height)
         win->needAllocate = true;
 
-    DrawAll(win);
+    if(win->needDraw)
+        DrawAll(win, 0);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
@@ -111,6 +145,43 @@ static inline void RemoveWindow(struct PnWindow *win,
 }
 
 
+static void frame_new(struct PnWindow *win,
+        struct wl_callback* cb, uint32_t a) {
+
+    DASSERT(win);
+    // So the question I have is: Can we get a callback event (this
+    // called) after we destroy the wl_callback (before this is called)?
+    // The wayland client API could do whatever it likes, it knows when we
+    // destroy the wl_callback, but the server being in an asynchronous
+    // process could send this event after we destroy it (but the wayland
+    // client API in this process could just ignore it knowing that we
+    // destroyed it).  Oh boy.
+    //
+    // I wonder, will we hit any of these assertions.
+    DASSERT(cb);
+    DASSERT(win->wl_callback == cb);
+    // There should be draw requests in the write draw queue.
+    DASSERT(win->dqWrite->first);
+    DASSERT(win->dqWrite->last);
+
+    wl_callback_destroy(cb);
+    win->wl_callback = 0;
+
+    if(win->needAllocate || win->needDraw)
+        DrawAll(win, 0);
+    else
+        DrawFromQueue(win);
+}
+
+
+static
+struct wl_callback_listener callback_listener = {
+    .done = (void (*)(void* data, struct wl_callback* cb, uint32_t a))
+        frame_new
+};
+
+
+
 struct PnWindow *pnWindow_create(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnDirection direction, enum PnAlign align,
@@ -153,15 +224,19 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
+    win->dqWrite = win->drawQueues;
+    win->dqRead = win->drawQueues + 1;
 
     * (enum PnExpand *) &win->surface.expand = expand;
     win->surface.direction = direction;
     win->surface.align = align;
     win->surface.backgroundColor = PN_WINDOW_BGCOLOR;
-
+    win->needDraw = true;
+    win->surface.window = win;
     // Default for windows so that user build the window before showing
     // it.
     win->surface.hidden = true;
+
 
     InitSurface(&win->surface);
 
@@ -332,9 +407,26 @@ void pnWindow_setCBDestroy(struct PnWindow *win,
     win->destroyUserData = userData;
 }
 
-void pnWindow_queueDraw(struct PnWindow *win) {
 
-    if(win->surface.hidden) return;
+bool _pnWindow_addCallback(struct PnWindow *win) {
 
-    ASSERT(0, "WRITE MORE CODE HERE");
+    DASSERT(win);
+
+    if(win->wl_callback) return false;
+
+    win->wl_callback = wl_surface_frame(win->wl_surface);
+    if(!win->wl_callback) {
+        ERROR("wl_surface_frame() failed");
+        return true; // failure
+    }
+    if(wl_callback_add_listener(win->wl_callback,
+                    &callback_listener, win)) {
+        ERROR("wl_callback_add_listener() failed");
+        wl_callback_destroy(win->wl_callback);
+        win->wl_callback = 0;
+        return true; // failure
+    }
+
+    return false;
 }
+

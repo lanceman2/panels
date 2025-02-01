@@ -37,6 +37,9 @@ static void configure(struct PnWindow *win,
             win->surface.allocation.height != h) {
         win->surface.allocation.width = w;
         win->surface.allocation.height = h;
+        // We have a RESIZE.
+        win->needDraw = true;
+
 //WARN("w,h=%" PRIi32",%" PRIi32, w, h);
         if(!win->needAllocate)
             win->needAllocate = true;

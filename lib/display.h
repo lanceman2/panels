@@ -83,6 +83,9 @@ struct PnSurface {
 
     enum PnSurfaceType type;
 
+    // A link in the draw queue.
+    struct PnSurface *dqNext, *dqPrev;
+
     // API user requested size.  What they get may be different.
     //
     // width and height are CONSTANT after they are first set!!!
@@ -163,6 +166,9 @@ struct PnSurface {
     // The "culled" acts before this, "noDrawing" flag.
     //
     bool noDrawing; // true if zero size showing.
+
+    // Is in the window draw queue.
+    bool isQueued;
 };
 
 
@@ -196,14 +202,36 @@ struct PnBuffer {
     int fd; // File descriptor to shared memory file
  
     bool busy; // the wayland compositor may be reading the buffer
+    // If the buffer is reallocated all the pixels will need to be drawn.
+    // Since widgets can queue draw events and draw on API request, we
+    // must make sure that all the pixels have been drawn at least once
+    // after a buffer is reallocated.
+    //
+    // I'm not sure that having more than one buffer is a good idea.  It
+    // adds extra drawing, but may decrease latency between drawing and
+    // showing frames.
+    bool needDraw;
 };
 
+struct PnDrawQueue {
+    struct PnSurface *first, *last;
+};
 
 // surface type can be a toplevel or a popup
 struct PnWindow {
 
     // 1st inherit surface
     struct PnSurface surface;
+
+    // We use two draw queues, one we read from (and dequeue) and one we
+    // write draw requests to from the API user.  This code dequeues one
+    // of the queues at the same time as the API user writes to the other.
+    // We switch the two queues each time we draw via this draw queue
+    // method.
+    struct PnDrawQueue *dqRead, *dqWrite;
+    struct PnDrawQueue drawQueues[2];
+
+    //struct PnSurface *drawQueueFirst, *drawQueueLast;
 
     // To keep:
     //    1. a list of toplevel windows in the display, or
@@ -239,8 +267,20 @@ struct PnWindow {
     void (*destroy)(struct PnWindow *window, void *userData);
     void *destroyUserData;
 
-    bool needAllocate; // need to recompute all widget allocations
-    //bool needDraw;
+    // "needAllocate" is a flag to said that we need to recompute all
+    // widget allocations, that is widget (and window) sizes and
+    // positions.
+    bool needAllocate;
+
+    // It was (on KDE plasma 5.27.5 Wayland, 2025 Jan 30) found that the
+    // xdg_surface_listener::configure gets called a lot, even when there
+    // are no pixels to change.  Since we can't just change pixel shared
+    // memory any time; we set this "needDraw" flag when we know there
+    // is a need to change at least one pixel's color.  And, obviously we
+    // set this "needDraw" if there is a window resize, because that makes
+    // all the pixels in the window in need of recoloring.
+    //
+    bool needDraw;
 };
 
 
@@ -298,6 +338,7 @@ struct PnDisplay {
 };
 
 
+
 // One big ass global display thingy that has 9 wayland display thingys in
 // it:
 extern struct PnDisplay d;
@@ -335,3 +376,9 @@ extern void GetWidgetAllocations(struct PnWindow *win);
 extern void pnSurface_draw(struct PnSurface *s,
         struct PnBuffer *buffer);
 
+extern void FlushDrawQueue(struct PnWindow *win);
+extern bool _pnWindow_addCallback(struct PnWindow *win);
+extern void PostDraw(struct PnWindow *win, struct PnBuffer *buffer);
+extern bool DrawFromQueue(struct PnWindow *win);
+
+extern void DrawAll(struct PnWindow *win, struct PnBuffer *buffer);

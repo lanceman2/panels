@@ -81,6 +81,8 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         goto fail;
     }
 
+    buffer->needDraw = true;
+
     return false;
 
 fail:
@@ -130,6 +132,9 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         ERROR("wl_buffer_add_listener() failed");
         goto fail;
     }
+
+    // The whole buffer needs to be drawn.
+    buffer->needDraw = true;
 
     return false;
 

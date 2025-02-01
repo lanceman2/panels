@@ -205,7 +205,6 @@ PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
 PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
         void (*destroy)(struct PnWindow *window, void *userData),
         void *userData);
-PN_EXPORT void pnWindow_queueDraw(struct PnWindow *window);
 
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnSurface *parent,
@@ -214,7 +213,6 @@ PN_EXPORT struct PnWidget *pnWidget_create(
         enum PnAlign align,
         enum PnExpand expand);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
-PN_EXPORT void pnWidget_queueDraw(struct PnWidget *widget);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
 
 
@@ -246,6 +244,15 @@ static inline void pnWidget_setDraw(struct PnWidget *widget,
             void *userData), void *userData) {
      pnSurface_setDraw((void *) widget, draw, userData);
 }
+
+PN_EXPORT void pnSurface_queueDraw(struct PnSurface *s);
+static inline void pnWindow_queueDraw(struct PnWindow *window) {
+    pnSurface_queueDraw((void *) window);
+}
+static inline void pnWidget_queueDraw(struct PnWidget *widget) {
+    pnSurface_queueDraw((void *) widget);
+}
+
 
 
 //PN_EXPORT struct PnSurface *pnWindow_getSurface(struct PnWindow *window);
