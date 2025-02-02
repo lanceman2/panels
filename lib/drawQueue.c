@@ -157,7 +157,7 @@ bool DrawFromQueue(struct PnWindow *win) {
         // I think this is okay.  The wayland compositor is just a little
         // busy now.  I think we will get this done later.
         _pnWindow_addCallback(win);
-        WARN("Wayland shared memory buffer busy");
+        //WARN("Wayland shared memory buffer busy");
         return true;
     }
 

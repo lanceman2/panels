@@ -73,9 +73,11 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
     // Seems to draw at about 60 Hz and that's good.
     static uint32_t count = 0;
     ++count;
-    if(!(count % 60))
+    if(!(count % 60)) {
+        if(count > 6000)
+            count = 0;
         fprintf(stderr, "  %" PRIu32 " draws\n", count);
-
+    }
 #if 1
     theta %= period;
 #else

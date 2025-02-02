@@ -17,18 +17,16 @@
 static void release(struct PnBuffer *buffer,
         struct wl_buffer *wl_buffer) {
 
-WARN();
     buffer->busy = false;
 
     struct PnWindow *win = buffer->window;
     DASSERT(win);
+    DASSERT(win->dqWrite);
 
-#if 0
     if(win->needDraw)
         DrawAll(win, 0);
-    else if(win->dqWrite)
+    else if(win->dqWrite->first)
         DrawFromQueue(win);
-#endif
 }
 
 static const struct wl_buffer_listener buffer_listener = {
