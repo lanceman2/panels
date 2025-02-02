@@ -1299,8 +1299,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // Yes. No shit, this is a solved problem, but there is no fucking way
     // anyone can extract someone else's solution into a form that codes
     // this shit.  Trying to "reform" a proven given solution is a way
-    // harder problem than writing this fucking code from scratch.  That
-    // is the nature of software... 
+    // harder problem than writing this code from scratch.  That is the
+    // nature of software... 
     //
     // So far, I see no performance issues.  Tested thousands of widgets
     // randomly laid out in a window, and randomly varying parameters.
@@ -1379,11 +1379,13 @@ void GetWidgetAllocations(struct PnWindow *win) {
         // new empty spaces as they come to be.  This looping will
         // converge (terminate) so long as there is a finite number of
         // widgets in the window.  The worst case would be that we cull or
-        // resize one widget per loop; but it likely that many widgets
+        // resize one widget per loop; but it's likely that many widgets
         // will cull or resize in each loop, if there is any culling.
         //
+        // The libpanels API lets developers have windows
+        //
         // tests/random_widgets.c is a test that should work this loop
-        // through its paces.
+        // through its paces.  Try it with 1000 widgets.
 
         ++loopCount;
 

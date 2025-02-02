@@ -184,7 +184,8 @@ bool DrawFromQueue(struct PnWindow *win) {
     // Dequeue the old write queue, which this now the read queue, q.
 
     // Note: we call it the "read" queue but we are reading and dequeueing
-    // (writing) it here.
+    // (writing) it here.  It's more like reading what to draw, so ya,
+    // read.
     struct PnSurface *s;
 
     while((s = PopQueue(q)))

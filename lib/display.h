@@ -196,8 +196,13 @@ struct PnBuffer {
     // stride is the distance in uint32_t (4 byte) chunks.
     uint32_t width, height, stride;
 
+    // TODO: This seems a little stupid, given this buffer is in the
+    // PnWindow.
+    struct PnWindow *window;
+
     // pixels is a pointer to the share memory pixel data from mmap(2).
     uint32_t *pixels;
+
 
     int fd; // File descriptor to shared memory file
  

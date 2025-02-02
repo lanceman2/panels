@@ -15,14 +15,13 @@ void catcher(int sig) {
 
 #define EXPAND  (PnExpand_HV)
 
-const static uint32_t halfPeriod = 422;
+const static uint32_t halfPeriod = 300;
 const static uint32_t period = halfPeriod * 2;
 const static uint32_t thirdPeriod = period/3;
 const static uint32_t thirdPeriod2 = (2*period)/3;
 
 
-static uint32_t theta = 0;
-
+// Saw Tooth function.
 uint32_t Saw(uint32_t x) {
 
     x = x % period;
@@ -39,6 +38,8 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 
+    // Some sort of phase angle memory for between draw calls.
+    static uint32_t theta = 0;
 
     // stride is in pixels.
 
@@ -47,13 +48,20 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
 
     uint32_t *pix = pixels;
 
+    // Phase angle for this draw call.
     uint32_t phi = theta;
 
+    // Draw a rainbow of colors. Red, Green, Blue each varying in a saw
+    // tooth wave with each color wave one third out of phase of each
+    // other.  We tried sine waves but that seemed to be more CPU
+    // intensive.
+
     for(uint32_t y = 0; y < h; ++y) {
-        uint32_t c = 0xFF000000 |
-            (Saw(phi) << 16) |
-            (Saw(phi + thirdPeriod)) |
-            (Saw(phi + thirdPeriod2) << 8);
+        uint32_t c = 0xFF000000 | // alpha
+            (Saw(phi) << 16) | // red
+            (Saw(phi + thirdPeriod2) << 8) | // green
+            (Saw(phi + thirdPeriod)); // blue
+
         for(uint32_t x = 0; x < w; ++x)
             *pix++ = c;
         pix += stride;
@@ -62,14 +70,20 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
 
     theta += 4;
 
-// Seem to print at about 60 Hz
-//static uint32_t count = 0;
-//fprintf(stderr, "  %" PRIu32, count++);
+    // Seems to draw at about 60 Hz and that's good.
+    static uint32_t count = 0;
+    ++count;
+    if(!(count % 60))
+        fprintf(stderr, "  %" PRIu32 " draws\n", count);
 
-    if(theta > period) {
+#if 1
+    theta %= period;
+#else
+    if(theta > 2*period) {
         theta = 0;
         return 0;
     }
+#endif
 
     return 1;
 }
@@ -86,7 +100,7 @@ int draw2(struct PnSurface *surface, uint32_t *pixels,
 
     uint32_t *pix = pixels;
 
-    uint32_t color = 0xCC334499;
+    uint32_t color = 0xCC55AA99;
 
     for(uint32_t y = 0; y < h; ++y) {
         for(uint32_t x = 0; x < w; ++x)
@@ -121,7 +135,6 @@ int main(void) {
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
     pnWidget_setDraw(w, draw2, 0);
-
 
 
     pnWindow_show(win, true);

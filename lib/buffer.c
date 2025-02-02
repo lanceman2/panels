@@ -17,8 +17,18 @@
 static void release(struct PnBuffer *buffer,
         struct wl_buffer *wl_buffer) {
 
-    //WARN();
+WARN();
     buffer->busy = false;
+
+    struct PnWindow *win = buffer->window;
+    DASSERT(win);
+
+#if 0
+    if(win->needDraw)
+        DrawAll(win, 0);
+    else if(win->dqWrite)
+        DrawFromQueue(win);
+#endif
 }
 
 static const struct wl_buffer_listener buffer_listener = {
@@ -100,6 +110,8 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     DASSERT(buffer);
     DASSERT(!buffer->busy);
     DASSERT(size);
+
+    buffer->window = win;
 
     buffer->fd = create_shm_file(size);
     if(buffer->fd <= -1)

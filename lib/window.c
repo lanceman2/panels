@@ -174,8 +174,7 @@ static void frame_new(struct PnWindow *win,
 }
 
 
-static
-struct wl_callback_listener callback_listener = {
+static struct wl_callback_listener callback_listener = {
     .done = (void (*)(void* data, struct wl_callback* cb, uint32_t a))
         frame_new
 };
@@ -224,6 +223,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->buffer[1].pixels = MAP_FAILED;
     win->buffer[0].fd = -1;
     win->buffer[1].fd = -1;
+
     win->dqWrite = win->drawQueues;
     win->dqRead = win->drawQueues + 1;
 
@@ -236,7 +236,6 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     // Default for windows so that user build the window before showing
     // it.
     win->surface.hidden = true;
-
 
     InitSurface(&win->surface);
 
