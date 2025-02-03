@@ -78,7 +78,7 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
             count = 0;
         fprintf(stderr, "  %" PRIu32 " draws\n", count);
     }
-#if 1
+#if 0
     theta %= period;
 #else
     if(theta > 2*period) {
