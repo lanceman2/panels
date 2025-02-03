@@ -24,10 +24,6 @@ void PostDraw(struct PnWindow *win, struct PnBuffer *buffer) {
 }
 
 
-// We need to make it clear that this is a draw (render) caused by a
-// wayland compositor configure event.  So, it was not caused by the API
-// users code telling us to draw (queue a draw on a surface).
-//
 void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
 
     DASSERT(win);
@@ -55,7 +51,8 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
 
     if(!buffer)
         // I think this is okay.  The wayland compositor is just a little
-        // busy now.  I think we will get this done later.
+        // busy now.  I think we will get this done later from a wl_buffer
+        // release event callback; see buffer.c.
         return;
 
     win->needDraw = false;
@@ -161,15 +158,13 @@ static void frame_new(struct PnWindow *win,
     DASSERT(cb);
     DASSERT(win->wl_callback == cb);
     // There should be draw requests in the write draw queue.
-    DASSERT(win->dqWrite->first);
-    DASSERT(win->dqWrite->last);
 
     wl_callback_destroy(cb);
     win->wl_callback = 0;
 
-    if(win->needAllocate || win->needDraw)
+    if(win->needDraw)
         DrawAll(win, 0);
-    else
+    else if(win->dqWrite->first)
         DrawFromQueue(win);
 }
 
@@ -428,4 +423,3 @@ bool _pnWindow_addCallback(struct PnWindow *win) {
 
     return false;
 }
-
