@@ -41,6 +41,205 @@ static const struct xdg_wm_base_listener xdg_wm_base_listener = {
 };
 
 
+// Find the most childish surface that has the pointer position, d.x and
+// d.y, in it.
+//
+// TODO: Do we need a faster surface search data structure?
+//
+// TODO: Maybe the widget (surface) order in the searching could be more
+// optimal.
+//
+static struct PnSurface * FindSurface(const struct PnWindow *win,
+        struct PnSurface *s, uint32_t x, uint32_t y) {
+
+    DASSERT(win);
+    DASSERT(s->firstChild);
+    DASSERT(!s->culled);
+
+    // Let's see if the x,y positions always make sense.
+    DASSERT(s->allocation.x <= x);
+    DASSERT(s->allocation.y <= y);
+    if(x >= s->allocation.x + s->allocation.width)
+        --x;
+    if(y >= s->allocation.y + s->allocation.height) {
+        WARN("y=%" PRIu32 "s->allocation.y + s->allocation.height=%" PRIu32,
+                y, s->allocation.y + s->allocation.height);
+    }
+
+    DASSERT(x < s->allocation.x + s->allocation.width);
+    DASSERT(y < s->allocation.y + s->allocation.height);
+
+    // At this point in the code "s" contains the pointer position, x,y.
+    // Now search the children to see if x,y is in one of them.
+
+    struct PnSurface *c;
+
+    switch(s->direction) {
+
+        case PnDirection_One:
+        case PnDirection_LR:
+            for(c = s->firstChild; c; c = c->nextSibling) {
+                if(c->culled) continue;
+                if(x < c->allocation.x)
+                    // x is to the left of surface "c"
+                    break; // done in x
+                if(x >= c->allocation.x + c->allocation.width)
+                    // x is to the right of surface "c" so
+                    // look at siblings to the right.
+                    continue;
+                // The x is in surface "c"
+                if(y < c->allocation.y)
+                    // y is above the surface "c"
+                    break;
+                if(y >= c->allocation.y + c->allocation.height)
+                    // y is below the surface "c"
+                    break;
+                // this surface "c" contains x,y.
+                if(c->firstChild)
+                    return FindSurface(win, c, x, y);
+                // c is a leaf.
+                return c;
+            }
+            break;
+
+        case PnDirection_RL:
+            for(c = s->lastChild; c; c = c->prevSibling) {
+                if(c->culled) continue;
+                if(x < c->allocation.x)
+                    // x is to the left of surface "c"
+                    break; // done in x
+                if(x >= c->allocation.x + c->allocation.width)
+                    // x is to the right of surface "c" so
+                    // look at siblings to the right.
+                    continue;
+                // The x is in surface "c"
+                if(y < c->allocation.y)
+                    // y is above the surface "c"
+                    break;
+                if(y >= c->allocation.y + c->allocation.height)
+                    // y is below the surface "c"
+                    break;
+                // this surface "c" contains x,y.
+                if(c->firstChild)
+                    return FindSurface(win, c, x, y);
+                // c is a leaf.
+                return c;
+            }
+            break;
+
+        case PnDirection_TB:
+            for(c = s->firstChild; c; c = c->nextSibling) {
+                if(c->culled) continue;
+                if(y < c->allocation.y)
+                    // y is to the above of surface "c"
+                    break; // done in y
+                if(y >= c->allocation.y + c->allocation.height)
+                    // y is below surface "c" so
+                    // look at siblings below.
+                    continue;
+                // The y is in surface "c"
+                if(x < c->allocation.x)
+                    // x is to the left the surface "c"
+                    break;
+                if(x >= c->allocation.x + c->allocation.width)
+                    // x is to the right the surface "c"
+                    break;
+                // this surface "c" contains x,y.
+                if(c->firstChild)
+                    return FindSurface(win, c, x, y);
+                // c is a leaf.
+                return c;
+            }
+            break;
+
+        case PnDirection_BT:
+            for(c = s->lastChild; c; c = c->prevSibling) {
+                if(c->culled) continue;
+                if(y < c->allocation.y)
+                    // y is to the above of surface "c"
+                    break; // done in y
+                if(y >= c->allocation.y + c->allocation.height)
+                    // y is below surface "c" so
+                    // look at siblings below.
+                    continue;
+                // The y is in surface "c"
+                if(x < c->allocation.x)
+                    // x is to the left the surface "c"
+                    break;
+                if(x >= c->allocation.x + c->allocation.width)
+                    // x is to the right the surface "c"
+                    break;
+                // this surface "c" contains x,y.
+                if(c->firstChild)
+                    return FindSurface(win, c, x, y);
+                // c is a leaf.
+                return c;
+            }
+            break;
+
+        default:
+            ASSERT(0, "Write more code");
+            return 0;
+    }
+
+
+    return s;
+}
+
+static void GetSurfaceWithXY(const struct PnWindow *win,
+        wl_fixed_t x,  wl_fixed_t y) {
+
+    // Maybe we round up wrong...??  We fix it below.
+    d.x = (wl_fixed_to_double(x) + 0.5);
+    d.y = (wl_fixed_to_double(y) + 0.5);
+
+    // Let's see if the x,y positions always make sense.
+    DASSERT(d.x < (uint32_t) -1);
+    DASSERT(d.y < (uint32_t) -1);
+    DASSERT(win->surface.allocation.width >= d.x);
+    DASSERT(win->surface.allocation.height >= d.y);
+    DASSERT(d.x >= 0);
+    DASSERT(d.y >= 0);
+
+    if(d.x >= win->surface.allocation.width) {
+        // I don't trust the wayland compositor to give me good numbers.
+        // I've seen values of x larger than the width of the window.
+        // Maybe we round up wrong...
+        DASSERT(d.x - win->surface.allocation.width < 3);
+        // x values go from 0 to width -1.
+        d.x = win->surface.allocation.width - 1;
+    }
+    if(d.y >= d.pointerWindow->surface.allocation.height) {
+        // I don't trust the wayland compositor to give me good numbers.
+        // I've seen values of y larger than the height of the window.
+        DASSERT(d.y - d.pointerWindow->surface.allocation.height < 3);
+        // y values go from 0 to height -1.
+        d.y = d.pointerWindow->surface.allocation.height - 1;
+    }
+
+    d.pointerSurface = (void *) d.pointerWindow;
+
+    if(d.pointerSurface->firstChild)
+        d.pointerSurface = FindSurface(d.pointerWindow, d.pointerSurface,
+                d.x, d.y);
+WARN("Got widget=%p at %" PRIu32 ",%" PRIu32, d.pointerSurface, d.x, d.y);
+}
+
+static void DoEnter(void) {
+
+    DASSERT(d.pointerSurface);
+
+    for(struct PnSurface *s = d.pointerSurface; s; s = s->parent) {
+        DASSERT(!s->culled);
+        if(s->enter && s->enter(s, d.x, d.y, s->enterData))
+            // Eat the event at this surface (widget or window).
+            break;
+    }
+}
+
+
+// This is the window enter event
+//
 static void enter(void *data,
         struct wl_pointer *p, uint32_t serial,
         struct wl_surface *wl_surface, wl_fixed_t x,  wl_fixed_t y) {
@@ -49,12 +248,16 @@ static void enter(void *data,
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
-
+ 
     DASSERT(!d.pointerWindow);
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
     DASSERT(d.pointerWindow->wl_surface == wl_surface);
+    DASSERT(d.pointerWindow->surface.allocation.x == 0);
+    DASSERT(d.pointerWindow->surface.allocation.y == 0);
 
-    DSPEW("wl_surface=%p x,y=%u,%u",wl_surface, x, y);
+    GetSurfaceWithXY(d.pointerWindow, x, y);
+    DASSERT(d.pointerSurface);
+    DoEnter();
 }
 
 static void leave(void *data, struct wl_pointer *p,
@@ -69,10 +272,13 @@ static void leave(void *data, struct wl_pointer *p,
             wl_surface_get_user_data(wl_surface));
 
     d.pointerWindow = 0;
+    d.pointerSurface = 0;
 
     DSPEW();
 }
 
+// Window motion.
+//
 static void motion(void *, struct wl_pointer *p, uint32_t,
         wl_fixed_t x,  wl_fixed_t y) {
 
@@ -80,8 +286,15 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
+    DASSERT(d.pointerSurface);
+    DASSERT(d.pointerWindow);
 
-    //DSPEW("%lg %lg", wl_fixed_to_double(x), wl_fixed_to_double(y));
+    struct PnSurface *s = d.pointerSurface;
+    GetSurfaceWithXY(d.pointerWindow, x, y);
+    if(s != d.pointerSurface) {
+        // The widget (surface) changed.  But where was the last enter ...
+        ERROR("CODE HERE");
+    }
 }
 
 static void button(void *, struct wl_pointer *p,
@@ -139,7 +352,7 @@ static void kb_enter(void* data, struct wl_keyboard* kb,
     DASSERT(!d.kbWindow);
 
     d.kbWindow = wl_surface_get_user_data(wl_surface);
-    //DSPEW();
+DSPEW();
 }
 
 static void kb_leave(void* data, struct wl_keyboard* kb,

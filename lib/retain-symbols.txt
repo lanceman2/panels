@@ -10,3 +10,5 @@ pnWidget_destroy
 pnSurface_setBackgroundColor
 pnSurface_queueDraw
 pnSurface_setDraw
+pnSurface_setEnter
+pnSurface_setLeave

@@ -138,7 +138,7 @@ void pnSurface_setDraw(
             s->type <= PnSurfaceType_widget);
 
     s->draw = draw;
-    s->userData = userData;
+    s->drawData = userData;
 }
 
 // This function calls itself.
@@ -164,7 +164,7 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
                 s->allocation.y * buffer->stride +
                 s->allocation.x,
                 s->allocation.width, s->allocation.height,
-                buffer->stride, s->userData) == 1)
+                buffer->stride, s->drawData) == 1)
             pnSurface_queueDraw(s);
 
 
@@ -209,4 +209,24 @@ void DestroySurface(struct PnSurface *s) {
 void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor) {
     s->backgroundColor = argbColor;
+}
+
+
+void pnSurface_setEnter(struct PnSurface *s,
+        bool (*enter)(struct PnSurface *surface,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+
+    DASSERT(s);
+    s->enter = enter;
+    s->enterData = userData;
+}
+
+void pnSurface_setLeave(struct PnSurface *s,
+        bool (*leave)(struct PnSurface *surface, void *userData),
+        void *userData) {
+
+    DASSERT(s);
+    s->leave = leave;
+    s->leaveData = userData;
 }

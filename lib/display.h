@@ -104,9 +104,33 @@ struct PnSurface {
     int (*draw)(struct PnSurface *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData);
-
     // To pass to draw():
-    void *userData;
+    void *drawData;
+
+    // user set event callbacks
+    //
+    // TODO: Is this too many pointers; should we allocate memory for it
+    // so that it this memory is not used unless the widget sets these
+    // callbacks?
+    //
+    bool (*enter)(struct PnSurface *surface,
+            uint32_t x, uint32_t y, void *userData);
+    void *enterData;
+    bool (*leave)(struct PnSurface *surface, void *userData);
+    void *leaveData;
+    bool (*press)(struct PnSurface *surface,
+            uint32_t which, uint32_t x, uint32_t y,
+            void *userData);
+    void *pressData;
+    bool (*release)(struct PnSurface *surface,
+            uint32_t which, uint32_t x, uint32_t y,
+            void *userData);
+    void *releaseData;
+    bool (*motion)(struct PnSurface *surface,
+            uint32_t which, uint32_t x, uint32_t y,
+            void *userData);
+    void *motionData;
+
 
     // We keep a linked list (tree like) graph of surfaces starting at a
     // window with PnSurface::parent == 0.
@@ -184,6 +208,7 @@ struct PnWidget {
 
     // The window this widget is part of.
     struct PnWindow *window;
+
 };
 
 struct PnBuffer {
@@ -333,13 +358,16 @@ struct PnDisplay {
     //
     // Set the window with mouse pointer focus (from enter and leave):
     struct PnWindow *pointerWindow;
+    struct PnSurface *pointerSurface;
+    uint32_t x, y; // pointer position.
+
     // Set the window with keyboard focus (from enter and leave):
     struct PnWindow *kbWindow;
+    struct PnSurface *kbSurface;
+
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.
-
-    // TODO: widget (sub-window) focus?
 };
 
 

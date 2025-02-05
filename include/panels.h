@@ -253,6 +253,37 @@ static inline void pnWidget_queueDraw(struct PnWidget *widget) {
     pnSurface_queueDraw((void *) widget);
 }
 
+PN_EXPORT void pnSurface_setEnter(struct PnSurface *s,
+        bool (*enter)(struct PnSurface *surface,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData);
+static inline void pnWindow_setEnter(struct PnWindow *window,
+        bool (*enter)(struct PnWindow *window,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+    pnSurface_setEnter((void *) window, (void *) enter, userData);
+}
+static inline void pnWidget_setEnter(struct PnWidget *widget,
+        bool (*enter)(struct PnWidget *widget,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+    pnSurface_setEnter((void *) widget, (void *) enter, userData);
+}
+
+PN_EXPORT void pnSurface_setLeave(struct PnSurface *s,
+        bool (*leave)(struct PnSurface *surface, void *userData),
+        void *userData);
+static inline void pnWindow_setLeave(struct PnWindow *window,
+        bool (*leave)(struct PnWindow *window, void *userData),
+        void *userData) {
+    pnSurface_setLeave((void *) window, (void *) leave, userData);
+}
+static inline void pnWidget_setLeave(struct PnWidget *widget,
+        bool (*leave)(struct PnWidget *widget, void *userData),
+        void *userData) {
+    pnSurface_setLeave((void *) widget, (void *) leave, userData);
+}
+
 
 
 //PN_EXPORT struct PnSurface *pnWindow_getSurface(struct PnWindow *window);
