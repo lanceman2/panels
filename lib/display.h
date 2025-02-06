@@ -223,26 +223,10 @@ struct PnBuffer {
     // stride is the distance in uint32_t (4 byte) chunks.
     uint32_t width, height, stride;
 
-    // TODO: This seems a little stupid, given this buffer is in the
-    // PnWindow.
-    struct PnWindow *window;
-
     // pixels is a pointer to the share memory pixel data from mmap(2).
     uint32_t *pixels;
 
-
     int fd; // File descriptor to shared memory file
- 
-    //bool busy; // the wayland compositor may be reading the buffer
-    // If the buffer is reallocated all the pixels will need to be drawn.
-    // Since widgets can queue draw events and draw on API request, we
-    // must make sure that all the pixels have been drawn at least once
-    // after a buffer is reallocated.
-    //
-    // I'm not sure that having more than one buffer is a good idea.  It
-    // adds extra drawing, but may decrease latency between drawing and
-    // showing frames.
-    //bool needDraw;
 };
 
 struct PnDrawQueue {
@@ -262,8 +246,6 @@ struct PnWindow {
     // method.
     struct PnDrawQueue *dqRead, *dqWrite;
     struct PnDrawQueue drawQueues[2];
-
-    //struct PnSurface *drawQueueFirst, *drawQueueLast;
 
     // To keep:
     //    1. a list of toplevel windows in the display, or
@@ -293,6 +275,7 @@ struct PnWindow {
     struct zxdg_toplevel_decoration_v1 *decoration;
     struct wl_callback *wl_callback;
     struct PnBuffer buffer;
+
 
     void (*destroy)(struct PnWindow *window, void *userData);
     void *destroyData;

@@ -94,8 +94,6 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     DASSERT(buffer);
     DASSERT(size);
 
-    buffer->window = win;
-
     buffer->fd = create_shm_file(size);
     if(buffer->fd <= -1)
         goto fail;

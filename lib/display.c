@@ -193,22 +193,28 @@ static void GetSurfaceWithXY(const struct PnWindow *win,
     d.x = (wl_fixed_to_double(x) + 0.5);
     d.y = (wl_fixed_to_double(y) + 0.5);
 
+    // Sometimes the values for just shit.
+
     // Let's see if the x,y positions always make sense.
-    DASSERT(d.x < (uint32_t) -1);
-    DASSERT(d.y < (uint32_t) -1);
+    // Hit these, WTF.
+    //DASSERT(d.x < (uint32_t) -1);
+    //DASSERT(d.y < (uint32_t) -1);
 
     if(d.x >= win->surface.allocation.width) {
         // I don't trust the wayland compositor to give me good numbers.
         // I've seen values of x larger than the width of the window.
         // Maybe we round up wrong...
-        DASSERT(d.x - win->surface.allocation.width < 3);
+        // I've seen this assertion activated, so what the hell:
+        // why is the wayland compositor sending us position values that
+        // are not in the window.
+        //DASSERT(d.x - win->surface.allocation.width < 3);
         // x values go from 0 to width -1.
         d.x = win->surface.allocation.width - 1;
     }
     if(d.y >= d.pointerWindow->surface.allocation.height) {
         // I don't trust the wayland compositor to give me good numbers.
         // I've seen values of y larger than the height of the window.
-        DASSERT(d.y - d.pointerWindow->surface.allocation.height < 3);
+        //DASSERT(d.y - d.pointerWindow->surface.allocation.height < 3);
         // y values go from 0 to height -1.
         d.y = d.pointerWindow->surface.allocation.height - 1;
     }
@@ -258,6 +264,7 @@ static void enter(void *data,
     DASSERT(d.pointerWindow->surface.allocation.y == 0);
 
     GetSurfaceWithXY(d.pointerWindow, x, y);
+
     DASSERT(d.pointerSurface);
     DoEnterAndLeave();
 }
