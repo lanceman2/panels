@@ -28,7 +28,7 @@ uint32_t Saw(uint32_t x) {
 
     if(x <= halfPeriod)
         return 255 * x / halfPeriod;
-    //else (x > 128)
+    //else (x > halfPeriod)
     return 255 - (x - halfPeriod) * 255/halfPeriod;
 }
 
@@ -55,6 +55,10 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
     // tooth wave with each color wave one third out of phase of each
     // other.  We tried sine waves but that seemed to be more CPU
     // intensive.
+
+    // We checked this by running htop with and without this for loop,
+    // and the CPU usage for this process is mostly from this loop
+    // as you'd expect.  So that's a good sign for libpanels.so.
 
     for(uint32_t y = 0; y < h; ++y) {
         uint32_t c = 0xFF000000 | // alpha
