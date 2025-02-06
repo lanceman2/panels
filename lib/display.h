@@ -233,7 +233,7 @@ struct PnBuffer {
 
     int fd; // File descriptor to shared memory file
  
-    bool busy; // the wayland compositor may be reading the buffer
+    //bool busy; // the wayland compositor may be reading the buffer
     // If the buffer is reallocated all the pixels will need to be drawn.
     // Since widgets can queue draw events and draw on API request, we
     // must make sure that all the pixels have been drawn at least once
@@ -242,7 +242,7 @@ struct PnBuffer {
     // I'm not sure that having more than one buffer is a good idea.  It
     // adds extra drawing, but may decrease latency between drawing and
     // showing frames.
-    bool needDraw;
+    //bool needDraw;
 };
 
 struct PnDrawQueue {
@@ -270,8 +270,6 @@ struct PnWindow {
     //    2. a list of popup windows in toplevel windows.
     struct PnWindow *next, *prev;
 
-    size_t sharedBufferSize;
-
     // Wayland client objects:
     //
     struct wl_surface  *wl_surface;
@@ -294,7 +292,7 @@ struct PnWindow {
     //
     struct zxdg_toplevel_decoration_v1 *decoration;
     struct wl_callback *wl_callback;
-    struct PnBuffer buffer[2];
+    struct PnBuffer buffer;
 
     void (*destroy)(struct PnWindow *window, void *userData);
     void *destroyData;

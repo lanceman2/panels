@@ -23,7 +23,6 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     DASSERT(buffer->wl_buffer);
     DASSERT(buffer->wl_shm_pool);
     DASSERT(buffer->size);
-    DASSERT(!buffer->busy);
     DASSERT(buffer->fd > -1);
     DASSERT(buffer->size < size);
     DASSERT(buffer->width * buffer->height * PN_PIXEL_SIZE == size);
@@ -78,8 +77,6 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         goto fail;
     }
 
-    buffer->needDraw = true;
-
     return false;
 
 fail:
@@ -95,7 +92,6 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         size_t size) {
 
     DASSERT(buffer);
-    DASSERT(!buffer->busy);
     DASSERT(size);
 
     buffer->window = win;
@@ -129,9 +125,6 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         goto fail;
     }
 
-    // The whole buffer needs to be drawn.
-    buffer->needDraw = true;
-
     return false;
 
 fail:
@@ -141,10 +134,8 @@ fail:
     return true;
 }
 
-// Returns the next buffer (pixels) the we can draw to.
-//
-// Returns 0 if both buffers are busy, that is the wayland compositor
-// is reading them (??).
+// Returns the buffer (pixels) that we can draw to
+// with the corrected sizes.
 //
 struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         uint32_t width, uint32_t height) {
@@ -156,17 +147,7 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
     DASSERT(width > 0);
     DASSERT(height > 0);
 
-    struct PnBuffer *buffer = win->buffer;
-    // We only have 2 elements in this buffer[] array
-    //if(buffer->busy) ++buffer;
-    if(buffer->busy) {
-        // The two buffers are busy.  It is thought that there will be a
-        // later draw-like event that will make the windows pixels
-        // current.  It appears that now there is an overflow of draw-like
-        // events.
-        //INFO("Buffers busy");
-        return 0;
-    }
+    struct PnBuffer *buffer = &win->buffer;
 
     DASSERT(PN_PIXEL_SIZE == 4);
     size_t size = width * height * PN_PIXEL_SIZE;
@@ -205,7 +186,6 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
 void FreeBuffer(struct PnBuffer *buffer) {
 
     DASSERT(buffer);
-    //DASSERT(!buffer->busy);
 
     if(buffer->wl_buffer)
         wl_buffer_destroy(buffer->wl_buffer);

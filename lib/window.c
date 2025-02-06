@@ -20,7 +20,6 @@ void PostDraw(struct PnWindow *win, struct PnBuffer *buffer) {
             buffer->width, buffer->height);
 
     wl_surface_commit(win->wl_surface);
-    //buffer->busy = true;
 }
 
 
@@ -56,7 +55,6 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
         return;
 
     win->needDraw = false;
-    buffer->needDraw = false;
 
     if(win->dqWrite->first) {
         // We no longer need to save the past queued draw requests given
@@ -219,10 +217,8 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
 
     DASSERT(win->surface.type < PnSurfaceType_widget);
 
-    win->buffer[0].pixels = MAP_FAILED;
-    win->buffer[1].pixels = MAP_FAILED;
-    win->buffer[0].fd = -1;
-    win->buffer[1].fd = -1;
+    win->buffer.pixels = MAP_FAILED;
+    win->buffer.fd = -1;
 
     win->dqWrite = win->drawQueues;
     win->dqRead = win->drawQueues + 1;
@@ -313,7 +309,7 @@ void pnWindow_show(struct PnWindow *win, bool show) {
 
     // The win->surface.culled variable is not used in windows.
 
-    if(show && !win->buffer[0].wl_buffer)
+    if(show && !win->buffer.wl_buffer)
         // This is the first surface commit.
         //
         // This has no error return.
@@ -359,8 +355,8 @@ void pnWindow_destroy(struct PnWindow *win) {
     if(win->wl_callback)
         wl_callback_destroy(win->wl_callback);
 
-    // Make sure both buffers are freed up.
-    FreeBuffer(win->buffer);
+    // Make sure buffer is freed up.
+    FreeBuffer(&win->buffer);
 
 
     switch(win->surface.type) {
