@@ -78,14 +78,13 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
             count = 0;
         fprintf(stderr, "  %" PRIu32 " draws\n", count);
     }
-#if 0
-    theta %= period;
-#else
-    if(theta > 2*period) {
+
+    if(userData)
+        theta %= period;
+    else if(theta > 2*period) {
         theta = 0;
         return 0;
     }
-#endif
 
     return 1;
 }
@@ -114,7 +113,7 @@ int draw2(struct PnSurface *surface, uint32_t *pixels,
 }
 
 
-int main(void) {
+int main(int argc, char **argv) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(2); // rand() seed
@@ -129,7 +128,7 @@ int main(void) {
             500/*width*/, 400/*height*/,
             0/*direction*/, 0/*align*/, EXPAND/*expand*/);
     ASSERT(w);
-    pnWidget_setDraw(w, draw1, 0);
+    pnWidget_setDraw(w, draw1, (void *) (uintptr_t)(argc - 1));
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 400/*height*/,
