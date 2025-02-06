@@ -193,7 +193,7 @@ static void GetSurfaceWithXY(const struct PnWindow *win,
     d.x = (wl_fixed_to_double(x) + 0.5);
     d.y = (wl_fixed_to_double(y) + 0.5);
 
-    // Sometimes the values for just shit.
+    // Sometimes the values are just shit.
 
     // Let's see if the x,y positions always make sense.
     // Hit these, WTF.
