@@ -17,11 +17,18 @@ struct PnSurface *PopQueue(struct PnDrawQueue *q) {
 
     DASSERT(s->isQueued);
     DASSERT(!s->dqPrev);
+
     s->isQueued = false;
-    // Go to the next in the queue.
     q->first = s->dqNext;
-    if(!q->first) q->last = 0;
-    else s->dqNext = 0;
+
+    if(q->first) {
+        DASSERT(q->first->dqPrev == s);
+        q->first->dqPrev = 0;
+        s->dqNext = 0;
+    } else {
+        q->last = 0;
+    }
+
     return s;
 }
 
@@ -89,7 +96,6 @@ void pnSurface_queueDraw(struct PnSurface *s) {
 
     if(s->isQueued) {
         // It's already queued
-ERROR();
         DASSERT(win->dqWrite->first);
         DASSERT(win->dqWrite->last);
         DASSERT(win->wl_callback);
@@ -153,24 +159,8 @@ bool DrawFromQueue(struct PnWindow *win) {
     struct PnBuffer *buffer = GetNextBuffer(win,
             win->surface.allocation.width,
             win->surface.allocation.height);
-    if(!buffer) {
-        // I think this is okay.  The wayland compositor is just a little
-        // busy now.  I think we will get this done later.
-        _pnWindow_addCallback(win);
-        //WARN("Wayland shared memory buffer busy");
-        return true;
-    }
 
-    if(buffer->needDraw) {
-        // The buffer is blank and needs to have all surfaces redrawn.
-        // It must have been resized.  Or it's a different buffer.
-        // This will draw all surfaces in the window, win.  We get what we
-        // wanted.
-        DrawAll(win, buffer);
-        // That should have emptied the write draw queue.
-        return false;
-    }
-
+    DASSERT(buffer);
     DASSERT(win->surface.allocation.width == buffer->width);
     DASSERT(win->surface.allocation.height == buffer->height);
 

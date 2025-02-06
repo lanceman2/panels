@@ -14,26 +14,6 @@
 #include  "display.h"
 
 
-static void release(struct PnBuffer *buffer,
-        struct wl_buffer *wl_buffer) {
-
-    buffer->busy = false;
-
-    struct PnWindow *win = buffer->window;
-    DASSERT(win);
-    DASSERT(win->dqWrite);
-
-    if(win->needDraw)
-        DrawAll(win, 0);
-    else if(win->dqWrite->first)
-        DrawFromQueue(win);
-}
-
-static const struct wl_buffer_listener buffer_listener = {
-    .release = (void *) release,
-};
-
-
 // Return false on success.
 //
 static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
@@ -70,8 +50,23 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     wl_buffer_destroy(buffer->wl_buffer);
     buffer->wl_buffer = 0;
 
-    // returns void.  Is there a way to check for error?
-    wl_shm_pool_resize(buffer->wl_shm_pool, size);
+    if(buffer->wl_shm_pool)
+        wl_shm_pool_destroy(buffer->wl_shm_pool);
+
+    buffer->wl_shm_pool = wl_shm_create_pool(d.wl_shm, buffer->fd, size);
+    if(!buffer->wl_shm_pool) {
+        ERROR("wl_shm_create_pool() failed");
+        goto fail;
+    }
+
+    // I tried using wl_shm_pool_resize() and it's a fucking nightmare of
+    // endless wayland errors/bugs.  Time spent I can't get back.  I got
+    // it working with the use of two wl_buffers switching between the
+    // two.  But using two buffers is not efficient when you have widgets
+    // that draw each other in an independent fashion; there's no way to
+    // keep the two buffers correct without a lot of memory copying,
+    // making it much more OS (operating system) resource intensive than
+    // using one buffer.
 
     buffer->wl_buffer = wl_shm_pool_create_buffer(
             buffer->wl_shm_pool, 0,
@@ -80,12 +75,6 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
             WL_SHM_FORMAT_ARGB8888);
     if(!buffer->wl_buffer) {
         ERROR("wl_shm_pool_create_buffer() failed");
-        goto fail;
-    }
-    
-    if(wl_buffer_add_listener(buffer->wl_buffer,
-                &buffer_listener, buffer)) {
-        ERROR("wl_buffer_add_listener() failed");
         goto fail;
     }
 
@@ -123,6 +112,9 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     }
     buffer->size = size;
 
+    if(buffer->wl_shm_pool)
+        wl_shm_pool_destroy(buffer->wl_shm_pool);
+
     buffer->wl_shm_pool = wl_shm_create_pool(d.wl_shm, buffer->fd, size);
     if(!buffer->wl_shm_pool) {
         ERROR("wl_shm_create_pool() failed");
@@ -134,12 +126,6 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
                         WL_SHM_FORMAT_ARGB8888);
     if(!buffer->wl_buffer) {
         ERROR("wl_shm_pool_create_buffer() failed");
-        goto fail;
-    }
-
-    if(wl_buffer_add_listener(buffer->wl_buffer,
-                &buffer_listener, buffer)) {
-        ERROR("wl_buffer_add_listener() failed");
         goto fail;
     }
 
@@ -172,7 +158,7 @@ struct PnBuffer *GetNextBuffer(struct PnWindow *win,
 
     struct PnBuffer *buffer = win->buffer;
     // We only have 2 elements in this buffer[] array
-    if(buffer->busy) ++buffer;
+    //if(buffer->busy) ++buffer;
     if(buffer->busy) {
         // The two buffers are busy.  It is thought that there will be a
         // later draw-like event that will make the windows pixels

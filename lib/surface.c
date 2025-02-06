@@ -223,7 +223,7 @@ void pnSurface_setEnter(struct PnSurface *s,
 }
 
 void pnSurface_setLeave(struct PnSurface *s,
-        bool (*leave)(struct PnSurface *surface, void *userData),
+        void (*leave)(struct PnSurface *surface, void *userData),
         void *userData) {
 
     DASSERT(s);

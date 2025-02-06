@@ -90,4 +90,3 @@ and GTK are so magical that they do not have to follow very basic
 standards of quality.  It bugs the fuck out of me, because I know if they
 just took a little more time in design and development these libraries
 could be unloaded.
-

@@ -74,6 +74,9 @@ void pnWidget_destroy(struct PnWidget *widget) {
     DASSERT(widget->surface.parent);
     ASSERT(widget->surface.type == PnSurfaceType_widget);
 
+    if(widget->destroy)
+        widget->destroy(widget, widget->destroyData);
+
     while(widget->surface.firstChild)
         pnWidget_destroy((void *) widget->surface.firstChild);
 
@@ -110,4 +113,13 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     widget->surface.window->needAllocate = true; 
 
     //pnWindow_queueDraw(widget->window);
+}
+
+void pnWidget_setDestroy(struct PnWidget *w,
+        void (*destroy)(struct PnWidget *widget, void *userData),
+        void *userData) {
+
+    DASSERT(w);
+    w->destroy = destroy;
+    w->destroyData = userData;
 }

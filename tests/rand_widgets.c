@@ -53,6 +53,28 @@ void CheckAddContainer(struct PnWidget *w) {
 }
 
 
+static bool Enter(struct PnWidget *w,
+            uint32_t x, uint32_t y, void *userData) {
+
+    pnWidget_setBackgroundColor(w, 0xFFFF0000);
+    pnWidget_queueDraw(w);
+
+    return true; // take focus.
+}
+
+static void Leave(struct PnWidget *w, void *userData) {
+
+    pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
+    pnWidget_queueDraw(w);
+}
+
+static void Destroy(struct PnWidget *w, void *data) {
+
+    ASSERT(w);
+    ASSERT(data);
+    free(data);
+}
+
 static struct PnWidget *Widget() {
 
     DASSERT(win);
@@ -71,7 +93,15 @@ static struct PnWidget *Widget() {
             SkewMinRand(0, 15, 2)/*align*/,
             Rand(0,3)/*expand*/);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+
+    uint32_t *color = malloc(sizeof(*color));
+    ASSERT(color, "malloc(%zu) failed", sizeof(*color));
+    *color = Color();
+    pnWidget_setBackgroundColor(w, *color);
+
+    pnWidget_setEnter(w, Enter, color);
+    pnWidget_setLeave(w, Leave, color);
+    pnWidget_setDestroy(w, Destroy, color);
 
     CheckAddContainer(w);
 

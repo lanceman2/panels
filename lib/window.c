@@ -20,7 +20,7 @@ void PostDraw(struct PnWindow *win, struct PnBuffer *buffer) {
             buffer->width, buffer->height);
 
     wl_surface_commit(win->wl_surface);
-    buffer->busy = true;
+    //buffer->busy = true;
 }
 
 
@@ -92,11 +92,16 @@ static void configure(struct PnWindow *win,
 
     xdg_surface_ack_configure(win->xdg_surface, serial);
 
-    if(!win->surface.allocation.width || !win->surface.allocation.height)
+    if(!win->surface.allocation.width || !win->surface.allocation.height) {
+        // This is the first call to draw real pixels.
         win->needAllocate = true;
+        DrawAll(win, 0);
+    }
 
     if(win->needDraw)
-        DrawAll(win, 0);
+        // We need to wait for the wayland compositor to tell us we can
+        // draw.
+        _pnWindow_addCallback(win);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
@@ -325,7 +330,7 @@ void pnWindow_destroy(struct PnWindow *win) {
 
     if(win->destroy)
         // This is called before we start destroying stuff.
-        win->destroy(win, win->destroyUserData);
+        win->destroy(win, win->destroyData);
 
     // Remove all child widgets in the list from win->surface.firstChild
     while(win->surface.firstChild)
@@ -356,7 +361,6 @@ void pnWindow_destroy(struct PnWindow *win) {
 
     // Make sure both buffers are freed up.
     FreeBuffer(win->buffer);
-    FreeBuffer(win->buffer + 1);
 
 
     switch(win->surface.type) {
@@ -391,14 +395,14 @@ void pnWindow_destroy(struct PnWindow *win) {
     free(win);
 }
 
-void pnWindow_setCBDestroy(struct PnWindow *win,
+void pnWindow_setDestroy(struct PnWindow *win,
         void (*destroy)(struct PnWindow *window, void *userData),
         void *userData) {
 
     DASSERT(win);
 
     win->destroy = destroy;
-    win->destroyUserData = userData;
+    win->destroyData = userData;
 }
 
 
@@ -420,6 +424,8 @@ bool _pnWindow_addCallback(struct PnWindow *win) {
         win->wl_callback = 0;
         return true; // failure
     }
+
+    wl_surface_commit(win->wl_surface);
 
     return false;
 }

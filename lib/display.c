@@ -196,10 +196,6 @@ static void GetSurfaceWithXY(const struct PnWindow *win,
     // Let's see if the x,y positions always make sense.
     DASSERT(d.x < (uint32_t) -1);
     DASSERT(d.y < (uint32_t) -1);
-    DASSERT(win->surface.allocation.width >= d.x);
-    DASSERT(win->surface.allocation.height >= d.y);
-    DASSERT(d.x >= 0);
-    DASSERT(d.y >= 0);
 
     if(d.x >= win->surface.allocation.width) {
         // I don't trust the wayland compositor to give me good numbers.
@@ -222,21 +218,27 @@ static void GetSurfaceWithXY(const struct PnWindow *win,
     if(d.pointerSurface->firstChild)
         d.pointerSurface = FindSurface(d.pointerWindow, d.pointerSurface,
                 d.x, d.y);
-WARN("Got widget=%p at %" PRIu32 ",%" PRIu32, d.pointerSurface, d.x, d.y);
+//WARN("Got widget=%p at %" PRIu32 ",%" PRIu32, d.pointerSurface, d.x, d.y);
 }
 
-static void DoEnter(void) {
+static void DoEnterAndLeave(void) {
 
     DASSERT(d.pointerSurface);
 
     for(struct PnSurface *s = d.pointerSurface; s; s = s->parent) {
         DASSERT(!s->culled);
-        if(s->enter && s->enter(s, d.x, d.y, s->enterData))
-            // Eat the event at this surface (widget or window).
+        if(d.focusSurface == s)
+            // This surface "s" already has focus.
             break;
+        if(s->enter && s->enter(s, d.x, d.y, s->enterData)) {
+            if(d.focusSurface && d.focusSurface->leave)
+                d.focusSurface->leave(d.focusSurface,
+                        d.focusSurface->leaveData);
+            d.focusSurface = s;
+            break;
+        }
     }
 }
-
 
 // This is the window enter event
 //
@@ -257,7 +259,7 @@ static void enter(void *data,
 
     GetSurfaceWithXY(d.pointerWindow, x, y);
     DASSERT(d.pointerSurface);
-    DoEnter();
+    DoEnterAndLeave();
 }
 
 static void leave(void *data, struct wl_pointer *p,
@@ -271,10 +273,12 @@ static void leave(void *data, struct wl_pointer *p,
     DASSERT((void *) d.pointerWindow ==
             wl_surface_get_user_data(wl_surface));
 
+    if(d.focusSurface && d.focusSurface->leave)
+        d.focusSurface->leave(d.focusSurface, d.focusSurface->leaveData);
+
     d.pointerWindow = 0;
     d.pointerSurface = 0;
-
-    DSPEW();
+    d.focusSurface = 0;
 }
 
 // Window motion.
@@ -291,10 +295,11 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
 
     struct PnSurface *s = d.pointerSurface;
     GetSurfaceWithXY(d.pointerWindow, x, y);
-    if(s != d.pointerSurface) {
-        // The widget (surface) changed.  But where was the last enter ...
-        ERROR("CODE HERE");
-    }
+
+    if(s != d.pointerSurface)
+        // The surface we are pointing to changed.
+        // The focused widget may be changed.
+        DoEnterAndLeave();
 }
 
 static void button(void *, struct wl_pointer *p,
@@ -307,7 +312,7 @@ static void button(void *, struct wl_pointer *p,
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
 
-    DSPEW("button=%" PRIu32 " state=%" PRIu32, button, state);
+    //DSPEW("button=%" PRIu32 " state=%" PRIu32, button, state);
 }
 
 static void axis(void *, struct wl_pointer *p, uint32_t,
@@ -318,7 +323,7 @@ static void axis(void *, struct wl_pointer *p, uint32_t,
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
 
-    DSPEW();
+    //DSPEW();
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -337,7 +342,7 @@ static void kb_map(void* data, struct wl_keyboard* kb,
     DASSERT(kb);
     DASSERT(d.wl_keyboard == kb);
 
-    DSPEW("fd=%d", fd);
+    //DSPEW("fd=%d", fd);
 }
 
 static void kb_enter(void* data, struct wl_keyboard* kb,
@@ -352,7 +357,7 @@ static void kb_enter(void* data, struct wl_keyboard* kb,
     DASSERT(!d.kbWindow);
 
     d.kbWindow = wl_surface_get_user_data(wl_surface);
-DSPEW();
+//DSPEW();
 }
 
 static void kb_leave(void* data, struct wl_keyboard* kb,
@@ -364,7 +369,7 @@ static void kb_leave(void* data, struct wl_keyboard* kb,
     DASSERT(d.wl_keyboard == kb);
 
     d.kbWindow = 0;
-    DSPEW();
+    //DSPEW();
 }
 
 static void kb_key(void* data, struct wl_keyboard* kb,

@@ -116,7 +116,7 @@ struct PnSurface {
     bool (*enter)(struct PnSurface *surface,
             uint32_t x, uint32_t y, void *userData);
     void *enterData;
-    bool (*leave)(struct PnSurface *surface, void *userData);
+    void (*leave)(struct PnSurface *surface, void *userData);
     void *leaveData;
     bool (*press)(struct PnSurface *surface,
             uint32_t which, uint32_t x, uint32_t y,
@@ -209,6 +209,8 @@ struct PnWidget {
     // The window this widget is part of.
     struct PnWindow *window;
 
+    void (*destroy)(struct PnWidget *widget, void *userData);
+    void *destroyData;
 };
 
 struct PnBuffer {
@@ -295,7 +297,7 @@ struct PnWindow {
     struct PnBuffer buffer[2];
 
     void (*destroy)(struct PnWindow *window, void *userData);
-    void *destroyUserData;
+    void *destroyData;
 
     // "needAllocate" is a flag to said that we need to recompute all
     // widget allocations, that is widget (and window) sizes and
@@ -359,6 +361,7 @@ struct PnDisplay {
     // Set the window with mouse pointer focus (from enter and leave):
     struct PnWindow *pointerWindow;
     struct PnSurface *pointerSurface;
+    struct PnSurface *focusSurface;
     uint32_t x, y; // pointer position.
 
     // Set the window with keyboard focus (from enter and leave):

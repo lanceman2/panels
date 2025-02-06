@@ -202,7 +202,7 @@ PN_EXPORT struct PnWindow *pnWindow_create(
 
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
 PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
-PN_EXPORT void pnWindow_setCBDestroy(struct PnWindow *window,
+PN_EXPORT void pnWindow_setDestroy(struct PnWindow *window,
         void (*destroy)(struct PnWindow *window, void *userData),
         void *userData);
 
@@ -214,11 +214,13 @@ PN_EXPORT struct PnWidget *pnWidget_create(
         enum PnExpand expand);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
+PN_EXPORT void pnWidget_setDestroy(struct PnWidget *widget,
+        void (*destroy)(struct PnWidget *widget, void *userData),
+        void *userData);
 
 
 PN_EXPORT void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor);
-
 static inline void pnWindow_setBackgroundColor(
         struct PnWindow *window, uint32_t argbColor) {
     pnSurface_setBackgroundColor((void *) window, argbColor);
@@ -227,6 +229,17 @@ static inline void pnWidget_setBackgroundColor(
         struct PnWidget *widget, uint32_t argbColor) {
     pnSurface_setBackgroundColor((void *) widget, argbColor);
 }
+
+PN_EXPORT uint32_t pnSurface_getBackgroundColor(struct PnSurface *s);
+static inline uint32_t pnWindow_getBackgroundColor(
+        struct PnWindow *window) {
+    return pnSurface_getBackgroundColor((void *) window);
+}
+static inline uint32_t pnWidget_getBackgroundColor(
+        struct PnWidget *widget) {
+    return pnSurface_getBackgroundColor((void *) widget);
+}
+
 
 PN_EXPORT void pnSurface_setDraw(struct PnSurface *s,
         int (*draw)(struct PnSurface *surface, uint32_t *pixels,
@@ -271,15 +284,15 @@ static inline void pnWidget_setEnter(struct PnWidget *widget,
 }
 
 PN_EXPORT void pnSurface_setLeave(struct PnSurface *s,
-        bool (*leave)(struct PnSurface *surface, void *userData),
+        void (*leave)(struct PnSurface *surface, void *userData),
         void *userData);
 static inline void pnWindow_setLeave(struct PnWindow *window,
-        bool (*leave)(struct PnWindow *window, void *userData),
+        void (*leave)(struct PnWindow *window, void *userData),
         void *userData) {
     pnSurface_setLeave((void *) window, (void *) leave, userData);
 }
 static inline void pnWidget_setLeave(struct PnWidget *widget,
-        bool (*leave)(struct PnWidget *widget, void *userData),
+        void (*leave)(struct PnWidget *widget, void *userData),
         void *userData) {
     pnSurface_setLeave((void *) widget, (void *) leave, userData);
 }

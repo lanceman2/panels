@@ -3,7 +3,8 @@ pnDisplay_haveXDGDecoration
 pnWindow_create
 pnWindow_destroy
 pnWindow_show
-pnWindow_setCBDestroy
+pnWindow_setDestroy
+pnWidget_setDestroy
 pnWidget_create
 pnWidget_show
 pnWidget_destroy

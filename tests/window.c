@@ -19,7 +19,7 @@ int main(void) {
             0, 0, 0, 0, PnExpand_HV);
     ASSERT(win);
 
-    pnWindow_setCBDestroy(win, destroy, &win);
+    pnWindow_setDestroy(win, destroy, &win);
 
     pnWindow_show(win, true);
 
