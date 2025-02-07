@@ -14,8 +14,8 @@ and utility programs.  It can be used with C++.
 The libpanels API lets developers have simple windows that they can draw
 raw 32 bit [true color] (https://en.wikipedia.org/wiki/Color_depth) pixels
 on; with or without a drawing API.  Sometimes you can draw much faster and
-more simply without a drawing API; sometimes antialiasing is just not
-needed.
+more simply without a drawing API; sometimes antialiasing (and other
+effects) are just not needed and slow down the running code.
 
 Mostly "panels" is minimalistic.  We wanted to:
 
@@ -35,7 +35,25 @@ We also wanted to be able to create simple windows and draw to
 Mostly because Qt and GTK are bloated and leak system resources.  I wish
 to create an on-the-fly programming paradigm that requires that running
 programs can load and unload compiled code.  The Qt and GTK libraries
-can't be unloaded, and it's by design.  Fixing them is a social problem.
+can't be unloaded, and it's by design.  Fixing that is a social problem.
+As best as I can tell I could change the codes to fix them, the social
+hurdlers seem higher than the coding challenge.
+
+As seen from above, Qt and GTK are not modular.  They are designed to take
+over and be central to your development.  They are that way by design.
+There may be modular aspects to Qt and GTK, but it is constrained to be
+internal to their respective libraries.  Once you use a part of them
+you'll likely be stuck with innate incompatibilities when trying to use
+them with other code outside these frameworks.  As a very common example
+if you wish to code with pthreads (NPTL) and GTK you'll need to understand
+the internal workings of the GTK main loop code.  I wrote a hack to do it
+(in the same process without changing GTK codes), but if GTK was not
+designed to be the main loop controller of your code it would have been
+trivial to do; taking hours instead of weeks to code; and it would have
+been much much more efficient had they not required using their main loop
+code.  gthreads may wrap all of pthreads (and I don't think it does) but
+it's not near as standard and robust as pthreads, and it can't be, it's
+built on pthreads.
 
 
 ## 3D Graphics and GPUs
@@ -43,7 +61,7 @@ can't be unloaded, and it's by design.  Fixing them is a social problem.
 I don't understand why the wayland compositors do not automatically use
 what GPU resources it can find.  Why not automatically use GPU resources
 for both 2D and 3D drawing?  At least make CPU rendering not be the
-default.
+default if it's slower.
 
 
 ## Dependencies
@@ -67,7 +85,7 @@ faster than drawing by just changing the pixel values by hand (as they
 say), in a large class of cases.  So, panels provides access to "raw"
 pixels.
 
-There are other libraries that these depend on, but they are very
+There are other libraries that these depend on, but they appear to be
 robust and stable.
 
 
@@ -75,4 +93,3 @@ robust and stable.
 
  * [hello wayland](https://github.com/emersion/hello-wayland.git)
  * [wleird](https://github.com/emersion/wleird.git)
-

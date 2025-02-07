@@ -157,6 +157,11 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
     return s;
 }
 
+// Find d.x, d.y, and d.pointerSurface which is the x,y position and
+// surface (widget) that contains that position.
+//
+// The mouse pointer window, d.pointerWindow, must be known.
+//
 void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y) {
 
@@ -211,6 +216,10 @@ void GetSurfaceWithXY(const struct PnWindow *win,
 //WARN("Got widget=%p at %" PRIu32 ",%" PRIu32, d.pointerSurface, d.x, d.y);
 }
 
+// Find the next focused widget (focusSurface), switch between the last
+// focused widget and the next, calling next focused widget enter callback
+// and then the lasted focused widget leave callback.
+//
 void DoEnterAndLeave(void) {
 
     DASSERT(d.pointerSurface);
