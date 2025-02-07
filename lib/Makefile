@@ -61,7 +61,8 @@ libpanels.so_SOURCES :=\
  toplevel.c\
  popup.c\
  allocation.c\
- drawQueue.c
+ drawQueue.c\
+ eventFindXY.c
 
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\

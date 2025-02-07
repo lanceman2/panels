@@ -15,7 +15,7 @@
 
 // Make rectangles that are a multiple of this size in pixels:
 //static const uint32_t Unit = 0;
-static const uint32_t Unit = 15;
+static const uint32_t Unit = 13;
 
 
 
@@ -52,6 +52,21 @@ void CheckAddContainer(struct PnWidget *w) {
         containers[Rand(0, num_containers-1)] = (void *) w;
 }
 
+static bool EnterW(struct PnWindow *w,
+            uint32_t x, uint32_t y, void *userData) {
+
+    pnWindow_setBackgroundColor(w, 0xFFFF0000);
+    pnWindow_queueDraw(w);
+
+    return true; // take focus.
+}
+
+static void LeaveW(struct PnWindow *w, void *userData) {
+
+    pnWindow_setBackgroundColor(w, *(uint32_t *) userData);
+    pnWindow_queueDraw(w);
+}
+
 
 static bool Enter(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
@@ -59,7 +74,8 @@ static bool Enter(struct PnWidget *w,
     pnWidget_setBackgroundColor(w, 0xFFFF0000);
     pnWidget_queueDraw(w);
 
-    return true; // take focus.
+    // taking focus lets us get the leave event handler called.
+    return true; // true => take focus.
 }
 
 static void Leave(struct PnWidget *w, void *userData) {
@@ -114,11 +130,15 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(SEED);
 
-    win = pnWindow_create(0, 3/*width*/, 3/*height*/,
+    win = pnWindow_create(0, 16/*width*/, 16/*height*/,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
-    pnWindow_setBackgroundColor(win, 0xFF000000);
+    uint32_t color = 0xFF000000;
+    pnWindow_setBackgroundColor(win, color);
+    pnWindow_setEnter(win, EnterW, &color);
+    pnWindow_setLeave(win, LeaveW, &color);
+
     containers[0] = (void *) win;
     num_containers = 1;
 

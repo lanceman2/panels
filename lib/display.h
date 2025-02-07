@@ -399,3 +399,8 @@ extern void PostDraw(struct PnWindow *win, struct PnBuffer *buffer);
 extern bool DrawFromQueue(struct PnWindow *win);
 
 extern void DrawAll(struct PnWindow *win, struct PnBuffer *buffer);
+
+extern void GetSurfaceWithXY(const struct PnWindow *win,
+        wl_fixed_t x,  wl_fixed_t y);
+
+extern void DoEnterAndLeave(void);
