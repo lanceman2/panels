@@ -14,7 +14,7 @@ CAIRO_LDFLAGS := $(shell pkg-config --libs cairo)\
 CAIRO_CFLAGS := $(shell pkg-config --cflags cairo)
 
 ifeq ($(libdir),)
-# Use of cairo is required.
+# Use of cairo is required ifdef WITH_CAIRO
 $(error software package cairo was not found)
 endif
 

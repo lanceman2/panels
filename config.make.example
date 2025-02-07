@@ -43,6 +43,10 @@ CPPFLAGS := -DDEBUG -DSPEW_LEVEL_DEBUG
 # Comment out next line to build without libcairo
 WITH_CAIRO := yes
 
+# Build option: WITH_FONTCONFIG
+# We default to with fontconfig
+# Comment out next line to build without libfontconfig
+WITH_FONTCONFIG := yes
 
 # C compiler option flags
 CFLAGS := -g -Wall -Werror -fno-omit-frame-pointer

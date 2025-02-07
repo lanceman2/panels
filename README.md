@@ -11,6 +11,12 @@ Wayland.
 Panels provides a C API (application programming interface) library
 and utility programs.  It can be used with C++.
 
+The libpanels API lets developers have simple windows that they can draw
+raw 32 bit [true color] (https://en.wikipedia.org/wiki/Color_depth) pixels
+on; with or without a drawing API.  Sometimes you can draw much faster and
+more simply without a drawing API; sometimes antialiasing is just not
+needed.
+
 Mostly "panels" is minimalistic.  We wanted to:
 
 1. divide windows into rectangular sub-sections called widgets,
@@ -19,6 +25,25 @@ Mostly "panels" is minimalistic.  We wanted to:
 4. the libpanels.so can be loaded and unloaded without leaking
    system resources, and
 5. keep it small.
+
+We also wanted to be able to create simple windows and draw to
+"raw" pixels, without requiring a widget abstraction.
+
+
+## Why not Qt or GTK?
+
+Mostly because Qt and GTK are bloated and leak system resources.  I wish
+to create an on-the-fly programming paradigm that requires that running
+programs can load and unload compiled code.  The Qt and GTK libraries
+can't be unloaded, and it's by design.  Fixing them is a social problem.
+
+
+## 3D Graphics and GPUs
+
+I don't understand why the wayland compositors do not automatically use
+what GPU resources it can find.  Why not automatically use GPU resources
+for both 2D and 3D drawing?  At least make CPU rendering not be the
+default.
 
 
 ## Dependencies
@@ -40,10 +65,10 @@ keep the "panels" users ability to draw without using cairo (and
 fontconfig).  Though cairo draws in a pretty optimal way it can never be
 faster than drawing by just changing the pixel values by hand (as they
 say), in a large class of cases.  So, panels provides access to "raw"
-pixels.  Not doing a thing is always faster than doing a thing.
+pixels.
 
 There are other libraries that these depend on, but they are very
-robust and stable.  More below...
+robust and stable.
 
 
 ## Reference Examples
@@ -51,42 +76,3 @@ robust and stable.  More below...
  * [hello wayland](https://github.com/emersion/hello-wayland.git)
  * [wleird](https://github.com/emersion/wleird.git)
 
-
-## Rambling and Ranting
-
-We have found that it is possible to get non-leaky code with these
-libraries: cairo, fontconfig, and wayland-client.  You just have to find
-the required "destroy" functions and call them when needed.
-
-There are lots of very common secondary library dependences that tend to
-not be buggy, not changing rapidly, and hence do not seem to need
-attention, like:
-    linux-vdso.so, libpthread.so, libm.so, libffi.so, libexpat.so,
-    libc.so, libz.so, libpng16.so, libbrotlidec.so, libbrotlicommon.so,
-    and ld-linux-x86-64.so.
-I just think of them as compiler and linker magic.
-
-I wonder how hard it is to write C code that can load and unload libc.
-I made a try at it, and it turns out that it's not an ordinary shared
-library.  If I live too long, I'll to do that at a later time.
-I'm guessing that linux-vdso.so, libpthread.so, and ld-linux-x86-64.so are
-special libraries too.
-
-We have found that pixman leaks memory, but got a patch excepted to pixman
-to fix it.  It should make it to everyone soon enough.  It appears that
-all the other dependencies pass Valgrind memory and other resource
-cleaning tests.
-
-Things like GTK and Qt can't be used because they leak lots of system
-resources, and I've talked with the developers and they are not interested
-in changing the design of their code. The GTK and Qt code are leaky by
-design.  They assume that users will run processes that never unlink
-from their code.  The GTK and Qt libraries will always leak lots of system
-resources, i.e. you can't unload them.
-
-I've heard said that we should write code that for every object created
-there should be a way to destroy that object, but not in Qt and GTK.  Qt
-and GTK are so magical that they do not have to follow very basic
-standards of quality.  It bugs the fuck out of me, because I know if they
-just took a little more time in design and development these libraries
-could be unloaded.

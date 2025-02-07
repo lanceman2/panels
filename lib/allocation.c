@@ -26,14 +26,11 @@
 //
 // Returns true if "s" is culled.
 //
-// If a container is hidden than all its children are effectively culled
-// and we do not bother marking the children as culled.
-//
 // Here we are resetting the culled flags so we just use the hidden
 // flags until after we compare widget sizes with the window size.
 //
-// Think of PnSurface::culled as a temporary flag that is only used when
-// we are allocating widget sizes and positions.
+// PnSurface::culled is set when we are allocating widget sizes and
+// positions.
 //
 static bool ResetChildrenCull(struct PnSurface *s) {
 
@@ -231,7 +228,6 @@ void TallyRequestedSizes(const struct PnSurface *s,
     a->width += GetBWidth(s);
     a->height += GetBHeight(s);
 }
-
 
 static void GetChildrenXY(const struct PnSurface *s,
         const struct PnAllocation *a) {
@@ -603,20 +599,21 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
     return 0;
 }
 
-static
+static inline
 struct PnSurface *Next(struct PnSurface *s) {
     DASSERT(s);
     return s->nextSibling;
 }
 
-static
+static inline
 struct PnSurface *Prev(struct PnSurface *s) {
     DASSERT(s);
     return s->prevSibling;
 }
 
 
-static inline void AlignXJustified(struct PnSurface *first,
+static inline
+void AlignXJustified(struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *c),
         uint32_t extraWidth) {
 
@@ -721,7 +718,8 @@ static inline void AlignYJustified(struct PnSurface *first,
 // matter of how we define it here, correct is relative to this context,
 // whatever the hell that is.
 //
-static inline void ExpandHShared(const struct PnSurface *s,
+static inline
+void ExpandHShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -828,7 +826,8 @@ static inline void ExpandHShared(const struct PnSurface *s,
 //
 // See comments in and above ExpandHShared().  There's symmetry here.
 //
-static inline void ExpandVShared(const struct PnSurface *s,
+static inline
+void ExpandVShared(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -934,7 +933,8 @@ static inline void ExpandVShared(const struct PnSurface *s,
 //
 // Fix the x and width of ca.
 //
-static inline void ExpandH(const struct PnSurface *s,
+static inline
+void ExpandH(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca,
         uint32_t *rightBorderWidth) {
@@ -997,7 +997,8 @@ static inline void ExpandH(const struct PnSurface *s,
 // Fix the y and height of "ca" which is the allocation of "c".
 // "c" fills all the space of "s" in this y direction.
 //
-static inline void ExpandV(const struct PnSurface *s,
+static inline
+void ExpandV(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca,
         uint32_t *bottomBorderHeight) {
@@ -1057,7 +1058,8 @@ static inline void ExpandV(const struct PnSurface *s,
 
 // This is a case where we are aligning one widget.
 //
-static inline void AlignX(const struct PnSurface *s,
+static inline
+void AlignX(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnAllocation *ca,
         uint32_t endBorder) {
@@ -1086,7 +1088,8 @@ static inline void AlignX(const struct PnSurface *s,
 
 // This is a case where we are aligning one widget.
 //
-static inline void AlignY(const struct PnSurface *s,
+static inline
+void AlignY(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnAllocation *ca,
         uint32_t endBorder) {
@@ -1146,7 +1149,7 @@ static void ExpandChildren(const struct PnSurface *s,
         ((struct PnSurface *)s)->noDrawing = false;
     else
         // No showing surface yet, but it may get set later in this
-        // function call, in ExpandHShared() or in ExpandV() where we
+        // function call, in Expand?Shared() or in Expand?() where we
         // check if any part of this container "s" is showing between its
         // children.
         ((struct PnSurface *)s)->noDrawing = true;
@@ -1220,7 +1223,8 @@ static void ExpandChildren(const struct PnSurface *s,
 //
 // The positions and size of the container is fixed and correct.
 //
-static inline void AlignXRight(const struct PnSurface *s,
+static inline
+void AlignXRight(const struct PnSurface *s,
         const struct PnAllocation *a,
         struct PnSurface *first,
         struct PnSurface *(*next)(struct PnSurface *s)) {
@@ -1243,8 +1247,9 @@ static inline void AlignXRight(const struct PnSurface *s,
 // it borrowed from the GDK part of the GTK API, which has a rectangular
 // space "allocation" class which gets setup when the widgets are
 // "allocated" (find the position and size of widgets).
-// A better function name may be GetWidgetPositionAndSize().
-// And the struct PnAllocation should be struct PositionAndSize.
+//
+// TODO: A better function name may be GetWidgetPositionAndSize().  And
+// the struct PnAllocation should be struct PositionAndSize.
 //
 void GetWidgetAllocations(struct PnWindow *win) {
 
@@ -1325,7 +1330,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
         uint32_t height = a->height;
 
         // This shrink wraps the widgets, only getting the widgets widths
-        // and heights.  Without the culled widgets.
+        // and heights, without the culled widgets.
         TallyRequestedSizes(s, a); // PASS 2 plus loop repeats
         // So now a->width and a->height may have changed.
 
@@ -1382,8 +1387,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
         // resize one widget per loop; but it's likely that many widgets
         // will cull or resize in each loop, if there is any culling.
         //
-        // The libpanels API lets developers have windows
-        //
         // tests/random_widgets.c is a test that should work this loop
         // through its paces.  Try it with 1000 widgets.
 
@@ -1428,10 +1431,10 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
     // TOTAL PASSES = 3 + 3 * loopCount
 
-    // TODO: Mash more widget passes together?  I'd expect that would be
-    // prone to introducing bugs.  It's currently doing a very ordered
-    // logical progression.  Switching the order of any of the operations
-    // will break it.
+    // TODO: Mash more widget (surface) passes together?  I'd expect that
+    // would be prone to introducing bugs.  It's currently doing a very
+    // ordered logical progression.  Switching the order of any of the
+    // operations will break it.
 
 //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 }

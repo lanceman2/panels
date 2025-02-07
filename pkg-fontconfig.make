@@ -1,5 +1,5 @@
 
-ifdef WITH_CAIRO
+ifdef WITH_FONTCONFIG
 
 # Get the fontconfig specific compiler options.
 
@@ -14,7 +14,7 @@ FONTCONFIG_LDFLAGS := $(shell pkg-config --libs fontconfig)\
 FONTCONFIG_CFLAGS := $(shell pkg-config --cflags fontconfig)
 
 ifeq ($(libdir),)
-# Use of fontconfig is required.
+# Use of fontconfig is required ifdef WITH_FONTCONFIG
 $(error software package fontconfig was not found)
 endif
 

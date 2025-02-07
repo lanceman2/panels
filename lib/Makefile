@@ -1,16 +1,22 @@
 root := ..
 
 include $(root)/config.make
+include $(root)/pkg-cairo.make
+include $(root)/pkg-fontconfig.make
+include $(root)/pkg-waylandclient.make
+
 
 ifdef WITH_CAIRO
 CPPFLAGS += -DWITH_CAIRO
 else
-$(warning Building WITHOUT CAIRO)
+$(warning Building WITHOUT cairo)
+endif
+ifdef WITH_FONTCONFIG
+CPPFLAGS += -DWITH_FONTCONFIG
+else
+$(warning Building WITHOUT libfontconfig)
 endif
 
-include $(root)/pkg-cairo.make
-include $(root)/pkg-fontconfig.make
-include $(root)/pkg-waylandclient.make
 
 INSTALL_DIR = $(PREFIX)/lib
 
@@ -29,6 +35,7 @@ xdg-decoration-protocol.c:
 	$(WL_SCANNER) private-code $(WL_PROTOCOL_DIR)/$(xdg_decoration_xml) $@
 xdg-decoration-protocol.h:
 	$(WL_SCANNER) client-header $(WL_PROTOCOL_DIR)/$(xdg_decoration_xml) $@
+
 
 # We need to build xdg-shell-client-protocol.h before we create depend
 # files (we made edits to ../quickbuild.make for this case):
@@ -61,6 +68,8 @@ libpanels.so_CPPFLAGS :=\
  $(CAIRO_CFLAGS)\
  $(FONTCONFIG_CFLAGS)\
  -DPN_LIB_CODE
+
+
 
 libpanels.so_CFLAGS :=\
  -fvisibility=hidden\
