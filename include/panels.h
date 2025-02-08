@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+#define PN_NUM_BUTTONS    (3)
+
 #define PN_PIXEL_SIZE     (4) // bytes per pixel
 // DEFAULTS
 #define PN_BORDER_WIDTH   (6) // default border pixels wide
@@ -297,10 +299,59 @@ static inline void pnWidget_setLeave(struct PnWidget *widget,
     pnSurface_setLeave((void *) widget, (void *) leave, userData);
 }
 
+PN_EXPORT void pnSurface_setPress(struct PnSurface *s,
+        bool (*press)(struct PnSurface *surface,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData);
+static inline void pnWindow_setPress(struct PnWindow *window,
+        bool (*press)(struct PnWindow *window,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+    pnSurface_setPress((void *) window, (void *) press,
+            userData);
+}
+static inline void pnWidget_setPress(struct PnWidget *widget,
+        bool (*press)(struct PnWidget *widget,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+    pnSurface_setPress((void *) widget, (void *) press,
+            userData);
+}
+
+PN_EXPORT void pnSurface_setRelease(struct PnSurface *s,
+        bool (*release)(struct PnSurface *surface,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData);
+static inline void pnWindow_setRelease(struct PnWindow *window,
+        bool (*release)(struct PnWindow *window,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+    pnSurface_setRelease((void *) window, (void *) release,
+            userData);
+}
+static inline void pnWidget_setRelease(struct PnWidget *widget,
+        bool (*release)(struct PnWidget *widget,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+    pnSurface_setRelease((void *) widget, (void *) release,
+            userData);
+}
 
 
-//PN_EXPORT struct PnSurface *pnWindow_getSurface(struct PnWindow *window);
-//PN_EXPORT struct PnSurface *pnWidget_getSurface(struct PnWidget *widget);
+static inline struct PnSurface *pnWindow_getSurface(
+        struct PnWindow *window) {
+    return (void *) window;
+}
+static inline struct PnSurface *pnWidget_getSurface(
+        struct PnWidget *widget) {
+    return (void *) widget;
+}
 
 
 

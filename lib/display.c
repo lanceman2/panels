@@ -95,6 +95,16 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     DASSERT(d.pointerSurface);
     DASSERT(d.pointerWindow);
 
+    if(d.buttonGrabSurface) {
+        DASSERT(d.buttonGrab);
+        struct PnSurface *s = d.buttonGrabSurface;
+        DASSERT(s->press);
+        DASSERT(s->release);
+        if(s->motion)
+            s->motion(s, d.x, d.y, s->motionData);
+        return;
+    }
+
     struct PnSurface *s = d.pointerSurface;
     GetSurfaceWithXY(d.pointerWindow, x, y);
 
@@ -113,6 +123,87 @@ static void button(void *, struct wl_pointer *p,
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
+
+    if(!d.focusSurface) return;
+
+    switch(button) {
+        case 272: // left
+            button = 0;
+            break;
+        case 274: // middle
+            button = 1;
+            break;
+        case 273: // right
+            button = 2;
+            break;
+        default:
+            WARN("Got mouse press=%" PRIu32, button);
+            return;
+    }
+
+    DASSERT(button < PN_NUM_BUTTONS);
+
+
+    switch(state) {
+
+        case WL_POINTER_BUTTON_STATE_RELEASED:
+
+//WARN("BUTTON (%" PRIu32 ") RELEASE", button);
+            if(d.buttonGrab) {
+                // We have a mouse button grab with this button.
+                DASSERT(d.buttonGrabSurface);
+                DASSERT(d.buttonGrabSurface->release);
+                DASSERT(d.buttonGrabSurface->press);
+                // Release the button grab:
+                DASSERT(d.buttonGrab & (01 << button));
+                d.buttonGrab &= ~(01 << button);
+                if(d.buttonGrabSurface->release)
+                    d.buttonGrabSurface->release(
+                            d.buttonGrabSurface, button,
+                            d.x, d.y,
+                            d.buttonGrabSurface->pressData);
+                if(!d.buttonGrab)
+                    d.buttonGrabSurface = 0;
+                return;
+            }
+
+            for(struct PnSurface *s = d.focusSurface; s; s = s->parent)
+                if(s->release && s->release(s, button,
+                            d.x, d.y, s->releaseData))
+                    break;
+            return;
+
+        case WL_POINTER_BUTTON_STATE_PRESSED:
+//WARN("BUTTON (%" PRIu32 ") PRESS", button);
+
+            if(d.buttonGrab) {
+                DASSERT(d.buttonGrabSurface);
+                DASSERT(d.buttonGrabSurface->press);
+                DASSERT(d.buttonGrabSurface->release);
+                DASSERT(!(d.buttonGrab & (01 << button)));
+                d.buttonGrab |= (01 << button);
+                if(d.buttonGrabSurface->press)
+                    d.buttonGrabSurface->press(
+                            d.buttonGrabSurface, button,
+                            d.x, d.y,
+                            d.buttonGrabSurface->pressData);
+                return;
+            }
+
+            for(struct PnSurface *s = d.focusSurface; s; s = s->parent)
+                if(s->press && s->press(s, button,
+                            d.x, d.y, s->pressData)) {
+                    if(s->release) {
+                        d.buttonGrabSurface = s;
+                        d.buttonGrab |= (01 << button);
+                    }
+                    break;
+                }
+            return;
+
+        default:
+            WARN("got button state=%" PRIu32, state);
+    }
 
     //DSPEW("button=%" PRIu32 " state=%" PRIu32, button, state);
 }

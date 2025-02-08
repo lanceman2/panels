@@ -211,6 +211,11 @@ void pnSurface_setBackgroundColor(
     s->backgroundColor = argbColor;
 }
 
+uint32_t pnSurface_getBackgroundColor(struct PnSurface *s) {
+    DASSERT(s);
+    return s->backgroundColor;
+}
+
 
 void pnSurface_setEnter(struct PnSurface *s,
         bool (*enter)(struct PnSurface *surface,
@@ -229,4 +234,34 @@ void pnSurface_setLeave(struct PnSurface *s,
     DASSERT(s);
     s->leave = leave;
     s->leaveData = userData;
+}
+
+void pnSurface_setPress(struct PnSurface *s,
+        bool (*press)(struct PnSurface *surface,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+
+    DASSERT(s);
+    s->press = press;
+    s->pressData = userData;
+}
+
+void pnSurface_setRelease(struct PnSurface *s,
+        bool (*release)(struct PnSurface *surface,
+            uint32_t which,
+            uint32_t x, uint32_t y, void *userData),
+        void *userData) {
+
+    DASSERT(s);
+    s->release = release;
+    s->releaseData = userData;
+
+    if(!release && d.buttonGrabSurface == s) {
+        // If we are removing the release callback (setting to 0), we need
+        // to make sure that there is no pending button grab, and if there
+        // is a button grab we must release the grab.
+        d.buttonGrabSurface = 0;
+        d.buttonGrab = 0;
+    }
 }

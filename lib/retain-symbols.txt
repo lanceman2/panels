@@ -9,7 +9,10 @@ pnWidget_create
 pnWidget_show
 pnWidget_destroy
 pnSurface_setBackgroundColor
+pnSurface_getBackgroundColor
 pnSurface_queueDraw
 pnSurface_setDraw
 pnSurface_setEnter
 pnSurface_setLeave
+pnSurface_setPress
+pnSurface_setRelease

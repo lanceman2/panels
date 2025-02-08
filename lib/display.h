@@ -113,6 +113,11 @@ struct PnSurface {
     // so that it this memory is not used unless the widget sets these
     // callbacks?
     //
+    // The enter callback is special, as it sets the surface (widget or
+    // window) to "focus", which we define as to receive the other
+    // events.  The "focused" widget can press up the "focused" events
+    // to it's parent by returning false.
+    //
     bool (*enter)(struct PnSurface *surface,
             uint32_t x, uint32_t y, void *userData);
     void *enterData;
@@ -127,7 +132,7 @@ struct PnSurface {
             void *userData);
     void *releaseData;
     bool (*motion)(struct PnSurface *surface,
-            uint32_t which, uint32_t x, uint32_t y,
+            uint32_t x, uint32_t y,
             void *userData);
     void *motionData;
 
@@ -337,18 +342,30 @@ struct PnDisplay {
 
     // Does the mouse pointer focus and the keyboard focus always follow
     // each other?  I'm guessing that, not always.  Why else do the two
-    // events exist separately?
+    // events exist separately?  Maybe tab key press to change keyboard
+    // focus needs them to be separate.
     //
     // Set the window with mouse pointer focus (from enter and leave):
     struct PnWindow *pointerWindow;
+    // The child most surface that has the pointer in it.
     struct PnSurface *pointerSurface;
+    // The child most surface that has the pointer in it and
+    // has taken "panels focus" by returning true from it's enter
+    // callback.
     struct PnSurface *focusSurface;
+    // In panels all x,y coordinates are given relative to the window's
+    // surface (Not like GTK's widget relative coordinates).
+    //
+    // We set this x,y with wayland mouse pointer enter and mouse pointer
+    // motion events.
     uint32_t x, y; // pointer position.
+
+    struct PnSurface *buttonGrabSurface;
+    uint32_t buttonGrab;
 
     // Set the window with keyboard focus (from enter and leave):
     struct PnWindow *kbWindow;
     struct PnSurface *kbSurface;
-
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.

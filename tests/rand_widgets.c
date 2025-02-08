@@ -18,7 +18,6 @@
 static const uint32_t Unit = 13;
 
 
-
 static
 void catcher(int sig) {
 
@@ -67,11 +66,39 @@ static void LeaveW(struct PnWindow *w, void *userData) {
     pnWindow_queueDraw(w);
 }
 
+static bool Press(struct PnWidget *w, uint32_t which,
+            uint32_t x, uint32_t y, void *userData) {
+
+    ASSERT(which <= 2);
+
+    uint32_t color = 0xFF000000 + (0xFF0000 >> (which * 8));
+
+    pnWidget_setBackgroundColor(w, color);
+    pnWidget_queueDraw(w);
+
+    // taking focus lets us get the leave event handler called.
+    return true; // true => eat it
+}
+
+static bool Release(struct PnWidget *w, uint32_t which,
+            uint32_t x, uint32_t y, void *userData) {
+
+    ASSERT(which <= 2);
+
+    uint32_t color = pnWidget_getBackgroundColor(w);
+
+    color &= 0xFFFFFFFF & (~(0xFF0000 >> (which * 8)));
+
+    pnWidget_setBackgroundColor(w, color);
+    pnWidget_queueDraw(w);
+    return true;
+}
+
 
 static bool Enter(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
 
-    pnWidget_setBackgroundColor(w, 0xFFFF0000);
+    pnWidget_setBackgroundColor(w, 0xFF642400);
     pnWidget_queueDraw(w);
 
     // taking focus lets us get the leave event handler called.
@@ -117,6 +144,8 @@ static struct PnWidget *Widget() {
 
     pnWidget_setEnter(w, Enter, color);
     pnWidget_setLeave(w, Leave, color);
+    pnWidget_setPress(w, Press, color);
+    pnWidget_setRelease(w, Release, color);
     pnWidget_setDestroy(w, Destroy, color);
 
     CheckAddContainer(w);
