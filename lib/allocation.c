@@ -1438,10 +1438,11 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // operations will break it.
 
     // Reset the "focused" surface and like things.  At this point we may
-    // be culling out that "focused" surface.  I'm not sure if there is
-    // a case that lets the focused and other marked surfaces stay marked;
+    // be culling out that "focused" surface.  I'm not sure if there is a
+    // case that lets the focused and other marked surfaces stay marked;
     // but if there is, for example, a "focused" surface that just got
-    // culled, we need to make it not "focused" now.
+    // culled, we need to make it not "focused" now.  A case may be when
+    // the panels API users code uses code to do a resize of the window.
     ResetDisplaySurfaces();
 
 

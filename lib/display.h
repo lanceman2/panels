@@ -436,6 +436,9 @@ static inline void RemoveSurfaceFromDisplay(struct PnSurface *s) {
 
 static inline void ResetDisplaySurfaces(void) {
 
+    // TODO: Do we really want to keep these marked surfaces?  Like after
+    // a call to GetWidgetAllocations().
+
     if(d.buttonGrabSurface && d.buttonGrabSurface->culled)
         d.buttonGrabSurface = 0;
 
