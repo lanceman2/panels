@@ -421,6 +421,7 @@ extern void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y);
 
 extern void DoEnterAndLeave(void);
+extern void GetPointerSurface(const struct PnWindow *win);
 
 static inline void RemoveSurfaceFromDisplay(struct PnSurface *s) {
 

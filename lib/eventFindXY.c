@@ -157,6 +157,28 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
     return s;
 }
 
+
+void GetPointerSurface(const struct PnWindow *win) {
+
+    // Lets guess that the mouse pointer is at the same widget.
+    // If not then:
+    if(!(d.pointerSurface &&
+                d.pointerSurface->allocation.x <= d.x && 
+                d.x < d.pointerSurface->allocation.x + 
+                        d.pointerSurface->allocation.width &&
+                d.pointerSurface->allocation.y <= d.y && 
+                d.y < d.pointerSurface->allocation.y + 
+                        d.pointerSurface->allocation.height))
+        // Start at the window surface.
+        d.pointerSurface = (void *) d.pointerWindow;
+
+    if(d.pointerSurface->firstChild)
+        // See if it's in a deeper child surface.
+        d.pointerSurface = FindSurface(d.pointerWindow, d.pointerSurface,
+                d.x, d.y);
+}
+
+
 // Find d.x, d.y, and d.pointerSurface which is the x,y position and
 // surface (widget) that contains that position.
 //
@@ -196,22 +218,7 @@ void GetSurfaceWithXY(const struct PnWindow *win,
         d.y = d.pointerWindow->surface.allocation.height - 1;
     }
 
-    // Lets guess that the mouse pointer is at the same widget.
-    // If not then:
-    if(!(d.pointerSurface &&
-                d.pointerSurface->allocation.x <= d.x && 
-                d.x < d.pointerSurface->allocation.x + 
-                        d.pointerSurface->allocation.width &&
-                d.pointerSurface->allocation.y <= d.y && 
-                d.y < d.pointerSurface->allocation.y + 
-                        d.pointerSurface->allocation.height))
-        // Start at the window surface.
-        d.pointerSurface = (void *) d.pointerWindow;
-
-    if(d.pointerSurface->firstChild)
-        // See if it's in a deeper child surface.
-        d.pointerSurface = FindSurface(d.pointerWindow, d.pointerSurface,
-                d.x, d.y);
+    GetPointerSurface(win);
 
 //WARN("Got widget=%p at %" PRIu32 ",%" PRIu32, d.pointerSurface, d.x, d.y);
 }

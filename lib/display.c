@@ -100,6 +100,11 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
         struct PnSurface *s = d.buttonGrabSurface;
         DASSERT(s->press);
         DASSERT(s->release);
+        // We need the to know where the pointerSurface is so we can do an
+        // "enter" event if the pointer is on a different surface when the
+        // button grab is released.
+        if(d.pointerWindow == d.buttonGrabSurface->window)
+            GetSurfaceWithXY(d.pointerWindow, x, y);
         if(s->motion)
             s->motion(s, d.x, d.y, s->motionData);
         return;
@@ -152,6 +157,7 @@ static void button(void *, struct wl_pointer *p,
             if(d.buttonGrab) {
                 // We have a mouse button grab with this button.
                 DASSERT(d.buttonGrabSurface);
+                DASSERT(d.buttonGrabSurface == d.focusSurface);
                 DASSERT(d.buttonGrabSurface->release);
                 DASSERT(d.buttonGrabSurface->press);
                 // Release the button grab:
@@ -162,8 +168,15 @@ static void button(void *, struct wl_pointer *p,
                             d.buttonGrabSurface, button,
                             d.x, d.y,
                             d.buttonGrabSurface->pressData);
-                if(!d.buttonGrab)
+                if(!d.buttonGrab) {
+                    GetPointerSurface(d.pointerWindow);
+                    if(d.buttonGrabSurface != d.pointerSurface) {
+                        // The surface we are pointing to changed.
+                        // The focused widget may be changed.
+                        DoEnterAndLeave();
+                    }
                     d.buttonGrabSurface = 0;
+                }
                 return;
             }
 
@@ -173,7 +186,7 @@ static void button(void *, struct wl_pointer *p,
                     break;
             return;
 
-        case WL_POINTER_BUTTON_STATE_PRESSED:
+case WL_POINTER_BUTTON_STATE_PRESSED:
 //WARN("BUTTON (%" PRIu32 ") PRESS", button);
 
             if(d.buttonGrab) {

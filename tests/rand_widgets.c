@@ -94,10 +94,11 @@ static bool Release(struct PnWidget *w, uint32_t which,
     return true;
 }
 
+static int count =0;
 
 static bool Enter(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
-
+WARN("%d", count++);
     pnWidget_setBackgroundColor(w, 0xFF642400);
     pnWidget_queueDraw(w);
     // taking focus lets us get the leave event handler called.
@@ -105,7 +106,7 @@ static bool Enter(struct PnWidget *w,
 }
 
 static void Leave(struct PnWidget *w, void *userData) {
-
+WARN("%d", count++);
     ASSERT(userData);
     pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
     pnWidget_queueDraw(w);
