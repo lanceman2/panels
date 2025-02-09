@@ -1266,7 +1266,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
     win->needAllocate = false;
 
-
     if(!a->width && !s->firstChild) {
         DASSERT(!a->height);
         a->width = GetBWidth(s);
@@ -1443,6 +1442,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // but if there is, for example, a "focused" surface that just got
     // culled, we need to make it not "focused" now.  A case may be when
     // the panels API users code uses code to do a resize of the window.
+    // Very common example may be: the user clicks a widget that closes
+    // it.
     ResetDisplaySurfaces();
 
 
