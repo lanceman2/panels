@@ -1266,9 +1266,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
     win->needAllocate = false;
 
-    // Reset the "focused" surface and like things.  At this point
-    // we may be culling out that "focused" surface.
-    ResetDisplaySurfaces();
 
     if(!a->width && !s->firstChild) {
         DASSERT(!a->height);
@@ -1439,6 +1436,14 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // would be prone to introducing bugs.  It's currently doing a very
     // ordered logical progression.  Switching the order of any of the
     // operations will break it.
+
+    // Reset the "focused" surface and like things.  At this point we may
+    // be culling out that "focused" surface.  I'm not sure if there is
+    // a case that lets the focused and other marked surfaces stay marked;
+    // but if there is, for example, a "focused" surface that just got
+    // culled, we need to make it not "focused" now.
+    ResetDisplaySurfaces();
+
 
 //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 }

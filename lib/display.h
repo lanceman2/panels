@@ -436,12 +436,12 @@ static inline void RemoveSurfaceFromDisplay(struct PnSurface *s) {
 
 static inline void ResetDisplaySurfaces(void) {
 
-    if(d.buttonGrabSurface)
+    if(d.buttonGrabSurface && d.buttonGrabSurface->culled)
         d.buttonGrabSurface = 0;
 
-    if(d.focusSurface)
+    if(d.focusSurface && d.focusSurface->culled)
         d.focusSurface = 0;
 
-    if(d.pointerSurface)
+    if(d.pointerSurface && d.pointerSurface->culled)
         d.pointerSurface = 0;
 }
