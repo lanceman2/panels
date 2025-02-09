@@ -1266,6 +1266,10 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
     win->needAllocate = false;
 
+    // Reset the "focused" surface and like things.  At this point
+    // we may be culling out that "focused" surface.
+    ResetDisplaySurfaces();
+
     if(!a->width && !s->firstChild) {
         DASSERT(!a->height);
         a->width = GetBWidth(s);

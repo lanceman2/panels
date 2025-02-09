@@ -74,6 +74,11 @@ void pnWidget_destroy(struct PnWidget *widget) {
     DASSERT(widget->surface.parent);
     ASSERT(widget->surface.type == PnSurfaceType_widget);
 
+    // If there is state in the display that refers to this surface
+    // (widget) take care to not refer to it.  Like if this widget
+    // had focus for example.
+    RemoveSurfaceFromDisplay((void *) widget);
+
     if(widget->destroy)
         widget->destroy(widget, widget->destroyData);
 

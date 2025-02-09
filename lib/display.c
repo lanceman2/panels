@@ -141,8 +141,8 @@ static void button(void *, struct wl_pointer *p,
             return;
     }
 
+    // If we add more button in this code, we need to know.
     DASSERT(button < PN_NUM_BUTTONS);
-
 
     switch(state) {
 

@@ -268,6 +268,9 @@ static inline void pnWidget_queueDraw(struct PnWidget *widget) {
     pnSurface_queueDraw((void *) widget);
 }
 
+// For a widget to get mouse pointer focus it needs a
+// "enter" and a "leave" callback.
+//
 PN_EXPORT void pnSurface_setEnter(struct PnSurface *s,
         bool (*enter)(struct PnSurface *surface,
             uint32_t x, uint32_t y, void *userData),

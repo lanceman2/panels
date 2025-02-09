@@ -100,13 +100,13 @@ static bool Enter(struct PnWidget *w,
 
     pnWidget_setBackgroundColor(w, 0xFF642400);
     pnWidget_queueDraw(w);
-
     // taking focus lets us get the leave event handler called.
     return true; // true => take focus.
 }
 
 static void Leave(struct PnWidget *w, void *userData) {
 
+    ASSERT(userData);
     pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
     pnWidget_queueDraw(w);
 }

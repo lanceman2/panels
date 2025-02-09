@@ -229,11 +229,19 @@ void DoEnterAndLeave(void) {
         if(d.focusSurface == s)
             // This surface "s" already has focus.
             break;
-        if(s->enter && s->enter(s, d.x, d.y, s->enterData)) {
-            if(d.focusSurface && d.focusSurface->leave)
+
+        if(s->enter) {
+            if(d.focusSurface) {
+                DASSERT(d.focusSurface->leave);
                 d.focusSurface->leave(d.focusSurface,
                         d.focusSurface->leaveData);
-            d.focusSurface = s;
+                d.focusSurface = 0;
+            }
+            if(s->enter(s, d.x, d.y, s->enterData) && s->leave)
+                d.focusSurface = s;
+            else
+                // "s" did not take focus.
+                continue;
             break;
         }
     }

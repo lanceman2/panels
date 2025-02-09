@@ -421,3 +421,27 @@ extern void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y);
 
 extern void DoEnterAndLeave(void);
+
+static inline void RemoveSurfaceFromDisplay(struct PnSurface *s) {
+
+    if(d.buttonGrabSurface == s)
+        d.buttonGrabSurface = 0;
+
+    if(d.focusSurface == s)
+        d.focusSurface = 0;
+
+    if(d.pointerSurface == s)
+        d.pointerSurface = 0;
+}
+
+static inline void ResetDisplaySurfaces(void) {
+
+    if(d.buttonGrabSurface)
+        d.buttonGrabSurface = 0;
+
+    if(d.focusSurface)
+        d.focusSurface = 0;
+
+    if(d.pointerSurface)
+        d.pointerSurface = 0;
+}
