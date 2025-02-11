@@ -39,12 +39,12 @@ CPPFLAGS := -DDEBUG -DSPEW_LEVEL_DEBUG
 
 
 # Build option: WITH_CAIRO
-# We default to with cairo.
+# We default to building libpanels with the cairo library.
 # Comment out next line to build without libcairo
 WITH_CAIRO := yes
 
 # Build option: WITH_FONTCONFIG
-# We default to with fontconfig
+# We default to building libpanels with the fontconfig library.
 # Comment out next line to build without libfontconfig
 WITH_FONTCONFIG := yes
 

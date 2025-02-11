@@ -260,6 +260,25 @@ static inline void pnWidget_setDraw(struct PnWidget *widget,
      pnSurface_setDraw((void *) widget, draw, userData);
 }
 
+
+PN_EXPORT void pnSurface_setConfig(struct PnSurface *s,
+        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData);
+static inline void pnWindow_setConfig(struct PnWindow *window,
+        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData) {
+     pnSurface_setConfig((void *) window, config, userData);
+}
+static inline void pnWidget_setConfig(struct PnWidget *widget,
+        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData) {
+     pnSurface_setConfig((void *) widget, config, userData);
+}
+
+
 PN_EXPORT void pnSurface_queueDraw(struct PnSurface *s);
 static inline void pnWindow_queueDraw(struct PnWindow *window) {
     pnSurface_queueDraw((void *) window);
@@ -356,6 +375,8 @@ static inline struct PnSurface *pnWidget_getSurface(
     return (void *) widget;
 }
 
+
+PN_EXPORT char *pnFindFont(const char *exp);
 
 
 

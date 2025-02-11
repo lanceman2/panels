@@ -64,6 +64,11 @@ libpanels.so_SOURCES :=\
  drawQueue.c\
  eventFindXY.c
 
+ifdef WITH_FONTCONFIG
+libpanels.so_SOURCES +=\
+ findFont.c
+endif
+
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\
  $(CAIRO_CFLAGS)\

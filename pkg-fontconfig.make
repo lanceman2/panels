@@ -1,5 +1,4 @@
 
-ifdef WITH_FONTCONFIG
 
 # Get the fontconfig specific compiler options.
 
@@ -14,8 +13,12 @@ FONTCONFIG_LDFLAGS := $(shell pkg-config --libs fontconfig)\
 FONTCONFIG_CFLAGS := $(shell pkg-config --cflags fontconfig)
 
 ifeq ($(libdir),)
-# Use of fontconfig is required ifdef WITH_FONTCONFIG
+ifdef WITH_FONTCONFIG
 $(error software package fontconfig was not found)
+else
+$(warning software package fontconfig was not found)
+endif
+undefine FONTCONFIG_LDFLAGS
 endif
 
 # Spew what fontconfig compiler options we have found
@@ -23,4 +26,3 @@ endif
 
 undefine libdir
 
-endif

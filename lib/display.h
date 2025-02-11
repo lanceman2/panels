@@ -100,18 +100,24 @@ struct PnSurface {
     // What they really get for surface size:
     struct PnAllocation allocation;
 
-    // API user passed in draw function:
-    int (*draw)(struct PnSurface *surface, uint32_t *pixels,
-            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
-            void *userData);
-    // To pass to draw():
-    void *drawData;
 
     // user set event callbacks
     //
     // TODO: Is this too many pointers; should we allocate memory for it
     // so that it this memory is not used unless the widget sets these
     // callbacks?
+    //
+    // API user passed in draw function:
+    int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData);
+    // To pass to draw():
+    void *drawData;
+    //
+    void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData);
+    void *configData;
     //
     // The enter callback is special, as it sets the surface (widget or
     // window) to "focus", which we define as to receive the other

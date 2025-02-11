@@ -1,6 +1,4 @@
 
-ifdef WITH_CAIRO
-
 # Get the cairo specific compiler options if we can.
 
 libdir := $(shell pkg-config --variable=libdir cairo)
@@ -14,8 +12,12 @@ CAIRO_LDFLAGS := $(shell pkg-config --libs cairo)\
 CAIRO_CFLAGS := $(shell pkg-config --cflags cairo)
 
 ifeq ($(libdir),)
-# Use of cairo is required ifdef WITH_CAIRO
+ifdef WITH_CAIRO
 $(error software package cairo was not found)
+else
+$(warning software package cairo was not found)
+endif
+undefine CAIRO_LDFLAGS
 endif
 
 # Spew what cairo compiler options we have found
@@ -23,4 +25,3 @@ endif
 
 undefine libdir
 
-endif

@@ -145,12 +145,21 @@ void pnSurface_setDraw(
 //
 void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
-    if(s->culled) return;
+    DASSERT(s);
+    DASSERT(!s->culled);
+    DASSERT(s->window);
+
+    if(s->window->needAllocate && s->config)
+        s->config(s,
+                buffer->pixels +
+                s->allocation.y * buffer->stride +
+                s->allocation.x,
+                s->allocation.width, s->allocation.height,
+                buffer->stride, s->configData);
 
     // All parent surfaces, including the window, could have nothing to draw
     // if their children widgets completely cover them.
     if(s->noDrawing) goto drawChildren;
-
 
     if(!s->draw)
         pn_drawFilledRectangle(buffer->pixels,
@@ -166,7 +175,6 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
                 s->allocation.width, s->allocation.height,
                 buffer->stride, s->drawData) == 1)
             pnSurface_queueDraw(s);
-
 
 drawChildren:
     // Now draw children (widgets).
@@ -206,10 +214,21 @@ void DestroySurface(struct PnSurface *s) {
 }
 
 
+void pnSurface_setConfig(struct PnSurface *s,
+        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData), void *userData) {
+    DASSERT(s);
+    s->config = config;
+    s->configData = userData;
+}
+
+
 void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor) {
     s->backgroundColor = argbColor;
 }
+
 
 uint32_t pnSurface_getBackgroundColor(struct PnSurface *s) {
     DASSERT(s);

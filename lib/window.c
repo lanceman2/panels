@@ -29,7 +29,6 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
 
     if(win->needAllocate)
         GetWidgetAllocations(win);
-    DASSERT(!win->needAllocate);
 
 
     // GetNextBuffer() can reallocate the buffer if the width or height
@@ -40,11 +39,14 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
                 win->surface.allocation.width,
                 win->surface.allocation.height);
 
-    if(!buffer)
+    if(!buffer) {
         // I think this is okay.  The wayland compositor is just a little
         // busy now.  I think we will get this done later from a wl_buffer
         // release event callback; see buffer.c.
+        if(win->needAllocate)
+            win->needAllocate = false;
         return;
+    }
 
     win->needDraw = false;
 
@@ -65,6 +67,9 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(win->surface.allocation.height == buffer->height);
 
     pnSurface_draw(&win->surface, buffer);
+
+    if(win->needAllocate)
+        win->needAllocate = false;
 
     d.surface_damage_func(win->wl_surface, 0, 0,
             buffer->width, buffer->height);

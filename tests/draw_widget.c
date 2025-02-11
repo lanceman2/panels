@@ -33,6 +33,14 @@ uint32_t Saw(uint32_t x) {
 }
 
 
+static void config(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
+            void *userData) {
+
+    fprintf(stderr, "config()\n");
+}
+
+
 static
 int draw1(struct PnSurface *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
@@ -133,6 +141,8 @@ int main(int argc, char **argv) {
             0/*direction*/, 0/*align*/, EXPAND/*expand*/);
     ASSERT(w);
     pnWidget_setDraw(w, draw1, (void *) (uintptr_t)(argc - 1));
+    pnWidget_setConfig(w, config, (void *) (uintptr_t)(argc - 1));
+
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 400/*height*/,

@@ -1,5 +1,8 @@
 root := ..
 
+include $(root)/pkg-cairo.make
+include $(root)/config.make
+
 
 PN_LIB := -L../lib -lpanels -Wl,-rpath=\$$ORIGIN/../lib
 
@@ -65,8 +68,21 @@ draw_widget_run_SOURCES := draw_widget.c
 draw_widget_run_LDFLAGS := $(PN_LIB)
 draw_widget_run_CPPFLAGS := -DRUN
 
+ifdef WITH_FONTCONFIG
+081_findFont_SOURCES := 081_findFont.c
+081_findFont_LDFLAGS := $(PN_LIB)
+endif
 
 
+ifdef CAIRO_LDFLAGS
+091_cairoDrawWidget_SOURCES := cairoDrawWidget.c
+091_cairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+091_cairoDrawWidget_CPPFLAGS := $(CAIRO_CFLAGS)
+
+cairoDrawWidget_run_SOURCES := cairoDrawWidget.c
+cairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+cairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+endif
 
 
 

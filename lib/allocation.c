@@ -1263,8 +1263,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
     DASSERT(!s->hidden);
     DASSERT(!s->parent);
     DASSERT(!s->culled);
-
-    win->needAllocate = false;
+    DASSERT(win->needAllocate);
 
     if(!a->width && !s->firstChild) {
         DASSERT(!a->height);
