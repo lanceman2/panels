@@ -64,16 +64,12 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(win->surface.allocation.width == buffer->width);
     DASSERT(win->surface.allocation.height == buffer->height);
 
-    d.surface_damage_func(win->wl_surface, 0, 0,
-            buffer->width, buffer->height);
-
     pnSurface_draw(&win->surface, buffer);
 
-
-    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
-
     d.surface_damage_func(win->wl_surface, 0, 0,
             buffer->width, buffer->height);
+
+    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
 
     // I think this, wl_surface_commit(), needs to be last.  The order of
     // the other functions may not matter much.

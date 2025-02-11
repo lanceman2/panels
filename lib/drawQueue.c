@@ -177,8 +177,6 @@ bool DrawFromQueue(struct PnWindow *win) {
     // read.
     struct PnSurface *s;
 
-    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
-
     while((s = PopQueue(q))) {
         pnSurface_draw(s, buffer);
         // The draw() function may have queued that surface again
@@ -193,6 +191,7 @@ bool DrawFromQueue(struct PnWindow *win) {
     // The "read" queue should be empty now.
     DASSERT(!q->last);
 
+    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
     wl_surface_commit(win->wl_surface);
 
     return false;
