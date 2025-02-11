@@ -25,9 +25,8 @@ struct PnSurface *PopQueue(struct PnDrawQueue *q) {
         DASSERT(q->first->dqPrev == s);
         q->first->dqPrev = 0;
         s->dqNext = 0;
-    } else {
+    } else
         q->last = 0;
-    }
 
     return s;
 }
@@ -178,15 +177,23 @@ bool DrawFromQueue(struct PnWindow *win) {
     // read.
     struct PnSurface *s;
 
-    while((s = PopQueue(q)))
+    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
+
+    while((s = PopQueue(q))) {
         pnSurface_draw(s, buffer);
         // The draw() function may have queued that surface again
         // but in the write (other) queue now.
+        //
+        // Looks like we can add together rectangles of damage.
+        d.surface_damage_func(win->wl_surface,
+                s->allocation.x, s->allocation.y,
+                s->allocation.width, s->allocation.height);
+     }
 
     // The "read" queue should be empty now.
     DASSERT(!q->last);
 
-    PostDraw(win, buffer);
+    wl_surface_commit(win->wl_surface);
 
     return false;
 }

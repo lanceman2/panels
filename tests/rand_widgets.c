@@ -94,11 +94,16 @@ static bool Release(struct PnWidget *w, uint32_t which,
     return true;
 }
 
-static int count =0;
+static int count = 0;
+
+// If the Enter() and Leave() calls are not paired up we assert.
 
 static bool Enter(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
-WARN("%d", count++);
+
+    ++count;
+
+    ASSERT(count == 1, "Number of Enter() and Leave() is wrong");
     pnWidget_setBackgroundColor(w, 0xFF642400);
     pnWidget_queueDraw(w);
     // taking focus lets us get the leave event handler called.
@@ -106,7 +111,10 @@ WARN("%d", count++);
 }
 
 static void Leave(struct PnWidget *w, void *userData) {
-WARN("%d", count++);
+
+    --count;
+
+    ASSERT(count == 0, "Leave() missing Enter() before");
     ASSERT(userData);
     pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
     pnWidget_queueDraw(w);

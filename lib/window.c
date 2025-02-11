@@ -12,16 +12,6 @@
 #include  "display.h"
 
 
-void PostDraw(struct PnWindow *win, struct PnBuffer *buffer) {
-
-    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
-
-    d.surface_damage_func(win->wl_surface, 0, 0,
-            buffer->width, buffer->height);
-
-    wl_surface_commit(win->wl_surface);
-}
-
 
 void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
 
@@ -34,6 +24,8 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     // The read queue should be empty
     DASSERT(!win->dqRead->first);
     DASSERT(!win->dqRead->last);
+
+    //bool needAllocate = win->needAllocate;
 
     if(win->needAllocate)
         GetWidgetAllocations(win);
@@ -72,9 +64,20 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(win->surface.allocation.width == buffer->width);
     DASSERT(win->surface.allocation.height == buffer->height);
 
+    d.surface_damage_func(win->wl_surface, 0, 0,
+            buffer->width, buffer->height);
+
     pnSurface_draw(&win->surface, buffer);
 
-    PostDraw(win, buffer);
+
+    wl_surface_attach(win->wl_surface, buffer->wl_buffer, 0, 0);
+
+    d.surface_damage_func(win->wl_surface, 0, 0,
+            buffer->width, buffer->height);
+
+    // I think this, wl_surface_commit(), needs to be last.  The order of
+    // the other functions may not matter much.
+    wl_surface_commit(win->wl_surface);
 }
 
 
