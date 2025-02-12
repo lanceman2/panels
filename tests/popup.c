@@ -2,7 +2,7 @@
 #include "../include/panels.h"
 
 #include "../lib/debug.h"
-
+#include "run.h"
 
 int main(void) {
 
@@ -23,9 +23,7 @@ int main(void) {
     pnWindow_setBackgroundColor(pop, 0xFA299981);
     pnWindow_show(pop, true);
 
-#ifdef RUN
-    while(pnDisplay_dispatch());
-#endif
+    Run(win);
 
     return 0;
 }

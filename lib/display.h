@@ -305,6 +305,13 @@ struct PnWindow {
     // all the pixels in the window in need of recoloring.
     //
     bool needDraw;
+
+    // This is a flag that is set in a wl_callback that lets us know that
+    // the window is very likely being shown to the user.  We know that
+    // the pixel buffer was drawn to, and we have waited for one wl_callback
+    // event.  I don't think that there's a way to really know that the
+    // window is showing, but this may be close enough.
+    bool haveDrawn;
 };
 
 

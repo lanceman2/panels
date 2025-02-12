@@ -3,6 +3,8 @@
 
 #include "../lib/debug.h"
 
+#include "run.h"
+
 
 // This callback just lets us know that the window was destroy without
 // this code destroying it; the desktop user did it.
@@ -25,10 +27,8 @@ int main(void) {
 
     //pnWindow_show(pnWindow_create(400, 350), true);
 
-#ifdef RUN
-    while(pnDisplay_dispatch());
-#endif
 
+    Run(win);
 
 
     fprintf(stderr, "   win=%p\n", win);

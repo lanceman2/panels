@@ -8,6 +8,7 @@
 #include "../lib/debug.h"
 
 #include "rand.h"
+#include "run.h"
 
 static
 void catcher(int sig) {
@@ -120,9 +121,7 @@ int main(int argc, char **argv) {
 
     pnWindow_show(win, true);
 
-#ifdef RUN
-    while(pnDisplay_dispatch());
-#endif
+    Run(win);
 
     if(cr)
         cairo_destroy(cr);

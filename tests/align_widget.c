@@ -6,6 +6,7 @@
 #include "../lib/debug.h"
 
 #include "rand.h"
+#include "run.h"
 
 #define SEED (1)
 
@@ -76,9 +77,7 @@ int main(void) {
 
     pnWindow_show(win, true);
 
-#ifdef RUN
-    while(pnDisplay_dispatch());
-#endif
+    Run(win);
 
     return 0;
 }

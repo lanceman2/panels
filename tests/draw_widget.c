@@ -6,6 +6,7 @@
 #include "../lib/debug.h"
 
 #include "rand.h"
+#include "run.h"
 
 static
 void catcher(int sig) {
@@ -91,6 +92,11 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
         fprintf(stderr, "  %" PRIu32 " draws\n", count);
     }
 
+#ifndef RUN
+    return 0;
+#endif
+
+
     if(userData)
         theta %= period;
     else if(theta > 2*period) {
@@ -154,9 +160,7 @@ int main(int argc, char **argv) {
 
     pnWindow_show(win, true);
 
-#ifdef RUN
-    while(pnDisplay_dispatch());
-#endif
+    Run(win);
 
     return 0;
 }

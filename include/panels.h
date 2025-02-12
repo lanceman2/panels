@@ -202,6 +202,7 @@ PN_EXPORT struct PnWindow *pnWindow_create(
         enum PnAlign align,
         enum PnExpand expand);
 
+PN_EXPORT bool pnWindow_isDrawn(struct PnWindow *window);
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
 PN_EXPORT void pnWindow_show(struct PnWindow *window, bool show);
 PN_EXPORT void pnWindow_setDestroy(struct PnWindow *window,

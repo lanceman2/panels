@@ -4,6 +4,8 @@
 
 #include "../lib/debug.h"
 
+#include "run.h"
+
 
 static
 void catcher(int sig) {
@@ -65,9 +67,7 @@ int main(void) {
 
     pnWindow_show(win, true);
 
-#ifdef RUN
-    while(pnDisplay_dispatch());
-#endif
+    Run(win);
 
     return 0;
 }
