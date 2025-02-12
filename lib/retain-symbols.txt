@@ -2,6 +2,7 @@ pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
 pnWindow_create
 pnWindow_isDrawn
+pnWindow_isDrawnReset
 pnWindow_destroy
 pnWindow_show
 pnWindow_setDestroy

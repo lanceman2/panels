@@ -311,7 +311,7 @@ struct PnWindow {
     // the pixel buffer was drawn to, and we have waited for one wl_callback
     // event.  I don't think that there's a way to really know that the
     // window is showing, but this may be close enough.
-    bool haveDrawn;
+    uint32_t haveDrawn;
 };
 
 

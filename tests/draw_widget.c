@@ -92,11 +92,6 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
         fprintf(stderr, "  %" PRIu32 " draws\n", count);
     }
 
-#ifndef RUN
-    return 0;
-#endif
-
-
     if(userData)
         theta %= period;
     else if(theta > 2*period) {
@@ -156,7 +151,6 @@ int main(int argc, char **argv) {
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
     pnWidget_setDraw(w, draw2, 0);
-
 
     pnWindow_show(win, true);
 

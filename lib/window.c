@@ -25,9 +25,6 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(!win->dqRead->first);
     DASSERT(!win->dqRead->last);
 
-    if(win->haveDrawn)
-        win->haveDrawn = false;
-
     if(win->needAllocate)
         GetWidgetAllocations(win);
 
@@ -174,8 +171,9 @@ static void frame_new(struct PnWindow *win,
         DrawAll(win, 0);
     else if(win->dqWrite->first)
         DrawFromQueue(win);
-    else if(!win->haveDrawn)
-        win->haveDrawn = true;
+
+    if(win->haveDrawn && win->haveDrawn < 2)
+        ++win->haveDrawn;
 }
 
 
@@ -444,23 +442,21 @@ bool _pnWindow_addCallback(struct PnWindow *win) {
 bool pnWindow_isDrawn(struct PnWindow *win) {
     DASSERT(win);
 
-    if(win->needDraw || win->dqWrite->first) {
-        // We assuming that there's something else that will make it show
-        // the window.  This is just trying to monitor things at this
-        // point.
-        win->haveDrawn = false;
-        return false; // It may of may not be showing.
-    }
+    if(win->haveDrawn >= 2)
+        return true;
 
-    if(!win->haveDrawn) {
-        // We request a wl_callback.  We are just assuming that if the
-        // wayland compositor releases a frame via wl_callback that the
-        // window is showing.  That may not be true, but it's all I do.
-        // This may be the best we can do to answer the question: "Is
-        // the window being shown to the user now?"
-        _pnWindow_addCallback(win);
-        return false;
-    }
+    // We request a wl_callback.  We are just assuming that if the
+    // wayland compositor releases a frame via wl_callback that the
+    // window is showing.  That may not be true, but it's all I do.
+    // This may be the best we can do to answer the question: "Is
+    // the window being shown to the user now?"
+    _pnWindow_addCallback(win);
+    win->haveDrawn = 1;
+    return false;
+}
 
-    return true; // There a good chance it's showing now.
+void pnWindow_isDrawnReset(struct PnWindow *win) {
+    DASSERT(win);
+    _pnWindow_addCallback(win);
+    win->haveDrawn = 1;
 }

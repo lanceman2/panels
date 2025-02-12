@@ -155,9 +155,6 @@ bool DrawFromQueue(struct PnWindow *win) {
     DASSERT(!win->needAllocate);
     DASSERT(!win->needDraw);
 
-    if(win->haveDrawn)
-        win->haveDrawn = false;
-
     struct PnBuffer *buffer = GetNextBuffer(win,
             win->surface.allocation.width,
             win->surface.allocation.height);
