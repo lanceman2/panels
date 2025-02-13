@@ -78,7 +78,7 @@ ifdef WITH_FONTCONFIG
 endif
 
 
-ifdef WITH_CAIRO
+ifdef CAIRO_LDFLAGS
 # ../lib/libpanel.so is linked with libcairo.so
 091_myCairoDrawWidget_SOURCES := myCairoDrawWidget.c
 091_myCairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
@@ -89,10 +89,10 @@ myCairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 myCairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 endif
 
-ifdef CAIRO_LDFLAGS
+ifdef WITH_CAIRO
 # ../lib/libpanel.so is not required to be linked with libcairo.so
 097_cairoDrawWidget_SOURCES := cairoDrawWidget.c
-097_cairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+097_cairoDrawWidget_LDFLAGS := $(PN_LIB)
 097_cairoDrawWidget_CPPFLAGS := $(CAIRO_CFLAGS)
 
 cairoDrawWidget_run_SOURCES := cairoDrawWidget.c
