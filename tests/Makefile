@@ -92,7 +92,7 @@ endif
 ifdef WITH_CAIRO
 # ../lib/libpanel.so is not required to be linked with libcairo.so
 097_cairoDrawWidget_SOURCES := cairoDrawWidget.c
-097_cairoDrawWidget_LDFLAGS := $(PN_LIB)
+097_cairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 097_cairoDrawWidget_CPPFLAGS := $(CAIRO_CFLAGS)
 
 cairoDrawWidget_run_SOURCES := cairoDrawWidget.c
