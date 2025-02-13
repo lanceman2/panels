@@ -78,15 +78,28 @@ ifdef WITH_FONTCONFIG
 endif
 
 
+ifdef WITH_CAIRO
+# ../lib/libpanel.so is linked with libcairo.so
+091_myCairoDrawWidget_SOURCES := myCairoDrawWidget.c
+091_myCairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+091_myCairoDrawWidget_CPPFLAGS := $(CAIRO_CFLAGS)
+
+myCairoDrawWidget_run_SOURCES := myCairoDrawWidget.c
+myCairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+myCairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+endif
+
 ifdef CAIRO_LDFLAGS
-091_cairoDrawWidget_SOURCES := cairoDrawWidget.c
-091_cairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-091_cairoDrawWidget_CPPFLAGS := $(CAIRO_CFLAGS)
+# ../lib/libpanel.so is not required to be linked with libcairo.so
+097_cairoDrawWidget_SOURCES := cairoDrawWidget.c
+097_cairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+097_cairoDrawWidget_CPPFLAGS := $(CAIRO_CFLAGS)
 
 cairoDrawWidget_run_SOURCES := cairoDrawWidget.c
 cairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 cairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 endif
+
 
 
 scribble_run_SOURCES := scribble.c

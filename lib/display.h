@@ -151,6 +151,7 @@ struct PnSurface {
             cairo_t *cr, void *userData);
     void *cairoDrawData;
     cairo_t *cr;
+    cairo_surface_t *cairo_surface;
 #endif
 
     // We keep a linked list (tree like) graph of surfaces starting at a
@@ -171,6 +172,7 @@ struct PnSurface {
 
     struct PnWindow *window; // The top most surface is a this window.
 
+    // In the order ARGB
     uint32_t backgroundColor;
 
     enum PnDirection direction;
@@ -442,6 +444,12 @@ extern void DrawAll(struct PnWindow *win, struct PnBuffer *buffer);
 
 extern void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y, bool isEnter);
+
+#ifdef WITH_CAIRO
+extern void RecreateCairos(struct PnWindow *win);
+extern void DestroyCairos(struct PnSurface *win);
+extern void DestroyCairo(struct PnSurface *s);
+#endif
 
 
 // Sets d.focusSurface

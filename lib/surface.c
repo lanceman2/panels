@@ -167,14 +167,25 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
         DASSERT(s->cr);
         if(s->cairoDraw(s, s->cr, s->cairoDrawData) == 1)
             pnSurface_queueDraw(s);
-    } else
-#endif
+    } else if(!s->draw) {
+        DASSERT(s->cr);
+        uint32_t c = s->backgroundColor;
+        cairo_set_source_rgba(s->cr,
+               ((0x00FF0000 & c) >> 16)/255.0, // R
+               ((0x0000FF00 & c) >> 8)/255.0,  // G
+               ((0x000000FF & c))/255.0,       // B
+               ((0xFF000000 & c) >> 24)/255.0  // A
+        );
+        cairo_paint(s->cr);
+    }
+#else // without Cairo
     if(!s->draw)
         pn_drawFilledRectangle(buffer->pixels,
                 s->allocation.x, s->allocation.y, 
                 s->allocation.width, s->allocation.height,
                 buffer->stride,
                 s->backgroundColor /*color in ARGB*/);
+#endif
     else
         if(s->draw(s,
                 buffer->pixels +
@@ -221,6 +232,11 @@ bool InitSurface(struct PnSurface *s) {
 void DestroySurface(struct PnSurface *s) {
 
     DASSERT(s);
+
+#ifdef WITH_CAIRO
+    DestroyCairo(s);
+#endif
+
     if(s->type != PnSurfaceType_widget) {
         DASSERT(!s->parent);
         return;
@@ -228,6 +244,7 @@ void DestroySurface(struct PnSurface *s) {
     DASSERT(s->parent);
 
     RemoveChildSurface(s->parent, s);
+
 }
 
 

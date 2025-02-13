@@ -333,6 +333,8 @@ void pnWindow_destroy(struct PnWindow *win) {
         // This is called before we start destroying stuff.
         win->destroy(win, win->destroyData);
 
+    DestroySurface(&win->surface);
+
     // If there is state in the display that refers to this surface
     // (window) take care to not refer to it.  Like if this window surface
     // had focus for example.

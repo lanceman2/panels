@@ -10,9 +10,9 @@ else
 define_WITH_FONTCONFIG := //\#define WITH_FONTCONFIG
 endif
 ifdef WITH_CAIRO
-define_WITH_CAIRO := \#define WITH_CARIO
+define_WITH_CAIRO := \#define WITH_CAIRO
 else
-define_WITH_CAIRO := //\#define WITH_CARIO
+define_WITH_CAIRO := //\#define WITH_CAIRO
 endif
 
 IN_VARS :=\

@@ -20,9 +20,48 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
+static cairo_surface_t *surface = 0;
+static cairo_t *cr = 0;
+
+
+static void config(struct PnWidget *s, uint32_t *pixels,
+            uint32_t x, uint32_t y,
+            uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
+            void *userData) {
+
+    if(cr)
+        cairo_destroy(cr);
+
+    if(surface)
+        cairo_surface_destroy(surface);
+
+    // We can't use cairo_format_stride_for_width() because the stride is
+    // given by the window width, and not the widget width.  It makes no
+    // sense to calculate stride at this point, the widget doesn't need to
+    // know shit about how the pixel memory is setup, the widget just uses
+    // what it's given.  That's why
+    // cairo_image_surface_create_for_data() has a stride parameter.  I'm
+    // sure GTK uses it to, and I don't have to look at the GTK code to
+    // know that.  Ya, I know the GTK widgets builders never see the
+    // stride, that's because in GTK widgets have the Cairo objects passed
+    // to them in draw().  libpanels lets the user draw how ever the fuck
+    // they want; but ya, having a faster pixel memory via OpenGL and GPU
+    // stuff should be added.  Yes, drawing with the CPU sucks.
+    //
+    // Cairo can be slow for many kinds of drawing, but is pretty good in
+    // many common cases.
+    //
+    surface = cairo_image_surface_create_for_data((void *) pixels,
+            CAIRO_FORMAT_ARGB32, w, h, stride*4);
+
+    cr = cairo_create(surface);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+}
+
 
 static
-int cairoDraw(struct PnWidget *s, cairo_t *cr,
+int draw(struct PnWidget *s, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 
     cairo_set_source_rgba(cr, 1, 0, 0.9, 0.5);
@@ -61,7 +100,7 @@ int cairoDraw(struct PnWidget *s, cairo_t *cr,
 }
 
 
-int main(void) {
+int main(int argc, char **argv) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
@@ -75,7 +114,8 @@ int main(void) {
             300/*width*/, 300/*height*/,
             0/*direction*/, 0/*align*/, PnExpand_None/*expand*/);
     ASSERT(w);
-    pnWidget_setCairoDraw(w, cairoDraw, 0);
+    pnWidget_setDraw(w, draw, (void *) (uintptr_t)(argc - 1));
+    pnWidget_setConfig(w, config, (void *) (uintptr_t)(argc - 1));
 
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
@@ -88,5 +128,12 @@ int main(void) {
 
     Run(win);
 
+    if(cr)
+        cairo_destroy(cr);
+
+    if(surface)
+        cairo_surface_destroy(surface);
+
+    cairo_debug_reset_static_data();
     return 0;
 }

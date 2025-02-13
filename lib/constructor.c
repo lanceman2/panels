@@ -28,9 +28,6 @@ static void __attribute__((constructor)) constructor(void) {
     // fontconfig and cairo is written.
     fprintf(stderr, "FcPatternGetString=%p\n", FcPatternGetString);
 #endif
-#ifdef WITH_CAIRO
-    fprintf(stderr, "cairo_create=%p\n", cairo_create);
-#endif
 
     DSPEW();
 }
@@ -40,6 +37,10 @@ static void __attribute__((destructor)) destructor(void) {
 
     if(d.wl_display)
         pnDisplay_destroy();
+
+#ifdef WITH_CAIRO
+    cairo_debug_reset_static_data();
+#endif
 
     DSPEW("libpanels.so done");
 }
