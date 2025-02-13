@@ -28,7 +28,7 @@ int cairoDraw(struct PnWidget *s, cairo_t *cr,
     cairo_set_source_rgba(cr, 1, 0, 0.9, 0.5);
     cairo_paint(cr);
 
-    // https://www.cairographics.org/samples/
+    // from https://www.cairographics.org/samples/
 
     cairo_set_line_width (cr, 6);
 

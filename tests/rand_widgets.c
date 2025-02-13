@@ -34,9 +34,7 @@ static uint32_t num_containers = 0;
 static
 void *GetContainer() {
 
-    uint32_t i = SkewMinRand(0,num_containers-1, 0);
-
-    return containers[i];
+    return containers[SkewMinRand(0,num_containers-1, 0)];
 }
 
 static
