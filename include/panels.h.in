@@ -24,6 +24,14 @@ extern "C" {
 #define PN_DEFAULT_WIDGET_WIDTH  (40)
 #define PN_DEFAULT_WIDGET_HEIGHT (40)
 
+#ifndef PN_LIB_CODE
+@define_WITH_FONTCONFIG@
+@define_WITH_CAIRO@
+#endif
+
+#ifdef WITH_CAIRO
+#include <cairo/cairo.h>
+#endif
 
 // We make default enumeration values be 0.  That saves a ton of
 // development time.
@@ -399,9 +407,33 @@ static inline struct PnSurface *pnWidget_getSurface(
     return (void *) widget;
 }
 
+/////////////////////////////////////////////////////////////////
+// If libpanels.so is built with libfontconfig.so
+#ifdef WITH_FONTCONFIG
 
 PN_EXPORT char *pnFindFont(const char *exp);
 
+#endif // #ifdef WITH_FONTCONFIG
+
+/////////////////////////////////////////////////////////////////
+// If libpanels.so is built with libcairo.so
+#ifdef WITH_CAIRO
+
+PN_EXPORT void pnSurface_setCairoDraw(struct PnSurface *surface,
+        int (*draw)(struct PnSurface *surface, cairo_t *cr, void *userData),
+        void *userData);
+static inline void pnWindow_setCairoDraw(struct PnWindow *surface,
+        int (*draw)(struct PnWindow *surface, cairo_t *cr, void *userData),
+        void *userData) {
+    pnSurface_setCairoDraw((void *) surface, (void *) draw, userData);
+}
+static inline void pnWidget_setCairoDraw(struct PnWidget *surface,
+        int (*draw)(struct PnWidget *surface, cairo_t *cr, void *userData),
+        void *userData) {
+    pnSurface_setCairoDraw((void *) surface, (void *) draw, userData);
+}
+
+#endif // #ifdef WITH_CAIRO
 
 
 #ifdef __cplusplus

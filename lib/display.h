@@ -1,4 +1,7 @@
 
+#ifdef WITH_CAIRO
+#include <cairo/cairo.h>
+#endif
 
 // It looks like most GUI (graphical user interface) based programs
 // (wayland compositor included), as we shrink a window, cull out the
@@ -143,6 +146,12 @@ struct PnSurface {
             void *userData);
     void *motionData;
 
+#ifdef WITH_CAIRO
+    int (*cairoDraw)(struct PnSurface *surface,
+            cairo_t *cr, void *userData);
+    void *cairoDrawData;
+    cairo_t *cr;
+#endif
 
     // We keep a linked list (tree like) graph of surfaces starting at a
     // window with PnSurface::parent == 0.

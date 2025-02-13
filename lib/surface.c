@@ -162,6 +162,13 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
     // if their children widgets completely cover them.
     if(s->noDrawing) goto drawChildren;
 
+#ifdef WITH_CAIRO
+    if(s->cairoDraw) {
+        DASSERT(s->cr);
+        if(s->cairoDraw(s, s->cr, s->cairoDrawData) == 1)
+            pnSurface_queueDraw(s);
+    } else
+#endif
     if(!s->draw)
         pn_drawFilledRectangle(buffer->pixels,
                 s->allocation.x, s->allocation.y, 

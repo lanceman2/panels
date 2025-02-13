@@ -14,7 +14,7 @@ endif
 ifdef WITH_FONTCONFIG
 CPPFLAGS += -DWITH_FONTCONFIG
 else
-$(warning Building WITHOUT libfontconfig)
+$(warning Building WITHOUT fontconfig)
 endif
 
 
@@ -68,6 +68,12 @@ ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\
  findFont.c
 endif
+
+ifdef WITH_CAIRO
+libpanels.so_SOURCES +=\
+ cairoDraw.c
+endif
+
 
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\
