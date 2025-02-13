@@ -172,7 +172,16 @@ void GetPointerSurface(const struct PnWindow *win) {
         // Start at the window surface.
         d.pointerSurface = (void *) d.pointerWindow;
 
-    if(d.pointerSurface->firstChild)
+    // The d.x, d.y position can move out from the pointerSurface
+    // without changing the pointerSurface because of a pointer grab.
+
+    if(d.pointerSurface->firstChild &&
+            d.x >= d.pointerSurface->allocation.x &&
+            d.y >= d.pointerSurface->allocation.y &&
+            d.x < d.pointerSurface->allocation.x +
+                d.pointerSurface->allocation.width &&
+            d.y < d.pointerSurface->allocation.y +
+                d.pointerSurface->allocation.height)
         // See if it's in a deeper child surface.
         d.pointerSurface = FindSurface(d.pointerWindow, d.pointerSurface,
                 d.x, d.y);
