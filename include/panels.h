@@ -250,34 +250,37 @@ PN_EXPORT void pnSurface_setDraw(struct PnSurface *s,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData);
 static inline void pnWindow_setDraw(struct PnWindow *window,
-        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+        int (*draw)(struct PnWindow *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData) {
-     pnSurface_setDraw((void *) window, draw, userData);
+     pnSurface_setDraw((void *) window, (void *) draw, userData);
 }
 static inline void pnWidget_setDraw(struct PnWidget *widget,
-        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+        int (*draw)(struct PnWidget *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData) {
-     pnSurface_setDraw((void *) widget, draw, userData);
+     pnSurface_setDraw((void *) widget, (void *) draw, userData);
 }
 
 
 PN_EXPORT void pnSurface_setConfig(struct PnSurface *s,
         void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData);
 static inline void pnWindow_setConfig(struct PnWindow *window,
-        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+        void (*config)(struct PnWindow *surface, uint32_t *pixels,
+            uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData) {
-     pnSurface_setConfig((void *) window, config, userData);
+     pnSurface_setConfig((void *) window, (void *) config, userData);
 }
 static inline void pnWidget_setConfig(struct PnWidget *widget,
-        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+        void (*config)(struct PnWidget *surface, uint32_t *pixels,
+            uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData) {
-     pnSurface_setConfig((void *) widget, config, userData);
+     pnSurface_setConfig((void *) widget, (void *) config, userData);
 }
 
 
@@ -326,12 +329,12 @@ static inline void pnWidget_setLeave(struct PnWidget *widget,
 PN_EXPORT void pnSurface_setPress(struct PnSurface *s,
         bool (*press)(struct PnSurface *surface,
             uint32_t which,
-            uint32_t x, uint32_t y, void *userData),
+            int32_t x, int32_t y, void *userData),
         void *userData);
 static inline void pnWindow_setPress(struct PnWindow *window,
         bool (*press)(struct PnWindow *window,
             uint32_t which,
-            uint32_t x, uint32_t y, void *userData),
+            int32_t x, int32_t y, void *userData),
         void *userData) {
     pnSurface_setPress((void *) window, (void *) press,
             userData);
@@ -339,7 +342,7 @@ static inline void pnWindow_setPress(struct PnWindow *window,
 static inline void pnWidget_setPress(struct PnWidget *widget,
         bool (*press)(struct PnWidget *widget,
             uint32_t which,
-            uint32_t x, uint32_t y, void *userData),
+            int32_t x, int32_t y, void *userData),
         void *userData) {
     pnSurface_setPress((void *) widget, (void *) press,
             userData);
@@ -348,12 +351,12 @@ static inline void pnWidget_setPress(struct PnWidget *widget,
 PN_EXPORT void pnSurface_setRelease(struct PnSurface *s,
         bool (*release)(struct PnSurface *surface,
             uint32_t which,
-            uint32_t x, uint32_t y, void *userData),
+            int32_t x, int32_t y, void *userData),
         void *userData);
 static inline void pnWindow_setRelease(struct PnWindow *window,
         bool (*release)(struct PnWindow *window,
             uint32_t which,
-            uint32_t x, uint32_t y, void *userData),
+            int32_t x, int32_t y, void *userData),
         void *userData) {
     pnSurface_setRelease((void *) window, (void *) release,
             userData);
@@ -361,9 +364,28 @@ static inline void pnWindow_setRelease(struct PnWindow *window,
 static inline void pnWidget_setRelease(struct PnWidget *widget,
         bool (*release)(struct PnWidget *widget,
             uint32_t which,
-            uint32_t x, uint32_t y, void *userData),
+            int32_t x, int32_t y, void *userData),
         void *userData) {
     pnSurface_setRelease((void *) widget, (void *) release,
+            userData);
+}
+
+PN_EXPORT void pnSurface_setMotion(struct PnSurface *s,
+        bool (*motion)(struct PnSurface *surface,
+                int32_t x, int32_t y, void *userData),
+        void *userData);
+static inline void pnWindow_setMotion(struct PnWindow *window,
+        bool (*motion)(struct PnWindow *window,
+                int32_t x, int32_t y, void *userData),
+        void *userData) {
+    pnSurface_setMotion((void *) window, (void *) motion,
+            userData);
+}
+static inline void pnWidget_setMotion(struct PnWidget *widget,
+        bool (*motion)(struct PnWidget *widget,
+                int32_t x, int32_t y, void *userData),
+        void *userData) {
+    pnSurface_setMotion((void *) widget, (void *) motion,
             userData);
 }
 

@@ -58,7 +58,7 @@ static void enter(void *data,
     DASSERT(d.pointerWindow->surface.allocation.x == 0);
     DASSERT(d.pointerWindow->surface.allocation.y == 0);
 
-    GetSurfaceWithXY(d.pointerWindow, x, y);
+    GetSurfaceWithXY(d.pointerWindow, x, y, true);
 
     DASSERT(d.pointerSurface);
     DoEnterAndLeave();
@@ -103,20 +103,34 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
         // We need the to know where the pointerSurface is so we can do an
         // "enter" event if the pointer is on a different surface when the
         // button grab is released.
-        if(d.pointerWindow == d.buttonGrabSurface->window)
-            GetSurfaceWithXY(d.pointerWindow, x, y);
-        if(s->motion)
-            s->motion(s, d.x, d.y, s->motionData);
+        if(d.pointerWindow == d.buttonGrabSurface->window) {
+            // We get the surface that pointer has the pointer if we can.
+            GetSurfaceWithXY(d.pointerWindow, x, y, false);
+//WARN("            %d,%d", d.x, d.y);
+            DASSERT(s == d.buttonGrabSurface);
+            if(s->motion)
+                // We will let only the grab widget (or window) see this
+                // motion.  Later at the release (release of this mouse
+                // pointer grab) event we will let another surface get a
+                // motion event (even when there is no motion from the
+                // wayland compositor at that time).
+                s->motion(s, d.x, d.y, s->motionData);
+        }
+
         return;
     }
 
     struct PnSurface *s = d.pointerSurface;
-    GetSurfaceWithXY(d.pointerWindow, x, y);
+    // We get the surface that pointer has the pointer if we can.
+    GetSurfaceWithXY(d.pointerWindow, x, y, false);
 
     if(s != d.pointerSurface)
         // The surface we are pointing to changed.
         // The focused widget may be changed.
         DoEnterAndLeave();
+
+    if(d.focusSurface)
+        DoMotion(d.focusSurface);
 }
 
 static void button(void *, struct wl_pointer *p,

@@ -115,6 +115,7 @@ struct PnSurface {
     void *drawData;
     //
     void (*config)(struct PnSurface *surface, uint32_t *pixels,
+            uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData);
     void *configData;
@@ -130,15 +131,15 @@ struct PnSurface {
     void (*leave)(struct PnSurface *surface, void *userData);
     void *leaveData;
     bool (*press)(struct PnSurface *surface,
-            uint32_t which, uint32_t x, uint32_t y,
+            uint32_t which, int32_t x, int32_t y,
             void *userData);
     void *pressData;
     bool (*release)(struct PnSurface *surface,
-            uint32_t which, uint32_t x, uint32_t y,
+            uint32_t which, int32_t x, int32_t y,
             void *userData);
     void *releaseData;
     bool (*motion)(struct PnSurface *surface,
-            uint32_t x, uint32_t y,
+            int32_t x, int32_t y,
             void *userData);
     void *motionData;
 
@@ -308,9 +309,9 @@ struct PnWindow {
 
     // This is a flag that is set in a wl_callback that lets us know that
     // the window is very likely being shown to the user.  We know that
-    // the pixel buffer was drawn to, and we have waited for one wl_callback
-    // event.  I don't think that there's a way to really know that the
-    // window is showing, but this may be close enough.
+    // the pixel buffer was drawn to, and we have waited for one
+    // wl_callback event.  I don't think that there's a way to really know
+    // that the window is showing, but this may be close enough.
     uint32_t haveDrawn;
 };
 
@@ -371,7 +372,7 @@ struct PnDisplay {
     //
     // We set this x,y with wayland mouse pointer enter and mouse pointer
     // motion events.
-    uint32_t x, y; // pointer position.
+    int32_t x, y; // pointer position.
 
     struct PnSurface *buttonGrabSurface;
     uint32_t buttonGrab;
@@ -431,10 +432,16 @@ extern bool DrawFromQueue(struct PnWindow *win);
 extern void DrawAll(struct PnWindow *win, struct PnBuffer *buffer);
 
 extern void GetSurfaceWithXY(const struct PnWindow *win,
-        wl_fixed_t x,  wl_fixed_t y);
+        wl_fixed_t x,  wl_fixed_t y, bool isEnter);
 
+
+// Sets d.focusSurface
 extern void DoEnterAndLeave(void);
+// Sets d.pointerSurface
 extern void GetPointerSurface(const struct PnWindow *win);
+// Calls motion() callback until a surface returns true.
+extern void DoMotion(struct PnSurface *s);
+
 
 static inline void RemoveSurfaceFromDisplay(struct PnSurface *s) {
 

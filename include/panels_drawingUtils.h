@@ -48,4 +48,24 @@ void pn_drawFilledRectangle(uint32_t *pix/*surface starting pixel*/,
             *pix = color;
 }
 
+
+static inline
+void pn_drawPixel(uint32_t *pix/*surface starting pixel*/,
+        uint32_t x, uint32_t y, uint32_t stride,
+        uint32_t color) {
+
+#define PIXEL_SIZE (4)
+
+#ifdef PN_LIB_CODE
+    DASSERT(pix);
+    DASSERT(stride);
+#endif
+
+    // stride is number of 4 bytes to next row.
+
+    pix += x + y * stride;
+    *pix = color;
+}
+
+
 #undef PIXEL_SIZE

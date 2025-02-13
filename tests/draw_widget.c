@@ -34,7 +34,8 @@ uint32_t Saw(uint32_t x) {
 }
 
 
-static void config(struct PnSurface *surface, uint32_t *pixels,
+static void config(struct PnWidget *surface, uint32_t *pixels,
+            uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 
@@ -43,7 +44,7 @@ static void config(struct PnSurface *surface, uint32_t *pixels,
 
 
 static
-int draw1(struct PnSurface *surface, uint32_t *pixels,
+int draw1(struct PnWidget *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 
@@ -103,7 +104,7 @@ int draw1(struct PnSurface *surface, uint32_t *pixels,
 }
 
 static
-int draw2(struct PnSurface *surface, uint32_t *pixels,
+int draw2(struct PnWidget *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 

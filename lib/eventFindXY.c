@@ -185,38 +185,54 @@ void GetPointerSurface(const struct PnWindow *win) {
 // The mouse pointer window, d.pointerWindow, must be known.
 //
 void GetSurfaceWithXY(const struct PnWindow *win,
-        wl_fixed_t x,  wl_fixed_t y) {
+        wl_fixed_t x,  wl_fixed_t y, bool isEnter) {
 
     DASSERT(d.pointerWindow);
+    DASSERT(win == d.pointerWindow);
 
     // Maybe we round up wrong...??  We fix it below.
-    d.x = (wl_fixed_to_double(x) + 0.5);
-    d.y = (wl_fixed_to_double(y) + 0.5);
 
-    // Sometimes the values are just shit.
+    if(wl_fixed_to_double(x) > 0.0)
+        d.x = (wl_fixed_to_double(x) + 0.5);
+    else
+        d.x = (wl_fixed_to_double(x) - 0.5);
+    if(wl_fixed_to_double(x) > 0.0)
+        d.y = (wl_fixed_to_double(y) + 0.5);
+    else
+        d.y = (wl_fixed_to_double(y) - 0.5);
 
-    // Hit these, WTF.
-    //DASSERT(d.x < (uint32_t) -1);
-    //DASSERT(d.y < (uint32_t) -1);
 
-    if(d.x >= win->surface.allocation.width) {
-        // I don't trust the wayland compositor to give me good numbers.
-        // I've seen values of x larger than the width of the window.
-        // Maybe we round up wrong...
-        // I've seen this assertion activated, so what the hell:
-        // why is the wayland compositor sending us position values that
-        // are not in the window.
-        //DASSERT(d.x - win->surface.allocation.width < 3);
-        // x values go from 0 to width -1.
-        d.x = win->surface.allocation.width - 1;
-    }
-    if(d.y >= d.pointerWindow->surface.allocation.height) {
-        // I don't trust the wayland compositor to give me good numbers.
-        // I've seen values of y larger than the height of the window.
-        //DASSERT(d.y - d.pointerWindow->surface.allocation.height < 3);
-        // y values go from 0 to height -1.
-        d.y = d.pointerWindow->surface.allocation.height - 1;
-    }
+//WARN("            %d,%d", d.x, d.y);
+
+    if(isEnter) {
+        // I do not like this.  With the compositor that I'm using I can
+        // get x,y values not in the window with window enter events.
+        // That makes no fucking sense, the mouse pointer is not in the
+        // window, but the enter event says it is.  It could be round off
+        // error.
+#define ERR_LEN  (1)
+        DASSERT(d.x >= - ERR_LEN);
+        DASSERT(d.y >= - ERR_LEN);
+        DASSERT(d.x < win->surface.allocation.width + ERR_LEN);
+        DASSERT(d.y < win->surface.allocation.height + ERR_LEN);
+
+        if(d.x < 0)
+            d.x = 0;
+        else if(d.x >= win->surface.allocation.width)
+            d.x = win->surface.allocation.width - 1;
+        if(d.y < 0)
+            d.y = 0;
+        else if(d.y >= win->surface.allocation.height)
+            d.y = win->surface.allocation.height - 1;
+    } else
+        // The mouse pointer can send events if there is a pointer grab and in
+        // that case the position made be to the left and/or above the window,
+        // making d.x and/or d.y negative or larger than the width and height
+        // of the window.
+        if(d.x < 0 || d.y < 0 ||
+                d.x >= win->surface.allocation.width ||
+                d.y >= win->surface.allocation.height)
+            return;
 
     GetPointerSurface(win);
 
@@ -251,5 +267,15 @@ void DoEnterAndLeave(void) {
                 continue;
             break;
         }
+    }
+}
+
+void DoMotion(struct PnSurface *s) {
+
+    DASSERT(s);
+    for(; s; s = s->parent) {
+        DASSERT(!s->culled);
+        if(s->motion && s->motion(s, d.x, d.y, s->motionData))
+            break;
     }
 }

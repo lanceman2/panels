@@ -89,6 +89,15 @@ cairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 endif
 
 
+scribble_run_SOURCES := scribble.c
+scribble_run_LDFLAGS := $(PN_LIB)
+scribble_run_CPPFLAGS := -DRUN
+
+102_scribble_run_SOURCES := scribble.c
+102_scribble_run_LDFLAGS := $(PN_LIB)
+
+
+
 
 CLEANFILES := $(wildcard tmp_*)
 

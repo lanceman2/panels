@@ -18,4 +18,5 @@ pnSurface_setEnter
 pnSurface_setLeave
 pnSurface_setPress
 pnSurface_setRelease
+pnSurface_setMotion
 pnFindFont

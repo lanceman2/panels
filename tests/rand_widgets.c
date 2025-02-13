@@ -68,7 +68,7 @@ static void LeaveW(struct PnWindow *w, void *userData) {
 }
 
 static bool Press(struct PnWidget *w, uint32_t which,
-            uint32_t x, uint32_t y, void *userData) {
+            int32_t x, int32_t y, void *userData) {
 
     ASSERT(which <= 2);
 
@@ -82,7 +82,7 @@ static bool Press(struct PnWidget *w, uint32_t which,
 }
 
 static bool Release(struct PnWidget *w, uint32_t which,
-            uint32_t x, uint32_t y, void *userData) {
+            int32_t x, int32_t y, void *userData) {
 
     ASSERT(which <= 2);
 

@@ -20,7 +20,8 @@ static cairo_surface_t *surface = 0;
 static cairo_t *cr = 0;
 
 
-static void config(struct PnSurface *s, uint32_t *pixels,
+static void config(struct PnWidget *s, uint32_t *pixels,
+            uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 
@@ -55,7 +56,7 @@ static void config(struct PnSurface *s, uint32_t *pixels,
 
 
 static
-int draw(struct PnSurface *s, uint32_t *pixels,
+int draw(struct PnWidget *s, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
             void *userData) {
 
