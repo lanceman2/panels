@@ -77,7 +77,6 @@ int main(void) {
     ASSERT(w);
     pnWidget_setCairoDraw(w, cairoDraw, 0);
 
-
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 400/*height*/,
             0/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
