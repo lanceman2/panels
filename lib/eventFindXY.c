@@ -244,8 +244,6 @@ void GetSurfaceWithXY(const struct PnWindow *win,
             return;
 
     GetPointerSurface(win);
-
-//WARN("Got widget=%p at %" PRIu32 ",%" PRIu32, d.pointerSurface, d.x, d.y);
 }
 
 // Find the next focused widget (focusSurface), switch between the last
