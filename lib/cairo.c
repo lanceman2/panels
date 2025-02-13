@@ -19,10 +19,12 @@ static inline void CreateCairo(struct PnBuffer *buffer,
         struct PnSurface *s) {
 
     DASSERT(s);
+    DASSERT(buffer);
     DASSERT(!s->cairo_surface);
     DASSERT(!s->cr);
 
-    if(s->culled || s->noDrawing) return;
+    if(s->culled || s->noDrawing ||
+            (!s->cairoDraw && s->draw)) return;
 
     s->cairo_surface = cairo_image_surface_create_for_data(
         (void *) (buffer->pixels +
@@ -50,8 +52,21 @@ void pnSurface_setCairoDraw(struct PnSurface *s,
         int (*draw)(struct PnSurface *surface, cairo_t *cr, void *userData),
         void *userData) {
     DASSERT(s);
+    DASSERT(s->window);
     s->cairoDraw = draw;
     s->cairoDrawData = userData;
+
+    if(draw && !s->cr && s->window->buffer.wl_buffer)
+        // This surface, "s", might need a Cairo surface (and Cairo
+        // object).
+        CreateCairo(&s->window->buffer, s);
+    else if(!draw && s->draw)
+        // This surface, "s", will not use Cairo to draw.  The user is
+        // unsetting the Cairo draw callback.
+        DestroyCairo(s);
+
+    // We'll let the user queue the draw of this surface, if they need to.
+    // Also it could be the window is not being shown now.
 }
 
 
