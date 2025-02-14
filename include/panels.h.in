@@ -58,7 +58,7 @@ extern "C" {
 //
 // Packing order direction: example PnDirection_RL means the first added
 // goes to the right side, second added goes next to the first just to the
-// left of the first.
+// left of the first, and so on ...
 //
 enum PnDirection {
 
@@ -71,8 +71,7 @@ enum PnDirection {
     // no gravity to hold widgets.  Cannot have any children.
     PnDirection_None = -2, // For non-container widgets or windows
 
-    // The container surface can only have zero or one widget, so it puts
-    // the child widget where ever it wants to on its surface.
+    // The container surface can only have zero or one widget.
     PnDirection_One = -1,
 
     // Windows (and widgets) with all the below gravities can have zero
@@ -80,7 +79,7 @@ enum PnDirection {
 
     // T Top, B Bottom, L Left, R Right
     //
-    // Horizontally row aligning child widgets:
+    // Horizontally row of child widgets:
     //
     // We use 0 so that PnDirection_LR is the default; it certainly made
     // writing test code easier.
@@ -88,7 +87,7 @@ enum PnDirection {
     PnDirection_LR = 0, // child widgets assemble from left to right
     PnDirection_RL = 1, // child widgets assemble from right to left
 
-    // Vertically column aligning child widgets:
+    // Vertically column of child widgets:
     //
     PnDirection_TB = 2, // child widgets assemble top to bottom
     //

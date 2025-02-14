@@ -48,16 +48,17 @@
 // that could be automatically generated.  How can a user use a wl_surface
 // without any fucking pixels?  Yes, yes, layers give you control, but
 // come on, layering and exposing 5 objects down to get to coloring a
-// fucking pixel.
+// fucking pixel seems silly.
 
 // Constrained by libwayland-client, we can only have one Pn Display
-// object in a process.
+// object in a process.  Not our fucking choose.  We're lucky that
+// it's not leaky (memory).
 
-#define TOPLEVEL         (01)
-#define POPUP            (02)
-#define WIDGET           (04)
+#define TOPLEVEL         (01) // first bit set
+#define POPUP            (02) // second bit set
+#define WIDGET           (04) // third bit set
 #define GET_WIDGET_TYPE(x)  (~(TOPLEVEL|POPUP|WIDGET) & (x))
-// WIDGET TYPES:
+// WIDGET TYPES: are a number in the (skip first 3 bits) higher bits.
 #define W_BUTTON         (1 << 3)
 #define W_MENU           (2 << 3)
 #define W_MENUITEM       (3 << 3)

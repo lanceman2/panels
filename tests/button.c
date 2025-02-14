@@ -27,10 +27,6 @@ int main(void) {
             (struct PnSurface *) win/*parent*/,
             "Quit");
     ASSERT(b);
-    uint32_t color = pnWidget_getBackgroundColor(b);
-    color &= 0x00FFFFFF; // change the Alpha
-    //color |= 0x88000000;
-    pnWidget_setBackgroundColor(b, color);
 
     pnWindow_show(win, true);
 
