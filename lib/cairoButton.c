@@ -12,12 +12,18 @@
 #include "xdg-decoration-protocol.h"
 
 #include "debug.h"
-#include  "display.h"
+#include "display.h"
+#include "cairoWidget.h"
 
 
 struct PnWidget *pnButton_create(struct PnSurface *parent,
         const char *label) {
 
+    struct PnButton *b = (void *) pnWidget_create(parent,
+              200/*width*/, 100/*height*/,
+            0/*direction*/, 0/*align*/,
+            PnExpand_HV/*expand*/, sizeof(*b));
+    ASSERT(b);
 
-    return 0;
+    return (void *) b;
 }

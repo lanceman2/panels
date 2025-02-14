@@ -212,14 +212,25 @@ static void MotionLeave(struct PnSurface *surface, void *userData) {
 
 // Return false on success.
 //
+// Both window and widget are a surface.  Some of this surface data
+// structure is already set up.
+//
 bool InitSurface(struct PnSurface *s) {
 
     DASSERT(s);
-    if(!(s->type & WIDGET)) {
-        DASSERT(!s->parent);
+    DASSERT(s->type);
+
+    if(!s->parent) {
+        DASSERT(!(s->type & WIDGET));
+        // this is a window.
         return false;
     }
-    DASSERT(s->parent);
+    // this is a widget
+    DASSERT(s->type & WIDGET);
+
+    // Default widget background color is that of it's
+    // parent.
+    s->backgroundColor = s->parent->backgroundColor;
 
     AddChildSurface(s->parent, s);
 

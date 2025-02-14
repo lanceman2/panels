@@ -13,8 +13,6 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-#define EXPAND  (PnExpand_HV)
-
 
 int main(void) {
 
@@ -25,13 +23,14 @@ int main(void) {
             PnExpand_HV);
     ASSERT(win);
 
-    struct PnWidget *w = pnWidget_create(
+    struct PnWidget *b = pnButton_create(
             (struct PnSurface *) win/*parent*/,
-            100/*width*/, 200/*height*/,
-            0/*direction*/, 0/*align*/,
-            EXPAND/*expand*/, 0);
-    ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xCCCF0000);
+            "Quit");
+    ASSERT(b);
+    uint32_t color = pnWidget_getBackgroundColor(b);
+    color &= 0x00FFFFFF; // change the Alpha
+    //color |= 0x88000000;
+    pnWidget_setBackgroundColor(b, color);
 
     pnWindow_show(win, true);
 
