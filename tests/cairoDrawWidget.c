@@ -73,13 +73,15 @@ int main(void) {
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             300/*width*/, 300/*height*/,
-            0/*direction*/, 0/*align*/, PnExpand_None/*expand*/);
+            0/*direction*/, 0/*align*/,
+            PnExpand_None/*expand*/, 0);
     ASSERT(w);
     pnWidget_setCairoDraw(w, cairoDraw, 0);
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 400/*height*/,
-            0/*direction*/, 0/*align*/, PnExpand_V/*expand*/);
+            0/*direction*/, 0/*align*/,
+            PnExpand_V/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
 

@@ -132,7 +132,7 @@ static inline uint32_t GetBWidth(const struct PnSurface *s) {
     if(s->firstChild || s->width)
         return s->width;
 
-    if(s->type == PnSurfaceType_widget)
+    if(s->type & WIDGET)
         return PN_DEFAULT_WIDGET_WIDTH;
 
     DASSERT(s->type == PnSurfaceType_popup ||
@@ -152,7 +152,7 @@ static inline uint32_t GetBHeight(const struct PnSurface *s) {
     if(s->firstChild || s->height)
         return s->height;
 
-    if(s->type == PnSurfaceType_widget)
+    if(s->type & WIDGET)
         return PN_DEFAULT_WIDGET_HEIGHT;
 
     DASSERT(s->type == PnSurfaceType_popup ||

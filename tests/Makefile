@@ -98,8 +98,14 @@ ifdef WITH_CAIRO
 cairoDrawWidget_run_SOURCES := cairoDrawWidget.c
 cairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 cairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
-endif
 
+105_button_SOURCES := button.c
+105_button_LDFLAGS := $(PN_LIB)
+
+button_run_SOURCES := button.c
+button_run_LDFLAGS := $(PN_LIB)
+button_run_CPPFLAGS := -DRUN
+endif
 
 
 scribble_run_SOURCES := scribble.c
@@ -108,7 +114,6 @@ scribble_run_CPPFLAGS := -DRUN
 
 102_scribble_run_SOURCES := scribble.c
 102_scribble_run_LDFLAGS := $(PN_LIB)
-
 
 
 

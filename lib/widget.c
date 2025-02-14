@@ -14,7 +14,8 @@
 
 struct PnWidget *pnWidget_create(
         struct PnSurface *parent, uint32_t w, uint32_t h,
-        enum PnDirection direction, enum PnAlign align, enum PnExpand expand) {
+        enum PnDirection direction, enum PnAlign align,
+        enum PnExpand expand, size_t size) {
 
     ASSERT(parent);
     DASSERT(parent->direction != PnDirection_None);
@@ -37,17 +38,23 @@ struct PnWidget *pnWidget_create(
         w = PN_DEFAULT_WIDGET_WIDTH;
         h = PN_DEFAULT_WIDGET_HEIGHT;
     }
+    struct PnWidget *widget;
 
-    struct PnWidget *widget = calloc(1, sizeof(*widget));
-    ASSERT(widget, "calloc(1,%zu) failed", sizeof(*widget));
+    if(size < sizeof(*widget))
+        size = sizeof(*widget);
 
+    widget = calloc(1, size);
+    ASSERT(widget, "calloc(1,%zu) failed", size);
+#ifdef DEBUG
+    widget->size = size;
+#endif
     widget->surface.parent = parent;
     widget->surface.direction = direction;
     widget->surface.align = align;
     * (enum PnExpand *) &widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;
 
-    if(parent->type == PnSurfaceType_widget)
+    if(parent->type & WIDGET)
         widget->surface.window = parent->window;
     else
         widget->surface.window = (void *) parent;
@@ -72,7 +79,7 @@ void pnWidget_destroy(struct PnWidget *widget) {
 
     DASSERT(widget);
     DASSERT(widget->surface.parent);
-    ASSERT(widget->surface.type == PnSurfaceType_widget);
+    ASSERT(widget->surface.type & WIDGET);
 
     // If there is state in the display that refers to this surface
     // (widget) take care to not refer to it.  Like if this widget
@@ -86,15 +93,14 @@ void pnWidget_destroy(struct PnWidget *widget) {
         pnWidget_destroy((void *) widget->surface.firstChild);
 
     DestroySurface((void *) widget);
-
-    DZMEM(widget, sizeof(*widget));
+    DZMEM(widget, widget->size);
     free(widget);
 }
 
 void pnWidget_show(struct PnWidget *widget, bool show) {
 
     DASSERT(widget);
-    DASSERT(widget->surface.type == PnSurfaceType_widget);
+    DASSERT(widget->surface.type & WIDGET);
 
     // Make it be one of two values.  Because we can have things like (3)
     // == true

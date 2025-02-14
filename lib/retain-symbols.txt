@@ -21,3 +21,4 @@ pnSurface_setRelease
 pnSurface_setMotion
 pnSurface_setCairoDraw
 pnFindFont
+pnButton_create

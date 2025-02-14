@@ -140,7 +140,8 @@ int main(int argc, char **argv) {
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             500/*width*/, 400/*height*/,
-            0/*direction*/, 0/*align*/, EXPAND/*expand*/);
+            0/*direction*/, 0/*align*/,
+            EXPAND/*expand*/, 0);
     ASSERT(w);
     pnWidget_setDraw(w, draw1, (void *) (uintptr_t)(argc - 1));
     pnWidget_setConfig(w, config, (void *) (uintptr_t)(argc - 1));
@@ -148,7 +149,8 @@ int main(int argc, char **argv) {
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 400/*height*/,
-            0/*direction*/, 0/*align*/, EXPAND/*expand*/);
+            0/*direction*/, 0/*align*/,
+            EXPAND/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
     pnWidget_setDraw(w, draw2, 0);

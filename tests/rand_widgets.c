@@ -142,7 +142,7 @@ static struct PnWidget *Widget() {
             Rand(0,1) + SkewMinRand(0, 2, 2) /*direction*/,
             // enum PnAlign goes from 0 to 15.
             SkewMinRand(0, 15, 2)/*align*/,
-            Rand(0,3)/*expand*/);
+            Rand(0,3)/*expand*/, 0/*size*/);
     ASSERT(w);
 
     uint32_t *color = malloc(sizeof(*color));

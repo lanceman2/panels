@@ -138,7 +138,8 @@ int main(int argc, char **argv) {
     w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             500/*width*/, 550/*height*/,
-            0/*direction*/, 0/*align*/, PnExpand_HV/*expand*/);
+            0/*direction*/, 0/*align*/,
+            PnExpand_HV/*expand*/, 0/*size*/);
     ASSERT(w);
     pnWidget_setDraw(w, draw, (void *) (uintptr_t)(argc - 1));
     pnWidget_setConfig(w, config, 0);

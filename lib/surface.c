@@ -134,8 +134,6 @@ void pnSurface_setDraw(
             uint32_t w, uint32_t h, uint32_t stride,
             void *userData), void *userData) {
     DASSERT(s);
-    DASSERT(s->type >= PnSurfaceType_toplevel &&
-            s->type <= PnSurfaceType_widget);
 
     s->draw = draw;
     s->drawData = userData;
@@ -217,7 +215,7 @@ static void MotionLeave(struct PnSurface *surface, void *userData) {
 bool InitSurface(struct PnSurface *s) {
 
     DASSERT(s);
-    if(s->type != PnSurfaceType_widget) {
+    if(!(s->type & WIDGET)) {
         DASSERT(!s->parent);
         return false;
     }
@@ -237,7 +235,7 @@ void DestroySurface(struct PnSurface *s) {
     DestroyCairo(s);
 #endif
 
-    if(s->type != PnSurfaceType_widget) {
+    if(!(s->type & WIDGET)) {
         DASSERT(!s->parent);
         return;
     }

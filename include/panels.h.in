@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #ifndef PN_EXPORT
 #  define PN_EXPORT extern
@@ -223,7 +224,7 @@ PN_EXPORT struct PnWidget *pnWidget_create(
         uint32_t width, uint32_t height,
         enum PnDirection direction,
         enum PnAlign align,
-        enum PnExpand expand);
+        enum PnExpand expand, size_t size);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
 PN_EXPORT void pnWidget_setDestroy(struct PnWidget *widget,
@@ -432,6 +433,9 @@ static inline void pnWidget_setCairoDraw(struct PnWidget *surface,
         void *userData) {
     pnSurface_setCairoDraw((void *) surface, (void *) draw, userData);
 }
+
+PN_EXPORT struct PnWidget *pnButton_create(struct PnSurface *parent,
+        const char *label);
 
 #endif // #ifdef WITH_CAIRO
 

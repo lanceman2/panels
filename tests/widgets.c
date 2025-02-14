@@ -21,7 +21,7 @@ struct PnWidget *W(void *container, enum PnDirection direction) {
     struct PnWidget *w = pnWidget_create((void *) container,
             14/*width*/, 14/*height*/,
             direction, 0/*align*/,
-            PnExpand_H | PnExpand_V/*expand*/);
+            PnExpand_H | PnExpand_V/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, GetColor());
     return w;

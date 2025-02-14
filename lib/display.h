@@ -53,6 +53,17 @@
 // Constrained by libwayland-client, we can only have one Pn Display
 // object in a process.
 
+#define TOPLEVEL         (01)
+#define POPUP            (02)
+#define WIDGET           (04)
+#define GET_WIDGET_TYPE(x)  (~(TOPLEVEL|POPUP|WIDGET) & (x))
+// WIDGET TYPES:
+#define W_BUTTON         (1 << 3)
+#define W_MENU           (2 << 3)
+#define W_MENUITEM       (3 << 3)
+
+
+
 
 // If we add more surface types we'll need to check all the code.
 //
@@ -64,11 +75,14 @@ enum PnSurfaceType {
     // a popup, and not a toplevel, and so does wayland-client.
 
     // 2 Window Surface types:
-    PnSurfaceType_toplevel = 0x156c271, // From xdg_surface_get_toplevel()
-    PnSurfaceType_popup,    // From wl_shell_surface_set_popup()
+    PnSurfaceType_toplevel = TOPLEVEL, // From xdg_surface_get_toplevel()
+    PnSurfaceType_popup = POPUP,    // From wl_shell_surface_set_popup()
 
-    // 1 Widget Surface type.  Not a wayland thing.
-    PnSurfaceType_widget    // a rectangular piece of a surface
+    // Widget Surface types:  Not a wayland thing.
+    PnSurfaceType_widget     = WIDGET, // a rectangular piece of a surface
+    PnSurfaceType_button     = (WIDGET & W_BUTTON),
+    PnSurfaceType_menu       = (WIDGET & W_MENU),
+    PnSurfaceType_menuitem   = (WIDGET & W_MENUITEM)
 };
 
 
@@ -234,6 +248,9 @@ struct PnWidget {
 
     void (*destroy)(struct PnWidget *widget, void *userData);
     void *destroyData;
+#ifdef DEBUG
+    size_t size;
+#endif
 };
 
 struct PnBuffer {
