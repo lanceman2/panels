@@ -19,26 +19,57 @@
 static int cairoDraw(struct PnSurface *surface,
             cairo_t *cr, struct PnButton *b) {
 
-
+    
 
     return 0;
 }
 
 static bool enter(struct PnSurface *surface,
             uint32_t x, uint32_t y, struct PnButton *b) {
+    DASSERT(b);
 
-    uint32_t color = pnWidget_getBackgroundColor((void *)b);
-    color &=  0x00FFFFFF; // change the Alpha
-    pnWidget_setBackgroundColor((void *)b, color);
-
+    b->state = PnButtonState_Hover;
     pnWidget_queueDraw((void *)b);
- 
     return true; // take focus
 }
 
 
+static inline void SetDefaultColors(struct PnButton *b) {
+
+    // These numbers have to be somewhere in the code, so here they are:
+    DASSERT(b);
+
+    b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
+    b->colors[PnButtonState_Hover] =   0xFFBEE2F3;
+    b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
+    b->colors[PnButtonState_Active] =  0xFF0BD109;
+
+    if(b->widget.surface.type & W_TOGGLE_BUTTON) {
+        ASSERT(0, "WRITE MORE CODE HERE");
+    }
+}
+
+void destroy(struct PnWidget *w, struct PnButton *b) {
+
+    DASSERT(b);
+    DASSERT(b = (void *) w);
+
+    if(w->surface.type & W_BUTTON) {
+        DASSERT(b->colors);
+        DZMEM(b->colors,
+                PnButtonState_NumRegularStates*sizeof(*b->colors));
+        free(b->colors);
+    } else {
+        DASSERT(w->surface.type & W_TOGGLE_BUTTON);
+        ASSERT(0, "WRITE MORE CODE");
+    }
+    //DSPEW();
+}
+
 struct PnWidget *pnButton_create(struct PnSurface *parent,
-        const char *label) {
+        const char *label, bool toggle) {
+
+    ASSERT(!toggle, "WRITE MORE CODE");
 
     // TODO: How many more function parameters should we add to the
     // button create function?
@@ -55,9 +86,21 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
         // pnWidget_create() should spew for us.
         return 0; // Failure.
 
-    pnWidget_setEnter((void *) b, (void *) enter, b);
-    pnWidget_setCairoDraw((void *) b, (void *) cairoDraw, b);
+    // Setting the widget surface type.  We decrease the data, but
+    // increase the complexity.  See enum PnSurfaceType in display.h.
+    // It's so easy to forget about all these bits, but DASSERT() is my
+    // hero.
+    DASSERT(b->widget.surface.type == PnSurfaceType_widget);
+    b->widget.surface.type = PnSurfaceType_button;
+    DASSERT(b->widget.surface.type & WIDGET);
 
+    pnWidget_setEnter(&b->widget, (void *) enter, b);
+    pnWidget_setCairoDraw((void *) b, (void *) cairoDraw, b);
+    pnWidget_setDestroy((void *)b, (void *) destroy, b);
+    b->colors = calloc(1, PnButtonState_NumRegularStates*sizeof(*b->colors));
+    ASSERT(b->colors, "calloc(1,%zu) failed",
+            PnButtonState_NumRegularStates*sizeof(*b->colors));
+    SetDefaultColors(b);
 
     return (void *) b;
 }

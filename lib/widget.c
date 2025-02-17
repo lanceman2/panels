@@ -131,6 +131,28 @@ void pnWidget_setDestroy(struct PnWidget *w,
         void *userData) {
 
     DASSERT(w);
+
+    if(!destroy)
+        // This case does not make much sense, but we can still do this
+        // for completeness.  There's no good reason for this to fail, so
+        // we just return.  It may make sense for other callbacks but not
+        // destroy.  We just designed the widgets to not be
+        // recyclable/reusable.  They are resource cheap, just destroy it
+        // an make another one in it's place.
+        return;
+
+    // TODO: If a user makes an existing widget into another kind using
+    // what it was, we need to make a linked list of destroy callbacks.
+    // Seems like a lot of memory not used in the default case.  The user
+    // could handle cleanup without a linked list of destroy callbacks,
+    // but it'd be not so pretty.  I don't like the GTK gobject stuff.  It
+    // adds too much complexity, like this destroy callback chain (so I
+    // imagine).  For now I do this:
+    if(w->destroy && destroy) {
+        ERROR("Destroy may only be set once and cannot be unset");
+        return;
+    }
+
     w->destroy = destroy;
     w->destroyData = userData;
 }

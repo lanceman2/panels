@@ -25,7 +25,7 @@ int main(void) {
 
     struct PnWidget *b = pnButton_create(
             (struct PnSurface *) win/*parent*/,
-            "Quit");
+            "Quit", false/*toggle*/);
     ASSERT(b);
 
     pnWindow_show(win, true);
