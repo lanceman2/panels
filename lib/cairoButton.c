@@ -16,22 +16,34 @@
 #include "cairoWidget.h"
 
 
+#if 0
 static int cairoDraw(struct PnSurface *surface,
             cairo_t *cr, struct PnButton *b) {
 
-    
 
     return 0;
 }
+#endif
 
 static bool enter(struct PnSurface *surface,
             uint32_t x, uint32_t y, struct PnButton *b) {
     DASSERT(b);
-
     b->state = PnButtonState_Hover;
+    pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
     pnWidget_queueDraw((void *)b);
     return true; // take focus
 }
+
+static bool leave(struct PnSurface *surface, struct PnButton *b) {
+    DASSERT(b);
+    if(b->state == PnButtonState_Hover) {
+        b->state = PnButtonState_Normal;
+        pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
+    }
+    pnWidget_queueDraw((void *)b);
+    return true; // take focus
+}
+
 
 
 static inline void SetDefaultColors(struct PnButton *b) {
@@ -78,7 +90,7 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     // we're hoping to auto-generate these parameters as this button
     // abstraction evolves.
     struct PnButton *b = (void *) pnWidget_create(parent,
-              200/*width*/, 100/*height*/,
+            200/*width*/, 100/*height*/,
             0/*direction*/, 0/*align*/,
             PnExpand_HV/*expand*/, sizeof(*b));
     if(!b)
@@ -95,12 +107,14 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     DASSERT(b->widget.surface.type & WIDGET);
 
     pnWidget_setEnter(&b->widget, (void *) enter, b);
-    pnWidget_setCairoDraw((void *) b, (void *) cairoDraw, b);
-    pnWidget_setDestroy((void *)b, (void *) destroy, b);
+    pnWidget_setLeave(&b->widget, (void *) leave, b);
+    //pnWidget_setCairoDraw(&b->widget, (void *) cairoDraw, b);
+    pnWidget_setDestroy(&b->widget, (void *) destroy, b);
     b->colors = calloc(1, PnButtonState_NumRegularStates*sizeof(*b->colors));
     ASSERT(b->colors, "calloc(1,%zu) failed",
             PnButtonState_NumRegularStates*sizeof(*b->colors));
     SetDefaultColors(b);
+    pnWidget_setBackgroundColor(&b->widget, b->colors[PnButtonState_Normal]);
 
-    return (void *) b;
+    return &b->widget;
 }
