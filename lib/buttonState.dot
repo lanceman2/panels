@@ -1,0 +1,31 @@
+// Run in a bash shell:
+//   display buttonState.dot
+//
+digraph Button {
+
+   subgraph cluster_button {
+        Normal -> Hover [ label="user pointer enter" ];
+        Hover -> Pressed [ label="user left button press"];
+        Pressed -> Activate [ label="user left button release"];
+        Pressed -> Normal [ label="user leave and left button release"];
+        Activate -> Normal [ label="automatic transition"];
+        labelloc="t";
+        label="Button";
+    }
+
+       subgraph cluster_toggle_button {
+        "Off Normal" -> "Off Hover" [ label="user pointer enter" ];
+        "Off Hover" -> "Off Pressed" [ label="user left button press"];
+        "Off Pressed" -> "On Activate" [ label="user left button release"];
+        "Off Pressed" -> "Off Normal" [ label="user leave and left button release"];
+        "On Activate" -> "On Normal" [ label="automatic transition"];
+        "On Normal" -> "On Hover" [ label="user pointer enter" ];
+        "On Hover" -> "On Pressed" [ label="user left button press"];
+        "On Pressed" -> "Off Activate" [ label="user left button release"];
+        "Off Activate" -> "Off Normal" [ label="automatic transition"];
+        "On Pressed" -> "On Normal" [ label="user leave and left button release"];
+        labelloc="t";
+        label="On/Off Toggle Button";
+    }
+
+}
