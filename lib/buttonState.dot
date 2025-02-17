@@ -1,31 +1,36 @@
 // Run in a bash shell:
-//   display buttonState.dot
 //
+//  %  display buttonState.dot
+//
+// The program "display" is from the graphviz software package.
+
 digraph Button {
 
    subgraph cluster_button {
-        Normal -> Hover [ label="user pointer enter" ];
-        Hover -> Pressed [ label="user left button press"];
-        Pressed -> Activate [ label="user left button release"];
-        Pressed -> Normal [ label="user leave and left button release"];
-        Activate -> Normal [ label="automatic transition"];
+        Normal -> Hover [ label="pointer\nenter" ];
+        Hover -> Pressed [ label="left\nbutton\npress"];
+        Hover -> Normal [ label="pointer\nleave"];
+        Pressed -> Activate [ label="left\nbutton\nrelease"];
+        Pressed -> Normal [ label="leave\nand\nleft\nbutton\nrelease"];
+        Activate -> Normal [ label="automatic\ntransition"];
         labelloc="t";
         label="Button";
     }
 
-       subgraph cluster_toggle_button {
-        "Off Normal" -> "Off Hover" [ label="user pointer enter" ];
-        "Off Hover" -> "Off Pressed" [ label="user left button press"];
-        "Off Pressed" -> "On Activate" [ label="user left button release"];
-        "Off Pressed" -> "Off Normal" [ label="user leave and left button release"];
-        "On Activate" -> "On Normal" [ label="automatic transition"];
-        "On Normal" -> "On Hover" [ label="user pointer enter" ];
-        "On Hover" -> "On Pressed" [ label="user left button press"];
-        "On Pressed" -> "Off Activate" [ label="user left button release"];
-        "Off Activate" -> "Off Normal" [ label="automatic transition"];
-        "On Pressed" -> "On Normal" [ label="user leave and left button release"];
+    subgraph cluster_toggle_button {
+        "Off Normal" -> "Off Hover" [ label="pointer\nenter" ];
+        "Off Hover" -> "Off Pressed" [ label="left\nbutton\npress"];
+        "Off Hover" -> "Off Normal" [ label="pointer\nleave"];
+        "Off Pressed" -> "On Activate" [ label="left\nbutton\nrelease"];
+        "Off Pressed" -> "Off Normal" [ label="leave\nand\nleft\nbutton\nrelease"];
+        "On Activate" -> "On Normal" [ label="automatic\ntransition"];
+        "On Normal" -> "On Hover" [ label="pointer\nenter" ];
+        "On Hover" -> "On Pressed" [ label="left\nbutton\npress"];
+        "On Hover" -> "On Normal" [ label="pointer\nleave"];
+        "On Pressed" -> "Off Activate" [ label="left\nbutton\nrelease"];
+        "Off Activate" -> "Off Normal" [ label="automatic\ntransition"];
+        "On Pressed" -> "On Normal" [ label="leave\nand\nleft\nbutton\nrelease"];
         labelloc="t";
-        label="On/Off Toggle Button";
+        label="On/Off Toggle Button\nSame As Check Button";
     }
-
 }
