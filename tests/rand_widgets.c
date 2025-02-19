@@ -154,7 +154,7 @@ static struct PnWidget *Widget() {
     pnWidget_setLeave(w, Leave, color);
     pnWidget_setPress(w, Press, color);
     pnWidget_setRelease(w, Release, color);
-    pnWidget_setDestroy(w, Destroy, color);
+    pnWidget_addDestroy(w, Destroy, color);
 
     CheckAddContainer(w);
 

@@ -248,32 +248,43 @@ void GetSurfaceWithXY(const struct PnWindow *win,
 
 // Find the next focused widget (focusSurface), switch between the last
 // focused widget and the next, calling next focused widget enter callback
-// and then the lasted focused widget leave callback.
+// and then the previous focused widget leave callback.
 //
 void DoEnterAndLeave(void) {
 
     DASSERT(d.pointerSurface);
+    // d.pointerSurface is the surface with the mouse pointer in it.
+
+    struct PnSurface *oldFocus = d.focusSurface;
+    d.focusSurface = 0;   
 
     for(struct PnSurface *s = d.pointerSurface; s; s = s->parent) {
         DASSERT(!s->culled);
-        if(d.focusSurface == s)
+        if(oldFocus == s) {
             // This surface "s" already has focus.
+            d.focusSurface = s;
             break;
+        }
 
         if(s->enter) {
-            if(d.focusSurface) {
-                DASSERT(d.focusSurface->leave);
-                d.focusSurface->leave(d.focusSurface,
-                        d.focusSurface->leaveData);
-                d.focusSurface = 0;
+            if(oldFocus) {
+                DASSERT(oldFocus->leave);
+                oldFocus->leave(oldFocus, oldFocus->leaveData);
+                oldFocus = 0;
             }
             if(s->enter(s, d.x, d.y, s->enterData) && s->leave)
+                // We have a new focused surface.
                 d.focusSurface = s;
             else
                 // "s" did not take focus.
                 continue;
             break;
         }
+    }
+
+    if(oldFocus && d.focusSurface != oldFocus) {
+        DASSERT(oldFocus->leave);
+        oldFocus->leave(oldFocus, oldFocus->leaveData);
     }
 }
 

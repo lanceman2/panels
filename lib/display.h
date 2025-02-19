@@ -86,14 +86,6 @@ enum PnSurfaceType {
 };
 
 
-struct PnAllocation {
-
-    // These x, y values are measured relative to the window, NOT parent
-    // widgets (like in GTK).
-    uint32_t x, y, width, height;
-};
-
-
 // A widget or window (toplevel window or popup window) has a surface.
 //
 struct PnSurface {
@@ -232,6 +224,28 @@ struct PnSurface {
     bool isQueued;
 };
 
+// This makes a stack list of widget destroy functions.  Destroy()
+// functions are called in the reverse order that they are added.
+//
+// TODO: This destroy functions linked list seem a little wasteful.  We
+// are allocating move memory just to add a destroy() function, in order
+// to simplify the interface to add destroy functions.  Another way to do
+// this would be to have the PnWidget inheriting struct add this
+// PnWidgetDestroy thing to it.  We need these functions in a list so
+// users can make widgets based on other widgets, that are based on yet
+// other widgets; and so on to N widgets deep.  Without this (or something
+// like this) the end widget user can't in this "simple way" inherit and
+// expose the PnWidget interfaces to it's end programming user.  They'd
+// have to get and store the previous destroy function from the last
+// widget object it is inheriting (which may be an okay idea).
+//
+struct PnWidgetDestroy {
+
+    void (*destroy)(struct PnWidget *widget, void *userData);
+    void *destroyData;
+    struct PnWidgetDestroy *next;
+};
+
 
 // surface type PnSurfaceType_widget
 //
@@ -246,8 +260,8 @@ struct PnWidget {
     // The window this widget is part of.
     struct PnWindow *window;
 
-    void (*destroy)(struct PnWidget *widget, void *userData);
-    void *destroyData;
+    struct PnWidgetDestroy *destroys;
+
 #ifdef DEBUG
     size_t size;
 #endif

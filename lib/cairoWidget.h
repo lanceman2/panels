@@ -53,14 +53,18 @@ enum PnButtonState {
 };
 
 
+#define NUM_FRAMES 10
+
 struct PnButton {
 
     struct PnWidget widget; // inherit first
 
+    void (*action)(struct PnButton *b, void *userData);
+
     enum PnButtonState state;
     uint32_t *colors;
 
-    uint32_t frameCount; // an animation frame counter
+    uint32_t frames; // an animation frame counter
 };
 
 

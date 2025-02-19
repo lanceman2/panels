@@ -15,52 +15,112 @@
 #include "display.h"
 #include "cairoWidget.h"
 
+static inline void
+SetState(struct PnButton *b, enum PnButtonState state) {
+    DASSERT(b);
+    if(state == b->state) return;
+    b->state = state;
+    pnWidget_queueDraw(&b->widget);
+}
 
-#if 0
-static int cairoDraw(struct PnSurface *surface,
+
+static inline void Draw( cairo_t *cr, struct PnButton *b) {
+
+    uint32_t color = b->colors[b->state];
+
+    cairo_set_source_rgba(cr,
+            PN_R_DOUBLE(color), PN_G_DOUBLE(color),
+            PN_B_DOUBLE(color), PN_A_DOUBLE(color));
+    cairo_paint(cr);
+}
+
+static void config(struct PnWidget *w, uint32_t *pixels,
+            uint32_t x, uint32_t y,
+            uint32_t width, uint32_t height,
+            uint32_t stride/*4 byte chunks*/,
+            struct PnButton *b) {
+
+    DASSERT(b);
+    DASSERT(b == (void *) w);
+    if(b->frames) b->frames = 0;
+    SetState(b, PnButtonState_Normal);
+}
+
+
+
+static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnButton *b) {
 
+    DASSERT(b);
+    DASSERT(b->state < PnButtonState_NumRegularStates);
 
-    return 0;
+    if(b->state != PnButtonState_Active) {
+        Draw(cr, b);
+        if(b->frames)
+            b->frames = 0;
+        return 0;
+    }
+
+    DASSERT(b->frames);
+
+    if(b->frames == NUM_FRAMES)
+        // We draw just once.
+        Draw(cr, b);
+
+    --b->frames;
+
+    if(!b->frames)
+        SetState(b, PnButtonState_Hover);
+
+    return 1;
 }
-#endif
 
-static bool enter(struct PnSurface *surface,
+static bool press(struct PnWidget *w,
+            uint32_t which, int32_t x, int32_t y,
+            struct PnButton *b) {
+    if(which == 0) {
+        SetState(b, PnButtonState_Pressed);
+        return true;
+    }
+    return false;
+}
+
+static bool release(struct PnWidget *w,
+            uint32_t which, int32_t x, int32_t y,
+            struct PnButton *b) {
+    if(which == 0) {
+        struct PnAllocation a;
+        pnWidget_getAllocation(w, &a);
+        if(b->state == PnButtonState_Pressed &&
+                a.x <= x && a.y <= y &&
+                x < a.x + a.width &&
+                y < a.y + a.height) {
+            SetState(b, PnButtonState_Active);
+            
+            b->frames = NUM_FRAMES;
+            return true;
+        }
+        SetState(b, PnButtonState_Normal);
+    }
+    return false;
+}
+
+static bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnButton *b) {
     DASSERT(b);
-    b->state = PnButtonState_Hover;
-    pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
-    pnWidget_queueDraw((void *)b);
+    if(b->state == PnButtonState_Normal)
+        SetState(b, PnButtonState_Hover);
     return true; // take focus
 }
 
-static bool leave(struct PnSurface *surface, struct PnButton *b) {
+static bool leave(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
-    if(b->state == PnButtonState_Hover) {
-        b->state = PnButtonState_Normal;
-        pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
-    }
-    pnWidget_queueDraw((void *)b);
+    if(b->state == PnButtonState_Hover)
+        SetState(b, PnButtonState_Normal);
     return true; // take focus
 }
 
-
-
-static inline void SetDefaultColors(struct PnButton *b) {
-
-    // These numbers have to be somewhere in the code, so here they are:
-    DASSERT(b);
-
-    b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
-    b->colors[PnButtonState_Hover] =   0xFFBEE2F3;
-    b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
-    b->colors[PnButtonState_Active] =  0xFF0BD109;
-
-    if(b->widget.surface.type & W_TOGGLE_BUTTON) {
-        ASSERT(0, "WRITE MORE CODE HERE");
-    }
-}
-
+static
 void destroy(struct PnWidget *w, struct PnButton *b) {
 
     DASSERT(b);
@@ -75,11 +135,10 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
         DASSERT(w->surface.type & W_TOGGLE_BUTTON);
         ASSERT(0, "WRITE MORE CODE");
     }
-    //DSPEW();
 }
 
 struct PnWidget *pnButton_create(struct PnSurface *parent,
-        const char *label, bool toggle) {
+        const char *label, bool toggle, size_t size) {
 
     ASSERT(!toggle, "WRITE MORE CODE");
 
@@ -89,8 +148,12 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     // We may need to unhide some of these widget create parameters, but
     // we're hoping to auto-generate these parameters as this button
     // abstraction evolves.
+    //
+    if(size < sizeof(struct PnButton))
+        size = sizeof(struct PnButton);
+    //
     struct PnButton *b = (void *) pnWidget_create(parent,
-            200/*width*/, 100/*height*/,
+            50/*width*/, 35/*height*/,
             0/*direction*/, 0/*align*/,
             PnExpand_HV/*expand*/, sizeof(*b));
     if(!b)
@@ -108,13 +171,22 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
 
     pnWidget_setEnter(&b->widget, (void *) enter, b);
     pnWidget_setLeave(&b->widget, (void *) leave, b);
-    //pnWidget_setCairoDraw(&b->widget, (void *) cairoDraw, b);
-    pnWidget_setDestroy(&b->widget, (void *) destroy, b);
+    pnWidget_setPress(&b->widget, (void *) press, b);
+    pnWidget_setRelease(&b->widget, (void *) release, b);
+    pnWidget_setConfig(&b->widget, (void *) config, b);
+    pnWidget_setCairoDraw(&b->widget, (void *) cairoDraw, b);
+    pnWidget_addDestroy(&b->widget, (void *) destroy, b);
+
     b->colors = calloc(1, PnButtonState_NumRegularStates*sizeof(*b->colors));
     ASSERT(b->colors, "calloc(1,%zu) failed",
             PnButtonState_NumRegularStates*sizeof(*b->colors));
-    SetDefaultColors(b);
-    pnWidget_setBackgroundColor(&b->widget, b->colors[PnButtonState_Normal]);
+    // Default state colors:
+    b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
+    b->colors[PnButtonState_Hover] =   0xFFBEE2F3;
+    b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
+    b->colors[PnButtonState_Active] =  0xFF0BD109;
+    pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
+
 
     return &b->widget;
 }

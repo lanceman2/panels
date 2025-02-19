@@ -120,6 +120,7 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
         return;
     }
 
+    // Save old pointer surface.
     struct PnSurface *s = d.pointerSurface;
     // We get the surface that pointer has the pointer if we can.
     GetSurfaceWithXY(d.pointerWindow, x, y, false);
@@ -175,7 +176,6 @@ static void button(void *, struct wl_pointer *p,
                 DASSERT(d.buttonGrabSurface->release);
                 DASSERT(d.buttonGrabSurface->press);
                 // Release the button grab:
-                DASSERT(d.buttonGrab & (01 << button));
                 d.buttonGrab &= ~(01 << button);
                 if(d.buttonGrabSurface->release)
                     d.buttonGrabSurface->release(

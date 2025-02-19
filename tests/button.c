@@ -14,19 +14,37 @@ void catcher(int sig) {
 }
 
 
+static struct PnWindow *win;
+
+struct button {
+
+    struct PnButton *button;
+
+};
+
+
+static void Button(void) {
+
+    struct button *b = (void *) pnButton_create(
+            (struct PnSurface *) win/*parent*/,
+            "Quit", false/*toggle*/, sizeof(*b));
+    ASSERT(b);
+
+
+}
+
+
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    struct PnWindow *win = pnWindow_create(0, 30, 30,
+    win = pnWindow_create(0, 10, 10,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
             PnExpand_HV);
     ASSERT(win);
 
-    struct PnWidget *b = pnButton_create(
-            (struct PnSurface *) win/*parent*/,
-            "Quit", false/*toggle*/);
-    ASSERT(b);
+    for(int i=0; i<10; ++i)
+        Button();
 
     pnWindow_show(win, true);
 

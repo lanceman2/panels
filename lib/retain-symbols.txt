@@ -6,7 +6,7 @@ pnWindow_isDrawnReset
 pnWindow_destroy
 pnWindow_show
 pnWindow_setDestroy
-pnWidget_setDestroy
+pnWidget_addDestroy
 pnWidget_create
 pnWidget_show
 pnWidget_destroy

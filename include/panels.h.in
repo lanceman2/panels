@@ -226,7 +226,7 @@ PN_EXPORT struct PnWidget *pnWidget_create(
         enum PnExpand expand, size_t size);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
-PN_EXPORT void pnWidget_setDestroy(struct PnWidget *widget,
+PN_EXPORT void pnWidget_addDestroy(struct PnWidget *widget,
         void (*destroy)(struct PnWidget *widget, void *userData),
         void *userData);
 
@@ -270,6 +270,25 @@ static inline void pnWidget_setDraw(struct PnWidget *widget,
      pnSurface_setDraw((void *) widget, (void *) draw, userData);
 }
 
+
+struct PnAllocation {
+
+    // These x, y values are measured relative to the window, NOT parent
+    // widgets (like in GTK).
+    uint32_t x, y, width, height;
+};
+
+
+PN_EXPORT void pnSurface_getAllocation(const struct PnSurface *s,
+        struct PnAllocation *a);
+static inline void pnWidget_getAllocation(const struct PnWidget *widget,
+        struct PnAllocation *a) {
+    pnSurface_getAllocation((void *) widget, a);
+}
+static inline void pnWindow_getAllocation(const struct PnWidget *window,
+        struct PnAllocation *a) {
+    pnSurface_getAllocation((void *) window, a);
+}
 
 PN_EXPORT void pnSurface_setConfig(struct PnSurface *s,
         void (*config)(struct PnSurface *surface, uint32_t *pixels,
@@ -434,7 +453,12 @@ static inline void pnWidget_setCairoDraw(struct PnWidget *surface,
 }
 
 PN_EXPORT struct PnWidget *pnButton_create(struct PnSurface *parent,
-        const char *label, bool toggle);
+        const char *label, bool toggle, size_t size);
+
+#define PN_R_DOUBLE(color) (((color & 0x00FF0000) >> 16)/(255.0))
+#define PN_G_DOUBLE(color) (((color & 0x0000FF00) >> 8)/(255.0))
+#define PN_B_DOUBLE(color) (( color & 0x000000FF)/(255.0))
+#define PN_A_DOUBLE(color) (((color & 0xFF000000) >> 24)/(255.0))
 
 #endif // #ifdef WITH_CAIRO
 

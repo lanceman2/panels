@@ -267,12 +267,16 @@ void pnSurface_setConfig(struct PnSurface *s,
     s->configData = userData;
 }
 
+void pnSurface_getAllocation(const struct PnSurface *s,
+        struct PnAllocation *a) {
+    DASSERT(s);
+    memcpy(a, &s->allocation, sizeof(*a));
+}
 
 void pnSurface_setBackgroundColor(
         struct PnSurface *s, uint32_t argbColor) {
     s->backgroundColor = argbColor;
 }
-
 
 uint32_t pnSurface_getBackgroundColor(struct PnSurface *s) {
     DASSERT(s);

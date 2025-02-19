@@ -86,8 +86,15 @@ void pnWidget_destroy(struct PnWidget *widget) {
     // had focus for example.
     RemoveSurfaceFromDisplay((void *) widget);
 
-    if(widget->destroy)
-        widget->destroy(widget, widget->destroyData);
+    while(widget->destroys) {
+        struct PnWidgetDestroy *destroy = widget->destroys;
+        destroy->destroy(widget, destroy->destroyData);
+        // pop one off the stack
+        widget->destroys = destroy->next;
+        // Free the struct PnWidgetDestroy element.
+        DZMEM(destroy, sizeof(*destroy));
+        free(destroy);
+    }
 
     while(widget->surface.firstChild)
         pnWidget_destroy((void *) widget->surface.firstChild);
@@ -126,33 +133,23 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     //pnWindow_queueDraw(widget->window);
 }
 
-void pnWidget_setDestroy(struct PnWidget *w,
+void pnWidget_addDestroy(struct PnWidget *w,
         void (*destroy)(struct PnWidget *widget, void *userData),
         void *userData) {
 
     DASSERT(w);
 
-    if(!destroy)
-        // This case does not make much sense, but we can still do this
-        // for completeness.  There's no good reason for this to fail, so
-        // we just return.  It may make sense for other callbacks but not
-        // destroy.  We just designed the widgets to not be
-        // recyclable/reusable.  They are resource cheap, just destroy it
-        // an make another one in it's place.
-        return;
+    if(!destroy) return;
 
-    // TODO: If a user makes an existing widget into another kind using
-    // what it was, we need to make a linked list of destroy callbacks.
-    // Seems like a lot of memory not used in the default case.  The user
-    // could handle cleanup without a linked list of destroy callbacks,
-    // but it'd be not so pretty.  I don't like the GTK gobject stuff.  It
-    // adds too much complexity, like this destroy callback chain (so I
-    // imagine).  For now I do this:
-    if(w->destroy && destroy) {
-        ERROR("Destroy may only be set once and cannot be unset");
-        return;
-    }
+    struct PnWidgetDestroy *dElement = calloc(1, sizeof(*dElement));
+    ASSERT(dElement, "calloc(1,%zu) failed", sizeof(*dElement));
+    dElement->destroy = destroy;
+    dElement->destroyData = userData;
 
-    w->destroy = destroy;
-    w->destroyData = userData;
+    // Add this new element to the widgets destroy list at the top:
+    //
+    // Save the last one, if any.
+    dElement->next = w->destroys;
+    // Make this element the top one in the stack.
+    w->destroys = dElement;
 }
