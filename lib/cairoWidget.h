@@ -64,6 +64,8 @@ struct PnButton {
     enum PnButtonState state;
     uint32_t *colors;
 
+    uint32_t width, height;
+
     uint32_t frames; // an animation frame counter
 };
 

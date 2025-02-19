@@ -32,18 +32,24 @@ static inline void Draw( cairo_t *cr, struct PnButton *b) {
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
     cairo_paint(cr);
+
+
 }
 
-static void config(struct PnWidget *w, uint32_t *pixels,
+static void config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
-            uint32_t width, uint32_t height,
+            uint32_t w, uint32_t h,
             uint32_t stride/*4 byte chunks*/,
             struct PnButton *b) {
 
     DASSERT(b);
-    DASSERT(b == (void *) w);
+    DASSERT(b == (void *) widget);
     if(b->frames) b->frames = 0;
     SetState(b, PnButtonState_Normal);
+    DASSERT(w);
+    DASSERT(h);
+    b->width = w;
+    b->height = h;
 }
 
 
