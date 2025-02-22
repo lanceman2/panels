@@ -253,7 +253,6 @@ void DestroySurface(struct PnSurface *s) {
     DASSERT(s->parent);
 
     RemoveChildSurface(s->parent, s);
-
 }
 
 

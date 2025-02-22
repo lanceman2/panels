@@ -314,6 +314,15 @@ struct PnWidget {
     // So: the particular indexes (example PN_BUTTON_CB_CLICK) into this
     // array are set at compile time.
     //
+    // Qt says: "callbacks can be unintuitive and may suffer from problems
+    // in ensuring the type-correctness of callback arguments."  We
+    // require that widget makers and users don't fuck up their function
+    // pointer prototypes.  If function prototypes change with panel
+    // callbacks you're screwed, i.e. you must be careful.  GTK uses CPP
+    // MACRO madness to check types.  I find that GTK MARCO gobject code
+    // is impossible to follow, but than they never can run their code
+    // with Valgrind, WTF.
+    //
     // This is the shit!  Simple and fast.
     //
     // Allocated actions[] array.  Realloc().
