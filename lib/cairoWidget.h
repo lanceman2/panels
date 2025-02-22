@@ -44,7 +44,7 @@ enum PnButtonState {
     PnButtonState_Hover    = HOVER,
     PnButtonState_Pressed  = PRESSED,
     PnButtonState_Active   = ACTIVE,
-    PnButtonState_NumRegularStates,
+    PnButtonState_NumRegularStates = (ACTIVE + 1),
     PnButtonState_ToggledNormal  = NORMAL  | TOGGLED,
     PnButtonState_ToggledHover   = HOVER   | TOGGLED,
     PnButtonState_ToggledPressed = PRESSED | TOGGLED,
@@ -60,6 +60,7 @@ struct PnButton {
     struct PnWidget widget; // inherit first
 
     void (*action)(struct PnButton *b, void *userData);
+    void *actionData;
 
     enum PnButtonState state;
     uint32_t *colors;

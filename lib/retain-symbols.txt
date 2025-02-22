@@ -22,3 +22,6 @@ pnSurface_setMotion
 pnSurface_setCairoDraw
 pnFindFont
 pnButton_create
+pnWidget_addAction
+pnWidget_callAction
+pnWidget_addCallback

@@ -153,3 +153,34 @@ void pnWidget_addDestroy(struct PnWidget *w,
     // Make this element the top one in the stack.
     w->destroys = dElement;
 }
+
+
+void pnWidget_addAction(struct PnWidget *w,
+        uint32_t actionIndex,
+        bool *(*action)(struct PnWidget *widget,
+            // The callback() can be any function prototype.  It's just a
+            // pointer to any kind of function.  We'll pass this pointer
+            // to the action function that knows what to do with it.
+            void *callback, void *userData,
+            void *actionData),
+        void *actionData)
+{
+    DASSERT(w);
+    DASSERT(action);
+
+}
+
+void pnWidget_callAction(struct PnWidget *w, uint32_t index) {
+    DASSERT(w);
+    ASSERT(index < w->numActions);
+
+}
+
+void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
+        // The callback function prototype varies with particular widget
+        // and index.  The widget maker must publish a list of function
+        // prototypes and indexes; example: PN_BUTTON_CB_CLICK.
+        void *callback, void *userData) {
+
+
+}

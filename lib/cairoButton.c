@@ -32,8 +32,6 @@ static inline void Draw( cairo_t *cr, struct PnButton *b) {
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
     cairo_paint(cr);
-
-
 }
 
 static void config(struct PnWidget *widget, uint32_t *pixels,
@@ -98,11 +96,9 @@ static bool release(struct PnWidget *w,
         struct PnAllocation a;
         pnWidget_getAllocation(w, &a);
         if(b->state == PnButtonState_Pressed &&
-                a.x <= x && a.y <= y &&
-                x < a.x + a.width &&
-                y < a.y + a.height) {
+                pnSurface_isInSurface(&w->surface, x, y)) {
             SetState(b, PnButtonState_Active);
-            
+            //pnWidget_callAction(w, PN_BUTTON_CB_CLICK);
             b->frames = NUM_FRAMES;
             return true;
         }
@@ -143,6 +139,27 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
     }
 }
 
+// button "click" marshalling function gets the button API users callback
+// to call.  Gets called indirectly from pnWidget_callActions(widget,
+// PN_BUTTON_CB_CLICK).
+//
+static bool click(struct PnButton *b,
+        // This is the user callback function prototype that we choose
+        // for this "click" action.
+        bool (*callback)(struct PnButton *b, void *userData),
+        void *userData, void *actionData) {
+
+    DASSERT(b);
+    DASSERT(actionData == 0);
+    DASSERT(b->action);
+    DASSERT(callback);
+
+    // callback() is the user set callback.
+    // We let the user return the value.  true will eat the event.
+    return callback(b, userData);
+}
+
+
 struct PnWidget *pnButton_create(struct PnSurface *parent,
         const char *label, bool toggle, size_t size) {
 
@@ -161,7 +178,7 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     struct PnButton *b = (void *) pnWidget_create(parent,
             50/*width*/, 35/*height*/,
             0/*direction*/, 0/*align*/,
-            PnExpand_HV/*expand*/, sizeof(*b));
+            PnExpand_HV/*expand*/, size);
     if(!b)
         // A common error mode is that the parent cannot have children.
         // pnWidget_create() should spew for us.
@@ -182,8 +199,11 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     pnWidget_setConfig(&b->widget, (void *) config, b);
     pnWidget_setCairoDraw(&b->widget, (void *) cairoDraw, b);
     pnWidget_addDestroy(&b->widget, (void *) destroy, b);
+    pnWidget_addAction(&b->widget, PN_BUTTON_CB_CLICK,
+            (void *) click, 0/*actionData*/);
 
-    b->colors = calloc(1, PnButtonState_NumRegularStates*sizeof(*b->colors));
+    b->colors = calloc(1, PnButtonState_NumRegularStates*
+            sizeof(*b->colors));
     ASSERT(b->colors, "calloc(1,%zu) failed",
             PnButtonState_NumRegularStates*sizeof(*b->colors));
     // Default state colors:

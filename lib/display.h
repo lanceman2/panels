@@ -247,6 +247,29 @@ struct PnWidgetDestroy {
 };
 
 
+struct PnCallback {
+    // The callbacks are called in order until one of them returns
+    // true.  The widget object knows that the actual function prototype
+    // is.  We are marshaling (I think that's the correct term) the action
+    // callbacks.
+    //
+    // The particular widget's API user set callback.
+    void *callback;
+    void *userData;
+    struct PnCallback *prev, *next;
+};
+
+struct PnAction {
+
+    // The action function called to indirectly call the particular
+    // widget's API user set callback(s).
+    void (*action)(struct PnWidget *widget, void *callback,
+            void *userData);
+
+    // Ordered list of callbacks:
+    struct PnCallback *callbacks;
+};
+
 // surface type PnSurfaceType_widget
 //
 // Widgets do not have a wayland surface (wl_surface) or other related
@@ -261,6 +284,41 @@ struct PnWidget {
     struct PnWindow *window;
 
     struct PnWidgetDestroy *destroys;
+
+    // An allocated array of marshaller functions that keep user set
+    // callback functions.
+    // These functions call API user callbacks.  See
+    // pnWidget_addCallback().  The object class that inherits PnWidget
+    // must define indexes into this array.  Like for example
+    // PN_BUTTON_CB_ACTION being 0, the action callback of a button
+    // click.
+    //
+    // Fuck that name string lookup stuff (GTK), or that signal/slot new
+    // language (Qt MOC) stuff.  When setup, (I think) this is much faster
+    // than either.  Each action is referred to by an index using a CPP
+    // MACROs like PN_BUTTON_CB_CLICK.  The correct indexes are solidified
+    // by constructing the base objects in order on the way up to the last
+    // widget inheritance level.  We assume that each given widget type
+    // has a predetermined and fixed value and index order of actions just
+    // after they are created.  This is not a big array.  We do not need a
+    // fucking data base or other complex data structure.  An array does
+    // the job well.  Users that make widget objects just need to find
+    // their starting index from their base widget object's last created
+    // index.  They do it just once when the code is written.  Any time a
+    // base widget adds or removes an action all the widget indexes need
+    // to adjust their fixed values (a coding time change).  So, the
+    // creation of actions can only happen in the widget create functions.
+    // In effect, the user callbacks are dynamically added, but the types
+    // for them is fixed in the particular widget code.
+    //
+    // So: the particular indexes (example PN_BUTTON_CB_CLICK) into this
+    // array are set at compile time.
+    //
+    // This is the shit!  Simple and fast.
+    //
+    // Allocated actions[] array.  Realloc().
+    struct PnAction *actions;
+    uint32_t numActions;
 
 #ifdef DEBUG
     size_t size;

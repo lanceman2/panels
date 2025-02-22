@@ -107,7 +107,8 @@ void pnSurface_queueDraw(struct PnSurface *s) {
         // callback code when it's culled; it could get culled before the
         // draw happens.
         return;
- 
+
+
     if(_pnWindow_addCallback(win))
         // Failure.  That sucks.
         return;

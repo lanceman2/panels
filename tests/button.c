@@ -1,4 +1,6 @@
 #include <signal.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../include/panels.h"
 
@@ -13,24 +15,47 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
+static int buttonCount = 0;
 
 static struct PnWindow *win;
 
 struct button {
 
-    struct PnButton *button;
+    struct PnButton *button; // first
+    int buttonNum;
 
 };
 
+static bool click(struct PnButton *button, struct button *b) {
+
+    ASSERT(b);
+    ASSERT(button == (void *) b);
+
+    fprintf(stderr, "CLICK button %d\n", b->buttonNum);
+    return false;
+}
+
+static void destroy(struct PnButton *button, struct button *b) {
+
+    DZMEM(b, sizeof(*b));
+    free(b);
+}
 
 static void Button(void) {
 
-    struct button *b = (void *) pnButton_create(
+    struct button *b = calloc(1, sizeof(*b));
+    ASSERT(b, "calloc(1,%zu) failed", sizeof(*b));
+
+    b->button = (void *) pnButton_create(
             (struct PnSurface *) win/*parent*/,
-            "Quit", false/*toggle*/, sizeof(*b));
+            "Quit", false/*toggle*/, 0);
     ASSERT(b);
 
+    b->buttonNum = buttonCount++;
 
+    pnWidget_addCallback((void *) b->button,
+            PN_BUTTON_CB_CLICK, click, b);
+    pnWidget_addDestroy((void *) b->button, (void *) destroy, b);
 }
 
 
