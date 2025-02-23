@@ -74,34 +74,74 @@ fail:
     return 0;
 }
 
+static inline
+void RemoveCallback(struct PnAction *a, struct PnCallback *c) {
 
-void pnWidget_destroy(struct PnWidget *widget) {
+    DASSERT(c);
 
-    DASSERT(widget);
-    DASSERT(widget->surface.parent);
-    ASSERT(widget->surface.type & WIDGET);
+    if(c->next) {
+        DASSERT(c != a->last);
+        c->next->prev = c->prev;
+    } else {
+        DASSERT(c == a->last);
+        a->last = c->prev;
+    }
 
-    // If there is state in the display that refers to this surface
-    // (widget) take care to not refer to it.  Like if this widget
-    // had focus for example.
-    RemoveSurfaceFromDisplay((void *) widget);
+    if(c->prev) {
+        DASSERT(c != a->first);
+        c->prev->next = c->next;
+    } else {
+        DASSERT(c == a->first);
+        a->first = c->next;
+        //c->prev = 0; // DZMEM() does this.
+    }
+    //c->next = 0; // DZMEM() does this.
 
-    while(widget->destroys) {
-        struct PnWidgetDestroy *destroy = widget->destroys;
-        destroy->destroy(widget, destroy->destroyData);
+    // Free c
+    DZMEM(c, sizeof(*c));
+    free(c);
+}
+
+void pnWidget_destroy(struct PnWidget *w) {
+
+    DASSERT(w);
+    DASSERT(w->surface.parent);
+    ASSERT(w->surface.type & WIDGET);
+
+    // Free actions
+    if(w->actions) {
+        DASSERT(w->numActions);
+        struct PnAction *a = w->actions;
+        struct PnAction *end = a + w->numActions;
+        for(; a != end; ++a)
+            while(a->first)
+                RemoveCallback(a, a->first);
+        // Free the actions[] array.
+        DZMEM(w->actions, w->numActions*sizeof(*w->actions));
+        free(w->actions);
+    }
+
+    // If there is state in the display that refers to this surface (w)
+    // take care to not refer to it.  Like if this widget (w) had focus,
+    // for example.
+    RemoveSurfaceFromDisplay((void *) w);
+
+    while(w->destroys) {
+        struct PnWidgetDestroy *destroy = w->destroys;
+        destroy->destroy(w, destroy->destroyData);
         // pop one off the stack
-        widget->destroys = destroy->next;
+        w->destroys = destroy->next;
         // Free the struct PnWidgetDestroy element.
         DZMEM(destroy, sizeof(*destroy));
         free(destroy);
     }
 
-    while(widget->surface.firstChild)
-        pnWidget_destroy((void *) widget->surface.firstChild);
+    while(w->surface.firstChild)
+        pnWidget_destroy((void *) w->surface.firstChild);
 
-    DestroySurface((void *) widget);
-    DZMEM(widget, widget->size);
-    free(widget);
+    DestroySurface((void *) w);
+    DZMEM(w, w->size);
+    free(w);
 }
 
 void pnWidget_show(struct PnWidget *widget, bool show) {
@@ -154,26 +194,48 @@ void pnWidget_addDestroy(struct PnWidget *w,
     w->destroys = dElement;
 }
 
-
 void pnWidget_addAction(struct PnWidget *w,
         uint32_t actionIndex,
-        bool *(*action)(struct PnWidget *widget,
+        bool (*action)(struct PnWidget *widget,
             // The callback() can be any function prototype.  It's just a
             // pointer to any kind of function.  We'll pass this pointer
             // to the action function that knows what to do with it.
             void *callback, void *userData,
             void *actionData),
-        void *actionData)
-{
+        void *actionData) {
+
     DASSERT(w);
     DASSERT(action);
-
+    // Add an action to the actions[] array.
+    w->actions = realloc(w->actions, (++w->numActions)*sizeof(*w->actions));
+    ASSERT(w->actions, "realloc(,%zu) failed",
+            w->numActions*sizeof(*w->actions));
+    // Set values in the end element of the actions[].
+    struct PnAction *a = w->actions + w->numActions-1;
+    a->action = action;
+    a->actionData = actionData;
+    a->first = 0;
+    a->last = 0;
 }
 
 void pnWidget_callAction(struct PnWidget *w, uint32_t index) {
     DASSERT(w);
     ASSERT(index < w->numActions);
+    DASSERT(w->actions);
 
+    struct PnCallback *c = w->actions[index].first;
+    if(!c)
+        // The widget API programmer did not call pnWidget_addCallback()
+        // for this index.
+        return;
+
+    // Get the widget builder action() function.
+    bool (*action)(struct PnWidget *widget, void *callback,
+            void *userData, void *actionData) = w->actions[index].action;
+    void *actionData = w->actions[index].actionData;
+    for(; c; c = c->next)
+        if(action(w, c->callback, c->callbackData, actionData))
+            break;
 }
 
 void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
@@ -181,6 +243,27 @@ void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
         // and index.  The widget maker must publish a list of function
         // prototypes and indexes; example: PN_BUTTON_CB_CLICK.
         void *callback, void *userData) {
+    DASSERT(w);
+    ASSERT(index < w->numActions);
+    DASSERT(w->actions);
+    ASSERT(callback);
 
+    struct PnAction *a = w->actions + index;
+    struct PnCallback *c = calloc(1, sizeof(*c));
+    ASSERT(c, "calloc(1,%zu) failed", sizeof(*c));
+    c->callback = callback;
+    c->callbackData = userData;
 
+    // Add this callback to the action callback as the last one.
+    if(a->last) {
+        DASSERT(a->first);
+        DASSERT(!a->last->next);
+        DASSERT(!a->first->prev);
+        a->last->next = c;
+    } else {
+        DASSERT(!a->first);
+        a->first = c;
+    }
+    c->prev = a->last;
+    a->last = c;
 }

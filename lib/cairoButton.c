@@ -98,7 +98,7 @@ static bool release(struct PnWidget *w,
         if(b->state == PnButtonState_Pressed &&
                 pnSurface_isInSurface(&w->surface, x, y)) {
             SetState(b, PnButtonState_Active);
-            //pnWidget_callAction(w, PN_BUTTON_CB_CLICK);
+            pnWidget_callAction(w, PN_BUTTON_CB_CLICK);
             b->frames = NUM_FRAMES;
             return true;
         }
@@ -140,8 +140,20 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
 }
 
 // button "click" marshalling function gets the button API users callback
-// to call.  Gets called indirectly from pnWidget_callActions(widget,
-// PN_BUTTON_CB_CLICK).
+// to call.  Gets called indirectly from
+// pnWidget_callActions(widget, PN_BUTTON_CB_CLICK).
+//
+// This is the most complex and dangerous thing in the libpanels widget
+// API. And it's not very complex. Passing a function to another function
+// so it can call that function.  If the function prototypes do not line
+// up we're fucked.  This lacks the type safety stuff that is in GTK and
+// Qt callbacks.  Ya, no fucking shit, apples and oranges.  I really do
+// know what the fuck I'm talking about.  I can't write a fucking book
+// here to give all the needed context to make this a good comparison.
+// Unsafe but much much faster than GTK and Qt.  The safety can be gotten
+// by looking at the code and making it work.  The world runs on FORTRAN
+// code which is all unsafe, at least that part of the world that does
+// math (linear algebra).
 //
 static bool click(struct PnButton *b,
         // This is the user callback function prototype that we choose
@@ -151,7 +163,6 @@ static bool click(struct PnButton *b,
 
     DASSERT(b);
     DASSERT(actionData == 0);
-    DASSERT(b->action);
     DASSERT(callback);
 
     // callback() is the user set callback.

@@ -228,7 +228,7 @@ struct PnSurface {
 // functions are called in the reverse order that they are added.
 //
 // TODO: This destroy functions linked list seem a little wasteful.  We
-// are allocating move memory just to add a destroy() function, in order
+// are allocating more memory just to add a destroy() function, in order
 // to simplify the interface to add destroy functions.  Another way to do
 // this would be to have the PnWidget inheriting struct add this
 // PnWidgetDestroy thing to it.  We need these functions in a list so
@@ -243,7 +243,7 @@ struct PnWidgetDestroy {
 
     void (*destroy)(struct PnWidget *widget, void *userData);
     void *destroyData;
-    struct PnWidgetDestroy *next;
+    struct PnWidgetDestroy *next; // next in the list.
 };
 
 
@@ -255,7 +255,7 @@ struct PnCallback {
     //
     // The particular widget's API user set callback.
     void *callback;
-    void *userData;
+    void *callbackData;
     struct PnCallback *prev, *next;
 };
 
@@ -263,11 +263,13 @@ struct PnAction {
 
     // The action function called to indirectly call the particular
     // widget's API user set callback(s).
-    void (*action)(struct PnWidget *widget, void *callback,
-            void *userData);
+    bool (*action)(struct PnWidget *widget, void *callback,
+            void *userData, void *actionData);
+
+    void *actionData;
 
     // Ordered list of callbacks:
-    struct PnCallback *callbacks;
+    struct PnCallback *first, *last;
 };
 
 // surface type PnSurfaceType_widget

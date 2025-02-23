@@ -33,7 +33,8 @@ struct button {
 static bool click(struct PnButton *button, struct button *b) {
 
     ASSERT(b);
-    ASSERT(button == (void *) b);
+    ASSERT(button);
+    ASSERT(button == b->button);
 
     fprintf(stderr, "CLICK button %d\n", b->buttonNum);
     return false;
