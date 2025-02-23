@@ -372,3 +372,11 @@ void pnSurface_setMotion(struct PnSurface *s,
             s->leave = 0;
     }
 }
+
+bool pnSurface_isInSurface(const struct PnSurface *s,
+        uint32_t x, uint32_t y) {
+    DASSERT(s);
+    return (s->allocation.x <= x && s->allocation.y <= y &&
+            x < s->allocation.x + s->allocation.width && 
+            y < s->allocation.y + s->allocation.height);
+}

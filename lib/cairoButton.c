@@ -51,7 +51,6 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
 }
 
 
-
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnButton *b) {
 
@@ -92,9 +91,10 @@ static bool press(struct PnWidget *w,
 static bool release(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
             struct PnButton *b) {
+    DASSERT(b == (void *) w);
+    DASSERT(b);
+
     if(which == 0) {
-        struct PnAllocation a;
-        pnWidget_getAllocation(w, &a);
         if(b->state == PnButtonState_Pressed &&
                 pnSurface_isInSurface(&w->surface, x, y)) {
             SetState(b, PnButtonState_Active);
@@ -223,7 +223,6 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
     b->colors[PnButtonState_Active] =  0xFF0BD109;
     pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
-
 
     return &b->widget;
 }

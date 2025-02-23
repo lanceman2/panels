@@ -206,6 +206,11 @@ void pnWidget_addAction(struct PnWidget *w,
 
     DASSERT(w);
     DASSERT(action);
+    // Actions must be added in order.
+    ASSERT(actionIndex == w->numActions,
+            "Callback action number %" PRIu32
+            " added out of order: !=%" PRIu32 ")",
+            actionIndex, w->numActions);
     // Add an action to the actions[] array.
     w->actions = realloc(w->actions, (++w->numActions)*sizeof(*w->actions));
     ASSERT(w->actions, "realloc(,%zu) failed",

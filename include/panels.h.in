@@ -16,6 +16,20 @@ extern "C" {
 
 #define PN_NUM_BUTTONS    (3)
 
+
+// List of action callback types
+//
+// These numbers are indexes into arrays, and have values that are
+// dependent on the order of widget inheritance.  It takes a test run to
+// check all these values.  The test must create all the widgets that are
+// in libpanels.so.  If action callback types are added tests must be run
+// to verify all these values.  If any of these numbers are wrong
+// pnWidget_addAction() will throw an assertion.
+//
+#define PN_BUTTON_CB_CLICK 0
+
+
+
 #define PN_PIXEL_SIZE     (4) // bytes per pixel
 // DEFAULTS
 #define PN_BORDER_WIDTH   (6) // default border pixels wide
@@ -416,6 +430,29 @@ static inline void pnWidget_setMotion(struct PnWidget *widget,
             userData);
 }
 
+PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
+        uint32_t actionIndex,
+        bool (*action)(struct PnWidget *widget,
+            // The callback() can be any function prototype.  It's just a
+            // pointer to any kind of function.  We'll pass this pointer
+            // to the action function that knows what to do with it.
+            void *callback, void *userData,
+            void *actionData),
+        void *actionData);
+
+PN_EXPORT void pnWidget_callAction(struct PnWidget *widget,
+        uint32_t index);
+
+PN_EXPORT void pnWidget_addCallback(struct PnWidget *widget,
+        uint32_t index,
+        // The callback function prototype varies with particular widget
+        // and index.  The widget maker must publish a list of function
+        // prototypes and indexes; example: PN_BUTTON_CB_CLICK.
+        void *callback, void *userData);
+
+
+PN_EXPORT bool pnSurface_isInSurface(const struct PnSurface *surface,
+        uint32_t x, uint32_t y);
 
 static inline struct PnSurface *pnWindow_getSurface(
         struct PnWindow *window) {
@@ -454,6 +491,8 @@ static inline void pnWidget_setCairoDraw(struct PnWidget *surface,
 
 PN_EXPORT struct PnWidget *pnButton_create(struct PnSurface *parent,
         const char *label, bool toggle, size_t size);
+
+
 
 #define PN_R_DOUBLE(color) (((color & 0x00FF0000) >> 16)/(255.0))
 #define PN_G_DOUBLE(color) (((color & 0x0000FF00) >> 8)/(255.0))

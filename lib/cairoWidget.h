@@ -59,9 +59,6 @@ struct PnButton {
 
     struct PnWidget widget; // inherit first
 
-    void (*action)(struct PnButton *b, void *userData);
-    void *actionData;
-
     enum PnButtonState state;
     uint32_t *colors;
 
