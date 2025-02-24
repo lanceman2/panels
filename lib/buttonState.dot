@@ -12,7 +12,8 @@ digraph Button {
         Hover -> Normal [ label="pointer\nleave"];
         Pressed -> Activate [ label="left\nbutton\nrelease"];
         Pressed -> Normal [ label="leave\nand\nleft\nbutton\nrelease"];
-        Activate -> Normal [ label="automatic\ntransition"];
+        Activate -> Normal [ label="time\nautomatic\ntransition"];
+        Activate -> Pressed [ label="left\nbutton\npress"];
         labelloc="t";
         label="Button";
     }
@@ -23,12 +24,14 @@ digraph Button {
         "Off Hover" -> "Off Normal" [ label="pointer\nleave"];
         "Off Pressed" -> "On Activate" [ label="left\nbutton\nrelease"];
         "Off Pressed" -> "Off Normal" [ label="leave\nand\nleft\nbutton\nrelease"];
-        "On Activate" -> "On Normal" [ label="automatic\ntransition"];
+        "On Activate" -> "On Normal" [ label="time\nautomatic\ntransition"];
+        "On Activate" -> "Off Pressed" [ label="left\nbutton\npress"];
         "On Normal" -> "On Hover" [ label="pointer\nenter" ];
         "On Hover" -> "On Pressed" [ label="left\nbutton\npress"];
         "On Hover" -> "On Normal" [ label="pointer\nleave"];
         "On Pressed" -> "Off Activate" [ label="left\nbutton\nrelease"];
-        "Off Activate" -> "Off Normal" [ label="automatic\ntransition"];
+        "Off Activate" -> "Off Normal" [ label="time\nautomatic\ntransition"];
+        "Off Activate" -> "On Pressed" [ label="left\nbutton\npress"];
         "On Pressed" -> "On Normal" [ label="leave\nand\nleft\nbutton\nrelease"];
         labelloc="t";
         label="On/Off Toggle Button\nSame As Check Button";

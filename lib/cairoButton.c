@@ -19,6 +19,9 @@ static inline void
 SetState(struct PnButton *b, enum PnButtonState state) {
     DASSERT(b);
     if(state == b->state) return;
+
+    if(b->frames) b->frames = 0;
+
     b->state = state;
     pnWidget_queueDraw(&b->widget);
 }
@@ -67,13 +70,24 @@ static int cairoDraw(struct PnWidget *w,
     DASSERT(b->frames);
 
     if(b->frames == NUM_FRAMES)
-        // We draw just once.
+        // First time drawing the active pixels for this button
+        // pres/release cycle.
+        //
+        // We draw one active frame.  If we change pixel content we need
+        // to draw more frames.  For now it's just the one set of "active"
+        // pixels that is fixed.
         Draw(cr, b);
 
     --b->frames;
 
-    if(!b->frames)
-        SetState(b, PnButtonState_Hover);
+    if(!b->frames) {
+        if(b->entered)
+            SetState(b, PnButtonState_Hover);
+        else
+            SetState(b, PnButtonState_Normal);
+        Draw(cr, b);
+        return 0; // Done counting frames.
+    }
 
     return 1;
 }
@@ -112,6 +126,7 @@ static bool enter(struct PnWidget *w,
     DASSERT(b);
     if(b->state == PnButtonState_Normal)
         SetState(b, PnButtonState_Hover);
+    b->entered = true;
     return true; // take focus
 }
 
@@ -119,6 +134,7 @@ static bool leave(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
     if(b->state == PnButtonState_Hover)
         SetState(b, PnButtonState_Normal);
+    b->entered = false;
     return true; // take focus
 }
 
@@ -141,23 +157,29 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
 
 // button "click" marshalling function gets the button API users callback
 // to call.  Gets called indirectly from
-// pnWidget_callActions(widget, PN_BUTTON_CB_CLICK).
+// pnWidget_callAction(widget, PN_BUTTON_CB_CLICK).
 //
 // This is the most complex and dangerous thing in the libpanels widget
-// API. And it's not very complex. Passing a function to another function
+// API. And, it's not very complex. Passing a function to another function
 // so it can call that function.  If the function prototypes do not line
-// up we're fucked.  This lacks the type safety stuff that is in GTK and
-// Qt callbacks.  Ya, no fucking shit, apples and oranges.  I really do
-// know what the fuck I'm talking about.  I can't write a fucking book
-// here to give all the needed context to make this a good comparison.
-// Unsafe but much much faster than GTK and Qt.  The safety can be gotten
-// by looking at the code and making it work.  The world runs on FORTRAN
-// code which is all unsafe, at least that part of the world that does
-// math (linear algebra).
+// up at run-time, we're fucked.  This lacks the type safety stuff that is
+// in GTK and Qt callbacks.  Ya, no fucking shit, apples and oranges.  I
+// can't write a fucking book here to give all the needed context to make
+// this a good comparison.  Unsafe but much faster than Qt.  I have not
+// been able to unwind (in my head) the gobject CPP Macro madness in GTK,
+// but this is butt head simple compared to connecting widget "signals"
+// in GTK.  Is it faster than GTK?  I don't know, or care enough to
+// measure it.  I expect they are both fast enough.
+//
+// The only things I have against GTK and Qt is they are both: (1) bloated
+// and (2) leak system resources into your process.  Both (1 and 2) are
+// unacceptable for some applications.
 //
 static bool click(struct PnButton *b,
-        // This is the user callback function prototype that we choose
-        // for this "click" action.
+        // This is the user callback function prototype that we choose for
+        // this "click" action.  The underlying API does not give a shit
+        // what this (callback) void pointer is, but we do at this
+        // point.
         bool (*callback)(struct PnButton *b, void *userData),
         void *userData, void *actionData) {
 
@@ -165,8 +187,11 @@ static bool click(struct PnButton *b,
     DASSERT(actionData == 0);
     DASSERT(callback);
 
-    // callback() is the user set callback.
-    // We let the user return the value.  true will eat the event.
+    // callback() is the API user set callback.
+    //
+    // We let the user return the value.  true will eat the event and stop
+    // this function from going through (calling) all connected
+    // callbacks.
     return callback(b, userData);
 }
 

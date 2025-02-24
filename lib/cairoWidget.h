@@ -53,7 +53,14 @@ enum PnButtonState {
 };
 
 
-#define NUM_FRAMES 10
+// Number of drawing cycles for a button "click" animation.
+//
+// TODO: Instead of using the drawing cycle period we could set an
+// interval timer to trigger that the animation is done.  That may use
+// much less system resources, especially for the case that the animation
+// does not change the pixels drawn every draw cycle.
+//
+#define NUM_FRAMES 6
 
 struct PnButton {
 
@@ -65,6 +72,8 @@ struct PnButton {
     uint32_t width, height;
 
     uint32_t frames; // an animation frame counter
+
+    bool entered; // is it focused from mouse enter?
 };
 
 
