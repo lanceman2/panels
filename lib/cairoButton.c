@@ -72,7 +72,6 @@ static inline void Draw(cairo_t *cr, struct PnButton *b) {
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
-#endif
 
     switch(b->state) {
         case PnButtonState_Normal:
@@ -83,6 +82,7 @@ static inline void Draw(cairo_t *cr, struct PnButton *b) {
             break;
         default:
     }
+#endif
 
     DrawBorder(cr);
 }
