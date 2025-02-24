@@ -15,6 +15,13 @@
 #include "display.h"
 #include "cairoWidget.h"
 
+
+#define MIN_WIDTH   (50)
+#define MIN_HEIGHT  (30) // MIN_HEIGHT - 2 * R - 2 * PAD >= 0
+#define LW          (6) // Line Width
+#define R           (10) // Radius
+#define PAD         (0)
+
 static inline void
 SetState(struct PnButton *b, enum PnButtonState state) {
     DASSERT(b);
@@ -26,15 +33,58 @@ SetState(struct PnButton *b, enum PnButtonState state) {
     pnWidget_queueDraw(&b->widget);
 }
 
+static inline void DrawBorder(cairo_t *cr) {
 
-static inline void Draw( cairo_t *cr, struct PnButton *b) {
+    cairo_surface_t *crs = cairo_get_target(cr);
+    int w = cairo_image_surface_get_width(crs);
+    int h = cairo_image_surface_get_height(crs);
+    DASSERT(w >= MIN_WIDTH);
+    DASSERT(h >= MIN_HEIGHT);
+    cairo_set_line_width(cr, LW);
+    w -= 2*(R+PAD);
+    h -= 2*(R+PAD);
+    double x = PAD + R + w, y = PAD;
+
+    cairo_move_to(cr, x, y);
+    cairo_arc(cr, x, y += R, R, -0.5*M_PI, 0);
+    cairo_line_to(cr, x += R, y += h);
+    cairo_arc(cr, x -= R, y, R, 0, 0.5*M_PI);
+    cairo_line_to(cr, x -= w, y += R);
+    cairo_arc(cr, x, y -= R, R, 0.5*M_PI, M_PI);
+    cairo_line_to(cr, x -= R, y -= h);
+    cairo_arc(cr, x += R, y, R, M_PI, 1.5*M_PI);
+    cairo_close_path(cr);
+    cairo_stroke(cr);
+}
+
+
+static inline void Draw(cairo_t *cr, struct PnButton *b) {
 
     uint32_t color = b->colors[b->state];
 
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
+#if 0
     cairo_paint(cr);
+
+    color = 0xFFF0F0F0;
+    cairo_set_source_rgba(cr,
+            PN_R_DOUBLE(color), PN_G_DOUBLE(color),
+            PN_B_DOUBLE(color), PN_A_DOUBLE(color));
+#endif
+
+    switch(b->state) {
+        case PnButtonState_Normal:
+        case PnButtonState_Hover:
+        case PnButtonState_Pressed:
+        case PnButtonState_Active:
+            //DrawBorder(cr);
+            break;
+        default:
+    }
+
+    DrawBorder(cr);
 }
 
 static void config(struct PnWidget *widget, uint32_t *pixels,
@@ -212,7 +262,7 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
         size = sizeof(struct PnButton);
     //
     struct PnButton *b = (void *) pnWidget_create(parent,
-            50/*width*/, 35/*height*/,
+            MIN_WIDTH, MIN_HEIGHT,
             0/*direction*/, 0/*align*/,
             PnExpand_HV/*expand*/, size);
     if(!b)
