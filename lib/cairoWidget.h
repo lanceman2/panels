@@ -44,7 +44,7 @@ enum PnButtonState {
     PnButtonState_Hover    = HOVER,
     PnButtonState_Pressed  = PRESSED,
     PnButtonState_Active   = ACTIVE,
-    PnButtonState_NumRegularStates = (ACTIVE + 1),
+    PnButtonState_NumRegularStates,
     PnButtonState_ToggledNormal  = NORMAL  | TOGGLED,
     PnButtonState_ToggledHover   = HOVER   | TOGGLED,
     PnButtonState_ToggledPressed = PRESSED | TOGGLED,

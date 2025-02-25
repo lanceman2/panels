@@ -68,10 +68,11 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    win = pnWindow_create(0, 10, 10,
+    win = pnWindow_create(0, 3, 3,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
             PnExpand_HV);
     ASSERT(win);
+    pnWindow_setBackgroundColor(win, 0xA0010101);
 
     for(int i=0; i<8; ++i)
         Button();
