@@ -36,62 +36,62 @@ int main(void) {
     else
 	px = uy;
     cairo_font_extents(cr, &fe);
-    cairo_text_extents (cr, text, &te);
+    cairo_text_extents(cr, text, &te);
     x = 0.5 - te.x_bearing - te.width / 2;
     y = 0.5 - fe.descent + fe.height / 2;
 
     /* baseline, descent, ascent, height */
-    cairo_set_line_width (cr, 4*px);
+    cairo_set_line_width(cr, 4*px);
     dashlength = 9*px;
-    cairo_set_dash (cr, &dashlength, 1, 0);
-    cairo_set_source_rgba (cr, 0, 0.6, 0, 1);
-    cairo_move_to (cr, x + te.x_bearing, y);
-    cairo_rel_line_to (cr, te.width, 0);
-    cairo_move_to (cr, x + te.x_bearing, y + fe.descent);
-    cairo_rel_line_to (cr, te.width, 0);
-    cairo_move_to (cr, x + te.x_bearing, y - fe.ascent);
-    cairo_rel_line_to (cr, te.width, 0);
-    cairo_move_to (cr, x + te.x_bearing, y - fe.height);
-    cairo_rel_line_to (cr, te.width, 0);
-    cairo_stroke (cr);
+    cairo_set_dash(cr, &dashlength, 1, 0);
+    cairo_set_source_rgba(cr, 0, 0.6, 0, 1);
+    cairo_move_to(cr, x + te.x_bearing, y);
+    cairo_rel_line_to(cr, te.width, 0);
+    cairo_move_to(cr, x + te.x_bearing, y + fe.descent);
+    cairo_rel_line_to(cr, te.width, 0);
+    cairo_move_to(cr, x + te.x_bearing, y - fe.ascent);
+    cairo_rel_line_to(cr, te.width, 0);
+    cairo_move_to(cr, x + te.x_bearing, y - fe.height);
+    cairo_rel_line_to(cr, te.width, 0);
+    cairo_stroke(cr);
 
     /* extents: width & height */
-    cairo_set_source_rgba (cr, 0, 0, 0.75, 1);
-    cairo_set_line_width (cr, px);
+    cairo_set_source_rgba(cr, 0, 0, 0.75, 1);
+    cairo_set_line_width(cr, px);
     dashlength = 3*px;
-    cairo_set_dash (cr, &dashlength, 1, 0);
-    cairo_rectangle (cr, x + te.x_bearing,
+    cairo_set_dash(cr, &dashlength, 1, 0);
+    cairo_rectangle(cr, x + te.x_bearing,
             y + te.y_bearing, te.width, te.height);
     cairo_stroke (cr);
 
     /* text */
-    cairo_move_to (cr, x, y);
-    cairo_set_source_rgba (cr, 0, 0, 0, 1);
-    cairo_show_text (cr, text);
+    cairo_move_to(cr, x, y);
+    cairo_set_source_rgba(cr, 0, 0, 0, 1);
+    cairo_show_text(cr, text);
 
     /* bearing */
-    cairo_set_dash (cr, NULL, 0, 0);
-    cairo_set_line_width (cr, 2 * px);
-    cairo_set_source_rgba (cr, 0, 0, 0.75, 1);
-    cairo_move_to (cr, x, y);
-    cairo_rel_line_to (cr, te.x_bearing, te.y_bearing);
-    cairo_stroke (cr);
+    cairo_set_dash(cr, NULL, 0, 0);
+    cairo_set_line_width(cr, 2 * px);
+    cairo_set_source_rgba(cr, 0, 0, 0.75, 1);
+    cairo_move_to(cr, x, y);
+    cairo_rel_line_to(cr, te.x_bearing, te.y_bearing);
+    cairo_stroke(cr);
 
     /* text's advance */
-    cairo_set_source_rgba (cr, 0, 0, 0.75, 1);
-    cairo_arc (cr, x + te.x_advance,
+    cairo_set_source_rgba(cr, 0, 0, 0.75, 1);
+    cairo_arc(cr, x + te.x_advance,
             y + te.y_advance, 5 * px, 0, 2 * M_PI);
-    cairo_fill (cr);
+    cairo_fill(cr);
 
     /* reference point */
-    cairo_arc (cr, x, y, 5 * px, 0, 2 * M_PI);
-    cairo_set_source_rgba (cr, 0.75, 0, 0, 1);
-    cairo_fill (cr);
+    cairo_arc(cr, x, y, 5 * px, 0, 2 * M_PI);
+    cairo_set_source_rgba(cr, 0.75, 0, 0, 1);
+    cairo_fill(cr);
 
     /* Write output and clean up */
-    cairo_surface_write_to_png (surface, "tmp_CairoTextSize.png");
-    cairo_destroy (cr);
-    cairo_surface_destroy (surface);
+    cairo_surface_write_to_png(surface, "tmp_CairoTextSize.png");
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
 
     cairo_debug_reset_static_data();
 
