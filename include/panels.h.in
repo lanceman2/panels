@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+// Number of mouse (pointer) buttons:
 #define PN_NUM_BUTTONS    (3)
 
 
@@ -490,7 +491,16 @@ static inline void pnWidget_setCairoDraw(struct PnWidget *surface,
 }
 
 PN_EXPORT struct PnWidget *pnButton_create(struct PnSurface *parent,
+        uint32_t width, uint32_t height,
+        enum PnDirection direction, enum PnAlign align,
+        enum PnExpand expand,
         const char *label, bool toggle, size_t size);
+
+PN_EXPORT struct PnWidget *pnLabel_create(struct PnSurface *parent,
+        uint32_t width, uint32_t height,
+        enum PnExpand expand,
+        const char *text, size_t size);
+
 
 
 

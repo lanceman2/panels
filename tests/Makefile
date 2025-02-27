@@ -91,7 +91,14 @@ myCairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 112_cairo_joy_SOURCES := cairo_joy.c
 112_cairo_joy_LDFLAGS := $(CAIRO_LDFLAGS)
 112_cairo_joy_CPPFLAGS := $(CAIRO_CFLAGS)
+
+# figuring out how to get the size of text without
+# creating a panel widget.
+110_CairoTextSize_SOURCES := CairoTextSize.c
+110_CairoTextSize_LDFLAGS := $(CAIRO_LDFLAGS)
+110_CairoTextSize_CPPFLAGS := $(CAIRO_CFLAGS)
 endif
+
 
 ifdef WITH_CAIRO
 # ../lib/libpanel.so is not required to be linked with libcairo.so
@@ -109,6 +116,13 @@ cairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 button_run_SOURCES := button.c
 button_run_LDFLAGS := $(PN_LIB)
 button_run_CPPFLAGS := -DRUN
+
+115_label_SOURCES := label.c
+115_label_LDFLAGS := $(PN_LIB)
+
+label_run_SOURCES := label.c
+label_run_LDFLAGS := $(PN_LIB)
+label_run_CPPFLAGS := -DRUN
 endif
 
 

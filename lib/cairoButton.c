@@ -16,7 +16,7 @@
 #include "cairoWidget.h"
 
 
-#define MIN_WIDTH   (50)
+#define MIN_WIDTH   (30)
 #define MIN_HEIGHT  (30) // MIN_HEIGHT - 2 * R - 2 * PAD >= 0
 #define LW          (1.4) // Line Width
 #define R           (6) // Radius
@@ -247,6 +247,9 @@ static bool click(struct PnButton *b,
 
 
 struct PnWidget *pnButton_create(struct PnSurface *parent,
+        uint32_t width, uint32_t height,
+        enum PnDirection direction, enum PnAlign align,
+        enum PnExpand expand,
         const char *label, bool toggle, size_t size) {
 
     ASSERT(!toggle, "WRITE MORE CODE");
@@ -254,28 +257,27 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     // TODO: How many more function parameters should we add to the
     // button create function?
     //
-    // We may need to unhide some of these widget create parameters, but
-    // we're hoping to auto-generate these parameters as this button
-    // abstraction evolves.
-    //
     if(size < sizeof(struct PnButton))
         size = sizeof(struct PnButton);
     //
     struct PnButton *b = (void *) pnWidget_create(parent,
             MIN_WIDTH, MIN_HEIGHT,
-            0/*direction*/, 0/*align*/,
-            PnExpand_HV/*expand*/, size);
+            direction, align, expand, size);
     if(!b)
         // A common error mode is that the parent cannot have children.
         // pnWidget_create() should spew for us.
         return 0; // Failure.
 
-    // Setting the widget surface type.  We decrease the data, but
-    // increase the complexity.  See enum PnSurfaceType in display.h.
-    // It's so easy to forget about all these bits, but DASSERT() is my
-    // hero.
+    // Setting the widget surface type.  We decrease the data (just one
+    // enum), but increase the complexity (with bit flags in the enum).
+    // See enum PnSurfaceType in display.h.  It's so easy to forget about
+    // all these bits (in type), but DASSERT() is my hero.
+    //
+    // It starts out life as a widget:
     DASSERT(b->widget.surface.type == PnSurfaceType_widget);
+    // And now it becomes a button:
     b->widget.surface.type = PnSurfaceType_button;
+    // which is also a widget too (and more bits):
     DASSERT(b->widget.surface.type & WIDGET);
 
     pnWidget_setEnter(&b->widget, (void *) enter, b);

@@ -1,4 +1,12 @@
 
+
+struct PnLabel {
+
+    struct PnWidget widget; // inherit first
+    //uint32_t width, height;
+};
+
+
 // button States
 //
 // Note: if it's not a toggle button it only has 4 usable states.  The

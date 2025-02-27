@@ -59,10 +59,11 @@
 #define WIDGET           (04) // third bit set
 #define GET_WIDGET_TYPE(x)  (~(TOPLEVEL|POPUP|WIDGET) & (x))
 // WIDGET TYPES: are a number in the (skip first 3 bits) higher bits.
-#define W_BUTTON         (1 << 3)
-#define W_TOGGLE_BUTTON  (2 << 3)
-#define W_MENU           (3 << 3)
-#define W_MENUITEM       (4 << 3)
+#define W_LABEL          (1 << 3)
+#define W_BUTTON         (2 << 3)
+#define W_TOGGLE_BUTTON  (3 << 3)
+#define W_MENU           (4 << 3)
+#define W_MENUITEM       (5 << 3)
 
 
 // If we add more surface types we'll need to check all the code.
@@ -80,8 +81,9 @@ enum PnSurfaceType {
 
     // Widget Surface types:  Not a wayland client thing.
     PnSurfaceType_widget     = WIDGET, // a rectangular piece of a surface
+    PnSurfaceType_label      = (WIDGET | W_LABEL), // a label widget
     PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget
-    PnSurfaceType_menu       = (WIDGET | W_MENU),
+    PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
     PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM)
 };
 

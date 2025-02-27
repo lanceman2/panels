@@ -53,7 +53,10 @@ static void Button(void) {
 
     b->button = (void *) pnButton_create(
             (struct PnSurface *) win/*parent*/,
-            "Quit", false/*toggle*/, 0);
+            0/*width*/, 0/*height*/,
+            0/*direction*/, 0/*align*/,
+            PnExpand_HV/*expand*/,
+            "Quit", false/*toggle*/, 0/*size*/);
     ASSERT(b);
 
     b->buttonNum = buttonCount++;

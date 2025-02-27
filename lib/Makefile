@@ -72,7 +72,8 @@ endif
 ifdef WITH_CAIRO
 libpanels.so_SOURCES +=\
  cairo.c\
- cairoButton.c
+ cairoButton.c\
+ cairoLabel.c
 endif
 
 
