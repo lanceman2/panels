@@ -87,6 +87,10 @@ ifdef CAIRO_LDFLAGS
 myCairoDrawWidget_run_SOURCES := myCairoDrawWidget.c
 myCairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 myCairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+112_cairo_joy_SOURCES := cairo_joy.c
+112_cairo_joy_LDFLAGS := $(CAIRO_LDFLAGS)
+112_cairo_joy_CPPFLAGS := $(CAIRO_CFLAGS)
 endif
 
 ifdef WITH_CAIRO

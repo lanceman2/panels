@@ -18,7 +18,7 @@
 
 #define MIN_WIDTH   (50)
 #define MIN_HEIGHT  (30) // MIN_HEIGHT - 2 * R - 2 * PAD >= 0
-#define LW          (2.4) // Line Width
+#define LW          (1.4) // Line Width
 #define R           (6) // Radius
 #define PAD         (2)
 
