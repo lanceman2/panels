@@ -35,8 +35,10 @@ struct PnWidget *pnWidget_create(
     // If there will not be children in this new widget than
     // we need width, w, and height, h to be nonzero.
     if(direction == PnDirection_None) {
-        w = PN_DEFAULT_WIDGET_WIDTH;
-        h = PN_DEFAULT_WIDGET_HEIGHT;
+        if(w == 0)
+            w = PN_DEFAULT_WIDGET_WIDTH;
+        if(h == 0)
+            h = PN_DEFAULT_WIDGET_HEIGHT;
     }
     struct PnWidget *widget;
 

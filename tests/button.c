@@ -57,7 +57,7 @@ static void Button(void) {
             0/*direction*/, 0/*align*/,
             PnExpand_HV/*expand*/,
             "Quit", false/*toggle*/, 0/*size*/);
-    ASSERT(b);
+    ASSERT(b->button);
 
     b->buttonNum = buttonCount++;
 

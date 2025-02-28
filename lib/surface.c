@@ -380,3 +380,13 @@ bool pnSurface_isInSurface(const struct PnSurface *s,
             x < s->allocation.x + s->allocation.width && 
             y < s->allocation.y + s->allocation.height);
 }
+
+#if 0
+void pnSurface_setMinWidth(struct PnSurface *s, uint32_t width) {
+    DASSERT(s);
+    if(s->width != width)
+        *((uint32_t *) &s->width) = width;
+
+    // TODO: Let the user queue the draw??
+}
+#endif

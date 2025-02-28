@@ -3,7 +3,9 @@
 struct PnLabel {
 
     struct PnWidget widget; // inherit first
-    //uint32_t width, height;
+    double fontSize;
+    uint32_t foregroundColor; // text color
+    char *text;
 };
 
 

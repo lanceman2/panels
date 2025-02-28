@@ -41,10 +41,10 @@ static void Label(void) {
 
     l->label = (void *) pnLabel_create(
             (struct PnSurface *) win/*parent*/,
-            0/*width*/, 0/*height*/,
+            0/*width*/, 30/*height*/,
             PnExpand_HV/*expand*/,
-            "Quit", 0/*size*/);
-    ASSERT(l);
+            "Lovely", 0/*size*/);
+    ASSERT(l->label);
 
     l->labelNum = labelCount++;
     pnWidget_addDestroy((void *) l->label, (void *) destroy, l);

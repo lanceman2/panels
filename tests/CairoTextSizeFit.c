@@ -10,7 +10,7 @@ int main(void) {
     const int w = 1000, h = 500;
     cairo_surface_t *surface;
     cairo_t *cr;
-    char text[]="Go3423iiiiiiiiiiiiiiiii4324234y";
+    char text[]="Qo3423iiiiiiiiiiiiiiiii4324234t";
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
     cr = cairo_create(surface);
 
@@ -61,7 +61,7 @@ int main(void) {
     cairo_paint(cr);
 
     cairo_set_source_rgba(cr, 0, 0, 0, 1);
-        cairo_move_to(cr, 0.5 *(width - extents.width) - extents.x_bearing,
+    cairo_move_to(cr, 0.5 *(width - extents.width) - extents.x_bearing,
                 - extents.y_bearing + 0.5 * (height - extents.height));
 
     cairo_show_text (cr, text);

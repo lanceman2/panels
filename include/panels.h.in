@@ -334,6 +334,18 @@ static inline void pnWidget_queueDraw(struct PnWidget *widget) {
     pnSurface_queueDraw((void *) widget);
 }
 
+#if 0
+PN_EXPORT void pnSurface_setMinWidth(struct PnSurface *s, uint32_t width);
+static inline void pnWindow_queueDraw(struct PnWindow *window) {
+    pnSurface_setMinWidth((void *) window, width);
+}
+static inline void pnWidget_queueDraw(struct PnWidget *widget,
+        uint32_t width) {
+    pnSurface_setMinWidth((void *) widget, width);
+}
+#endif
+
+
 // For a widget to get mouse pointer focus it needs a
 // "enter" and a "leave" callback.
 //

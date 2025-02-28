@@ -240,8 +240,7 @@ static bool click(struct PnButton *b,
     // callback() is the API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
-    // this function from going through (calling) all connected
-    // callbacks.
+    // this function from going through (calling) all connected callbacks.
     return callback(b, userData);
 }
 
