@@ -94,9 +94,9 @@ myCairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
 # figuring out how to get the size of text without
 # creating a panel widget.
-110_CairoTextSize_SOURCES := CairoTextSize.c
-110_CairoTextSize_LDFLAGS := $(CAIRO_LDFLAGS)
-110_CairoTextSize_CPPFLAGS := $(CAIRO_CFLAGS)
+110_CairoTextSizeFit_SOURCES := CairoTextSizeFit.c ../lib/debug.c
+110_CairoTextSizeFit_LDFLAGS := $(CAIRO_LDFLAGS)
+110_CairoTextSizeFit_CPPFLAGS := $(CAIRO_CFLAGS)
 endif
 
 
