@@ -29,8 +29,7 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
     DASSERT(text);
     DASSERT(strlen(text));
 
-
-    const uint32_t color = 0xFFFFFFFF;
+    const uint32_t color = l->widget.surface.backgroundColor;
 
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
@@ -38,10 +37,10 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
     cairo_paint(cr);
 
     cairo_set_source_rgba(cr,
-            PN_R_DOUBLE(l->foregroundColor),
-            PN_G_DOUBLE(l->foregroundColor),
-            PN_B_DOUBLE(l->foregroundColor),
-            PN_A_DOUBLE(l->foregroundColor));
+            PN_R_DOUBLE(l->fontColor),
+            PN_G_DOUBLE(l->fontColor),
+            PN_B_DOUBLE(l->fontColor),
+            PN_A_DOUBLE(l->fontColor));
 
     struct PnAllocation a;
     pnWidget_getAllocation(&l->widget, &a);
@@ -51,8 +50,38 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
 
     cairo_set_font_size(cr, l->fontSize);
     cairo_text_extents(cr, text, &extents);
-    cairo_move_to(cr, 0.5 *(w - extents.width) - extents.x_bearing,
-                - extents.y_bearing + 0.5 * (h - extents.height));
+
+    double x, y;
+
+    switch(l->widget.surface.align & PN_ALIGN_X) {
+        case PN_ALIGN_X_LEFT:
+            x = - extents.x_bearing;
+            break;
+        case PN_ALIGN_X_RIGHT:
+            x = - extents.x_bearing + w - extents.width;
+            break;
+        default:
+        //case PN_ALIGN_X_CENTER:
+        //case PN_ALIGN_X_JUSTIFIED:
+            x = 0.5 *(w - extents.width) - extents.x_bearing;
+            break;
+    }
+
+    switch(l->widget.surface.align & PN_ALIGN_Y) {
+        case PN_ALIGN_Y_TOP:
+            y = - extents.y_bearing;
+            break;
+        case PN_ALIGN_Y_BOTTOM:
+            y = - extents.y_bearing + h - extents.height;
+            break;
+        default:
+        //case PN_ALIGN_Y_CENTER:
+        //case PN_ALIGN_Y_JUSTIFIED:
+            y = - extents.y_bearing + 0.5 * (h - extents.height);
+            break;
+    }
+
+    cairo_move_to(cr, x, y);
     cairo_show_text(cr, text);
 }
 
@@ -98,12 +127,11 @@ uint32_t GetWidthAndFontSize(const char *text, uint32_t h,
     DASSERT(strlen(text));
     DASSERT(h);
     DASSERT(sizeOut);
-
-    const int w = 1;
     cairo_surface_t *surface;
     cairo_t *cr;
-    // We never draw to this tiny surface.
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
+    // We never draw to this tiny surface.  I wonder if we can use a null
+    // surface.
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, h);
     cr = cairo_create(surface);
 
     const double height = h;
@@ -139,12 +167,15 @@ uint32_t GetWidthAndFontSize(const char *text, uint32_t h,
 
 struct PnWidget *pnLabel_create(struct PnSurface *parent,
         uint32_t width, uint32_t height,
+        uint32_t xPadding, uint32_t yPadding,
+        enum PnAlign align, // for text alignment
         enum PnExpand expand,
         const char *text, size_t size) {
 
     DASSERT(parent);
     DASSERT(text);
     DASSERT(strlen(text));
+    ASSERT(yPadding < height);
 
     if(height < MIN_HEIGHT)
         height = MIN_HEIGHT;
@@ -152,17 +183,19 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
     double fontSize = height;
 
     if(width == 0)
-        width = GetWidthAndFontSize(text, height, &fontSize);
+        width = GetWidthAndFontSize(text, height - yPadding,
+                &fontSize) + 2*xPadding;
 
     if(width < MIN_WIDTH)
         width = MIN_WIDTH;
+    
 
     if(size < sizeof(struct PnLabel))
         size = sizeof(struct PnLabel);
     //
     struct PnLabel *l = (void *) pnWidget_create(parent,
             width, height,
-            PnDirection_None, 0/*align*/,
+            PnDirection_None, align/*align*/,
             expand, size);
     if(!l)
         // TODO: Not sure that this can fail, other than memory allocation
@@ -178,7 +211,7 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
     DASSERT(l->widget.surface.type & WIDGET);
 
     l->fontSize = fontSize;
-    l->foregroundColor = 0xFF000000;
+    l->fontColor = 0xFF000000;
     l->text = strdup(text);
     ASSERT(l->text, "strdup() failed");
 
@@ -187,4 +220,10 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
     pnWidget_addDestroy(&l->widget, (void *) destroy, l);
 
     return &l->widget; // We inherited PnWidget.
+}
+
+void pnLabel_setFontColor(struct PnLabel *l, uint32_t color) {
+
+    DASSERT(l);
+    l->fontColor = color;
 }

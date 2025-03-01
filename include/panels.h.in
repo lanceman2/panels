@@ -140,7 +140,9 @@ enum PnExpand {
 };
 
 
-// Container widget attribute Align:
+// Align is a:
+//   1. Container widget attribute for child widget layout, and
+//   2. A Label widget attribute for test layout.
 //
 // If there is extra space for a widget that will not be filled, we
 // align (float) the widget into position.
@@ -510,9 +512,14 @@ PN_EXPORT struct PnWidget *pnButton_create(struct PnSurface *parent,
 
 PN_EXPORT struct PnWidget *pnLabel_create(struct PnSurface *parent,
         uint32_t width, uint32_t height,
+        uint32_t xPadding, uint32_t yPadding,
+        enum PnAlign align, // for text alignment
         enum PnExpand expand,
         const char *text, size_t size);
 
+struct PnLabel;
+
+PN_EXPORT void pnLabel_setFontColor(struct PnLabel *label, uint32_t color);
 
 
 
