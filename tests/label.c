@@ -22,25 +22,9 @@ static int labelCount = 0;
 
 static struct PnWindow *win;
 
-struct label {
-
-    struct PnLabel *label;
-    int labelNum;
-};
-
-
-static void destroy(struct PnLabel *label, struct label *l) {
-    DASSERT(label);
-    DASSERT(l);
-    DASSERT(label == l->label);
-    DZMEM(l, sizeof(*l));
-    free(l);
-}
 
 static void Label(void) {
 
-    struct label *l = calloc(1, sizeof(*l));
-    ASSERT(l, "calloc(1,%zu) failed", sizeof(*l));
     const char *format = "L %" PRIu32
         " Padding=(%" PRIu32 ", %" PRIu32 ")";
     uint32_t xPadding = 10*Rand(0,1);
@@ -50,18 +34,16 @@ static void Label(void) {
     char text[Len];
     snprintf(text, Len, format, labelCount++, xPadding, yPadding);
 
-    l->label = (void *) pnLabel_create(
+    struct PnLabel *label = (void *) pnLabel_create(
             (struct PnSurface *) win/*parent*/,
             0/*width*/, 30/*height*/,
             xPadding, yPadding,
             Rand(0,15)/*align*/,
             PnExpand_HV/*expand*/,
             text, 0/*size*/);
-    ASSERT(l->label);
-    pnLabel_setFontColor(l->label, 0xF0000000);
-    pnWidget_setBackgroundColor((void *)l->label, Color());
-    l->labelNum = labelCount;
-    pnWidget_addDestroy((void *) l->label, (void *) destroy, l);
+    ASSERT(label);
+    pnLabel_setFontColor(label, 0xF0000000);
+    pnWidget_setBackgroundColor((void *)label, Color());
 }
 
 

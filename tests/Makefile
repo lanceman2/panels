@@ -123,6 +123,13 @@ button_run_CPPFLAGS := -DRUN
 label_run_SOURCES := label.c
 label_run_LDFLAGS := $(PN_LIB)
 label_run_CPPFLAGS := -DRUN
+
+labeledButton_run_SOURCES := labeledButton.c
+labeledButton_run_LDFLAGS := $(PN_LIB)
+labeledButton_run_CPPFLAGS := -DRUN
+
+120_labeledButton_SOURCES := labeledButton.c
+120_labeledButton_LDFLAGS := $(PN_LIB)
 endif
 
 

@@ -16,9 +16,9 @@
 #include "cairoWidget.h"
 
 
-#define MIN_WIDTH   (30)
-#define MIN_HEIGHT  (30) // MIN_HEIGHT - 2 * R - 2 * PAD >= 0
-#define LW          (1.4) // Line Width
+#define MIN_WIDTH   (9)
+#define MIN_HEIGHT  (9)
+#define LW          (2) // Line Width
 #define R           (6) // Radius
 #define PAD         (2)
 
@@ -54,7 +54,6 @@ static inline void DrawBorder(cairo_t *cr) {
     cairo_line_to(cr, x -= R, y -= h);
     cairo_arc(cr, x += R, y, R, M_PI, 1.5*M_PI);
     cairo_close_path(cr);
-    cairo_stroke(cr);
 }
 
 
@@ -85,6 +84,7 @@ static inline void Draw(cairo_t *cr, struct PnButton *b) {
 #endif
 
     DrawBorder(cr);
+    cairo_stroke(cr);
 }
 
 static void config(struct PnWidget *widget, uint32_t *pixels,
@@ -240,21 +240,32 @@ static bool click(struct PnButton *b,
     // callback() is the API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
-    // this function from going through (calling) all connected callbacks.
+    // this function from going through (calling) all connected
+    // callbacks.
     return callback(b, userData);
 }
 
 
 struct PnWidget *pnButton_create(struct PnSurface *parent,
         uint32_t width, uint32_t height,
-        enum PnDirection direction, enum PnAlign align,
+        enum PnDirection direction,
+        enum PnAlign align,
         enum PnExpand expand,
         const char *label, bool toggle, size_t size) {
 
     ASSERT(!toggle, "WRITE MORE CODE");
 
+    if(width < MIN_WIDTH)
+        width = MIN_WIDTH;
+    if(height < MIN_HEIGHT)
+        height = MIN_HEIGHT;
+
     // TODO: How many more function parameters should we add to the
     // button create function?
+    //
+    // We may need to unhide some of these widget create parameters, but
+    // we're hoping to auto-generate these parameters as this button
+    // abstraction evolves.
     //
     if(size < sizeof(struct PnButton))
         size = sizeof(struct PnButton);
@@ -267,16 +278,12 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
         // pnWidget_create() should spew for us.
         return 0; // Failure.
 
-    // Setting the widget surface type.  We decrease the data (just one
-    // enum), but increase the complexity (with bit flags in the enum).
-    // See enum PnSurfaceType in display.h.  It's so easy to forget about
-    // all these bits (in type), but DASSERT() is my hero.
-    //
-    // It starts out life as a widget:
+    // Setting the widget surface type.  We decrease the data, but
+    // increase the complexity.  See enum PnSurfaceType in display.h.
+    // It's so easy to forget about all these bits, but DASSERT() is my
+    // hero.
     DASSERT(b->widget.surface.type == PnSurfaceType_widget);
-    // And now it becomes a button:
     b->widget.surface.type = PnSurfaceType_button;
-    // which is also a widget too (and more bits):
     DASSERT(b->widget.surface.type & WIDGET);
 
     pnWidget_setEnter(&b->widget, (void *) enter, b);
@@ -295,7 +302,7 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
             PnButtonState_NumRegularStates*sizeof(*b->colors));
     // Default state colors:
     b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
-    b->colors[PnButtonState_Hover] =   0xFFBEE2F3;
+    b->colors[PnButtonState_Hover] =   0xFF00EDFF;
     b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
     b->colors[PnButtonState_Active] =  0xFF0BD109;
     pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
