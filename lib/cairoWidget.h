@@ -3,9 +3,10 @@
 struct PnLabel {
 
     struct PnWidget widget; // inherit first
+    char *text;
     double fontSize;
     uint32_t fontColor; // text color
-    char *text;
+    uint32_t xPadding, yPadding;
 };
 
 

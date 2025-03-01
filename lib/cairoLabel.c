@@ -55,10 +55,10 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
 
     switch(l->widget.surface.align & PN_ALIGN_X) {
         case PN_ALIGN_X_LEFT:
-            x = - extents.x_bearing;
+            x = - extents.x_bearing + l->xPadding;
             break;
         case PN_ALIGN_X_RIGHT:
-            x = - extents.x_bearing + w - extents.width;
+            x = - extents.x_bearing + w - extents.width - l->xPadding;
             break;
         default:
         //case PN_ALIGN_X_CENTER:
@@ -69,10 +69,10 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
 
     switch(l->widget.surface.align & PN_ALIGN_Y) {
         case PN_ALIGN_Y_TOP:
-            y = - extents.y_bearing;
+            y = - extents.y_bearing + l->yPadding;
             break;
         case PN_ALIGN_Y_BOTTOM:
-            y = - extents.y_bearing + h - extents.height;
+            y = - extents.y_bearing + h - extents.height - l->yPadding;
             break;
         default:
         //case PN_ALIGN_Y_CENTER:
@@ -188,7 +188,8 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
 
     if(width < MIN_WIDTH)
         width = MIN_WIDTH;
-    
+    if(width < xPadding)
+        width = xPadding;
 
     if(size < sizeof(struct PnLabel))
         size = sizeof(struct PnLabel);
@@ -214,6 +215,8 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
     l->fontColor = 0xFF000000;
     l->text = strdup(text);
     ASSERT(l->text, "strdup() failed");
+    l->xPadding = xPadding;
+    l->yPadding = yPadding;
 
     pnWidget_setConfig(&l->widget, (void *) config, l);
     pnWidget_setCairoDraw(&l->widget, (void *) cairoDraw, l);
