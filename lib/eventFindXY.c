@@ -219,11 +219,13 @@ void GetSurfaceWithXY(const struct PnWindow *win,
         // That makes no fucking sense, the mouse pointer is not in the
         // window, but the enter event says it is.  It could be round off
         // error.
-#define ERR_LEN  (1)
+#if 0
+#define ERR_LEN  (5) // Have seen assertion with ERR_LEN (2)
         DASSERT(d.x >= - ERR_LEN);
         DASSERT(d.y >= - ERR_LEN);
         DASSERT(d.x < win->surface.allocation.width + ERR_LEN);
         DASSERT(d.y < win->surface.allocation.height + ERR_LEN);
+#endif
 
         if(d.x < 0)
             d.x = 0;

@@ -170,38 +170,38 @@ enum PnExpand {
 #define PN_ALIGN_Y  (03 << 2)
 
 
-#define PN_ALIGN_X_LEFT      (00) // default
-#define PN_ALIGN_X_RIGHT     (01) 
-#define PN_ALIGN_X_CENTER    (02)
+#define PN_ALIGN_X_CENTER    (00) // default
+#define PN_ALIGN_X_LEFT      (01)
+#define PN_ALIGN_X_RIGHT     (02)
 #define PN_ALIGN_X_JUSTIFIED (03)
 
-#define PN_ALIGN_Y_TOP       (00) // default
-#define PN_ALIGN_Y_BOTTOM    (01 << 2)
-#define PN_ALIGN_Y_CENTER    (02 << 2)
+#define PN_ALIGN_Y_CENTER    (00) // default
+#define PN_ALIGN_Y_TOP       (01 << 2)
+#define PN_ALIGN_Y_BOTTOM    (02 << 2)
 #define PN_ALIGN_Y_JUSTIFIED (03 << 2)
 
 enum PnAlign {
 
     // x -> first 2 bits  y -> next 2 bits
 
-    PnAlign_LT = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_TOP), // = 0
-    PnAlign_RT = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_TOP),
-    PnAlign_CT = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_TOP),
-    PnAlign_JT = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_TOP),
-
-    PnAlign_LB = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_BOTTOM),
-    PnAlign_RB = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_BOTTOM),
-    PnAlign_CB = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_BOTTOM),
-    PnAlign_JB = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_BOTTOM),
-
+    PnAlign_CC = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_CENTER), // = 0
     PnAlign_LC = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_CENTER),
     PnAlign_RC = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_CENTER),
-    PnAlign_CC = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_CENTER),
     PnAlign_JC = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_CENTER),
 
+    PnAlign_CT = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_TOP),
+    PnAlign_LT = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_TOP),
+    PnAlign_RT = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_TOP),
+    PnAlign_JT = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_TOP),
+
+    PnAlign_CB = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_BOTTOM),
+    PnAlign_LB = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_BOTTOM),
+    PnAlign_RB = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_BOTTOM),
+    PnAlign_JB = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_BOTTOM),
+
+    PnAlign_CJ = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_JUSTIFIED),
     PnAlign_LJ = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_JUSTIFIED),
     PnAlign_RJ = (PN_ALIGN_X_RIGHT     | PN_ALIGN_Y_JUSTIFIED),
-    PnAlign_CJ = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_JUSTIFIED),
     PnAlign_JJ = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_JUSTIFIED)
 };
 
