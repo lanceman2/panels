@@ -196,7 +196,7 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
     //
     struct PnLabel *l = (void *) pnWidget_create(parent,
             width, height,
-            PnDirection_None, align/*align*/,
+            PnLayout_None, align/*align*/,
             expand, size);
     if(!l)
         // TODO: Not sure that this can fail, other than memory allocation

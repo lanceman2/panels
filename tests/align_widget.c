@@ -25,7 +25,7 @@ static struct PnWidget *Widget(void *parent) {
             (struct PnSurface *) parent,
             50/*width*/,
             50/*height*/,
-            0/*direction*/,
+            0/*layout*/,
             0/*align*/,
             //PnExpand_H * Rand(0, 1));
             PnExpand_HV & 0/*expand*/, 0);
@@ -43,7 +43,7 @@ int main(void) {
 
     struct PnWindow *win = pnWindow_create(0,\
             20/*width*/, 20/*height*/,
-            0/*x*/, 0/*y*/, PnDirection_TB/*direction*/,
+            0/*x*/, 0/*y*/, PnLayout_TB/*layout*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
     pnWindow_setBackgroundColor(win, 0xFF000000);
@@ -52,7 +52,7 @@ int main(void) {
             (struct PnSurface *) win,
             40/*width*/,
             40/*height*/,
-            PnDirection_LR/*direction*/,
+            PnLayout_LR/*layout*/,
             PnAlign_RC/*align*/, PnExpand_HV/*expand*/,
             0/*size*/);
     ASSERT(w);
@@ -66,7 +66,7 @@ int main(void) {
             (struct PnSurface *) win,
             40/*width*/,
             40/*height*/,
-            PnDirection_BT/*direction*/,
+            PnLayout_BT/*layout*/,
             PnAlign_JC/*align*/, PnExpand_H/*expand*/,
             0);
     ASSERT(w);

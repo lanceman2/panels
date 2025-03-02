@@ -14,19 +14,19 @@
 
 struct PnWidget *pnWidget_create(
         struct PnSurface *parent, uint32_t w, uint32_t h,
-        enum PnDirection direction, enum PnAlign align,
+        enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, size_t size) {
 
     ASSERT(parent);
-    DASSERT(parent->direction != PnDirection_None);
-    DASSERT(parent->direction != PnDirection_One || !parent->firstChild);
+    DASSERT(parent->layout != PnLayout_None);
+    DASSERT(parent->layout != PnLayout_One || !parent->firstChild);
 
-    if(parent->direction == PnDirection_None) {
+    if(parent->layout == PnLayout_None) {
         ERROR("Parent surface cannot have children");
         return 0;
     }
 
-    if(parent->direction == PnDirection_One &&
+    if(parent->layout == PnLayout_One &&
             parent->firstChild) {
         ERROR("Parent surface cannot have more than one child");
         return 0;
@@ -34,7 +34,7 @@ struct PnWidget *pnWidget_create(
 
     // If there will not be children in this new widget than
     // we need width, w, and height, h to be nonzero.
-    if(direction == PnDirection_None) {
+    if(layout == PnLayout_None) {
         if(w == 0)
             w = PN_DEFAULT_WIDGET_WIDTH;
         if(h == 0)
@@ -51,7 +51,7 @@ struct PnWidget *pnWidget_create(
     widget->size = size;
 #endif
     widget->surface.parent = parent;
-    widget->surface.direction = direction;
+    widget->surface.layout = layout;
     widget->surface.align = align;
     * (enum PnExpand *) &widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;

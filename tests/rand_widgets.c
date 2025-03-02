@@ -139,7 +139,7 @@ static struct PnWidget *Widget() {
             (struct PnSurface *) parent,
             Unit * Rand(0,2)/*width*/,
             Unit * Rand(0,2)/*height*/,
-            Rand(0,1) + SkewMinRand(0, 2, 2) /*direction*/,
+            Rand(0,1) + SkewMinRand(0, 2, 2) /*layout*/,
             // enum PnAlign goes from 0 to 15.
             SkewMinRand(0, 15, 2)/*align*/,
             Rand(0,3)/*expand*/, 0/*size*/);
@@ -168,7 +168,7 @@ int main(void) {
     srand(SEED);
 
     win = pnWindow_create(0, 16/*width*/, 16/*height*/,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/,
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
     uint32_t color = 0xFF000000;

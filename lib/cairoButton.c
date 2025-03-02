@@ -259,7 +259,7 @@ static bool clickAction(struct PnButton *b,
 
 struct PnWidget *pnButton_create(struct PnSurface *parent,
         uint32_t width, uint32_t height,
-        enum PnDirection direction,
+        enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand,
         const char *label, bool toggle, size_t size) {
@@ -283,7 +283,7 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     //
     struct PnButton *b = (void *) pnWidget_create(parent,
             width, height,
-            direction, align, expand, size);
+            layout, align, expand, size);
     if(!b)
         // A common error mode is that the parent cannot have children.
         // pnWidget_create() should spew for us.

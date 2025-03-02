@@ -66,21 +66,21 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
     struct PnWindow *win = pnWindow_create(0, 30, 30,
-            0/*x*/, 0/*y*/, PnDirection_RL/*direction*/, PnAlign_RB,
+            0/*x*/, 0/*y*/, PnLayout_RL/*layout*/, PnAlign_RB,
             PnExpand_HV);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             300/*width*/, 300/*height*/,
-            0/*direction*/, 0/*align*/,
+            0/*layout*/, 0/*align*/,
             PnExpand_None/*expand*/, 0);
     ASSERT(w);
     pnWidget_setCairoDraw(w, cairoDraw, 0);
 
     w = pnWidget_create((struct PnSurface *) win/*parent*/,
             100/*width*/, 400/*height*/,
-            0/*direction*/, 0/*align*/,
+            0/*layout*/, 0/*align*/,
             PnExpand_V/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);

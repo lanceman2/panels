@@ -100,10 +100,10 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
 
     // Now "s" has children.
 
-    // TODO: deal with containers that are not PnDirection_LR,
-    // PnDirection_RL, PnDirection_TB, or PnDirection_BT.
-    ASSERT(s->direction >= PnDirection_LR ||
-            s->direction <= PnDirection_BT, "WRITE MORE CODE");
+    // TODO: deal with containers that are not PnLayout_LR,
+    // PnLayout_RL, PnLayout_TB, or PnLayout_BT.
+    ASSERT(s->layout >= PnLayout_LR ||
+            s->layout <= PnLayout_BT, "WRITE MORE CODE");
 
     for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
         if(c->culled)
@@ -182,15 +182,15 @@ void TallyRequestedSizes(const struct PnSurface *s,
 
     bool gotOne = false;
 
-    switch(s->direction) {
-        case PnDirection_None:
+    switch(s->layout) {
+        case PnLayout_None:
             DASSERT(!s->firstChild);
             break;
-        case PnDirection_One:
+        case PnLayout_One:
             DASSERT((!s->firstChild && !s->lastChild)
                     || s->firstChild == s->lastChild);
-        case PnDirection_LR:
-        case PnDirection_RL:
+        case PnLayout_LR:
+        case PnLayout_RL:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
                 if(c->culled) continue;
@@ -205,8 +205,8 @@ void TallyRequestedSizes(const struct PnSurface *s,
             if(gotOne)
                 a->height += GetBHeight(s);
             break;
-        case PnDirection_BT:
-        case PnDirection_TB:
+        case PnLayout_BT:
+        case PnLayout_TB:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
                 if(c->culled) continue;
@@ -243,10 +243,10 @@ static void GetChildrenXY(const struct PnSurface *s,
     uint32_t y = a->y + borderY;
 
 
-    switch(s->direction) {
+    switch(s->layout) {
 
-        case PnDirection_One:
-        case PnDirection_TB:
+        case PnLayout_One:
+        case PnLayout_TB:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
                 if(c->culled) continue;
@@ -258,7 +258,7 @@ static void GetChildrenXY(const struct PnSurface *s,
             }
             break;
 
-        case PnDirection_BT:
+        case PnLayout_BT:
             for(struct PnSurface *c = s->lastChild; c;
                     c = c->prevSibling) {
                 if(c->culled) continue;
@@ -270,7 +270,7 @@ static void GetChildrenXY(const struct PnSurface *s,
             }
             break;
 
-        case PnDirection_LR:
+        case PnLayout_LR:
             for(struct PnSurface *c = s->firstChild; c;
                     c = c->nextSibling) {
                 if(c->culled) continue;
@@ -282,7 +282,7 @@ static void GetChildrenXY(const struct PnSurface *s,
             }
             break;
 
-        case PnDirection_RL:
+        case PnLayout_RL:
             for(struct PnSurface *c = s->lastChild; c;
                     c = c->prevSibling) {
                 if(c->culled) continue;
@@ -294,7 +294,7 @@ static void GetChildrenXY(const struct PnSurface *s,
             }
             break;
 
-        case PnDirection_None:
+        case PnLayout_None:
         default:
             ASSERT(0);
             break;
@@ -357,7 +357,7 @@ static inline bool RecurseCullX(
             // "c" had no children culled, so we must have just trimmed
             // the end border of "c".  So this is not a culling, it's just
             // a container border trimming.  We'll come here again if cull
-            // searching the other direction (Y) makes this loop again.
+            // searching the other layout (Y) makes this loop again.
             // }
     }
 
@@ -413,14 +413,14 @@ static inline bool RecurseCullY(
             // "c" had no children culled, so we must have just trimmed
             // the end border of "c".  So this is not a culling, it's just
             // a container border trimming.  We'll come here again if cull
-            // searching the other direction (X) makes this loop again.
+            // searching the other layout (X) makes this loop again.
             // }
     }
 
     return false; // no culling.
 }
 
-// For when the direction of the packing for the container of "c"
+// For when the layout of the packing for the container of "c"
 // is vertical.
 //
 static inline
@@ -428,13 +428,13 @@ uint32_t CullX(const struct PnAllocation *a, struct PnSurface *c) {
 
     DASSERT(c);
     DASSERT(c->parent);
-    DASSERT(c->parent->direction == PnDirection_TB ||
-            c->parent->direction == PnDirection_BT);
+    DASSERT(c->parent->layout == PnLayout_TB ||
+            c->parent->layout == PnLayout_BT);
 
     bool haveChildShowing = false;
     uint32_t haveCullRet = 0;
 
-    // Now cull in the x direction.
+    // Now cull in the x layout.
     for(; c; c = c->nextSibling) {
         if(c->culled) continue;
         if(RecurseCullX(a, c, &c->allocation))
@@ -447,7 +447,7 @@ uint32_t CullX(const struct PnAllocation *a, struct PnSurface *c) {
     return haveCullRet;
 }
 
-// For when the direction of the packing for the container of "c"
+// For when the layout of the packing for the container of "c"
 // is horizontal.
 //
 static inline
@@ -455,13 +455,13 @@ uint32_t CullY(const struct PnAllocation *a, struct PnSurface *c) {
 
     DASSERT(c);
     DASSERT(c->parent);
-    DASSERT(c->parent->direction == PnDirection_LR ||
-            c->parent->direction == PnDirection_RL);
+    DASSERT(c->parent->layout == PnLayout_LR ||
+            c->parent->layout == PnLayout_RL);
 
     bool haveChildShowing = false;
     uint32_t haveCullRet = 0;
 
-    // Now cull in the y direction.
+    // Now cull in the y layout.
     for(; c; c = c->nextSibling) {
         if(c->culled) continue;
         if(RecurseCullY(a, c, &c->allocation))
@@ -513,10 +513,10 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
     uint32_t haveCullRet = 0;
 
 
-    switch(s->direction) {
+    switch(s->layout) {
 
-        case PnDirection_One:
-        case PnDirection_TB:
+        case PnLayout_One:
+        case PnLayout_TB:
             haveCullRet = CullX(a, s->firstChild);
             if(haveCullRet) return haveCullRet;
             c = s->lastChild;
@@ -534,7 +534,7 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             if(c->culled) haveCullRet = NO_SHOWING_CHILD;
             return haveCullRet;
 
-        case PnDirection_BT:
+        case PnLayout_BT:
             haveCullRet = CullX(a, s->firstChild);
             if(haveCullRet) return haveCullRet;
             c = s->firstChild;
@@ -552,7 +552,7 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             if(c->culled) haveCullRet = NO_SHOWING_CHILD;
             return haveCullRet;
 
-        case PnDirection_LR:
+        case PnLayout_LR:
             haveCullRet = CullY(a, s->firstChild);
             if(haveCullRet) return haveCullRet;
             c = s->lastChild;
@@ -570,7 +570,7 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             if(c->culled) haveCullRet = NO_SHOWING_CHILD;
             return haveCullRet;
 
-        case PnDirection_RL:
+        case PnLayout_RL:
             haveCullRet = CullY(a, s->firstChild);
             if(haveCullRet) return haveCullRet;
             c = s->firstChild;
@@ -588,9 +588,9 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             if(c->culled) haveCullRet = NO_SHOWING_CHILD;
             return haveCullRet;
 
-        case PnDirection_None:
+        case PnLayout_None:
         default:
-            ASSERT(0, "s->type=%d s->direction=%d", s->type, s->direction);
+            ASSERT(0, "s->type=%d s->layout=%d", s->type, s->layout);
             break;
     }
 
@@ -1156,11 +1156,11 @@ static void ExpandChildren(const struct PnSurface *s,
 
     struct PnSurface *c;
 
-    switch(s->direction) {
+    switch(s->layout) {
 
-        case PnDirection_One:
+        case PnLayout_One:
             DASSERT(s->firstChild == s->lastChild);
-        case PnDirection_LR:
+        case PnLayout_LR:
             ExpandHShared(s, a, s->firstChild, Next);
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
@@ -1170,7 +1170,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
 
-        case PnDirection_TB:
+        case PnLayout_TB:
             ExpandVShared(s, a, s->firstChild, Next);
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
@@ -1180,7 +1180,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     AlignX(s, &s->allocation, &c->allocation, endBorder);
             break;
 
-        case PnDirection_BT:
+        case PnLayout_BT:
             ExpandVShared(s, a, s->lastChild, Prev);
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
@@ -1190,7 +1190,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     AlignX(s, &s->allocation, &c->allocation, endBorder);
             break;
 
-        case PnDirection_RL:
+        case PnLayout_RL:
             ExpandHShared(s, a, s->lastChild, Prev);
             for(c = s->firstChild; c; c = c->nextSibling)
                 if(!c->culled)
@@ -1200,7 +1200,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
 
-        case PnDirection_None:
+        case PnLayout_None:
         default:
             ASSERT(0);
             break;

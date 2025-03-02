@@ -183,7 +183,7 @@ struct PnSurface {
     // In the order ARGB
     uint32_t backgroundColor;
 
-    enum PnDirection direction;
+    enum PnLayout layout;
     enum PnAlign align;
     const enum PnExpand expand;
 

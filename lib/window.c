@@ -186,12 +186,12 @@ static struct wl_callback_listener callback_listener = {
 
 struct PnWindow *pnWindow_create(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
-        enum PnDirection direction, enum PnAlign align,
+        enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand) {
 
-    DASSERT(direction != PnDirection_None || (w && h));
+    DASSERT(layout != PnLayout_None || (w && h));
 
-    if(direction == PnDirection_None && !(w && h)) {
+    if(layout == PnLayout_None && !(w && h)) {
         ERROR("A window with no child widgets must have non-zero "
                 "width and height, w,h=%" PRIu32 ",%" PRIu32,
                 w, h);
@@ -229,7 +229,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     win->dqRead = win->drawQueues + 1;
 
     * (enum PnExpand *) &win->surface.expand = expand;
-    win->surface.direction = direction;
+    win->surface.layout = layout;
     win->surface.align = align;
     win->surface.backgroundColor = PN_WINDOW_BGCOLOR;
     win->needDraw = true;

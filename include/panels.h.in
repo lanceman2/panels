@@ -54,9 +54,10 @@ extern "C" {
 // development time.
 
 
-// Child widget direction packing order
+// Child widget direction/layout packing order
 //
-// Container widget attribute PnDirection.
+// Container widget attribute PnLayout.
+// How the children are laid out.
 //
 // Is there a "field/branch" in mathematics that we can know that will
 // give use a more optimal way to parametrise widget rectangle packing?
@@ -72,23 +73,23 @@ extern "C" {
 // Like text flow direction.  Example: in English words of on the page
 // from left to right, the first word read is on the left.
 //
-// Packing order direction: example PnDirection_RL means the first added
+// Packing order direction: example PnLayout_RL means the first added
 // goes to the right side, second added goes next to the first just to the
 // left of the first, and so on ...
 //
-enum PnDirection {
+enum PnLayout {
 
-    // PnDirection is a attribute of a widget container (surface), be it a
+    // PnLayout is a attribute of a widget container (surface), be it a
     // widget or window.
 
-    // PnDirection_None and PnDirection_One just add failure modes for when
+    // PnLayout_None and PnLayout_One just add failure modes for when
     // the user adds extra children.
 
     // no gravity to hold widgets.  Cannot have any children.
-    PnDirection_None = -2, // For non-container widgets or windows
+    PnLayout_None = -2, // For non-container widgets or windows
 
     // The container surface can only have zero or one widget.
-    PnDirection_One = -1,
+    PnLayout_One = -1,
 
     // Windows (and widgets) with all the below gravities can have zero
     // or more children.
@@ -97,24 +98,26 @@ enum PnDirection {
     //
     // Horizontally row of child widgets:
     //
-    // We use 0 so that PnDirection_LR is the default; it certainly made
+    // We use 0 so that PnLayout_LR is the default; it certainly made
     // writing test code easier.
     //
-    PnDirection_LR = 0, // child widgets assemble from left to right
-    PnDirection_RL = 1, // child widgets assemble from right to left
+    PnLayout_LR = 0, // child widgets assemble from left to right
+    PnLayout_RL = 1, // child widgets assemble from right to left
 
     // Vertically column of child widgets:
     //
-    PnDirection_TB = 2, // child widgets assemble top to bottom
+    PnLayout_TB = 2, // child widgets assemble top to bottom
     //
-    // PnDirection_BT is like real world gravity pulling down where the
+    // PnLayout_BT is like real world gravity pulling down where the
     // starting widget gets squished on the bottom.
-    PnDirection_BT = 3, // child widgets assemble bottom to top
+    PnLayout_BT = 3, // child widgets assemble bottom to top
 
-    // We could use this direction to make a grid, a notebook, or other
+    PnLayout_Table = 4,
+
+    // We could use this layout to make a grid, a notebook, or other
     // container packing method. The window or widget will define its own
     // packing.
-    PnDirection_Callback
+    PnLayout_Callback
 };
 
 
@@ -224,7 +227,7 @@ PN_EXPORT struct PnWindow *pnWindow_create(
          * top/bottom border thickness. */
         uint32_t width, uint32_t height,
         int32_t x, int32_t y,
-        enum PnDirection direction,
+        enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand);
 
@@ -239,7 +242,7 @@ PN_EXPORT void pnWindow_setDestroy(struct PnWindow *window,
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnSurface *parent,
         uint32_t width, uint32_t height,
-        enum PnDirection direction,
+        enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
@@ -507,7 +510,7 @@ static inline void pnWidget_setCairoDraw(struct PnWidget *surface,
 
 PN_EXPORT struct PnWidget *pnButton_create(struct PnSurface *parent,
         uint32_t width, uint32_t height,
-        enum PnDirection direction, enum PnAlign align,
+        enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand,
         const char *label, bool toggle, size_t size);
 

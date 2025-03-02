@@ -131,14 +131,14 @@ int main(int argc, char **argv) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
     struct PnWindow *win = pnWindow_create(0, 30, 30,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
 
     w = pnWidget_create(
             (struct PnSurface *) win/*parent*/,
             500/*width*/, 550/*height*/,
-            0/*direction*/, 0/*align*/,
+            0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0/*size*/);
     ASSERT(w);
     pnWidget_setDraw(w, draw, (void *) (uintptr_t)(argc - 1));

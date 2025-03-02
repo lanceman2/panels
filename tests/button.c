@@ -65,7 +65,7 @@ static void Button(void) {
     b->button = (void *) pnButton_create(
             (struct PnSurface *) win/*parent*/,
             30/*width*/, 20/*height*/,
-            0/*direction*/, 0/*align*/,
+            0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/,
             "Quit", false/*toggle*/, 0/*size*/);
     ASSERT(b->button);
@@ -86,7 +86,7 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
     win = pnWindow_create(0, 0, 0,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
+            0/*x*/, 0/*y*/, PnLayout_LR, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWindow_setBackgroundColor(win, 0xAA010101);

@@ -53,7 +53,7 @@ int main(void) {
     srand(3);
 
     win = pnWindow_create(0, 3, 3,
-            0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWindow_setBackgroundColor(win, 0xA0010101);

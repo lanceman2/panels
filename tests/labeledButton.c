@@ -37,7 +37,7 @@ static void Button(void) {
     if(!(buttonCount % 6))
         hbox = pnWidget_create((void *) win,
                 2/*width*/, 2/*height*/,
-                PnDirection_LR, 0/*align*/,
+                PnLayout_LR, 0/*align*/,
                 PnExpand_HV, 0/*size*/);
     ASSERT(hbox);
 
@@ -48,7 +48,7 @@ static void Button(void) {
 
     struct PnWidget *button = pnButton_create((void *) hbox,
             0/*width*/, 0/*height*/,
-            0/*direction*/, 0/*align*/,
+            0/*layout*/, 0/*align*/,
             PnExpand_VH, 0/*label*/, false/*toggle*/,
             0/*size*/);
     ASSERT(button);
@@ -76,7 +76,7 @@ int main(void) {
     srand(3);
 
     win = pnWindow_create(0, 3/*width*/, 3/*height*/,
-            0/*x*/, 0/*y*/, PnDirection_TB/*direction*/, 0,
+            0/*x*/, 0/*y*/, PnLayout_TB/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWindow_setBackgroundColor(win, 0xFF000000);

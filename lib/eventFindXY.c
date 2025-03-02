@@ -45,10 +45,10 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
 
     struct PnSurface *c;
 
-    switch(s->direction) {
+    switch(s->layout) {
 
-        case PnDirection_One:
-        case PnDirection_LR:
+        case PnLayout_One:
+        case PnLayout_LR:
             for(c = s->firstChild; c; c = c->nextSibling) {
                 if(c->culled) continue;
                 if(x < c->allocation.x)
@@ -73,7 +73,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             }
             break;
 
-        case PnDirection_RL:
+        case PnLayout_RL:
             for(c = s->lastChild; c; c = c->prevSibling) {
                 if(c->culled) continue;
                 if(x < c->allocation.x)
@@ -98,7 +98,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             }
             break;
 
-        case PnDirection_TB:
+        case PnLayout_TB:
             for(c = s->firstChild; c; c = c->nextSibling) {
                 if(c->culled) continue;
                 if(y < c->allocation.y)
@@ -123,7 +123,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             }
             break;
 
-        case PnDirection_BT:
+        case PnLayout_BT:
             for(c = s->lastChild; c; c = c->prevSibling) {
                 if(c->culled) continue;
                 if(y < c->allocation.y)
