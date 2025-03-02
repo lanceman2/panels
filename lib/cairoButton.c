@@ -282,7 +282,7 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
         size = sizeof(struct PnButton);
     //
     struct PnButton *b = (void *) pnWidget_create(parent,
-            MIN_WIDTH, MIN_HEIGHT,
+            width, height,
             direction, align, expand, size);
     if(!b)
         // A common error mode is that the parent cannot have children.

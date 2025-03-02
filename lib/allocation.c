@@ -234,7 +234,7 @@ static void GetChildrenXY(const struct PnSurface *s,
 
     DASSERT(!s->culled);
     DASSERT(s->firstChild);
-    DASSERT(a->width);
+    DASSERT(a->width, "s->type=%d s->culled=%d", s->type, s->culled);
     DASSERT(a->height);
 
     uint32_t borderX = GetBWidth(s);
@@ -1333,9 +1333,29 @@ void GetWidgetAllocations(struct PnWindow *win) {
         TallyRequestedSizes(s, a); // PASS 2 plus loop repeats
         // So now a->width and a->height may have changed.
 
+        if(a->width == 0 || a->height == 0) {
+            // This has to be the special case where the window has
+            // children that are all culled; because we do not allow a
+            // window to have zero width or height if it has no
+            // child widgets in it.
+            DASSERT(s->firstChild);
+            DASSERT(s->firstChild->culled);
+#ifdef DEBUG
+            for(struct PnSurface *c=s->firstChild; c; c = c->nextSibling)
+                ASSERT(c->culled);
+#endif
+            DASSERT(width);
+            DASSERT(height);
+            if(a->width == 0)
+                a->width = width;
+            if(a->height == 0)
+                a->height = height;
+            break;
+        }
+
         // No x and y allocations yet.
         GetChildrenXY(s, a); // PASS 3 plus loop repeats
-        // Now we have  x and y allocations.
+        // Now we have x and y allocations (and widths and heights).
 
         // Still shrink wrapped and the top surface width and height are
         // set to the "shrink wrapped" width and height.
@@ -1433,7 +1453,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // TODO: Mash more widget (surface) passes together?  I'd expect that
     // would be prone to introducing bugs.  It's currently doing a very
     // ordered logical progression.  Switching the order of any of the
-    // operations will break it.
+    // operations will break it (without more changes).
 
     // Reset the "focused" surface and like things.  At this point we may
     // be culling out that "focused" surface.  I'm not sure if there is a

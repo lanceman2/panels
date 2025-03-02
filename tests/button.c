@@ -85,7 +85,7 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    win = pnWindow_create(0, 8, 8,
+    win = pnWindow_create(0, 0, 0,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
             PnExpand_HV);
     ASSERT(win);
