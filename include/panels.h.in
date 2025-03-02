@@ -165,8 +165,7 @@ enum PnExpand {
 // if none of the sibling widgets expand to take all the "extra" space.
 
 // The default "align" is:
-//     Left X-direction (horizontal) and Top Y-direction (vertical).
-//
+//     Left X-direction (horizontal) and Top Y-direction (verLayout/
 
 // x -> first 2 bits  y -> next 2 bits
 
