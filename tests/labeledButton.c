@@ -62,7 +62,7 @@ static void Button(void) {
             text, 0/*size*/);
     ASSERT(l);
     pnLabel_setFontColor(l, 0xF0000000);
-    uint32_t color = 0xAAFFFFFF & Color();
+    uint32_t color = 0xDA000000 | (0x00FFFFFF & Color());
     pnWidget_setBackgroundColor((void *)l, color);
     pnWidget_setBackgroundColor(button, color);
     pnWidget_addCallback(button,
