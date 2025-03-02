@@ -59,30 +59,18 @@ static inline void DrawBorder(cairo_t *cr) {
 
 static inline void Draw(cairo_t *cr, struct PnButton *b) {
 
-    uint32_t color = b->colors[b->state];
+    uint32_t color;
 
+    color = b->widget.surface.backgroundColor;
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
-#if 0
     cairo_paint(cr);
 
-    color = 0xFFF0F0F0;
+    color = b->colors[b->state];
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
-
-    switch(b->state) {
-        case PnButtonState_Normal:
-        case PnButtonState_Hover:
-        case PnButtonState_Pressed:
-        case PnButtonState_Active:
-            //DrawBorder(cr);
-            break;
-        default:
-    }
-#endif
-
     DrawBorder(cr);
     cairo_stroke(cr);
 }
@@ -147,6 +135,7 @@ static bool press(struct PnWidget *w,
             struct PnButton *b) {
     if(which == 0) {
         SetState(b, PnButtonState_Pressed);
+        pnWidget_callAction(w, PN_BUTTON_CB_PRESS);
         return true;
     }
     return false;
@@ -205,6 +194,28 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
     }
 }
 
+
+// Press and no release yet.
+//
+static bool pressAction(struct PnButton *b,
+        // This is the user callback function prototype that we choose for
+        // this "press" action.  The underlying API does not give a shit
+        // what this (callback) void pointer is, but we do at this
+        // point.
+        bool (*callback)(struct PnButton *b, void *userData),
+        void *userData, void *actionData) {
+
+    DASSERT(b);
+    DASSERT(actionData == 0);
+    DASSERT(callback);
+
+    // callback() is the API user set callback.
+    //
+    // We let the user return the value.  true will eat the event and stop
+    // this function from going through (calling) all connected
+    // callbacks.
+    return callback(b, userData);
+}
 // button "click" marshalling function gets the button API users callback
 // to call.  Gets called indirectly from
 // pnWidget_callAction(widget, PN_BUTTON_CB_CLICK).
@@ -225,7 +236,7 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
 // and (2) leak system resources into your process.  Both (1 and 2) are
 // unacceptable for some applications.
 //
-static bool click(struct PnButton *b,
+static bool clickAction(struct PnButton *b,
         // This is the user callback function prototype that we choose for
         // this "click" action.  The underlying API does not give a shit
         // what this (callback) void pointer is, but we do at this
@@ -294,14 +305,18 @@ struct PnWidget *pnButton_create(struct PnSurface *parent,
     pnWidget_setCairoDraw(&b->widget, (void *) cairoDraw, b);
     pnWidget_addDestroy(&b->widget, (void *) destroy, b);
     pnWidget_addAction(&b->widget, PN_BUTTON_CB_CLICK,
-            (void *) click, 0/*actionData*/);
+            (void *) clickAction, 0/*actionData*/);
+    pnWidget_addAction(&b->widget, PN_BUTTON_CB_PRESS,
+            (void *) pressAction, 0/*actionData*/);
+
 
     b->colors = calloc(1, PnButtonState_NumRegularStates*
             sizeof(*b->colors));
     ASSERT(b->colors, "calloc(1,%zu) failed",
             PnButtonState_NumRegularStates*sizeof(*b->colors));
     // Default state colors:
-    b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
+    //b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
+    b->colors[PnButtonState_Normal] = b->widget.surface.backgroundColor;
     b->colors[PnButtonState_Hover] =   0xFF00EDFF;
     b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
     b->colors[PnButtonState_Active] =  0xFF0BD109;

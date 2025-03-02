@@ -27,7 +27,8 @@ extern "C" {
 // to verify all these values.  If any of these numbers are wrong
 // pnWidget_addAction() will throw an assertion.
 //
-#define PN_BUTTON_CB_CLICK 0
+#define PN_BUTTON_CB_CLICK 0 // after release
+#define PN_BUTTON_CB_PRESS 1 // after press
 
 
 

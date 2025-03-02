@@ -71,7 +71,7 @@ enum PnButtonState {
 // much less system resources, especially for the case that the animation
 // does not change the pixels drawn every draw cycle.
 //
-#define NUM_FRAMES 6
+#define NUM_FRAMES 11
 
 struct PnButton {
 

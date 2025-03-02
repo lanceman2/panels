@@ -40,6 +40,17 @@ static bool click(struct PnButton *button, struct button *b) {
     return false;
 }
 
+static bool press(struct PnButton *button, struct button *b) {
+
+    ASSERT(b);
+    ASSERT(button);
+    ASSERT(button == b->button);
+
+    fprintf(stderr, "PRESS button %d\n", b->buttonNum);
+    return false;
+}
+
+
 static void destroy(struct PnButton *button, struct button *b) {
 
     DZMEM(b, sizeof(*b));
@@ -63,7 +74,10 @@ static void Button(void) {
 
     pnWidget_addCallback((void *) b->button,
             PN_BUTTON_CB_CLICK, click, b);
+    pnWidget_addCallback((void *) b->button,
+            PN_BUTTON_CB_PRESS, press, b);
     pnWidget_addDestroy((void *) b->button, (void *) destroy, b);
+    pnWidget_setBackgroundColor((void *) b->button, 0xFF707070);
 }
 
 
@@ -71,11 +85,11 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    win = pnWindow_create(0, 3, 3,
+    win = pnWindow_create(0, 8, 8,
             0/*x*/, 0/*y*/, PnDirection_LR/*direction*/, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWindow_setBackgroundColor(win, 0xA0010101);
+    pnWindow_setBackgroundColor(win, 0xAA010101);
 
     for(int i=0; i<8; ++i)
         Button();
