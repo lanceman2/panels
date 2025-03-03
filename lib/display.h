@@ -175,10 +175,24 @@ struct PnSurface {
     // So, this parent=0 for toplevel windows and popup windows.
     //
     struct PnSurface *parent;
+
     struct PnSurface *firstChild, *lastChild;
     struct PnSurface *nextSibling, *prevSibling;
 
+    union {
+        struct {
+            struct PnSurface *firstChild, *lastChild;
+            struct PnSurface *nextSibling, *prevSibling;
+        } list;
+        struct {
+            struct PnSurface **children;
+            uint32_t numRows, numColumns;
+        } grid;
+    };
+
+
     struct PnWindow *window; // The top most surface is a this window.
+
 
     // In the order ARGB
     uint32_t backgroundColor;

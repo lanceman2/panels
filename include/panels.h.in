@@ -112,7 +112,9 @@ enum PnLayout {
     // starting widget gets squished on the bottom.
     PnLayout_BT = 3, // child widgets assemble bottom to top
 
-    PnLayout_Table = 4,
+    // X/Y indexed grid layout container.  Coordinates are (0,0) to
+    // (M-1,N-1).
+    PnLayout_Grid = 4,
 
     // We could use this layout to make a grid, a notebook, or other
     // container packing method. The window or widget will define its own
