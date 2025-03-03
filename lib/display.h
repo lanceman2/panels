@@ -180,13 +180,15 @@ struct PnSurface {
     //struct PnSurface *nextSibling, *prevSibling;
 
     union {
+        // These two structures are close to the same size for 64 bit
+        // computers (64 bit pointers).
         struct {
             struct PnSurface *firstChild, *lastChild;
             struct PnSurface *nextSibling, *prevSibling;
         } l; // container is a list (l)
         struct {
             struct PnSurface **child;
-            uint32_t numRows, numColumns;
+            uint32_t numRows, numColumns, numChildren;
         } g; // container is a grid (g)
     };
 

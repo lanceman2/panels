@@ -79,8 +79,8 @@ extern "C" {
 //
 enum PnLayout {
 
-    // PnLayout is a attribute of a widget container (surface), be it a
-    // widget or window.
+    // PnLayout is a attribute of a widget (surface) container (or lack
+    // thereof), be it a widget or window.
 
     // PnLayout_None and PnLayout_One just add failure modes for when
     // the user adds extra children.

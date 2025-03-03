@@ -71,10 +71,8 @@ void GetSurfaceDamageFunction(struct PnWindow *win) {
     }
 }
 
-
-// Add the child, s, as the last child.
 static inline
-void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+void AddChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
 
     DASSERT(parent);
     DASSERT(s);
@@ -97,15 +95,31 @@ void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
         parent->l.firstChild = s;
     }
     parent->l.lastChild = s;
-
 }
 
 static inline
-void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+void AddChildSurfaceGrid(struct PnSurface *parent, struct PnSurface *s) {
 
-    DASSERT(s);
+    ASSERT(0, "WRITE CODE FOR GRID CASE HERE");
+}
+
+// Add the child, s, as the last child.
+static inline
+void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+
     DASSERT(parent);
+    DASSERT(s);
+    DASSERT(s->parent);
     DASSERT(s->parent == parent);
+
+    if(parent->layout != PnLayout_Grid)
+        AddChildSurfaceList(parent, s);
+    else
+        AddChildSurfaceGrid(parent, s);
+}
+    
+static inline
+void RemoveChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
 
     if(s->l.nextSibling) {
         DASSERT(parent->l.lastChild != s);
@@ -126,6 +140,25 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
 
     s->l.nextSibling = 0;
     s->parent = 0;
+}
+
+static inline
+void RemoveChildSurfaceGrid(struct PnSurface *parent, struct PnSurface *s) {
+
+    ASSERT(0, "WRITE CODE FOR GRID CASE HERE");
+}
+
+static inline
+void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+
+    DASSERT(s);
+    DASSERT(parent);
+    DASSERT(s->parent == parent);
+
+    if(parent->layout != PnLayout_Grid)
+        RemoveChildSurfaceList(parent, s);
+    else
+        RemoveChildSurfaceGrid(parent, s);
 }
 
 void pnSurface_setDraw(

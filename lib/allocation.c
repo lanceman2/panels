@@ -9,6 +9,23 @@
 #include  "display.h"
 
 
+
+static bool inline HaveChildren(const struct PnSurface *s) {
+    DASSERT(s);
+    ASSERT(s->layout < PnLayout_Callback, "WRITE MORE CODE");
+
+    if(s->layout < PnLayout_Grid) {
+        DASSERT((s->l.firstChild && s->l.lastChild) ||
+                (!s->l.firstChild && !s->l.lastChild));
+        return (s->l.firstChild);
+    }
+
+    // else
+    DASSERT(s->layout == PnLayout_Grid);
+
+    return (s->g.numChildren);
+}
+
 // We use lots of function recursion to get widget positions, sizes, and
 // culling.  This code may hurt your head.
 
@@ -36,7 +53,7 @@ static bool ResetChildrenCull(struct PnSurface *s) {
 
     bool culled = s->hidden;
 
-    if(culled || !s->l.firstChild)
+    if(culled || !HaveChildren(s))
         return culled;
 
     // "s" is not culled yet, but it may get culled if no children
@@ -45,14 +62,23 @@ static bool ResetChildrenCull(struct PnSurface *s) {
     culled = true;
     // It's culled unless a child is not culled.
 
-    for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling) {
-        c->culled = ResetChildrenCull(c);
+    switch(s->layout) {
 
-        if(!c->culled && culled)
-            // We have at least one child not culled and the container "s"
-            // is not hidden.
-            culled = false;
-        // We will set all children's children.
+        case PnLayout_Grid:
+            ASSERT(0, "ADD GRID CODE");
+            break;
+
+        default:
+            for(struct PnSurface *c = s->l.firstChild; c;
+                    c = c->l.nextSibling) {
+                c->culled = ResetChildrenCull(c);
+
+                if(!c->culled && culled)
+                    // We have at least one child not culled and the
+                    // container "s" is not hidden.
+                    culled = false;
+                // We will set all children's children.
+            }
     }
 
     return culled;
@@ -88,7 +114,7 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     DASSERT(s);
     DASSERT(!s->culled);
 
-    if(s->l.firstChild)
+    if(HaveChildren(s))
         // We may add changes to this later:
         s->canExpand = s->expand;
     else {
@@ -99,6 +125,13 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     }
 
     // Now "s" has children.
+
+    if(s->layout == PnLayout_Grid) {
+
+        ASSERT(0, "WRITE GRID CASE");
+
+        return s->canExpand;
+    }
 
     // TODO: deal with containers that are not PnLayout_LR,
     // PnLayout_RL, PnLayout_TB, or PnLayout_BT.
@@ -129,7 +162,8 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
 //
 static inline uint32_t GetBWidth(const struct PnSurface *s) {
 
-    if(s->l.firstChild || s->width)
+    if(HaveChildren(s) || s->width)
+        // It can be zero.
         return s->width;
 
     if(s->type & WIDGET)
@@ -149,7 +183,8 @@ static inline uint32_t GetBWidth(const struct PnSurface *s) {
 
 static inline uint32_t GetBHeight(const struct PnSurface *s) {
 
-    if(s->l.firstChild || s->height)
+    if(HaveChildren(s) || s->height)
+        // It can be zero.
         return s->height;
 
     if(s->type & WIDGET)
@@ -184,7 +219,6 @@ void TallyRequestedSizes(const struct PnSurface *s,
 
     switch(s->layout) {
         case PnLayout_None:
-            DASSERT(!s->l.firstChild);
             break;
         case PnLayout_One:
             DASSERT((!s->l.firstChild && !s->l.lastChild)
@@ -221,6 +255,9 @@ void TallyRequestedSizes(const struct PnSurface *s,
             if(gotOne)
                 a->width += GetBWidth(s);
             break;
+        case PnLayout_Grid:
+            ASSERT(0, "WRITE GRID LAYOUT CASE");
+            break;
         default:
     }
 
@@ -233,7 +270,9 @@ static void GetChildrenXY(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     DASSERT(!s->culled);
-    DASSERT(s->l.firstChild);
+    // This seems a little odd, but, it turns out that some part of this
+    // union will be set:
+    DASSERT(HaveChildren(s));
     DASSERT(a->width, "s->type=%d s->culled=%d", s->type, s->culled);
     DASSERT(a->height);
 
@@ -294,6 +333,10 @@ static void GetChildrenXY(const struct PnSurface *s,
             }
             break;
 
+        case PnLayout_Grid:
+            ASSERT(0, "WRITE GRID LAYOUT CASE");
+            break;
+
         case PnLayout_None:
         default:
             ASSERT(0);
@@ -319,6 +362,7 @@ static inline bool RecurseCullX(
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
 
+    DASSERT(c->layout != PnLayout_Grid);
     DASSERT(!c->culled);
 
     if(ca->x > a->x + a->width) {
@@ -374,6 +418,7 @@ static inline bool RecurseCullY(
         const struct PnAllocation *a,
         struct PnSurface *c, struct PnAllocation *ca) {
 
+    DASSERT(c->layout != PnLayout_Grid);
     DASSERT(!c->culled);
 
     if(ca->y > a->y + a->height) {
@@ -505,7 +550,7 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     DASSERT(!s->culled);
-    DASSERT(s->l.firstChild);
+    DASSERT(HaveChildren(s));
 
     struct PnSurface *c; // child iterator.
 
@@ -587,6 +632,10 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             }
             if(c->culled) haveCullRet = NO_SHOWING_CHILD;
             return haveCullRet;
+
+        case PnLayout_Grid:
+            ASSERT(0, "MORE CODE HERE");
+            break;
 
         case PnLayout_None:
         default:
@@ -942,6 +991,7 @@ void ExpandH(const struct PnSurface *s,
     DASSERT(c);
     DASSERT(ca == &c->allocation);
     DASSERT(s);
+    DASSERT(s->layout < PnLayout_Grid);
     DASSERT(s->l.firstChild);
     DASSERT(s->l.lastChild);
     DASSERT(&s->allocation == a);
@@ -1006,6 +1056,7 @@ void ExpandV(const struct PnSurface *s,
     DASSERT(c);
     DASSERT(ca == &c->allocation);
     DASSERT(s);
+    DASSERT(s->layout < PnLayout_Grid);
     DASSERT(s->l.firstChild);
     DASSERT(s->l.lastChild);
     DASSERT(&s->allocation == a);
@@ -1135,8 +1186,7 @@ static void ExpandChildren(const struct PnSurface *s,
     // "s" has a correct allocation, "a".
 
     DASSERT(s);
-    DASSERT(s->l.firstChild);
-    DASSERT(s->l.lastChild);
+    DASSERT(HaveChildren(s));
     DASSERT(!s->culled);
 
     // This will be either the container "s" right edge border padding
@@ -1200,10 +1250,23 @@ static void ExpandChildren(const struct PnSurface *s,
                     AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
 
+        case PnLayout_Grid:
+            ASSERT(0, "WRITE MORE CODE HERE");
+            break;
+
         case PnLayout_None:
         default:
             ASSERT(0);
             break;
+    }
+
+    if(s->layout == PnLayout_Grid) {
+        DASSERT(s->g.child);
+        DASSERT(s->g.numChildren);
+
+        ASSERT(0, "WRITE MORE CODE HERE");
+
+        return;
     }
 
     // Now that all the children of "s" have correct allocations we can
@@ -1265,7 +1328,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
     DASSERT(!s->culled);
     DASSERT(win->needAllocate);
 
-    if(!a->width && !s->l.firstChild) {
+    if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);
         a->width = GetBWidth(s);
         a->height = GetBHeight(s);
@@ -1277,14 +1340,12 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // TODO: Do this for popup windows in popup.c?
     //
 
-    if(!s->l.firstChild) {
-        DASSERT(!s->l.lastChild);
+    if(!HaveChildren(s))
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.
         //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         return;
-    }
 
     // We do many passes through the widget (surface) tree data structure.
     // Each pass does a different thing, read on.  I think it's impossible
@@ -1313,8 +1374,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // We count widget tree passes, but note: widget passes can get
     // quicker as widget passes cull and so on.
 
-    DASSERT(s->l.firstChild->parent == s);
-    DASSERT(s->l.lastChild->parent == s);
 
     ResetChildrenCull(s); // PASS 1
 
@@ -1338,11 +1397,21 @@ void GetWidgetAllocations(struct PnWindow *win) {
             // children that are all culled; because we do not allow a
             // window to have zero width or height if it has no
             // child widgets in it.
-            DASSERT(s->l.firstChild);
-            DASSERT(s->l.firstChild->culled);
+            DASSERT(s->layout > PnLayout_None);
 #ifdef DEBUG
-            for(struct PnSurface *c=s->l.firstChild; c; c = c->l.nextSibling)
-                ASSERT(c->culled);
+            switch(s->layout) {
+
+                case PnLayout_Grid:
+                    ASSERT(0, "WRITE CODE FOR GRID CASE");
+                    break;
+
+                default:
+                    ASSERT(s->l.firstChild);
+                    ASSERT(s->l.firstChild->culled);
+                    for(struct PnSurface *c=s->l.firstChild; c;
+                            c = c->l.nextSibling)
+                        ASSERT(c->culled);
+            }
 #endif
             DASSERT(width);
             DASSERT(height);
@@ -1422,11 +1491,16 @@ void GetWidgetAllocations(struct PnWindow *win) {
         // fix in it: all the widgets get culled.
         //
         // NOT A FULL PASS through the widget tree.
-        for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling)
-            if(!c->culled) {
-                haveChildShowing = true;
-                break;
-            }
+        if(s->layout < PnLayout_Grid) {
+            for(struct PnSurface *c = s->l.firstChild; c;
+                    c = c->l.nextSibling)
+                if(!c->culled) {
+                    haveChildShowing = true;
+                    break;
+                }
+        } else {
+            ASSERT(0, "WRITE CODE FOR GRID CASE");
+        }
 
     } while(haveChildShowing &&
             // PASS 4 plus loop repeats

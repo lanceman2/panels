@@ -44,8 +44,13 @@ static void CreateCairos(struct PnBuffer *buffer,
 
     CreateCairo(buffer, s);
 
-    for(s = s->l.firstChild; s; s = s->l.nextSibling)
-        CreateCairos(buffer, s);
+    if(s->layout != PnLayout_Grid) {
+        for(s = s->l.firstChild; s; s = s->l.nextSibling)
+            CreateCairos(buffer, s);
+        return;
+    }
+
+    ASSERT(0, "WRITE CODE FOR GRID CASE HERE");
 }
 
 void pnSurface_setCairoDraw(struct PnSurface *s,
@@ -102,6 +107,11 @@ void DestroyCairos(struct PnSurface *s) {
     DASSERT(s);
     DestroyCairo(s);
 
-    for(s = s->l.firstChild; s; s = s->l.nextSibling)
-        DestroyCairos(s);
+    if(s->layout != PnLayout_Grid) {
+        for(s = s->l.firstChild; s; s = s->l.nextSibling)
+            DestroyCairos(s);
+        return;
+    }
+
+    ASSERT(0, "WRITE CODE FOR GRID CASE HERE");
 }

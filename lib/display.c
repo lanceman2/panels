@@ -552,9 +552,11 @@ static void _pnDisplay_destroy(void) {
     // Destroy stuff in reverse order of creation, pretty much.
 
     DASSERT(d.surface.type == PnSurfaceType_toplevel);
+    DASSERT(d.surface.layout == PnLayout_LR);
+    DASSERT(PnLayout_LR == 0);
 
     while(d.surface.l.firstChild) {
-        // Destroy widgets without parents.
+        // Destroy widgets without regular parents.
         DASSERT(d.surface.l.firstChild->type & WIDGET);
         pnWidget_destroy((void *) d.surface.l.firstChild);
     }
