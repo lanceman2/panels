@@ -17,6 +17,8 @@ struct PnWidget *pnWidget_create(
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, size_t size) {
 
+    // We can make widgets without having a window yet, so we need to make
+    // sure that we have a PnDisplay (process singleton).
     if(CheckDisplay()) return 0;
 
     if(!parent)
@@ -24,7 +26,7 @@ struct PnWidget *pnWidget_create(
         parent = &d.surface;
 
     DASSERT(parent->layout != PnLayout_None);
-    DASSERT(parent->layout != PnLayout_One || !parent->firstChild);
+    DASSERT(parent->layout != PnLayout_One || !parent->l.firstChild);
 
     if(parent->layout == PnLayout_None) {
         ERROR("Parent surface cannot have children");
@@ -32,7 +34,7 @@ struct PnWidget *pnWidget_create(
     }
 
     if(parent->layout == PnLayout_One &&
-            parent->firstChild) {
+            parent->l.firstChild) {
         ERROR("Parent surface cannot have more than one child");
         return 0;
     }
@@ -143,8 +145,8 @@ void pnWidget_destroy(struct PnWidget *w) {
         free(destroy);
     }
 
-    while(w->surface.firstChild)
-        pnWidget_destroy((void *) w->surface.firstChild);
+    while(w->surface.l.firstChild)
+        pnWidget_destroy((void *) w->surface.l.firstChild);
 
     DestroySurface((void *) w);
     DZMEM(w, w->size);

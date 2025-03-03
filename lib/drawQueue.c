@@ -74,14 +74,14 @@ static void DequeueChildren(struct PnDrawQueue *q, struct PnSurface *s) {
     DASSERT(s);
 
     struct PnSurface *c;
-    for(c = s->firstChild; c; c = c->nextSibling) {
+    for(c = s->l.firstChild; c; c = c->l.nextSibling) {
         // If the surface "c" is culled it can get un-culled at any time
         // so we just work with it.  It could happen that things change
         // before we get to draw.  Drawing events are somewhat
         // asynchronous to this process.
         if(c->isQueued)
             RemoveFromDrawQueue(q, c);
-        else if(s->firstChild)
+        else if(s->l.firstChild)
             // If a child is not queued it could have queued children.
             DequeueChildren(q, c);
     }

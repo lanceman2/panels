@@ -80,23 +80,23 @@ void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
     DASSERT(s);
     DASSERT(s->parent);
     DASSERT(s->parent == parent);
-    DASSERT(!s->firstChild);
-    DASSERT(!s->lastChild);
-    DASSERT(!s->nextSibling);
-    DASSERT(!s->prevSibling);
+    DASSERT(!s->l.firstChild);
+    DASSERT(!s->l.lastChild);
+    DASSERT(!s->l.nextSibling);
+    DASSERT(!s->l.prevSibling);
 
-    if(parent->firstChild) {
-        DASSERT(parent->lastChild);
-        DASSERT(!parent->lastChild->nextSibling);
-        DASSERT(!parent->firstChild->prevSibling);
+    if(parent->l.firstChild) {
+        DASSERT(parent->l.lastChild);
+        DASSERT(!parent->l.lastChild->l.nextSibling);
+        DASSERT(!parent->l.firstChild->l.prevSibling);
 
-        s->prevSibling = parent->lastChild;
-        parent->lastChild->nextSibling = s;
+        s->l.prevSibling = parent->l.lastChild;
+        parent->l.lastChild->l.nextSibling = s;
     } else {
-        DASSERT(!parent->lastChild);
-        parent->firstChild = s;
+        DASSERT(!parent->l.lastChild);
+        parent->l.firstChild = s;
     }
-    parent->lastChild = s;
+    parent->l.lastChild = s;
 
 }
 
@@ -107,24 +107,24 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
     DASSERT(parent);
     DASSERT(s->parent == parent);
 
-    if(s->nextSibling) {
-        DASSERT(parent->lastChild != s);
-        s->nextSibling->prevSibling = s->prevSibling;
+    if(s->l.nextSibling) {
+        DASSERT(parent->l.lastChild != s);
+        s->l.nextSibling->l.prevSibling = s->l.prevSibling;
     } else {
-        DASSERT(parent->lastChild == s);
-        parent->lastChild = s->prevSibling;
+        DASSERT(parent->l.lastChild == s);
+        parent->l.lastChild = s->l.prevSibling;
     }
 
-    if(s->prevSibling) {
-        DASSERT(parent->firstChild != s);
-        s->prevSibling->nextSibling = s->nextSibling;
-        s->prevSibling = 0;
+    if(s->l.prevSibling) {
+        DASSERT(parent->l.firstChild != s);
+        s->l.prevSibling->l.nextSibling = s->l.nextSibling;
+        s->l.prevSibling = 0;
     } else {
-        DASSERT(parent->firstChild == s);
-        parent->firstChild = s->nextSibling;
+        DASSERT(parent->l.firstChild == s);
+        parent->l.firstChild = s->l.nextSibling;
     }
 
-    s->nextSibling = 0;
+    s->l.nextSibling = 0;
     s->parent = 0;
 }
 
@@ -195,7 +195,7 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
 drawChildren:
     // Now draw children (widgets).
-    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
+    for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling)
         if(!c->culled)
             pnSurface_draw(c, buffer);
 }

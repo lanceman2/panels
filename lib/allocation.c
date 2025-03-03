@@ -36,7 +36,7 @@ static bool ResetChildrenCull(struct PnSurface *s) {
 
     bool culled = s->hidden;
 
-    if(culled || !s->firstChild)
+    if(culled || !s->l.firstChild)
         return culled;
 
     // "s" is not culled yet, but it may get culled if no children
@@ -45,7 +45,7 @@ static bool ResetChildrenCull(struct PnSurface *s) {
     culled = true;
     // It's culled unless a child is not culled.
 
-    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+    for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling) {
         c->culled = ResetChildrenCull(c);
 
         if(!c->culled && culled)
@@ -88,7 +88,7 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     DASSERT(s);
     DASSERT(!s->culled);
 
-    if(s->firstChild)
+    if(s->l.firstChild)
         // We may add changes to this later:
         s->canExpand = s->expand;
     else {
@@ -105,7 +105,7 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     ASSERT(s->layout >= PnLayout_LR ||
             s->layout <= PnLayout_BT, "WRITE MORE CODE");
 
-    for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling) {
+    for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling) {
         if(c->culled)
             // Skip culled widgets.
             continue;
@@ -129,7 +129,7 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
 //
 static inline uint32_t GetBWidth(const struct PnSurface *s) {
 
-    if(s->firstChild || s->width)
+    if(s->l.firstChild || s->width)
         return s->width;
 
     if(s->type & WIDGET)
@@ -149,7 +149,7 @@ static inline uint32_t GetBWidth(const struct PnSurface *s) {
 
 static inline uint32_t GetBHeight(const struct PnSurface *s) {
 
-    if(s->firstChild || s->height)
+    if(s->l.firstChild || s->height)
         return s->height;
 
     if(s->type & WIDGET)
@@ -184,15 +184,15 @@ void TallyRequestedSizes(const struct PnSurface *s,
 
     switch(s->layout) {
         case PnLayout_None:
-            DASSERT(!s->firstChild);
+            DASSERT(!s->l.firstChild);
             break;
         case PnLayout_One:
-            DASSERT((!s->firstChild && !s->lastChild)
-                    || s->firstChild == s->lastChild);
+            DASSERT((!s->l.firstChild && !s->l.lastChild)
+                    || s->l.firstChild == s->l.lastChild);
         case PnLayout_LR:
         case PnLayout_RL:
-            for(struct PnSurface *c = s->firstChild; c;
-                    c = c->nextSibling) {
+            for(struct PnSurface *c = s->l.firstChild; c;
+                    c = c->l.nextSibling) {
                 if(c->culled) continue;
                 if(!gotOne) gotOne = true;
                 TallyRequestedSizes(c, &c->allocation);
@@ -207,8 +207,8 @@ void TallyRequestedSizes(const struct PnSurface *s,
             break;
         case PnLayout_BT:
         case PnLayout_TB:
-            for(struct PnSurface *c = s->firstChild; c;
-                    c = c->nextSibling) {
+            for(struct PnSurface *c = s->l.firstChild; c;
+                    c = c->l.nextSibling) {
                 if(c->culled) continue;
                 if(!gotOne) gotOne = true;
                 TallyRequestedSizes(c, &c->allocation);
@@ -233,7 +233,7 @@ static void GetChildrenXY(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     DASSERT(!s->culled);
-    DASSERT(s->firstChild);
+    DASSERT(s->l.firstChild);
     DASSERT(a->width, "s->type=%d s->culled=%d", s->type, s->culled);
     DASSERT(a->height);
 
@@ -247,48 +247,48 @@ static void GetChildrenXY(const struct PnSurface *s,
 
         case PnLayout_One:
         case PnLayout_TB:
-            for(struct PnSurface *c = s->firstChild; c;
-                    c = c->nextSibling) {
+            for(struct PnSurface *c = s->l.firstChild; c;
+                    c = c->l.nextSibling) {
                 if(c->culled) continue;
                 c->allocation.x = x;
                 c->allocation.y = y;
-                if(c->firstChild)
+                if(c->l.firstChild)
                     GetChildrenXY(c, &c->allocation);
                 y += c->allocation.height + borderY;
             }
             break;
 
         case PnLayout_BT:
-            for(struct PnSurface *c = s->lastChild; c;
-                    c = c->prevSibling) {
+            for(struct PnSurface *c = s->l.lastChild; c;
+                    c = c->l.prevSibling) {
                 if(c->culled) continue;
                 c->allocation.x = x;
                 c->allocation.y = y;
-                if(c->firstChild)
+                if(c->l.firstChild)
                     GetChildrenXY(c, &c->allocation);
                 y += c->allocation.height + borderY;
             }
             break;
 
         case PnLayout_LR:
-            for(struct PnSurface *c = s->firstChild; c;
-                    c = c->nextSibling) {
+            for(struct PnSurface *c = s->l.firstChild; c;
+                    c = c->l.nextSibling) {
                 if(c->culled) continue;
                 c->allocation.x = x;
                 c->allocation.y = y;
-                if(c->firstChild)
+                if(c->l.firstChild)
                     GetChildrenXY(c, &c->allocation);
                 x += c->allocation.width + borderX;
             }
             break;
 
         case PnLayout_RL:
-            for(struct PnSurface *c = s->lastChild; c;
-                    c = c->prevSibling) {
+            for(struct PnSurface *c = s->l.lastChild; c;
+                    c = c->l.prevSibling) {
                 if(c->culled) continue;
                 c->allocation.x = x;
                 c->allocation.y = y;
-                if(c->firstChild)
+                if(c->l.firstChild)
                     GetChildrenXY(c, &c->allocation);
                 x += c->allocation.width + borderX;
             }
@@ -331,7 +331,7 @@ static inline bool RecurseCullX(
     if(ca->x + ca->width > a->x + a->width) {
         // The outer edge does not fit.
 
-        if(!c->firstChild) {
+        if(!c->l.firstChild) {
             // This is a leaf that does not fit so we just cull it.
             c->culled = true;
             return true;
@@ -386,7 +386,7 @@ static inline bool RecurseCullY(
     if(ca->y + ca->height > a->y + a->height) {
         // The outer edge does not fit.
 
-        if(!c->firstChild) {
+        if(!c->l.firstChild) {
             // This is a leaf that does not fit so we just cull it.
             c->culled = true;
             return true;
@@ -435,7 +435,7 @@ uint32_t CullX(const struct PnAllocation *a, struct PnSurface *c) {
     uint32_t haveCullRet = 0;
 
     // Now cull in the x layout.
-    for(; c; c = c->nextSibling) {
+    for(; c; c = c->l.nextSibling) {
         if(c->culled) continue;
         if(RecurseCullX(a, c, &c->allocation))
             haveCullRet |= GOT_CULL;
@@ -462,7 +462,7 @@ uint32_t CullY(const struct PnAllocation *a, struct PnSurface *c) {
     uint32_t haveCullRet = 0;
 
     // Now cull in the y layout.
-    for(; c; c = c->nextSibling) {
+    for(; c; c = c->l.nextSibling) {
         if(c->culled) continue;
         if(RecurseCullY(a, c, &c->allocation))
             haveCullRet |= GOT_CULL;
@@ -505,7 +505,7 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     DASSERT(!s->culled);
-    DASSERT(s->firstChild);
+    DASSERT(s->l.firstChild);
 
     struct PnSurface *c; // child iterator.
 
@@ -517,17 +517,17 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
 
         case PnLayout_One:
         case PnLayout_TB:
-            haveCullRet = CullX(a, s->firstChild);
+            haveCullRet = CullX(a, s->l.firstChild);
             if(haveCullRet) return haveCullRet;
-            c = s->lastChild;
+            c = s->l.lastChild;
             while(c && c->culled)
-                c = c->prevSibling;
+                c = c->l.prevSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
             haveCullRet = RecurseCullY(a, c, &c->allocation) ? GOT_CULL : 0;
-            while(c->culled && c->prevSibling) {
-                c = c->prevSibling;
+            while(c->culled && c->l.prevSibling) {
+                c = c->l.prevSibling;
                 if(!c->culled)
                     RecurseCullY(a, c, &c->allocation);
             }
@@ -535,17 +535,17 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             return haveCullRet;
 
         case PnLayout_BT:
-            haveCullRet = CullX(a, s->firstChild);
+            haveCullRet = CullX(a, s->l.firstChild);
             if(haveCullRet) return haveCullRet;
-            c = s->firstChild;
+            c = s->l.firstChild;
             while(c && c->culled)
-                c = c->nextSibling;
+                c = c->l.nextSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
             haveCullRet = RecurseCullY(a, c, &c->allocation) ? GOT_CULL : 0;
-            while(c->culled && c->nextSibling) {
-                c = c->nextSibling;
+            while(c->culled && c->l.nextSibling) {
+                c = c->l.nextSibling;
                 if(!c->culled)
                     RecurseCullY(a, c, &c->allocation);
             }
@@ -553,17 +553,17 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             return haveCullRet;
 
         case PnLayout_LR:
-            haveCullRet = CullY(a, s->firstChild);
+            haveCullRet = CullY(a, s->l.firstChild);
             if(haveCullRet) return haveCullRet;
-            c = s->lastChild;
+            c = s->l.lastChild;
             while(c && c->culled)
-                c = c->prevSibling;
+                c = c->l.prevSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
             haveCullRet = RecurseCullX(a, c, &c->allocation) ? GOT_CULL : 0;
-            while(c->culled && c->prevSibling) {
-                c = c->prevSibling;
+            while(c->culled && c->l.prevSibling) {
+                c = c->l.prevSibling;
                 if(!c->culled)
                     RecurseCullX(a, c, &c->allocation);
             }
@@ -571,17 +571,17 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             return haveCullRet;
 
         case PnLayout_RL:
-            haveCullRet = CullY(a, s->firstChild);
+            haveCullRet = CullY(a, s->l.firstChild);
             if(haveCullRet) return haveCullRet;
-            c = s->firstChild;
+            c = s->l.firstChild;
             while(c && c->culled)
-                c = c->nextSibling;
+                c = c->l.nextSibling;
             // We must have at least one child in this widget container,
             // otherwise it would be culled.
             DASSERT(c);
             haveCullRet = RecurseCullX(a, c, &c->allocation) ? GOT_CULL : 0;
-            while(c->culled && c->nextSibling) {
-                c = c->nextSibling;
+            while(c->culled && c->l.nextSibling) {
+                c = c->l.nextSibling;
                 if(!c->culled)
                     RecurseCullX(a, c, &c->allocation);
             }
@@ -602,13 +602,13 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
 static inline
 struct PnSurface *Next(struct PnSurface *s) {
     DASSERT(s);
-    return s->nextSibling;
+    return s->l.nextSibling;
 }
 
 static inline
 struct PnSurface *Prev(struct PnSurface *s) {
     DASSERT(s);
-    return s->prevSibling;
+    return s->l.prevSibling;
 }
 
 
@@ -942,8 +942,8 @@ void ExpandH(const struct PnSurface *s,
     DASSERT(c);
     DASSERT(ca == &c->allocation);
     DASSERT(s);
-    DASSERT(s->firstChild);
-    DASSERT(s->lastChild);
+    DASSERT(s->l.firstChild);
+    DASSERT(s->l.lastChild);
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
 
@@ -1006,8 +1006,8 @@ void ExpandV(const struct PnSurface *s,
     DASSERT(c);
     DASSERT(ca == &c->allocation);
     DASSERT(s);
-    DASSERT(s->firstChild);
-    DASSERT(s->lastChild);
+    DASSERT(s->l.firstChild);
+    DASSERT(s->l.lastChild);
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
 
@@ -1135,8 +1135,8 @@ static void ExpandChildren(const struct PnSurface *s,
     // "s" has a correct allocation, "a".
 
     DASSERT(s);
-    DASSERT(s->firstChild);
-    DASSERT(s->lastChild);
+    DASSERT(s->l.firstChild);
+    DASSERT(s->l.lastChild);
     DASSERT(!s->culled);
 
     // This will be either the container "s" right edge border padding
@@ -1159,43 +1159,43 @@ static void ExpandChildren(const struct PnSurface *s,
     switch(s->layout) {
 
         case PnLayout_One:
-            DASSERT(s->firstChild == s->lastChild);
+            DASSERT(s->l.firstChild == s->l.lastChild);
         case PnLayout_LR:
-            ExpandHShared(s, a, s->firstChild, Next);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            ExpandHShared(s, a, s->l.firstChild, Next);
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     ExpandV(s, a, c, &c->allocation, &endBorder);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnLayout_TB:
-            ExpandVShared(s, a, s->firstChild, Next);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            ExpandVShared(s, a, s->l.firstChild, Next);
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     ExpandH(s, a, c, &c->allocation, &endBorder);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     AlignX(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnLayout_BT:
-            ExpandVShared(s, a, s->lastChild, Prev);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            ExpandVShared(s, a, s->l.lastChild, Prev);
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     ExpandH(s, a, c, &c->allocation, &endBorder);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     AlignX(s, &s->allocation, &c->allocation, endBorder);
             break;
 
         case PnLayout_RL:
-            ExpandHShared(s, a, s->lastChild, Prev);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            ExpandHShared(s, a, s->l.lastChild, Prev);
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     ExpandV(s, a, c, &c->allocation, &endBorder);
-            for(c = s->firstChild; c; c = c->nextSibling)
+            for(c = s->l.firstChild; c; c = c->l.nextSibling)
                 if(!c->culled)
                     AlignY(s, &s->allocation, &c->allocation, endBorder);
             break;
@@ -1209,8 +1209,8 @@ static void ExpandChildren(const struct PnSurface *s,
     // Now that all the children of "s" have correct allocations we can
     // expand (fix) the "s" children's children allocations.
 
-    for(c = s->firstChild; c; c = c->nextSibling)
-        if(!c->culled && c->firstChild)
+    for(c = s->l.firstChild; c; c = c->l.nextSibling)
+        if(!c->culled && c->l.firstChild)
             ExpandChildren(c, &c->allocation);
 }
 
@@ -1265,7 +1265,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
     DASSERT(!s->culled);
     DASSERT(win->needAllocate);
 
-    if(!a->width && !s->firstChild) {
+    if(!a->width && !s->l.firstChild) {
         DASSERT(!a->height);
         a->width = GetBWidth(s);
         a->height = GetBHeight(s);
@@ -1277,8 +1277,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // TODO: Do this for popup windows in popup.c?
     //
 
-    if(!s->firstChild) {
-        DASSERT(!s->lastChild);
+    if(!s->l.firstChild) {
+        DASSERT(!s->l.lastChild);
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.
@@ -1313,8 +1313,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // We count widget tree passes, but note: widget passes can get
     // quicker as widget passes cull and so on.
 
-    DASSERT(s->firstChild->parent == s);
-    DASSERT(s->lastChild->parent == s);
+    DASSERT(s->l.firstChild->parent == s);
+    DASSERT(s->l.lastChild->parent == s);
 
     ResetChildrenCull(s); // PASS 1
 
@@ -1338,10 +1338,10 @@ void GetWidgetAllocations(struct PnWindow *win) {
             // children that are all culled; because we do not allow a
             // window to have zero width or height if it has no
             // child widgets in it.
-            DASSERT(s->firstChild);
-            DASSERT(s->firstChild->culled);
+            DASSERT(s->l.firstChild);
+            DASSERT(s->l.firstChild->culled);
 #ifdef DEBUG
-            for(struct PnSurface *c=s->firstChild; c; c = c->nextSibling)
+            for(struct PnSurface *c=s->l.firstChild; c; c = c->l.nextSibling)
                 ASSERT(c->culled);
 #endif
             DASSERT(width);
@@ -1422,7 +1422,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
         // fix in it: all the widgets get culled.
         //
         // NOT A FULL PASS through the widget tree.
-        for(struct PnSurface *c = s->firstChild; c; c = c->nextSibling)
+        for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling)
             if(!c->culled) {
                 haveChildShowing = true;
                 break;

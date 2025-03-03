@@ -44,7 +44,7 @@ static void CreateCairos(struct PnBuffer *buffer,
 
     CreateCairo(buffer, s);
 
-    for(s = s->firstChild; s; s = s->nextSibling)
+    for(s = s->l.firstChild; s; s = s->l.nextSibling)
         CreateCairos(buffer, s);
 }
 
@@ -102,6 +102,6 @@ void DestroyCairos(struct PnSurface *s) {
     DASSERT(s);
     DestroyCairo(s);
 
-    for(s = s->firstChild; s; s = s->nextSibling)
+    for(s = s->l.firstChild; s; s = s->l.nextSibling)
         DestroyCairos(s);
 }

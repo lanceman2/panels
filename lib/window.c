@@ -340,9 +340,9 @@ void pnWindow_destroy(struct PnWindow *win) {
     // had focus for example.
     RemoveSurfaceFromDisplay((void *) win);
 
-    // Remove all child widgets in the list from win->surface.firstChild
-    while(win->surface.firstChild)
-        pnWidget_destroy((void *) win->surface.firstChild);
+    // Remove all child widgets in the list from win->surface.l.l.firstChild
+    while(win->surface.l.firstChild)
+        pnWidget_destroy((void *) win->surface.l.firstChild);
 
     if(win->surface.type == PnSurfaceType_popup) {
         // A popup

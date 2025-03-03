@@ -24,7 +24,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
         struct PnSurface *s, uint32_t x, uint32_t y) {
 
     DASSERT(win);
-    DASSERT(s->firstChild);
+    DASSERT(s->l.firstChild);
     DASSERT(!s->culled);
 
     // Let's see if the x,y positions always make sense.
@@ -49,7 +49,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
 
         case PnLayout_One:
         case PnLayout_LR:
-            for(c = s->firstChild; c; c = c->nextSibling) {
+            for(c = s->l.firstChild; c; c = c->l.nextSibling) {
                 if(c->culled) continue;
                 if(x < c->allocation.x)
                     // x is to the left of surface "c"
@@ -66,7 +66,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
                     // y is below the surface "c"
                     break;
                 // this surface "c" contains x,y.
-                if(c->firstChild)
+                if(c->l.firstChild)
                     return FindSurface(win, c, x, y);
                 // c is a leaf.
                 return c;
@@ -74,7 +74,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_RL:
-            for(c = s->lastChild; c; c = c->prevSibling) {
+            for(c = s->l.lastChild; c; c = c->l.prevSibling) {
                 if(c->culled) continue;
                 if(x < c->allocation.x)
                     // x is to the left of surface "c"
@@ -91,7 +91,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
                     // y is below the surface "c"
                     break;
                 // this surface "c" contains x,y.
-                if(c->firstChild)
+                if(c->l.firstChild)
                     return FindSurface(win, c, x, y);
                 // c is a leaf.
                 return c;
@@ -99,7 +99,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_TB:
-            for(c = s->firstChild; c; c = c->nextSibling) {
+            for(c = s->l.firstChild; c; c = c->l.nextSibling) {
                 if(c->culled) continue;
                 if(y < c->allocation.y)
                     // y is to the above of surface "c"
@@ -116,7 +116,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
                     // x is to the right the surface "c"
                     break;
                 // this surface "c" contains x,y.
-                if(c->firstChild)
+                if(c->l.firstChild)
                     return FindSurface(win, c, x, y);
                 // c is a leaf.
                 return c;
@@ -124,7 +124,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_BT:
-            for(c = s->lastChild; c; c = c->prevSibling) {
+            for(c = s->l.lastChild; c; c = c->l.prevSibling) {
                 if(c->culled) continue;
                 if(y < c->allocation.y)
                     // y is to the above of surface "c"
@@ -141,7 +141,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
                     // x is to the right the surface "c"
                     break;
                 // this surface "c" contains x,y.
-                if(c->firstChild)
+                if(c->l.firstChild)
                     return FindSurface(win, c, x, y);
                 // c is a leaf.
                 return c;
@@ -175,7 +175,7 @@ void GetPointerSurface(const struct PnWindow *win) {
     // The d.x, d.y position can move out from the pointerSurface
     // without changing the pointerSurface because of a pointer grab.
 
-    if(d.pointerSurface->firstChild &&
+    if(d.pointerSurface->l.firstChild &&
             d.x >= d.pointerSurface->allocation.x &&
             d.y >= d.pointerSurface->allocation.y &&
             d.x < d.pointerSurface->allocation.x +

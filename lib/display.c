@@ -553,10 +553,10 @@ static void _pnDisplay_destroy(void) {
 
     DASSERT(d.surface.type == PnSurfaceType_toplevel);
 
-    while(d.surface.firstChild) {
+    while(d.surface.l.firstChild) {
         // Destroy widgets without parents.
-        DASSERT(d.surface.firstChild->type & WIDGET);
-        pnWidget_destroy((void *) d.surface.firstChild);
+        DASSERT(d.surface.l.firstChild->type & WIDGET);
+        pnWidget_destroy((void *) d.surface.l.firstChild);
     }
 
     // Destroy all the windows.

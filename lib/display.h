@@ -176,25 +176,24 @@ struct PnSurface {
     //
     struct PnSurface *parent;
 
-    struct PnSurface *firstChild, *lastChild;
-    struct PnSurface *nextSibling, *prevSibling;
+    //struct PnSurface *firstChild, *lastChild;
+    //struct PnSurface *nextSibling, *prevSibling;
 
     union {
         struct {
             struct PnSurface *firstChild, *lastChild;
             struct PnSurface *nextSibling, *prevSibling;
-        } list;
+        } l; // container is a list (l)
         struct {
             struct PnSurface **child;
             uint32_t numRows, numColumns;
-        } grid;
+        } g; // container is a grid (g)
     };
 
 
     struct PnWindow *window; // The top most surface is a this window.
 
-
-    // In the order ARGB
+    // 32 color bits in the byte order Alpha Red Green Blue:
     uint32_t backgroundColor;
 
     enum PnLayout layout;
@@ -451,12 +450,13 @@ struct PnDisplay {
     // Inherit surface for orphaned children surfaces (widgets).  That is,
     // widgets without parents.  This display thingy is the god parent of
     // all widgets without parents.  The widgets in this "list" do not get
-    // drawn unless they get new parents.
+    // drawn unless they get new parents that belong to a PnWindow at a
+    // top parenting level.
     //
     // TODO: This does not ever use a lot of the data in this structure,
-    // given these surface is never drawn and so on.  But, it's not a huge
+    // given this surface is never drawn and so on.  But, it's not a huge
     // amount of data.  Maybe brake PnSurface into two smaller structures?
-    // And use just the parenting part here.
+    // And use just the parenting part of a surface here.
     //
     struct PnSurface surface;
 
