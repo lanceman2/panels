@@ -25,8 +25,6 @@ int main(void) {
 
     pnWindow_show(win, true);
 
-    //pnWindow_show(pnWindow_create(400, 350), true);
-
 
     Run(win);
 
