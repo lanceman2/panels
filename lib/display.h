@@ -185,7 +185,7 @@ struct PnSurface {
             struct PnSurface *nextSibling, *prevSibling;
         } list;
         struct {
-            struct PnSurface **children;
+            struct PnSurface **child;
             uint32_t numRows, numColumns;
         } grid;
     };
@@ -447,6 +447,19 @@ struct PnWindow {
 // a X11 display.
 //
 struct PnDisplay {
+
+    // Inherit surface for orphaned children surfaces (widgets).  That is,
+    // widgets without parents.  This display thingy is the god parent of
+    // all widgets without parents.  The widgets in this "list" do not get
+    // drawn unless they get new parents.
+    //
+    // TODO: This does not ever use a lot of the data in this structure,
+    // given these surface is never drawn and so on.  But, it's not a huge
+    // amount of data.  Maybe brake PnSurface into two smaller structures?
+    // And use just the parenting part here.
+    //
+    struct PnSurface surface;
+
 
     // 9 singleton wayland client objects:
     //

@@ -71,6 +71,15 @@ draw_widget_run_CPPFLAGS := -DRUN
 067_draw_widget_SOURCES := draw_widget.c
 067_draw_widget_LDFLAGS := $(PN_LIB)
 
+070_orphans_SOURCES := orphans.c
+070_orphans_LDFLAGS := $(PN_LIB)
+
+orphans_run_SOURCES := orphans.c
+orphans_run_LDFLAGS := $(PN_LIB)
+orphans_run_CPPFLAGS := -DRUN
+
+073_orphansNoWin_SOURCES := orphansNoWin.c
+073_orphansNoWin_LDFLAGS := $(PN_LIB)
 
 ifdef WITH_FONTCONFIG
 081_findFont_SOURCES := 081_findFont.c

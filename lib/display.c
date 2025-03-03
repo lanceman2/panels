@@ -482,6 +482,10 @@ static int _pnDisplay_create(void) {
 
     DASSERT(!d.wl_display);
 
+    // This toplevel surface is never rendered.  We just use it to store
+    // orphaned widgets.  Orphaned widgets may get parents later.
+    d.surface.type = PnSurfaceType_toplevel;
+
     d.wl_display = wl_display_connect(0);
     RET_ERROR(d.wl_display, 1, "wl_display_connect() failed");
 
@@ -547,8 +551,17 @@ static void _pnDisplay_destroy(void) {
 
     // Destroy stuff in reverse order of creation, pretty much.
 
+    DASSERT(d.surface.type == PnSurfaceType_toplevel);
+
+    while(d.surface.firstChild) {
+        // Destroy widgets without parents.
+        DASSERT(d.surface.firstChild->type & WIDGET);
+        pnWidget_destroy((void *) d.surface.firstChild);
+    }
+
     // Destroy all the windows.
     while(d.windows)
+        // Which destroys all the widgets in them.
         pnWindow_destroy(d.windows);
 
     if(d.zxdg_decoration_manager)

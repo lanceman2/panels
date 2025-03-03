@@ -17,7 +17,12 @@ struct PnWidget *pnWidget_create(
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, size_t size) {
 
-    ASSERT(parent);
+    if(CheckDisplay()) return 0;
+
+    if(!parent)
+        // Use the god parent.
+        parent = &d.surface;
+
     DASSERT(parent->layout != PnLayout_None);
     DASSERT(parent->layout != PnLayout_One || !parent->firstChild);
 
