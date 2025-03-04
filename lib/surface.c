@@ -9,9 +9,34 @@
 #include "xdg-decoration-protocol.h"
 
 #include "debug.h"
-#include  "display.h"
+#include "display.h"
 
 #include "../include/panels_drawingUtils.h"
+
+
+void DestroySurfaceChildren(struct PnSurface *s) {
+
+    if(s->layout != PnLayout_Grid)
+        while(s->l.firstChild)
+            pnWidget_destroy((void *) s->l.firstChild);
+    else {
+        for(uint32_t y=s->g.numRows-1; y != -1; --y)
+            for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
+                struct PnSurface ***child = s->g.child;
+                // rows and columns can share widgets; like for row span
+                // and column span; that is adjacent cells that share
+                // the same widget.
+                if(child[y][x] &&
+                        (!x || child[y][x] != child[y][x-1]) &&
+                        (!y || child[y][x] != child[y-1][x])) {
+                    pnWidget_destroy((void *) child[y][x]);
+                    --s->g.numChildren;
+                }
+                child[y][x] = 0;
+            }
+        DASSERT(!s->g.numChildren);
+    }
+}
 
 
 void GetSurfaceDamageFunction(struct PnWindow *win) {
@@ -253,6 +278,20 @@ bool InitSurface(struct PnSurface *s) {
     DASSERT(s);
     DASSERT(s->type);
 
+    if(s->layout == PnLayout_Grid) {
+        DASSERT(s->g.numRows);
+        DASSERT(s->g.numColumns);
+        s->g.child = calloc(s->g.numRows, sizeof(*s->g.child));
+        ASSERT(s->g.child, "calloc(%" PRIu32 ",%zu) failed",
+                s->g.numRows, sizeof(*s->g.child));
+        for(uint32_t y=s->g.numRows-1; y != -1; --y) {
+            s->g.child[y] = calloc(s->g.numColumns, sizeof(*s->g.child[y]));
+            ASSERT(s->g.child[y], "calloc(%" PRIu32 ",%zu) failed",
+                    s->g.numColumns, sizeof(*s->g.child[y]));
+        }
+    }
+
+
     if(!s->parent) {
         DASSERT(!(s->type & WIDGET));
         // this is a window.
@@ -286,6 +325,19 @@ void DestroySurface(struct PnSurface *s) {
     DASSERT(s->parent);
 
     RemoveChildSurface(s->parent, s);
+
+    if(s->layout == PnLayout_Grid) {
+        // A Grid container surface has memory allocated for it's
+        // container 2D array thingy: child[numRows][numColumns]
+        struct PnSurface ***child = s->g.child;
+        for(uint32_t y=s->g.numRows-1; y != -1; --y) {
+            // Free a row array.
+            DZMEM(child[y], sizeof(*child[y])*s->g.numColumns);
+            free(child[y]);
+        }
+        DZMEM(child, sizeof(*child)*s->g.numRows);
+        free(child);
+    }
 }
 
 

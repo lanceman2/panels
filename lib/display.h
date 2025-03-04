@@ -176,9 +176,6 @@ struct PnSurface {
     //
     struct PnSurface *parent;
 
-    //struct PnSurface *firstChild, *lastChild;
-    //struct PnSurface *nextSibling, *prevSibling;
-
     union {
         // These two structures are close to the same size for 64 bit
         // computers (64 bit pointers).
@@ -187,7 +184,10 @@ struct PnSurface {
             struct PnSurface *nextSibling, *prevSibling;
         } l; // container is a list (l)
         struct {
-            struct PnSurface **child;
+            // Allocate this 2D array in InitSurface()
+            // Free() this 2D array in void DestroySurface()
+            struct PnSurface ***child;
+            // row y -> child[y]  child[y][x]
             uint32_t numRows, numColumns, numChildren;
         } g; // container is a grid (g)
     };
@@ -560,6 +560,7 @@ extern bool InitPopup(struct PnWindow *win,
 
 extern bool InitSurface(struct PnSurface *s);
 extern void DestroySurface(struct PnSurface *s);
+extern void DestroySurfaceChildren(struct PnSurface *s);
 
 extern void GetWidgetAllocations(struct PnWindow *win);
 

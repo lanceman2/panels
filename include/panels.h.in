@@ -231,7 +231,11 @@ PN_EXPORT struct PnWindow *pnWindow_create(
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand);
-
+PN_EXPORT struct PnWindow *pnWindow_createWithGrid(
+        struct PnWindow *parent,
+        uint32_t w, uint32_t h, int32_t x, int32_t y,
+        enum PnAlign align, enum PnExpand expand,
+        uint32_t numColumns, uint32_t numRows);
 PN_EXPORT bool pnWindow_isDrawn(struct PnWindow *window);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWindow *window);
 PN_EXPORT void pnWindow_destroy(struct PnWindow *window);
@@ -246,6 +250,11 @@ PN_EXPORT struct PnWidget *pnWidget_create(
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
+PN_EXPORT struct PnWidget *pnWidget_createWithGrid(
+        struct PnSurface *parent, uint32_t w, uint32_t h,
+        enum PnAlign align, enum PnExpand expand, 
+        uint32_t numColumns, uint32_t numRows,
+        size_t size);
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
 PN_EXPORT void pnWidget_addDestroy(struct PnWidget *widget,

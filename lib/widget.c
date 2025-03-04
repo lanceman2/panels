@@ -12,10 +12,13 @@
 #include "../include/panels_drawingUtils.h"
 
 
-struct PnWidget *pnWidget_create(
+static inline
+struct PnWidget *_pnWidget_createFull(
         struct PnSurface *parent, uint32_t w, uint32_t h,
         enum PnLayout layout, enum PnAlign align,
-        enum PnExpand expand, size_t size) {
+        enum PnExpand expand, 
+        uint32_t numRows, uint32_t numColumns,
+        size_t size) {
 
     // We can make widgets without having a window yet, so we need to make
     // sure that we have a PnDisplay (process singleton).
@@ -83,6 +86,25 @@ fail:
     return 0;
 }
 
+struct PnWidget *pnWidget_createWithGrid(
+        struct PnSurface *parent, uint32_t w, uint32_t h,
+        enum PnAlign align, enum PnExpand expand,
+        uint32_t numColumns, uint32_t numRows,
+        size_t size) {
+    return _pnWidget_createFull(parent, w, h, PnLayout_Grid, align, expand, 
+            numRows, numColumns, size);
+}
+
+struct PnWidget *pnWidget_create(
+        struct PnSurface *parent, uint32_t w, uint32_t h,
+        enum PnLayout layout, enum PnAlign align,
+        enum PnExpand expand, size_t size) {
+
+    ASSERT(layout != PnLayout_Grid);
+    return _pnWidget_createFull(parent, w, h, layout, align, expand, 
+        0/*numRows*/, 0/*numColumns*/, size);
+}
+
 static inline
 void RemoveCallback(struct PnAction *a, struct PnCallback *c) {
 
@@ -145,10 +167,12 @@ void pnWidget_destroy(struct PnWidget *w) {
         free(destroy);
     }
 
-    while(w->surface.l.firstChild)
-        pnWidget_destroy((void *) w->surface.l.firstChild);
+    // Destroy children.
+    // Destroy all child widgets in the list from w->surface.l.firstChild
+    // or w->surface.g.child[][].
+    DestroySurfaceChildren(&w->surface);
 
-    DestroySurface((void *) w);
+    DestroySurface(&w->surface);
     DZMEM(w, w->size);
     free(w);
 }

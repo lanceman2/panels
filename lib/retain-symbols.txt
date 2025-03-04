@@ -28,3 +28,5 @@ pnWidget_callAction
 pnWidget_addCallback
 pnSurface_isInSurface
 pnLabel_setFontColor
+pnWidget_createWithGrid
+pnWindow_createWithGrid

@@ -183,12 +183,12 @@ static struct wl_callback_listener callback_listener = {
 };
 
 
-
-struct PnWindow *pnWindow_create(struct PnWindow *parent,
+static inline
+struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnLayout layout, enum PnAlign align,
-        enum PnExpand expand) {
-
+        enum PnExpand expand,
+        uint32_t numColumns, uint32_t numRows) {
     DASSERT(layout != PnLayout_None || (w && h));
 
     if(layout == PnLayout_None && !(w && h)) {
@@ -197,7 +197,6 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
                 w, h);
         return 0;
     }
-
 
     if(CheckDisplay()) return 0;
 
@@ -237,6 +236,16 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
     // Default for windows so that user build the window before showing
     // it.
     win->surface.hidden = true;
+    if(layout == PnLayout_Grid) {
+        DASSERT(numRows);
+        DASSERT(numColumns);
+        win->surface.g.numRows = numRows;
+        win->surface.g.numColumns = numColumns;
+    } else {
+        DASSERT(!numRows);
+        DASSERT(!numColumns);
+    }
+
 
     InitSurface(&win->surface);
 
@@ -278,9 +287,6 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
             ASSERT(0, "Write more code here case=%d", win->surface.type);
     }
 
-    //win->surface.allocation.width = w;
-    //win->surface.allocation.height = h;
-
     return win;
 
 fail:
@@ -288,6 +294,23 @@ fail:
     pnWindow_destroy(win);
 
     return 0;
+}
+
+struct PnWindow *pnWindow_createWithGrid(struct PnWindow *parent,
+        uint32_t w, uint32_t h, int32_t x, int32_t y,
+        enum PnAlign align, enum PnExpand expand,
+        uint32_t numColumns, uint32_t numRows) {
+    return _pnWindow_createFull(parent, w, h, x, y,
+            PnLayout_Grid, align, expand, numColumns, numRows);
+}
+
+struct PnWindow *pnWindow_create(struct PnWindow *parent,
+        uint32_t w, uint32_t h, int32_t x, int32_t y,
+        enum PnLayout layout, enum PnAlign align,
+        enum PnExpand expand) {
+    ASSERT(layout != PnLayout_Grid);
+    return _pnWindow_createFull(parent, w, h, x, y, layout, align,
+            expand, 0/*numColumns*/, 0/*numRows*/);
 }
 
 
@@ -333,21 +356,17 @@ void pnWindow_destroy(struct PnWindow *win) {
         // This is called before we start destroying stuff.
         win->destroy(win, win->destroyData);
 
-    DestroySurface(&win->surface);
-
     // If there is state in the display that refers to this surface
     // (window) take care to not refer to it.  Like if this window surface
     // had focus for example.
     RemoveSurfaceFromDisplay((void *) win);
 
-    // Remove all child widgets in the list from win->surface.l.firstChild
+    // Destroy all child widgets in the list from win->surface.l.firstChild
     // or win->surface.g.child[][].
+    DestroySurfaceChildren(&win->surface);
 
-    if(win->surface.layout != PnLayout_Grid)
-        while(win->surface.l.firstChild)
-            pnWidget_destroy((void *) win->surface.l.firstChild);
-    else
-        ASSERT(0, "WRITE GRID CASE HERE");
+    DestroySurface(&win->surface);
+
 
     if(win->surface.type == PnSurfaceType_popup) {
         // A popup
