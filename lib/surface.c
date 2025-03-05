@@ -20,16 +20,16 @@ void DestroySurfaceChildren(struct PnSurface *s) {
         while(s->l.firstChild)
             pnWidget_destroy((void *) s->l.firstChild);
     else {
+        struct PnSurface ***child = s->g.child;
         for(uint32_t y=s->g.numRows-1; y != -1; --y)
             for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-                struct PnSurface ***child = s->g.child;
-                // rows and columns can share widgets; like for row span
-                // and column span; that is adjacent cells that share
+                struct PnSurface *c = child[y][x];
+                // rows and columns can share widgets; like for row span 2
+                // and column span 2; that is adjacent cells that share
                 // the same widget.
-                if(child[y][x] &&
-                        (!x || child[y][x] != child[y][x-1]) &&
-                        (!y || child[y][x] != child[y-1][x])) {
-                    pnWidget_destroy((void *) child[y][x]);
+                if(c && (!x || c != child[y][x-1]) &&
+                        (!y || c != child[y-1][x])) {
+                    pnWidget_destroy((void *) c);
                     --s->g.numChildren;
                 }
                 child[y][x] = 0;
@@ -105,16 +105,16 @@ void AddChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
     DASSERT(s->parent == parent);
     DASSERT(!s->l.firstChild);
     DASSERT(!s->l.lastChild);
-    DASSERT(!s->l.nextSibling);
-    DASSERT(!s->l.prevSibling);
+    DASSERT(!s->pl.nextSibling);
+    DASSERT(!s->pl.prevSibling);
 
     if(parent->l.firstChild) {
         DASSERT(parent->l.lastChild);
-        DASSERT(!parent->l.lastChild->l.nextSibling);
-        DASSERT(!parent->l.firstChild->l.prevSibling);
+        DASSERT(!parent->l.lastChild->pl.nextSibling);
+        DASSERT(!parent->l.firstChild->pl.prevSibling);
 
-        s->l.prevSibling = parent->l.lastChild;
-        parent->l.lastChild->l.nextSibling = s;
+        s->pl.prevSibling = parent->l.lastChild;
+        parent->l.lastChild->pl.nextSibling = s;
     } else {
         DASSERT(!parent->l.lastChild);
         parent->l.firstChild = s;
@@ -122,15 +122,144 @@ void AddChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
     parent->l.lastChild = s;
 }
 
+// We act on just the farthest upper and left cell for a given
+// surface (widget).  Widgets can span more than one cell.
+//
 static inline
-void AddChildSurfaceGrid(struct PnSurface *parent, struct PnSurface *s) {
-
-    ASSERT(0, "WRITE CODE FOR GRID CASE HERE");
+bool IsUpperLeftCell(struct PnSurface *c,
+        struct PnSurface ***cells, uint32_t x, uint32_t y) {
+    return (c && (!x || c != cells[y][x-1]) &&
+            (!y || c != cells[y-1][x]));
 }
 
-// Add the child, s, as the last child.
+
+// This can destroy, create, and reallocate the grid.  Just choose your
+// numColumns and numRows.  Widgets in removed cells get destroyed.
+//
+// Oh what fun.
+//
 static inline
-void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
+
+    DASSERT(s->layout == PnLayout_Grid);
+    struct PnSurface ***child = s->g.child;
+    ASSERT(s->g.numColumns || !child);
+    ASSERT(s->g.numRows || !child);
+    ASSERT((numColumns && numRows) || (!numColumns && !numRows));
+
+    // 1. First do possible cleanup due to number of rows decreasing.
+    ////////////////////////////////////////////////////////////////////
+    uint32_t y=s->g.numRows-1;
+    //
+    for(; y >= numRows && y != -1; --y) {
+        // Remove row child[y].
+        for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
+            struct PnSurface *c = child[y][x];
+            // rows and columns can share widgets; like for row span 2
+            // and column span 3; that is adjacent cells that share
+            // the same widget.
+            //
+            // Note: the element spans may change, if the spans go across
+            // cells that are kept and cells that are removed.
+            if(IsUpperLeftCell(c, child, x, y)) {
+                pnWidget_destroy((void *) c);
+                --s->g.numChildren;
+            }
+            child[y][x] = 0; // DEBUG memset 0 thingy
+        }
+        child[y] = 0;
+        free(child[y]);
+    }
+
+    // 2. Do removing or growing of the cells at the end of the existing
+    //    rows.
+    ////////////////////////////////////////////////////////////////////
+    // For the remaining rows, shrink the number of columns per row as
+    // needed.
+    //
+    // y is numRows-1 or -1
+    for(; y != -1; --y) {
+        // Note we iterate just on the end of the row if it needs
+        // trimming.
+        for(uint32_t x=s->g.numColumns-1; x>=numColumns && x!=-1; --x) {
+            struct PnSurface *c = child[y][x];
+            if(IsUpperLeftCell(c, child, x, y)) {
+                pnWidget_destroy((void *) c);
+                --s->g.numChildren;
+            }
+            child[y][x] = 0; // DEBUG memset 0 thingy
+        }
+        if(s->g.numColumns != numColumns) continue;
+        child[y] = realloc(child[y], numColumns*sizeof(*child[y]));
+        ASSERT(child[y], "realloc(,%zu) failed",
+                numColumns*sizeof(*child[y]));
+        if(numColumns > s->g.numColumns)
+            // Zero the new memory.
+            memset(child[y] + s->g.numColumns, 0,
+                    (numColumns - s->g.numColumns)*sizeof(*child[y]));
+    }
+
+    // 3. Grow or shrink the number of rows.
+    /////////////////////////////////////////////////////////////////
+    if(numRows != s->g.numRows) {
+        child = s->g.child = realloc(child, numRows*sizeof(*child));
+        ASSERT(child, "realloc(,%zu) failed", numRows*sizeof(*child));
+        if(numRows > s->g.numRows)
+            // Zero the new memory.
+            memset(child + s->g.numRows, 0,
+                    (numRows - s->g.numRows)*sizeof(*child));
+    }
+
+    // 4. Add new rows.
+    /////////////////////////////////////////////////////////////////
+    for(y=s->g.numRows; y < numRows; ++y) {
+        child[y] = calloc(numColumns, sizeof(*child[y]));
+        ASSERT(child[y], "calloc(%" PRIu32 ",%zu) failed",
+                numColumns, sizeof(*child[y]));
+        // calloc() zeros memory.
+    }
+
+    s->g.numRows = numRows;
+    s->g.numColumns = numColumns;
+}
+
+
+static inline
+void AddChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s,
+        uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan) {
+
+    DASSERT(cSpan);
+    DASSERT(rSpan);
+
+    if(column + cSpan > grid->g.numColumns ||
+            row + rSpan > grid->g.numRows) {
+        uint32_t c = column + cSpan;
+        if(c < grid->g.numColumns)
+            c = grid->g.numColumns;
+        uint32_t r = row + rSpan;
+        if(r < grid->g.numRows)
+            r = grid->g.numRows;
+        RecreateGrid(grid, c, r);
+    }
+
+    DASSERT(grid->g.numColumns > column);
+    DASSERT(grid->g.numRows > row);
+    DASSERT(grid->g.child);
+
+    struct PnSurface ***child = s->g.child;
+    for(uint32_t y=row+rSpan-1; y>=row; --y)
+        for(uint32_t x=column+cSpan-1; x>=column; --x)
+            // The added child can span more cells.
+            child[y][x] = s;
+
+    s->pg.row = row;
+    s->pg.column = column;
+}
+
+// Add the child, s, to the parent.
+static inline
+void AddChildSurface(struct PnSurface *parent, struct PnSurface *s,
+        uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(parent);
     DASSERT(s);
@@ -140,30 +269,30 @@ void AddChildSurface(struct PnSurface *parent, struct PnSurface *s) {
     if(parent->layout != PnLayout_Grid)
         AddChildSurfaceList(parent, s);
     else
-        AddChildSurfaceGrid(parent, s);
+        AddChildSurfaceGrid(parent, s, column, row, cSpan, rSpan);
 }
     
 static inline
 void RemoveChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
 
-    if(s->l.nextSibling) {
+    if(s->pl.nextSibling) {
         DASSERT(parent->l.lastChild != s);
-        s->l.nextSibling->l.prevSibling = s->l.prevSibling;
+        s->pl.nextSibling->pl.prevSibling = s->pl.prevSibling;
     } else {
         DASSERT(parent->l.lastChild == s);
-        parent->l.lastChild = s->l.prevSibling;
+        parent->l.lastChild = s->pl.prevSibling;
     }
 
-    if(s->l.prevSibling) {
+    if(s->pl.prevSibling) {
         DASSERT(parent->l.firstChild != s);
-        s->l.prevSibling->l.nextSibling = s->l.nextSibling;
-        s->l.prevSibling = 0;
+        s->pl.prevSibling->pl.nextSibling = s->pl.nextSibling;
+        s->pl.prevSibling = 0;
     } else {
         DASSERT(parent->l.firstChild == s);
-        parent->l.firstChild = s->l.nextSibling;
+        parent->l.firstChild = s->pl.nextSibling;
     }
 
-    s->l.nextSibling = 0;
+    s->pl.nextSibling = 0;
     s->parent = 0;
 }
 
@@ -252,10 +381,27 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
             pnSurface_queueDraw(s);
 
 drawChildren:
+
     // Now draw children (widgets).
-    for(struct PnSurface *c = s->l.firstChild; c; c = c->l.nextSibling)
-        if(!c->culled)
-            pnSurface_draw(c, buffer);
+    if(s->layout != PnLayout_Grid)
+        for(struct PnSurface *c = s->l.firstChild; c; c = c->pl.nextSibling) {
+            if(!c->culled)
+                pnSurface_draw(c, buffer);
+        }
+    else if(s->g.numChildren) {
+        struct PnSurface ***child = s->g.child;
+        for(uint32_t y=s->g.numRows-1; y != -1; --y)
+            for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
+                struct PnSurface *c = child[y][x];
+                if(c->culled) continue;
+                // rows and columns can share widgets; like for row span N
+                // and/or column span N; that is adjacent cells that share
+                // the same widget.
+                if(c && (!x || c != child[y][x-1]) &&
+                        (!y || c != child[y-1][x]))
+                    pnSurface_draw(c, buffer);
+                }
+    }
 }
 
 static bool MotionEnter(struct PnSurface *surface,
@@ -263,6 +409,7 @@ static bool MotionEnter(struct PnSurface *surface,
     DASSERT(surface);
     return true; // Take focus so we can get motion events.
 }
+
 static void MotionLeave(struct PnSurface *surface, void *userData) {
     DASSERT(surface);
 }
@@ -273,24 +420,19 @@ static void MotionLeave(struct PnSurface *surface, void *userData) {
 // Both window and widget are a surface.  Some of this surface data
 // structure is already set up.
 //
-bool InitSurface(struct PnSurface *s) {
+// column and row are -1 for the unused case.
+//
+bool InitSurface(struct PnSurface *s, uint32_t column, uint32_t row,
+        uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(s);
     DASSERT(s->type);
 
     if(s->layout == PnLayout_Grid) {
-        DASSERT(s->g.numRows);
-        DASSERT(s->g.numColumns);
-        s->g.child = calloc(s->g.numRows, sizeof(*s->g.child));
-        ASSERT(s->g.child, "calloc(%" PRIu32 ",%zu) failed",
-                s->g.numRows, sizeof(*s->g.child));
-        for(uint32_t y=s->g.numRows-1; y != -1; --y) {
-            s->g.child[y] = calloc(s->g.numColumns, sizeof(*s->g.child[y]));
-            ASSERT(s->g.child[y], "calloc(%" PRIu32 ",%zu) failed",
-                    s->g.numColumns, sizeof(*s->g.child[y]));
-        }
+        DASSERT(row = s->g.numRows);
+        DASSERT(column = s->g.numColumns);
+        RecreateGrid(s, column, row);
     }
-
 
     if(!s->parent) {
         DASSERT(!(s->type & WIDGET));
@@ -304,7 +446,7 @@ bool InitSurface(struct PnSurface *s) {
     // parent.
     s->backgroundColor = s->parent->backgroundColor;
 
-    AddChildSurface(s->parent, s);
+    AddChildSurface(s->parent, s, column, row, cSpan, rSpan);
 
     return false;
 }

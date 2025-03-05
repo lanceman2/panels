@@ -51,7 +51,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
 
         case PnLayout_One:
         case PnLayout_LR:
-            for(c = s->l.firstChild; c; c = c->l.nextSibling) {
+            for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
                 if(c->culled) continue;
                 if(x < c->allocation.x)
                     // x is to the left of surface "c"
@@ -76,7 +76,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_RL:
-            for(c = s->l.lastChild; c; c = c->l.prevSibling) {
+            for(c = s->l.lastChild; c; c = c->pl.prevSibling) {
                 if(c->culled) continue;
                 if(x < c->allocation.x)
                     // x is to the left of surface "c"
@@ -101,7 +101,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_TB:
-            for(c = s->l.firstChild; c; c = c->l.nextSibling) {
+            for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
                 if(c->culled) continue;
                 if(y < c->allocation.y)
                     // y is to the above of surface "c"
@@ -126,7 +126,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_BT:
-            for(c = s->l.lastChild; c; c = c->l.prevSibling) {
+            for(c = s->l.lastChild; c; c = c->pl.prevSibling) {
                 if(c->culled) continue;
                 if(y < c->allocation.y)
                     // y is to the above of surface "c"

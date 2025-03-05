@@ -45,7 +45,7 @@ static void CreateCairos(struct PnBuffer *buffer,
     CreateCairo(buffer, s);
 
     if(s->layout != PnLayout_Grid) {
-        for(s = s->l.firstChild; s; s = s->l.nextSibling)
+        for(s = s->l.firstChild; s; s = s->pl.nextSibling)
             CreateCairos(buffer, s);
         return;
     }
@@ -108,7 +108,7 @@ void DestroyCairos(struct PnSurface *s) {
     DestroyCairo(s);
 
     if(s->layout != PnLayout_Grid) {
-        for(s = s->l.firstChild; s; s = s->l.nextSibling)
+        for(s = s->l.firstChild; s; s = s->pl.nextSibling)
             DestroyCairos(s);
         return;
     }

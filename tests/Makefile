@@ -149,6 +149,8 @@ scribble_run_CPPFLAGS := -DRUN
 102_scribble_run_SOURCES := scribble.c
 102_scribble_run_LDFLAGS := $(PN_LIB)
 
+130_gridWindow_SOURCES := gridWindow.c
+130_gridWindow_LDFLAGS := $(PN_LIB)
 
 
 CLEANFILES := $(wildcard tmp_*)

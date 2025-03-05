@@ -64,12 +64,6 @@ extern "C" {
 // We need to keep in mind that our rectangles can grown and shrink as
 // needed to make the resulting window fully packed (with no gaps).
 //
-// Studying the behavior of gvim (the program) with changing multiple edit
-// views is very helpful in studying widget containerization.  Like for
-// example how it splits a edit view.  And, what happens when a view is
-// removed from in between views.  And, what happens when a view (widget)
-// border is moved when there are a lot of views in a large grid of views.
-//
 // Like text flow direction.  Example: in English words of on the page
 // from left to right, the first word read is on the left.
 //
@@ -231,9 +225,9 @@ PN_EXPORT struct PnWindow *pnWindow_create(
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand);
-PN_EXPORT struct PnWindow *pnWindow_createWithGrid(
+PN_EXPORT struct PnWindow *pnWindow_createAsGrid(
         struct PnWindow *parent,
-        uint32_t w, uint32_t h, int32_t x, int32_t y,
+        uint32_t width, uint32_t height, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows);
 PN_EXPORT bool pnWindow_isDrawn(struct PnWindow *window);
@@ -250,11 +244,19 @@ PN_EXPORT struct PnWidget *pnWidget_create(
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
-PN_EXPORT struct PnWidget *pnWidget_createWithGrid(
+PN_EXPORT struct PnWidget *pnWidget_createAsGrid(
         struct PnSurface *parent, uint32_t w, uint32_t h,
         enum PnAlign align, enum PnExpand expand, 
         uint32_t numColumns, uint32_t numRows,
         size_t size);
+PN_EXPORT struct PnWidget *pnWidget_createInGrid(
+        struct PnSurface *grid, uint32_t w, uint32_t h,
+        enum PnLayout layout,
+        enum PnAlign align, enum PnExpand expand, 
+        uint32_t columnNum, uint32_t rowNum,
+        uint32_t columnSpan, uint32_t rowSpan,
+        size_t size);
+
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
 PN_EXPORT void pnWidget_addDestroy(struct PnWidget *widget,

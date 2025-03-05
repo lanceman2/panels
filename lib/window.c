@@ -241,13 +241,9 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
         DASSERT(numColumns);
         win->surface.g.numRows = numRows;
         win->surface.g.numColumns = numColumns;
-    } else {
-        DASSERT(!numRows);
-        DASSERT(!numColumns);
     }
 
-
-    InitSurface(&win->surface);
+    InitSurface(&win->surface, -1, -1, 0, 0);
 
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
     if(!win->wl_surface) {
@@ -296,7 +292,7 @@ fail:
     return 0;
 }
 
-struct PnWindow *pnWindow_createWithGrid(struct PnWindow *parent,
+struct PnWindow *pnWindow_createAsGrid(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
@@ -310,7 +306,7 @@ struct PnWindow *pnWindow_create(struct PnWindow *parent,
         enum PnExpand expand) {
     ASSERT(layout != PnLayout_Grid);
     return _pnWindow_createFull(parent, w, h, x, y, layout, align,
-            expand, 0/*numColumns*/, 0/*numRows*/);
+            expand, -1/*numColumns*/, -1/*numRows*/);
 }
 
 

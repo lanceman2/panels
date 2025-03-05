@@ -17,7 +17,8 @@ struct PnWidget *_pnWidget_createFull(
         struct PnSurface *parent, uint32_t w, uint32_t h,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, 
-        uint32_t numRows, uint32_t numColumns,
+        uint32_t column, uint32_t row,
+        uint32_t cSpan, uint32_t rSpan,
         size_t size) {
 
     // We can make widgets without having a window yet, so we need to make
@@ -65,6 +66,14 @@ struct PnWidget *_pnWidget_createFull(
     widget->surface.align = align;
     * (enum PnExpand *) &widget->surface.expand = expand;
     widget->surface.type = PnSurfaceType_widget;
+    if(widget->surface.layout == PnLayout_Grid) {
+        DASSERT(column);
+        DASSERT(row);
+        DASSERT(column != -1);
+        DASSERT(row != -1);
+        widget->surface.g.numColumns = column;
+        widget->surface.g.numRows = row;
+    }
 
     if(parent->type & WIDGET)
         widget->surface.window = parent->window;
@@ -75,7 +84,7 @@ struct PnWidget *_pnWidget_createFull(
     *((uint32_t *) &widget->surface.width) = w;
     *((uint32_t *) &widget->surface.height) = h;
 
-    if(InitSurface((void *) widget))
+    if(InitSurface((void *) widget, column, row, cSpan, rSpan))
         goto fail;
 
     return widget;
@@ -86,23 +95,39 @@ fail:
     return 0;
 }
 
-struct PnWidget *pnWidget_createWithGrid(
+struct PnWidget *pnWidget_createAsGrid(
         struct PnSurface *parent, uint32_t w, uint32_t h,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows,
         size_t size) {
-    return _pnWidget_createFull(parent, w, h, PnLayout_Grid, align, expand, 
-            numRows, numColumns, size);
+    return _pnWidget_createFull(parent, w, h, PnLayout_Grid,
+            align, expand, numColumns, numRows,
+            0/*cSpan*/, 0/*rSpan*/, size);
 }
 
 struct PnWidget *pnWidget_create(
         struct PnSurface *parent, uint32_t w, uint32_t h,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, size_t size) {
-
     ASSERT(layout != PnLayout_Grid);
     return _pnWidget_createFull(parent, w, h, layout, align, expand, 
-        0/*numRows*/, 0/*numColumns*/, size);
+            -1/*numColumns*/, -1/*numRows*/,
+            0/*cSpan*/, 0/*rSpan*/, size);
+}
+
+struct PnWidget *pnWidget_createInGrid(
+        struct PnSurface *grid, uint32_t w, uint32_t h,
+        enum PnLayout layout,
+        enum PnAlign align, enum PnExpand expand, 
+        uint32_t columnNum, uint32_t rowNum,
+        uint32_t columnSpan, uint32_t rowSpan,
+        size_t size) {
+    ASSERT(grid);
+    ASSERT(grid->layout == PnLayout_Grid);
+    ASSERT(grid->g.numColumns > columnNum);
+    ASSERT(grid->g.numRows > rowNum);
+    return _pnWidget_createFull(grid, w, h, layout, align, expand, 
+            columnNum, rowNum, columnSpan, rowSpan, size);
 }
 
 static inline
