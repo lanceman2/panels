@@ -27,10 +27,8 @@ void DestroySurfaceChildren(struct PnSurface *s) {
                 // rows and columns can share widgets; like for row span 2
                 // and column span 2; that is adjacent cells that share
                 // the same widget.
-                if(c && (!x || c != child[y][x-1]) &&
-                        (!y || c != child[y-1][x])) {
+                if(IsUpperLeftCell(c, child, x, y)) {
                     pnWidget_destroy((void *) c);
-                    --s->g.numChildren;
                 }
                 child[y][x] = 0;
             }
@@ -122,19 +120,15 @@ void AddChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
     parent->l.lastChild = s;
 }
 
-// We act on just the farthest upper and left cell for a given
-// surface (widget).  Widgets can span more than one cell.
+// This can destroy, create, and reallocate a grid container.
 //
-static inline
-bool IsUpperLeftCell(struct PnSurface *c,
-        struct PnSurface ***cells, uint32_t x, uint32_t y) {
-    return (c && (!x || c != cells[y][x-1]) &&
-            (!y || c != cells[y-1][x]));
-}
-
-
-// This can destroy, create, and reallocate the grid.  Just choose your
-// numColumns and numRows.  Widgets in removed cells get destroyed.
+// Remember realloc() is mostly your friend.  It copies (keeps) memory
+// contents to new memory locations when memory is enlarged.  But, it does
+// not zero new memory.
+//
+// Just choose your numColumns and numRows.  Widgets in removed cells get
+// destroyed.  This also handles destroying any child widgets (surfaces)
+// in the grid cells that may be destroyed.
 //
 // Oh what fun.
 //
@@ -161,17 +155,14 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
             //
             // Note: the element spans may change, if the spans go across
             // cells that are kept and cells that are removed.
-            if(IsUpperLeftCell(c, child, x, y)) {
+            if(IsUpperLeftCell(c, child, x, y))
                 pnWidget_destroy((void *) c);
-                --s->g.numChildren;
-            }
             child[y][x] = 0; // DEBUG memset 0 thingy
         }
-        child[y] = 0;
         free(child[y]);
     }
 
-    // 2. Do removing or growing of the cells at the end of the existing
+    // 2. Do removing or growing of the cells at the end of existing
     //    rows.
     ////////////////////////////////////////////////////////////////////
     // For the remaining rows, shrink the number of columns per row as
@@ -183,10 +174,8 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         // trimming.
         for(uint32_t x=s->g.numColumns-1; x>=numColumns && x!=-1; --x) {
             struct PnSurface *c = child[y][x];
-            if(IsUpperLeftCell(c, child, x, y)) {
+            if(IsUpperLeftCell(c, child, x, y))
                 pnWidget_destroy((void *) c);
-                --s->g.numChildren;
-            }
             child[y][x] = 0; // DEBUG memset 0 thingy
         }
         if(s->g.numColumns != numColumns) continue;
@@ -201,8 +190,8 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
 
     // 3. Grow or shrink the number of rows.
     /////////////////////////////////////////////////////////////////
-    if(numRows != s->g.numRows) {
-        child = s->g.child = realloc(child, numRows*sizeof(*child));
+    if(numRows && numRows != s->g.numRows) {
+        s->g.child = (child = realloc(child, numRows*sizeof(*child)));
         ASSERT(child, "realloc(,%zu) failed", numRows*sizeof(*child));
         if(numRows > s->g.numRows)
             // Zero the new memory.
@@ -219,6 +208,16 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         // calloc() zeros memory.
     }
 
+    // 5. Cleanup all the grid rows.
+    /////////////////////////////////////////////////////////////////
+    if(!numRows) {
+        // Free the whole grid.
+        DZMEM(child, s->g.numRows*sizeof(*child));
+        free(child);
+    }
+
+    // 6. Record the grid size.
+    /////////////////////////////////////////////////////////////////
     s->g.numRows = numRows;
     s->g.numColumns = numColumns;
 }
@@ -242,15 +241,18 @@ void AddChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s,
         RecreateGrid(grid, c, r);
     }
 
+    
     DASSERT(grid->g.numColumns > column);
     DASSERT(grid->g.numRows > row);
     DASSERT(grid->g.child);
 
-    struct PnSurface ***child = s->g.child;
-    for(uint32_t y=row+rSpan-1; y>=row; --y)
-        for(uint32_t x=column+cSpan-1; x>=column; --x)
+    struct PnSurface ***child = grid->g.child;
+    for(uint32_t y=row+rSpan-1; y>=row && y!=-1; --y)
+        for(uint32_t x=column+cSpan-1; x>=column && x!=-1; --x)
             // The added child can span more cells.
             child[y][x] = s;
+
+    ++grid->g.numChildren;
 
     s->pg.row = row;
     s->pg.column = column;
@@ -297,9 +299,40 @@ void RemoveChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
 }
 
 static inline
-void RemoveChildSurfaceGrid(struct PnSurface *parent, struct PnSurface *s) {
+void RemoveChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s) {
 
-    ASSERT(0, "WRITE CODE FOR GRID CASE HERE");
+    struct PnSurface ***child = grid->g.child;
+    DASSERT(child);
+    uint32_t numColumns = grid->g.numColumns;
+    uint32_t numRows = grid->g.numRows;
+    DASSERT(numColumns);
+    DASSERT(numRows);
+    DASSERT(grid->g.numChildren);
+    uint32_t x = s->pg.column;
+    uint32_t y = s->pg.row;
+
+    DASSERT(numColumns > x);
+    DASSERT(numRows > y);
+    DASSERT(child[y][x] == s);
+
+    // There can be any amount of cells that form a rectangle; given that
+    // there can be a span (number) of columns and rows (not just a span
+    // of 1).
+
+    for(; y<numRows; ++y)
+        for(x=s->pg.column; x<numColumns; ++x) {
+            if(child[y][x] == s)
+                child[y][x] = 0;
+            else
+                break;
+        }
+
+    --grid->g.numChildren;
+
+    // TODO: We could have initialized them to -1 (invalid value).
+    //
+    s->pg.row = 0;
+    s->pg.column = 0;
 }
 
 static inline
@@ -382,14 +415,24 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
 drawChildren:
 
+    // TODO: If we add more surface layout types that would make the below more
+    // than two if() options, than make the below ifs into a switch()
+    // statement.  That goes for a lot of surface layout type if switches
+    // in many files.
+
     // Now draw children (widgets).
     if(s->layout != PnLayout_Grid)
+        // The s container uses some kind of listed list.
         for(struct PnSurface *c = s->l.firstChild; c; c = c->pl.nextSibling) {
             if(!c->culled)
                 pnSurface_draw(c, buffer);
         }
     else if(s->g.numChildren) {
+        // s is a grid container.
         struct PnSurface ***child = s->g.child;
+        DASSERT(child);
+        DASSERT(s->g.numRows);
+        DASSERT(s->g.numColumns);
         for(uint32_t y=s->g.numRows-1; y != -1; --y)
             for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
                 struct PnSurface *c = child[y][x];
@@ -397,10 +440,9 @@ drawChildren:
                 // rows and columns can share widgets; like for row span N
                 // and/or column span N; that is adjacent cells that share
                 // the same widget.
-                if(c && (!x || c != child[y][x-1]) &&
-                        (!y || c != child[y-1][x]))
+                if(IsUpperLeftCell(c, child, x, y))
                     pnSurface_draw(c, buffer);
-                }
+            }
     }
 }
 
@@ -429,8 +471,8 @@ bool InitSurface(struct PnSurface *s, uint32_t column, uint32_t row,
     DASSERT(s->type);
 
     if(s->layout == PnLayout_Grid) {
-        DASSERT(row = s->g.numRows);
-        DASSERT(column = s->g.numColumns);
+        DASSERT(!s->g.numRows);
+        DASSERT(!s->g.numColumns);
         RecreateGrid(s, column, row);
     }
 
@@ -460,26 +502,11 @@ void DestroySurface(struct PnSurface *s) {
     DestroyCairo(s);
 #endif
 
-    if(!(s->type & WIDGET)) {
-        DASSERT(!s->parent);
-        return;
-    }
-    DASSERT(s->parent);
+    if(s->type & WIDGET)
+        RemoveChildSurface(s->parent, s);
 
-    RemoveChildSurface(s->parent, s);
-
-    if(s->layout == PnLayout_Grid) {
-        // A Grid container surface has memory allocated for it's
-        // container 2D array thingy: child[numRows][numColumns]
-        struct PnSurface ***child = s->g.child;
-        for(uint32_t y=s->g.numRows-1; y != -1; --y) {
-            // Free a row array.
-            DZMEM(child[y], sizeof(*child[y])*s->g.numColumns);
-            free(child[y]);
-        }
-        DZMEM(child, sizeof(*child)*s->g.numRows);
-        free(child);
-    }
+    if(s->layout == PnLayout_Grid)
+        RecreateGrid(s, 0, 0);
 }
 
 

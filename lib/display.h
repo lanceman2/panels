@@ -177,6 +177,8 @@ struct PnSurface {
     struct PnSurface *parent;
 
     union {
+        // For containers to see their children.
+        ////////////////////////////////////////////////////////
         struct {
             struct PnSurface *firstChild, *lastChild;
         } l; // surface is a container list (l)
@@ -185,18 +187,20 @@ struct PnSurface {
             // Free this 2D array in void DestroySurface()
             struct PnSurface ***child;
             // row y -> child[y]  child[y][x]
-            uint32_t numRows, numColumns, numChildren;
+            uint32_t numColumns/*x*/, numRows/*y*/, numChildren;
         } g; // surface is a container grid (g)
     };
 
     union {
+        // For children to go through the lists they are in.
+        ////////////////////////////////////////////////////////
         struct {
             struct PnSurface *nextSibling, *prevSibling;
-        } pl; // parent container is a list (pl)
+        } pl; // my parent container is a list (pl)
         struct {
             // row y -> child[y]  child[y][x]
             uint32_t row, column;
-        } pg; // parent container is a grid (pg)
+        } pg; // my parent container is a grid (pg)
     };
 
     struct PnWindow *window; // The top most surface is a this window.
@@ -551,6 +555,17 @@ static inline bool CheckDisplay(void) {
     return (bool) !d.wl_display;
 }
 
+// We act on just the farthest upper and left cell for a given
+// surface (widget).  Widgets can span more than one cell; so this
+// selects one of a particular widget per grid looping of all cells
+// in the grid; like in RecreateGrid() in surface.c.
+//
+static inline
+bool IsUpperLeftCell(struct PnSurface *c,
+        struct PnSurface ***cells, uint32_t x, uint32_t y) {
+    return (c && (!x || c != cells[y][x-1]) &&
+            (!y || c != cells[y-1][x]));
+}
 
 extern void GetSurfaceDamageFunction(struct PnWindow *win);
 

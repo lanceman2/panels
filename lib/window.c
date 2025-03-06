@@ -236,14 +236,8 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
     // Default for windows so that user build the window before showing
     // it.
     win->surface.hidden = true;
-    if(layout == PnLayout_Grid) {
-        DASSERT(numRows);
-        DASSERT(numColumns);
-        win->surface.g.numRows = numRows;
-        win->surface.g.numColumns = numColumns;
-    }
 
-    InitSurface(&win->surface, -1, -1, 0, 0);
+    InitSurface(&win->surface, numColumns, numRows, 0, 0);
 
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
     if(!win->wl_surface) {
@@ -362,7 +356,6 @@ void pnWindow_destroy(struct PnWindow *win) {
     DestroySurfaceChildren(&win->surface);
 
     DestroySurface(&win->surface);
-
 
     if(win->surface.type == PnSurfaceType_popup) {
         // A popup

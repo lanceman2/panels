@@ -5,6 +5,7 @@
 #include "../lib/debug.h"
 
 #include "run.h"
+#include "rand.h"
 
 
 static
@@ -13,32 +14,42 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
+const uint32_t numColumns = 5, numRows = 6;
+
+struct PnWindow *win;
+
+void Widget(uint32_t x, uint32_t y) {
+
+    struct PnWidget *w = pnWidget_createInGrid((void *) win,
+            20/*width*/, 20/*height*/,
+        PnLayout_One,
+        0/*align*/, PnExpand_HV, 
+        x/*columnNum*/, y/*rowNum*/,
+        1/*columnSpan*/, 1/*rowSpan*/,
+        0/*size*/);
+    pnWidget_setBackgroundColor(w, Color());
+}
 
 
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    struct PnWindow *win = pnWindow_createAsGrid(0/*parent*/,
-        2/*width*/, 2/*height*/, 0/*x*/, 0/*y*/,
-        0/*align*/, 0/*expand*/,
-        8/*numColumns*/, 5/*numRows*/);
+    srand(2);
+
+    win = pnWindow_createAsGrid(0/*parent*/,
+            5/*width*/, 5/*height*/, 0/*x*/, 0/*y*/,
+            0/*align*/, PnExpand_HV/*expand*/,
+            numColumns, numRows);
     ASSERT(win);
+
+    for(uint32_t y=0; y<numRows; ++y)
+        for(uint32_t x=0; x<numColumns; ++x)
+            Widget(x, y);
 
     pnWindow_show(win, true);
 
     //Run(win);
-
-
-    fprintf(stderr, "   win=%p\n", win);
-    // This passes Valgrind with or without destroying the window
-    // given the libpanels.so destructor cleans up the windows and
-    // display if the user does not.
-
-    if(win)
-        // Yes.  The win pointer is still valid.
-        // Just testing that we can call this:
-        pnWindow_destroy(win);
 
     return 0;
 }
