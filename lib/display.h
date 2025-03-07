@@ -101,6 +101,8 @@ struct PnGrid {
     // each time the widgets are packed, but are not because it's not much
     // memory (or is it?).
     //
+    // These are widths and heights without cell borders of the grid.
+    // Just the room available for a child widget.
     uint32_t *widths, *heights;
     uint32_t numChildren;
 };
