@@ -287,16 +287,21 @@ void TallyRequestedSizes(const struct PnSurface *s,
                 a->width += borderX;
             break;
         case PnLayout_Grid: {
+            // Good luck following this shit.  I think it's inherently
+            // complex.
+            //
             // There is not an obvious way to distribute the space in the
-            // grid cells for the case when cells can span more than one
+            // grid cells for the case when widgets can span more than one
             // cell space in the grid.  This is a simple way to do it.  We
             // ignore the cell space of the multi-cell widget until we
             // get to tallying the cell where the multi-cell widget
             // starts.  The !IsUpperLeftCell() ignores the widget until it
             // is in the upper and left corner of the widget is where the
             // cell we are testing is.  This will tend to make the cells
-            // farthest for the upper and left smaller, but the total
-            // container grid size is unique.
+            // farthest from the upper left corner smaller, but the total
+            // container grid size is obvious and unique (the distribution
+            // of space in each cell in the grid is not obvious).  This
+            // seems to be the simplest way to do it.
             struct PnSurface ***child = s->g.grid->child;
             for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
                 uint32_t cellHeight = 0;
@@ -305,12 +310,34 @@ void TallyRequestedSizes(const struct PnSurface *s,
                     if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
                     TallyRequestedSizes(c, &c->allocation);
-                    ASSERT(0);
-                    // Now we have all "s" children and descendent sizes.
-                    // Find the widest child.
-                    if(cellHeight < c->allocation.height)
-                        cellHeight = c->allocation.height;
+                    // Now we have all "c" children and descendent sizes.
+                    // Find the tallest child.
+                    uint32_t h = c->allocation.height;
+                    DASSERT(h);
+                    uint32_t y = yi + 1;
+                    while(y < s->g.numRows && child[y][xi] == c) {
+                        // This, "c", is the same widget as the widget
+                        // below in this column; that is, this widget "c"
+                        // spans in the vertical direction, so we remove
+                        // the last rows height if we can.
+                        if(h > s->g.grid->heights[y])
+                            h -= s->g.grid->heights[y];
+                        else {
+                            // This widget will not contribute to the
+                            // height, because it's too small to need more
+                            // height than what was in row yi without it.
+                            h = 0;
+                            break;
+                        }
+                        ++y;
+                    }
+                    if(cellHeight < h)
+                        cellHeight = h;
                 }
+                // Record the height of the row, which could be zero
+                // if there were no widgets found in this row.
+                s->g.grid->heights[yi] = cellHeight;
+
                 if(cellHeight)
                     a->height += borderY + cellHeight;
             }
@@ -322,12 +349,32 @@ void TallyRequestedSizes(const struct PnSurface *s,
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
                     // We already called TallyRequestedSizes(c,) in the
                     // above double for() loop.
-                    //
-                    // Now we have all "s" children and descendent sizes.
-                    // Find the highest child.
-                    if(cellWidth < c->allocation.width)
-                        cellWidth = c->allocation.width;
+                    uint32_t w = c->allocation.width;
+                    DASSERT(w);
+                    uint32_t x = xi + 1;
+                    while(x < s->g.numColumns && child[yi][x] == c) {
+                        // This, "c", is the same widget as the widget
+                        // to the right; that is, this widget "c"
+                        // spans in the horizontal direction, so we remove
+                        // the last columns width if we can.
+                        if(w > s->g.grid->widths[x])
+                            w -= s->g.grid->widths[x];
+                        else {
+                            // This widget will not contribute to the
+                            // width, because it's too small to need more
+                            // width than what was in column xi without it.
+                            w = 0;
+                            break;
+                        }
+                        ++x;
+                    }
+                    if(cellWidth < w)
+                        cellWidth = w;
                 }
+                // Record the width of the column, which could be zero
+                // if there were no widgets found in this column.
+                s->g.grid->widths[xi] = cellWidth;
+
                 if(cellWidth)
                     a->width += borderX + cellWidth;
             }
