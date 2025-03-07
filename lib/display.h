@@ -88,6 +88,24 @@ enum PnSurfaceType {
 };
 
 
+struct PnGrid {
+
+    // child[y][x] points to a widget (surface).
+    struct PnSurface ***child;
+
+    // At widget size allocation time we record the size and spacing of
+    // all the grid-lines in these two allocated arrays:
+    // widths[numColumns] and heights[numRows].  These are only needed in
+    // the "bootstrapping" in getting the widget packing (widget size and
+    // position allocations).  These could have been allocated and freed
+    // each time the widgets are packed, but are not because it's not much
+    // memory (or is it?).
+    //
+    uint32_t *widths, *heights;
+    uint32_t numChildren;
+};
+
+
 // A widget or window (toplevel window or popup window) has a surface.
 //
 struct PnSurface {
@@ -182,12 +200,13 @@ struct PnSurface {
         struct {
             struct PnSurface *firstChild, *lastChild;
         } l; // surface is a container list (l)
+
         struct {
-            // Allocate this 2D array in InitSurface()
-            // Free this 2D array in void DestroySurface()
-            struct PnSurface ***child;
-            // row y -> child[y]  child[y][x]
-            uint32_t numColumns/*x*/, numRows/*y*/, numChildren;
+            // We make this the same size as PnSurface::l by allocating
+            // grid.  Otherwise it would be much larger than
+            // PnSurface::l.
+            struct PnGrid *grid;
+            uint32_t numColumns, numRows;
         } g; // surface is a container grid (g)
     };
 
@@ -199,7 +218,7 @@ struct PnSurface {
         } pl; // my parent container is a list (pl)
         struct {
             // row y -> child[y]  child[y][x]
-            uint32_t row, column;
+            uint32_t row, column, rSpan, cSpan;
         } pg; // my parent container is a grid (pg)
     };
 

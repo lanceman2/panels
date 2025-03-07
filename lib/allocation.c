@@ -23,7 +23,7 @@ static bool inline HaveChildren(const struct PnSurface *s) {
     // else
     DASSERT(s->layout == PnLayout_Grid);
 
-    return (s->g.numChildren);
+    return (s->g.grid->numChildren);
 }
 
 // We use lots of function recursion to get widget positions, sizes, and
@@ -37,10 +37,11 @@ static bool ResetChildrenCull(struct PnSurface *s);
 static inline bool GridResetChildrenCull(struct PnSurface *s) {
 
     DASSERT(s->layout == PnLayout_Grid);
-    DASSERT(s->g.numChildren);
+    DASSERT(s->g.grid->numChildren);
     DASSERT(s->g.numColumns);
     DASSERT(s->g.numRows);
-    struct PnSurface ***child = s->g.child;
+    DASSERT(s->g.grid);
+    struct PnSurface ***child = s->g.grid->child;
     DASSERT(child);
 
     bool culled = true;
@@ -296,38 +297,39 @@ void TallyRequestedSizes(const struct PnSurface *s,
             // cell we are testing is.  This will tend to make the cells
             // farthest for the upper and left smaller, but the total
             // container grid size is unique.
-            struct PnSurface ***child = s->g.child;
+            struct PnSurface ***child = s->g.grid->child;
             for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
-                uint32_t cellWidth = 0;
+                uint32_t cellHeight = 0;
                 for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
                     c = child[yi][xi];
-                    if(c->culled) continue;
+                    if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
                     TallyRequestedSizes(c, &c->allocation);
+                    ASSERT(0);
                     // Now we have all "s" children and descendent sizes.
                     // Find the widest child.
-                    if(cellWidth < c->allocation.width)
-                        cellWidth = c->allocation.width;
+                    if(cellHeight < c->allocation.height)
+                        cellHeight = c->allocation.height;
                 }
-                if(cellWidth)
-                    a->width += borderX + cellWidth;
+                if(cellHeight)
+                    a->height += borderY + cellHeight;
             }
             for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
-                uint32_t cellHeight = 0;
+                uint32_t cellWidth = 0;
                 for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
                     c = child[yi][xi];
-                    if(c->culled) continue;
+                    if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
                     // We already called TallyRequestedSizes(c,) in the
                     // above double for() loop.
                     //
                     // Now we have all "s" children and descendent sizes.
                     // Find the highest child.
-                    if(cellHeight < c->allocation.height)
-                        cellHeight = c->allocation.height;
+                    if(cellWidth < c->allocation.width)
+                        cellWidth = c->allocation.width;
                 }
-                if(cellHeight)
-                    a->height += borderY + cellHeight;
+                if(cellWidth)
+                    a->width += borderX + cellWidth;
             }
             break;
         }
@@ -410,7 +412,7 @@ static void GetChildrenXY(const struct PnSurface *s,
             break;
 
         case PnLayout_Grid: {
-            struct PnSurface ***child = s->g.child;
+            struct PnSurface ***child = s->g.grid->child;
             for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
                 x = a->x + a->width; // x max, end of row
                 for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
@@ -1264,7 +1266,6 @@ void AlignY(const struct PnSurface *s,
         }
 }
 
-
 // This function calls itself.
 //
 // At this call "s" has it's position and size set "correctly" and so do
@@ -1281,6 +1282,8 @@ static void ExpandChildren(const struct PnSurface *s,
         const struct PnAllocation *a) {
 
     // "s" has a correct allocation, "a".
+    //
+    // The children has unexpanded widths and heights.
 
     DASSERT(s);
     DASSERT(HaveChildren(s));
@@ -1314,7 +1317,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     ExpandV(s, a, c, &c->allocation, &endBorder);
             for(c = s->l.firstChild; c; c = c->pl.nextSibling)
                 if(!c->culled)
-                    AlignY(s, &s->allocation, &c->allocation, endBorder);
+                    AlignY(s, a, &c->allocation, endBorder);
             break;
 
         case PnLayout_TB:
@@ -1324,7 +1327,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     ExpandH(s, a, c, &c->allocation, &endBorder);
             for(c = s->l.firstChild; c; c = c->pl.nextSibling)
                 if(!c->culled)
-                    AlignX(s, &s->allocation, &c->allocation, endBorder);
+                    AlignX(s, a, &c->allocation, endBorder);
             break;
 
         case PnLayout_BT:
@@ -1334,7 +1337,7 @@ static void ExpandChildren(const struct PnSurface *s,
                     ExpandH(s, a, c, &c->allocation, &endBorder);
             for(c = s->l.firstChild; c; c = c->pl.nextSibling)
                 if(!c->culled)
-                    AlignX(s, &s->allocation, &c->allocation, endBorder);
+                    AlignX(s, a, &c->allocation, endBorder);
             break;
 
         case PnLayout_RL:
@@ -1344,12 +1347,39 @@ static void ExpandChildren(const struct PnSurface *s,
                     ExpandV(s, a, c, &c->allocation, &endBorder);
             for(c = s->l.firstChild; c; c = c->pl.nextSibling)
                 if(!c->culled)
-                    AlignY(s, &s->allocation, &c->allocation, endBorder);
+                    AlignY(s, a, &c->allocation, endBorder);
             break;
 
-        case PnLayout_Grid:
-            ASSERT(0, "WRITE MORE CODE HERE");
+        case PnLayout_Grid: {
+            struct PnSurface ***child = s->g.grid->child;
+            uint32_t yi=s->g.numRows-1;
+            // Expand columns with any extra space.
+            uint32_t extraWidth = a->width;
+            uint32_t num = 0;
+            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                c = child[yi][xi];
+                if(c->culled) continue;
+                if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+                DASSERT(extraWidth >= c->allocation.width);
+                extraWidth -= c->allocation.width;
+                ++num;
+            }
+            // Now extraWidth is the extra width we will distribute.
+            uint32_t addPer = 0;
+            if(num) addPer = extraWidth/num;
+            uint32_t end = extraWidth - num * addPer;
+
+            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+                    c = child[yi][xi];
+                    if(c->culled) continue;
+                    if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+                    ///////////SHIT CODE BELOW
+                    --end;
+                }
+            }
             break;
+        }
 
         case PnLayout_None:
         default:
@@ -1358,8 +1388,9 @@ static void ExpandChildren(const struct PnSurface *s,
     }
 
     if(s->layout == PnLayout_Grid) {
-        DASSERT(s->g.child);
-        DASSERT(s->g.numChildren);
+        DASSERT(s->g.grid);
+        DASSERT(s->g.grid->child);
+        DASSERT(s->g.grid->numChildren);
 
         ASSERT(0, "WRITE MORE CODE HERE");
 
@@ -1600,7 +1631,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
         }
 
     } while(haveChildShowing &&
-            // PASS 4 plus loop repeats
+            // PASS 4 plus loop repeats times 3
             ClipOrCullChildren(s, a));
 
     // TOTAL PASSES (so far) = 1 + 3 * loopCount

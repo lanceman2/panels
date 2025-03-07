@@ -26,7 +26,8 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
     DASSERT(win);
 
     DASSERT((s->layout < PnLayout_Grid && s->l.firstChild) ||
-            (s->layout == PnLayout_Grid && s->g.child && s->g.numChildren));
+            (s->layout == PnLayout_Grid && s->g.grid->child &&
+             s->g.grid->numChildren));
     DASSERT(!s->culled);
 
     // Let's see if the x,y positions always make sense.

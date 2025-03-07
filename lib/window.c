@@ -290,6 +290,8 @@ struct PnWindow *pnWindow_createAsGrid(struct PnWindow *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
+    DASSERT(numColumns);
+    DASSERT(numRows);
     return _pnWindow_createFull(parent, w, h, x, y,
             PnLayout_Grid, align, expand, numColumns, numRows);
 }

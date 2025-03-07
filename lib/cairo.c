@@ -42,6 +42,8 @@ static inline void CreateCairo(struct PnBuffer *buffer,
 static void CreateCairos(struct PnBuffer *buffer,
         struct PnSurface *s) {
 
+    DASSERT(s);
+
     CreateCairo(buffer, s);
 
     if(s->layout != PnLayout_Grid) {
@@ -51,7 +53,8 @@ static void CreateCairos(struct PnBuffer *buffer,
     }
 
     // s is a grid container.
-    struct PnSurface ***child = s->g.child;
+    struct PnSurface ***child = s->g.grid->child;
+    DASSERT(child);
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x)
             if(IsUpperLeftCell(child[y][x], child, x, y))
@@ -121,7 +124,8 @@ void DestroyCairos(struct PnSurface *s) {
     }
     //
     // s is a grid container.
-    struct PnSurface ***child = s->g.child;
+    struct PnSurface ***child = s->g.grid->child;
+    DASSERT(child);
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x)
             if(IsUpperLeftCell(child[y][x], child, x, y))
