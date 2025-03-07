@@ -29,9 +29,9 @@ void DestroySurfaceChildren(struct PnSurface *s) {
                 // rows and columns can share widgets; like for row span 2
                 // and column span 2; that is adjacent cells that share
                 // the same widget.
-                if(IsUpperLeftCell(c, child, x, y)) {
+                if(IsUpperLeftCell(c, child, x, y))
                     pnWidget_destroy((void *) c);
-                }
+
                 child[y][x] = 0;
             }
         DASSERT(!s->g.grid->numChildren);
@@ -489,7 +489,7 @@ drawChildren:
         for(uint32_t y=s->g.numRows-1; y != -1; --y)
             for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
                 struct PnSurface *c = child[y][x];
-                if(c->culled) continue;
+                if(!c || c->culled) continue;
                 // rows and columns can share widgets; like for row span N
                 // and/or column span N; that is adjacent cells that share
                 // the same widget.
