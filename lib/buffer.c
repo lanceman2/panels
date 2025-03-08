@@ -80,6 +80,7 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
 #ifdef WITH_CAIRO
     RecreateCairos(win);
 #endif
+
     return false;
 
 fail:
@@ -125,7 +126,6 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         ERROR("wl_shm_pool_create_buffer() failed");
         goto fail;
     }
-
 #ifdef WITH_CAIRO
     RecreateCairos(win);
 #endif

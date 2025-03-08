@@ -159,15 +159,22 @@ static uint32_t ResetCanExpand(struct PnSurface *s) {
     // Now "s" has children.
 
     if(s->layout == PnLayout_Grid) {
-
-        ASSERT(0, "WRITE GRID CASE");
-
+        DASSERT(s->g.grid);
+        struct PnSurface ***child = s->g.grid->child;
+        DASSERT(child);
+        for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                struct PnSurface *c = child[yi][xi];
+                if(!c || c->culled) continue;
+                if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+                // Call this for every un-culled child in the grid.
+                s->canExpand |= ResetCanExpand(c);
+            }
+        }
         return s->canExpand;
     }
 
-    // TODO: deal with containers that are not PnLayout_LR,
-    // PnLayout_RL, PnLayout_TB, or PnLayout_BT.
-    ASSERT(s->layout >= PnLayout_LR ||
+    DASSERT(s->layout >= PnLayout_LR ||
             s->layout <= PnLayout_BT, "WRITE MORE CODE");
 
     for(struct PnSurface *c = s->l.firstChild; c; c = c->pl.nextSibling) {
@@ -472,10 +479,12 @@ static void GetChildrenXY(const struct PnSurface *s,
                     c = child[yi][xi];
                     if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
-                    // Start with widget aligned center (horizontally).
+                    // Start with widget aligned left (horizontally).  We
+                    // must start aligned left so culling (we do next)
+                    // works correctly.  We must do aligning after
+                    // culling.
                     DASSERT(s->g.grid->widths[xi] >= c->allocation.width);
-                    c->allocation.x = x +
-                            (s->g.grid->widths[xi] - c->allocation.width)/2;
+                    c->allocation.x = x;
                 }
             }
             for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
@@ -488,10 +497,14 @@ static void GetChildrenXY(const struct PnSurface *s,
                     c = child[yi][xi];
                     if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
-                    // Start with widget aligned center (vertically).
+                    // Start with widget aligned up (top vertically).  We
+                    // must start aligned top so the culling (we do next)
+                    // works correctly.  We must do aligning after
+                    // culling.
                     DASSERT(s->g.grid->heights[yi] >= c->allocation.height);
-                    c->allocation.y = y +
-                            (s->g.grid->heights[yi] - c->allocation.height)/2;
+                    c->allocation.y = y;
+                    if(HaveChildren(c))
+                        GetChildrenXY(c, &c->allocation);
                 }
             }
             break;
@@ -682,17 +695,18 @@ uint32_t CullY(const struct PnAllocation *a, struct PnSurface *c) {
 
 // Cull widgets that do not fit. This is the hard part. If we (newly) cull
 // a widget we have to go back and reposition all widgets.  This window
-// can have arbitrarily complex (can of worms) shapes.  Maybe after
-// culling each widget we go up just one parent level and reshape the
-// widgets; and iterate like that until there are no more new culls in the
-// widget tree traversal.
+// can contain arbitrarily complex shapes, only limited to how random
+// rectangles can be packed.
 //
 // Returns 0 or GOT_CULL or NO_SHOWING_CHILD
 //
-//
 // Returns true if there is a descendent of "s" is trimmed or culled.
 //
-// // Basic idea: Clip borders and cull until we can't cull.
+// // Basic idea: Clip borders (of container widgets) and cull until we
+// can't cull (or clip containers).
+//
+// At this point in the code all the widgets are pushed to the upper left;
+// i.e. there is aligning done yet.
 //
 // So, if there is a new cull in a parent node we return (pop the
 // ClipOrCullChildren() call stack).  If we cull a leaf, we keep clipping
@@ -701,8 +715,6 @@ uint32_t CullY(const struct PnAllocation *a, struct PnSurface *c) {
 //
 // Parent widgets without any showing children are culled as we pop the
 // function call stack.
-//
-// The windows widgets are no longer shrink wrapped.
 //
 // This function indirectly calls itself.
 //
@@ -796,24 +808,33 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             return haveCullRet;
 
         case PnLayout_Grid: {
+            // The grid container must have an un-culled child in a row
+            // (column) in order for that row (column) to be drawn.  That
+            // this point the grid is shrink wrapped around its' children
+            // with its' borders intact.
+#if 0
+            uint32_t xBorder = GetBWidth(s);
+            uint32_t yBorder = GetBWidth(s);
             struct PnSurface ***child = s->g.grid->child;
             DASSERT(child);
+            uint32_t x = a->x + a->width; // x max, end of row
+            uint32_t *widths = s->g.grid->widths;
+            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+
             for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
-                //uint32_t x = a->x + a->width; // x max, end of row
-                for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
                     c = child[yi][xi];
                     if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
                 }
             }
-            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
-                //uint32_t y = a->y + a->height; // y max, bottom of grid
+            uint32_t y = a->y + a->height; // y max, bottom of grid
                 for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
                     c = child[yi][xi];
                     if(!c || c->culled) continue;
                     if(!IsUpperLeftCell(c, child, xi, yi)) continue;
                 }
             }
+#endif
             return haveCullRet;
         }
 
@@ -1432,33 +1453,8 @@ static void ExpandChildren(const struct PnSurface *s,
             break;
 
         case PnLayout_Grid: {
-            struct PnSurface ***child = s->g.grid->child;
-            uint32_t yi=s->g.numRows-1;
-            // Expand columns with any extra space.
-            uint32_t extraWidth = a->width;
-            uint32_t num = 0;
-            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
-                c = child[yi][xi];
-                if(c->culled) continue;
-                if(!IsUpperLeftCell(c, child, xi, yi)) continue;
-                DASSERT(extraWidth >= c->allocation.width);
-                extraWidth -= c->allocation.width;
-                ++num;
-            }
-            // Now extraWidth is the extra width we will distribute.
-            uint32_t addPer = 0;
-            if(num) addPer = extraWidth/num;
-            uint32_t end = extraWidth - num * addPer;
 
-            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
-                for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
-                    c = child[yi][xi];
-                    if(c->culled) continue;
-                    if(!IsUpperLeftCell(c, child, xi, yi)) continue;
-                    ///////////SHIT CODE BELOW
-                    --end;
-                }
-            }
+        //ASSERT(0, "WRITE MORE CODE HERE");
             break;
         }
 
@@ -1473,7 +1469,7 @@ static void ExpandChildren(const struct PnSurface *s,
         DASSERT(s->g.grid->child);
         DASSERT(s->g.grid->numChildren);
 
-        ASSERT(0, "WRITE MORE CODE HERE");
+        //ASSERT(0, "WRITE MORE CODE HERE");
 
         return;
     }
@@ -1610,10 +1606,18 @@ void GetWidgetAllocations(struct PnWindow *win) {
 #ifdef DEBUG
             switch(s->layout) {
 
-                case PnLayout_Grid:
-                    ASSERT(0, "WRITE CODE FOR GRID CASE");
+                case PnLayout_Grid: {
+                    struct PnSurface ***child = s->g.grid->child;
+                    DASSERT(child);
+                    for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+                        for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                            struct PnSurface *c = child[yi][xi];
+                            if(!c || c->culled) continue;
+                            ASSERT(0, "All children should be culled");
+                        }
+                    }
                     break;
-
+                }
                 default:
                     ASSERT(s->l.firstChild);
                     ASSERT(s->l.firstChild->culled);
@@ -1697,7 +1701,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
         haveChildShowing = false;
         // It can happen that the window is so small that no widget can
-        // fix in it: all the widgets get culled.
+        // fit in it: all the widgets get culled.
         //
         // NOT A FULL PASS through the widget tree.
         if(s->layout < PnLayout_Grid) {
@@ -1708,7 +1712,19 @@ void GetWidgetAllocations(struct PnWindow *win) {
                     break;
                 }
         } else {
-            ASSERT(0, "WRITE CODE FOR GRID CASE");
+            DASSERT(s->layout == PnLayout_Grid);
+            struct PnSurface ***child = s->g.grid->child;
+            DASSERT(child);
+            for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+                for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                    struct PnSurface *c = child[yi][xi];
+                    if(!c || c->culled) continue;
+                    haveChildShowing = true;
+                    break;
+                }
+                if(haveChildShowing)
+                    break;
+            }
         }
 
     } while(haveChildShowing &&
@@ -1730,7 +1746,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // PASS 6
     ExpandChildren(s, a);
 
-
     // TOTAL PASSES = 3 + 3 * loopCount
 
     // TODO: Mash more widget (surface) passes together?  I'd expect that
@@ -1748,6 +1763,5 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // it.
     ResetDisplaySurfaces();
 
-
-//INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
+    //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
 }

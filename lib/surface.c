@@ -150,12 +150,30 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
     ASSERT(s->g.numRows || !child);
     ASSERT((numColumns && numRows) || (!numColumns && !numRows));
 
-    // 1. First do possible cleanup due to number of rows decreasing.
+
+    // 0. Setup widths[] and heights[] arrays.
+    ////////////////////////////////////////////////////////////////////
+    if(numColumns && numColumns != s->g.numColumns) {
+        DASSERT(numColumns);
+        s->g.grid->widths = realloc(s->g.grid->widths,
+                numColumns*sizeof(*s->g.grid->widths));
+        ASSERT(s->g.grid->widths, "realloc(,%zu) failed",
+                numColumns*sizeof(*s->g.grid->widths));
+        // The values in this array do not matter now at this time.
+    }
+    if(numRows && numRows != s->g.numRows) {
+            s->g.grid->heights = realloc(s->g.grid->heights,
+                numRows*sizeof(*s->g.grid->heights));
+        ASSERT(s->g.grid->heights, "realloc(,%zu) failed",
+                numRows*sizeof(*s->g.grid->heights));
+        // The values in this array do not matter now at this time.
+    }
+
+    // 1. Do possible cleanup due to number of rows decreasing.
     ////////////////////////////////////////////////////////////////////
     uint32_t y=s->g.numRows-1;
-    //
     for(; y >= numRows && y != -1; --y) {
-        // Remove row child[y].
+        // Remove existing row child[y].
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
             struct PnSurface *c = child[y][x];
             // rows and columns can share widgets; like for row span 2
@@ -168,85 +186,82 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
                 pnWidget_destroy((void *) c);
             child[y][x] = 0; // DEBUG memset 0 thingy
         }
+        // Remove unneeded row pointers.
         free(child[y]);
+        child[y] = 0;
     }
 
-    // 2. Do removing or adding of the cells at the end of existing rows.
-    ////////////////////////////////////////////////////////////////////
-    // For the remaining rows, shrink the number of columns per row as
-    // needed.
-    //
-    // y is numRows-1 or -1
-    for(; y != -1; --y) {
-        // Note we iterate just on the end of the row if it needs
-        // trimming.
-        for(uint32_t x=s->g.numColumns-1; x>=numColumns && x!=-1; --x) {
-            struct PnSurface *c = child[y][x];
-            if(IsUpperLeftCell(c, child, x, y))
-                pnWidget_destroy((void *) c);
-            child[y][x] = 0; // DEBUG memset 0 thingy
-        }
-        if(s->g.numColumns != numColumns) continue;
-
-        child[y] = realloc(child[y], numColumns*sizeof(*child[y]));
-        ASSERT(child[y], "realloc(,%zu) failed",
-                numColumns*sizeof(*child[y]));
-
-        if(numColumns > s->g.numColumns)
-            // Zero the new memory.
-            memset(child[y] + s->g.numColumns, 0,
-                    (numColumns - s->g.numColumns)*sizeof(*child[y]));
-    }
-
-    if(numColumns && numColumns != s->g.numColumns) {
-
-        s->g.grid->widths = realloc(s->g.grid->widths,
-                numColumns*sizeof(*s->g.grid->widths));
-        ASSERT(s->g.grid->widths, "realloc(,%zu) failed",
-                numColumns*sizeof(*s->g.grid->widths));
-        // The values in this memory do not matter now.
-    }
-
-
-    // 3. Grow or shrink the number of rows.
+    // 2. Grow or shrink the number of rows with the new numColunms.
     /////////////////////////////////////////////////////////////////
     if(numRows && numRows != s->g.numRows) {
 
+#ifdef DEBUG
+        if(s->g.numRows > numRows) {
+            // Zero memory that is freed.
+            DZMEM(child + numRows,
+                    (s->g.numRows - numRows)*sizeof(*child));
+        }
+#endif
         s->g.grid->child = (child = realloc(child,
                     numRows*sizeof(*child)));
         ASSERT(child, "realloc(,%zu) failed", numRows*sizeof(*child));
 
-        s->g.grid->heights = realloc(s->g.grid->heights,
-                numRows*sizeof(*s->g.grid->heights));
-        ASSERT(s->g.grid->heights, "realloc(,%zu) failed",
-                numRows*sizeof(*s->g.grid->heights));
+        if(s->g.numRows < numRows) {
+            // We added rows so:
+            // Create new row (child[y]) pointers.  The old row pointers
+            // will be fine by using realloc() above.
+            for(y=s->g.numRows; y < numRows; ++y) {
+                child[y] = calloc(numColumns, sizeof(*child[y]));
+                    ASSERT(child[y], "calloc(%" PRIu32 ",%zu) failed",
+                            numColumns, sizeof(*child[y]));
+                // calloc() zeros memory.
+            }
+        }
+        // If it shrank the number of rows we removed row pointers in 1.
+    }
 
-        if(numRows > s->g.numRows) {
-            // Zero the new grid child widget pointer memory.
-            memset(child + s->g.numRows, 0,
-                    (numRows - s->g.numRows)*sizeof(*child));
-            // The values in s->g.grid->heights memory do not matter
-            // now.
+    // 3. Do removing or adding of the columns at the end of existing rows
+    //    that will still exist.
+    ////////////////////////////////////////////////////////////////////
+    // For the remaining rows, shrink or grow the number of columns per
+    // row as needed.
+    if(numColumns && s->g.numRows &&
+            s->g.numColumns && s->g.numColumns != numColumns) {
+
+        DASSERT(numRows);
+        // Now we iterate just on the end of pre-existing rows if it needs
+        // trimming.
+        y = s->g.numRows-1;
+        if(y >= numRows-1)
+            y = numRows-1;
+        for(; y!=-1; --y) {
+            for(uint32_t x=s->g.numColumns-1;
+                    x>=numColumns && x!=-1; --x) {
+                struct PnSurface *c = child[y][x];
+                if(IsUpperLeftCell(c, child, x, y))
+                    pnWidget_destroy((void *) c);
+                child[y][x] = 0; // DEBUG memset 0 thingy
+            }
+
+            child[y] = realloc(child[y], numColumns*sizeof(*child[y]));
+            ASSERT(child[y], "realloc(,%zu) failed",
+                    numColumns*sizeof(*child[y]));
+            if(numColumns > s->g.numColumns)
+                // Zero the new memory.
+                memset(child[y] + s->g.numColumns, 0,
+                        (numColumns - s->g.numColumns)*sizeof(*child[y]));
         }
     }
 
-    // 4. Add new rows.
-    /////////////////////////////////////////////////////////////////
-    for(y=s->g.numRows; y < numRows; ++y) {
-        child[y] = calloc(numColumns, sizeof(*child[y]));
-        ASSERT(child[y], "calloc(%" PRIu32 ",%zu) failed",
-                numColumns, sizeof(*child[y]));
-        // calloc() zeros memory.
-    }
-
-    // 5. Cleanup all the grid rows.
+    // 4. Cleanup all the grid rows.
     /////////////////////////////////////////////////////////////////
     if(!numRows) {
         DASSERT(!numColumns);
-        // Free the whole grid.
-        DZMEM(child, s->g.numRows*sizeof(*child));
-        free(child);
+        DASSERT(child);
+        DASSERT(s->g.numRows);
+        DASSERT(s->g.numColumns);
 
+        // Free the whole grid.
         DASSERT(s->g.grid->heights);
         DASSERT(s->g.numRows);
         DZMEM(s->g.grid->heights, s->g.numRows*sizeof(*s->g.grid->heights));
@@ -256,6 +271,12 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         DASSERT(s->g.numColumns);
         DZMEM(s->g.grid->widths, s->g.numColumns*sizeof(*s->g.grid->widths));
         free(s->g.grid->widths);
+
+        // All the row pointers child[y] are freed in (1.) above.
+        // And all child widgets are destroyed in (1.) above.
+
+        DZMEM(child, s->g.numRows*sizeof(*child));
+        free(child);
 
         DZMEM(s->g.grid, sizeof(*s->g.grid));
         free(s->g.grid);
@@ -268,7 +289,7 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         DASSERT(numRows);
     }
 
-    // 6. Record the grid size.
+    // 5. Record the grid size.
     /////////////////////////////////////////////////////////////////
     s->g.numRows = numRows;
     s->g.numColumns = numColumns;

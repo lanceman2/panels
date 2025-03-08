@@ -14,7 +14,7 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-const uint32_t numColumns = 5, numRows = 6;
+const uint32_t numColumns = 2, numRows = 2;
 
 struct PnWindow *win;
 
