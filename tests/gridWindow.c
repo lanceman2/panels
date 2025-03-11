@@ -14,14 +14,14 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-const uint32_t numColumns = 2, numRows = 2;
+const uint32_t numColumns = 18, numRows = 10;
 
 struct PnWindow *win;
 
 void Widget(uint32_t x, uint32_t y) {
 
     struct PnWidget *w = pnWidget_createInGrid((void *) win,
-            20/*width*/, 20/*height*/,
+            67/*width*/, 50/*height*/,
         PnLayout_One,
         0/*align*/, PnExpand_HV, 
         x/*columnNum*/, y/*rowNum*/,
@@ -49,7 +49,7 @@ int main(void) {
 
     pnWindow_show(win, true);
 
-    //Run(win);
+    Run(win);
 
     return 0;
 }

@@ -151,7 +151,7 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
     ASSERT((numColumns && numRows) || (!numColumns && !numRows));
 
 
-    // 0. Setup widths[] and heights[] arrays.
+    // 0. Setup x[], y[], widths[] and heights[] arrays.
     ////////////////////////////////////////////////////////////////////
     if(numColumns && numColumns != s->g.numColumns) {
         DASSERT(numColumns);
@@ -159,6 +159,12 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
                 numColumns*sizeof(*s->g.grid->widths));
         ASSERT(s->g.grid->widths, "realloc(,%zu) failed",
                 numColumns*sizeof(*s->g.grid->widths));
+
+        s->g.grid->x = realloc(s->g.grid->x,
+                (numColumns+1)*sizeof(*s->g.grid->x));
+        ASSERT(s->g.grid->x, "realloc(,%zu) failed",
+                (numColumns+1)*sizeof(*s->g.grid->x));
+
         // The values in this array do not matter now at this time.
     }
     if(numRows && numRows != s->g.numRows) {
@@ -166,6 +172,12 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
                 numRows*sizeof(*s->g.grid->heights));
         ASSERT(s->g.grid->heights, "realloc(,%zu) failed",
                 numRows*sizeof(*s->g.grid->heights));
+
+        s->g.grid->y = realloc(s->g.grid->y,
+                (numRows+1)*sizeof(*s->g.grid->y));
+        ASSERT(s->g.grid->y, "realloc(,%zu) failed",
+                (numRows+1)*sizeof(*s->g.grid->y));
+
         // The values in this array do not matter now at this time.
     }
 
@@ -262,15 +274,26 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         DASSERT(s->g.numColumns);
 
         // Free the whole grid.
-        DASSERT(s->g.grid->heights);
+        DASSERT(s->g.grid->x);
+        DASSERT(s->g.numColumns);
+        DZMEM(s->g.grid->x, (s->g.numColumns+1)*
+                sizeof(*s->g.grid->x));
+        free(s->g.grid->x);
+
+        DASSERT(s->g.grid->widths);
+        DZMEM(s->g.grid->widths, s->g.numColumns*sizeof(*s->g.grid->widths));
+        free(s->g.grid->widths);
+
+        DASSERT(s->g.grid->y);
         DASSERT(s->g.numRows);
+        DZMEM(s->g.grid->y, (s->g.numRows+1)*
+                sizeof(*s->g.grid->y));
+        free(s->g.grid->y);
+
+        DASSERT(s->g.grid->heights);
         DZMEM(s->g.grid->heights, s->g.numRows*sizeof(*s->g.grid->heights));
         free(s->g.grid->heights);
 
-        DASSERT(s->g.grid->widths);
-        DASSERT(s->g.numColumns);
-        DZMEM(s->g.grid->widths, s->g.numColumns*sizeof(*s->g.grid->widths));
-        free(s->g.grid->widths);
 
         // All the row pointers child[y] are freed in (1.) above.
         // And all child widgets are destroyed in (1.) above.

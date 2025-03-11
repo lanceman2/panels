@@ -24,6 +24,8 @@ static inline void CreateCairo(struct PnBuffer *buffer,
     DASSERT(!s->cr);
 
     if(s->culled || s->noDrawing ||
+            // We use cairoDraw if we can we are not using the
+            // non-cairo draw function.
             (!s->cairoDraw && s->draw)) return;
 
     s->cairo_surface = cairo_image_surface_create_for_data(
@@ -56,9 +58,12 @@ static void CreateCairos(struct PnBuffer *buffer,
     struct PnSurface ***child = s->g.grid->child;
     DASSERT(child);
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
-        for(uint32_t x=s->g.numColumns-1; x != -1; --x)
+        for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
+            struct PnSurface *c = child[y][x];
+            if(!c || c->culled) continue;
             if(IsUpperLeftCell(child[y][x], child, x, y))
-                CreateCairos(buffer, s);
+                CreateCairos(buffer, c);
+        }
 }
 
 void pnSurface_setCairoDraw(struct PnSurface *s,
@@ -129,6 +134,7 @@ void DestroyCairos(struct PnSurface *s) {
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
             struct PnSurface *c = child[y][x];
+            if(!c || c->culled) continue;
             if(IsUpperLeftCell(c, child, x, y))
                 DestroyCairos(c);
         }

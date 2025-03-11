@@ -93,6 +93,19 @@ struct PnGrid {
     // child[y][x] points to a widget (surface).
     struct PnSurface ***child;
 
+    // Positions of the grid lines starting at the top left of the grid
+    // surface.  For any m and n, x[m], y[n] is to the upper left corner
+    // of a cell where a contained widget can be positioned if it is
+    // aligned top left.  We must remember that there can be a border
+    // between cells and widgets in the cells may not necessarily fill the
+    // whole cell space.
+    //
+    // We can quickly find the cell n and m at a given pixel position x
+    // and y using 2D bisection O(2*log2N), and then test if we are in a
+    // widget that is in the cell.
+    //
+    uint32_t *x, *y; // array sizes: x[numColumns+1], y[numRows+1]
+
     // At widget size allocation time we record the size and spacing of
     // all the grid-lines in these two allocated arrays:
     // widths[numColumns] and heights[numRows].  These are only needed in
@@ -103,7 +116,15 @@ struct PnGrid {
     //
     // These are widths and heights without cell borders of the grid.
     // Just the room available for a child widget.
+    //
+    // TODO: Are these redundant given x and y above?  Maybe not given
+    // that we can mark unused rows and columns with them.
+    //
+    // widths[m] == 0 means that there is no showing cells for column m.
+    // heights[n] == 0 means that there is no showing cells for row n.
+    //
     uint32_t *widths, *heights;
+
     uint32_t numChildren;
 };
 
@@ -204,9 +225,9 @@ struct PnSurface {
         } l; // surface is a container list (l)
 
         struct {
-            // We make this the same size as PnSurface::l by allocating
-            // grid.  Otherwise it would be much larger than
-            // PnSurface::l.
+            // We make this "g" the same size as PnSurface::l by
+            // allocating grid.  Otherwise it would be much larger than
+            // PnSurface::l above.
             struct PnGrid *grid;
             uint32_t numColumns, numRows;
         } g; // surface is a container grid (g)
@@ -336,7 +357,8 @@ struct PnWidget {
     struct PnWidgetDestroy *destroys;
 
     // An allocated array of marshaller functions that keep user set
-    // callback functions.
+    // callback functions for panel widgets.
+    //
     // These functions call API user callbacks.  See
     // pnWidget_addCallback().  The object class that inherits PnWidget
     // must define indexes into this array.  Like for example
@@ -346,20 +368,21 @@ struct PnWidget {
     // Fuck that name string lookup stuff (GTK), or that signal/slot new
     // language (Qt MOC) stuff.  When setup, (I think) this is much faster
     // than either.  Each action is referred to by an index using a CPP
-    // MACROs like PN_BUTTON_CB_CLICK.  The correct indexes are solidified
-    // by constructing the base objects in order on the way up to the last
-    // widget inheritance level.  We assume that each given widget type
-    // has a predetermined and fixed value and index order of actions just
-    // after they are created.  This is not a big array.  We do not need a
-    // fucking data base or other complex data structure.  An array does
-    // the job well.  Users that make widget objects just need to find
-    // their starting index from their base widget object's last created
-    // index.  They do it just once when the code is written.  Any time a
-    // base widget adds or removes an action all the widget indexes need
-    // to adjust their fixed values (a coding time change).  So, the
-    // creation of actions can only happen in the widget create functions.
-    // In effect, the user callbacks are dynamically added, but the types
-    // for them is fixed in the particular widget code.
+    // MACROs like PN_BUTTON_CB_CLICK.  The correct indexes are
+    // solidified by constructing the base objects in order on the way up
+    // to the last widget inheritance level.  We assume that each given
+    // widget type has a predetermined and fixed value and index order of
+    // actions just after they are created.  We do not need a fucking data
+    // base or other complex data structure.  An array does the job well.
+    // Users that make widget objects just need to find their starting
+    // index from their base widget object's last created index.  They do
+    // it just once when the code is written.  Any time a base widget adds
+    // or removes an action all the widget indexes need to adjust their
+    // fixed values (a compile time change).  It appears that the setup of
+    // signals/slots is a compile time thing in Qt, so I think it's very
+    // hard to justify that all that added complexity.  In GTK it looks
+    // like it could be done at run-time, but I never see it used that
+    // way.
     //
     // So: the particular indexes (example PN_BUTTON_CB_CLICK) into this
     // array are set at compile time.
@@ -370,12 +393,11 @@ struct PnWidget {
     // pointer prototypes.  If function prototypes change with panel
     // callbacks you're screwed, i.e. you must be careful.  GTK uses CPP
     // MACRO madness to check types.  I find that GTK MARCO gobject code
-    // is impossible to follow, but than they never can run their code
-    // with Valgrind, WTF.
+    // is impossible to follow.
     //
     // This is the shit!  Simple and fast.
     //
-    // Allocated actions[] array.  Realloc().
+    // Allocated actions[] array.  Realloc(3).
     struct PnAction *actions;
     uint32_t numActions;
 

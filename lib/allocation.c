@@ -469,7 +469,17 @@ static void GetChildrenXY(const struct PnSurface *s,
         case PnLayout_Grid: {
             struct PnSurface ***child = s->g.grid->child;
             DASSERT(child);
+            uint32_t *X = s->g.grid->x;
+            DASSERT(X);
+            uint32_t *Y = s->g.grid->y;
+            DASSERT(Y);
+            X[s->g.numColumns] = a->x + a->width;
+            Y[s->g.numRows] = a->y + a->height;
+
             for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+                Y[yi] = Y[yi+1];
+                if(s->g.grid->heights[yi])
+                    Y[yi] -= (borderY + s->g.grid->heights[yi]);
                 x = a->x + a->width; // x max, end of row
                 for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
                     if(s->g.grid->widths[xi])
@@ -488,6 +498,9 @@ static void GetChildrenXY(const struct PnSurface *s,
                 }
             }
             for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                X[xi] = X[xi+1];
+                if(s->g.grid->widths[xi])
+                    X[xi] -= (borderX + s->g.grid->widths[xi]);
                 y = a->y + a->height; // y max, bottom of grid
                 for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
                     if(s->g.grid->heights[yi])
@@ -705,8 +718,9 @@ uint32_t CullY(const struct PnAllocation *a, struct PnSurface *c) {
 // // Basic idea: Clip borders (of container widgets) and cull until we
 // can't cull (or clip containers).
 //
-// At this point in the code all the widgets are pushed to the upper left;
-// i.e. there is aligning done yet.
+// At this point in the code all the widgets are pushed to the upper left
+// and packed tight; i.e. there is no user selected widget aligning or
+// expanding done yet.
 //
 // So, if there is a new cull in a parent node we return (pop the
 // ClipOrCullChildren() call stack).  If we cull a leaf, we keep clipping
@@ -723,6 +737,8 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
 
     DASSERT(s);
     DASSERT(&s->allocation == a);
+    DASSERT(a->width);
+    DASSERT(a->height);
     DASSERT(!s->culled);
     DASSERT(HaveChildren(s));
 
@@ -808,33 +824,125 @@ static uint32_t ClipOrCullChildren(const struct PnSurface *s,
             return haveCullRet;
 
         case PnLayout_Grid: {
+
+            // The hard part of this is when we have multi-span rows
+            // and/or columns; anytime we cull a multi-span widget we
+            // may cause the grid to dramatically change shape.
+            //
+            // If there are no multi-spanning widgets being cull tested
+            // this can be much faster.
+            //
             // The grid container must have an un-culled child in a row
-            // (column) in order for that row (column) to be drawn.  That
-            // this point the grid is shrink wrapped around its' children
-            // with its' borders intact.
-#if 0
-            uint32_t xBorder = GetBWidth(s);
-            uint32_t yBorder = GetBWidth(s);
+            // (column) in order for that row (column) to be drawn.
             struct PnSurface ***child = s->g.grid->child;
             DASSERT(child);
-            uint32_t x = a->x + a->width; // x max, end of row
-            uint32_t *widths = s->g.grid->widths;
-            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+            // At this point "a" is not necessarily consistent with
+            // the children.
 
-            for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
-                    c = child[yi][xi];
-                    if(!c || c->culled) continue;
-                    if(!IsUpperLeftCell(c, child, xi, yi)) continue;
-                }
-            }
-            uint32_t y = a->y + a->height; // y max, bottom of grid
+            // 1. First cull due to X size.
+            ///////////////////////////////////////////////////////////
+            uint32_t xMax = a->x + a->width;
+            //
+            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
                 for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
                     c = child[yi][xi];
                     if(!c || c->culled) continue;
-                    if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+                    if(c->allocation.x >= xMax) {
+                        // No chance to fit.  If it spans more columns it
+                        // does not matter (we checked it's starting x
+                        // position), we can just cull it and continue
+                        // culling more.  All children in this child "c"
+                        // are culled too.
+                        c->culled = true;
+                        haveCullRet |= GOT_CULL;
+                        continue;
+                    }
+                    if(c->allocation.x + c->allocation.width > xMax) {
+                        bool haveCull = false;
+                        // Squish "c".
+                        c->allocation.width = xMax - c->allocation.x;
+                        // See if it gets widget culls and it should.
+                        if(HaveChildren(c)) {
+                            haveCull = (haveCullRet |=
+                                ClipOrCullChildren(c, &c->allocation));
+                            DASSERT(haveCullRet);
+                        } else {
+                            haveCull = c->culled = true;
+                            haveCullRet |= GOT_CULL;
+                        }
+                        if(c->pg.cSpan > 1 && haveCull)
+                            // We just culled a multi-column spanning
+                            // child than we need to finish this culling
+                            // pass.  The shape of the whole grid can
+                            // change a lot from this.
+                            //
+                            // Multi-span in grids (tables) are a pain in
+                            // the ass.
+                            //
+                            // TODO: We may add more checks here to see if
+                            // the whole grid changed a lot, and if not,
+                            // do not return now.  Letting it cull more in
+                            // the next culling pass does not make this
+                            // wrong, but maybe just a little slower.
+                            return haveCullRet;
+                    }
                 }
             }
-#endif
+
+            // If we got any culls in culling along X we do the Y culling
+            // on the next pass, if there are any.
+            if(haveCullRet) return haveCullRet;
+
+            // 2. Second cull due to Y size.
+            ///////////////////////////////////////////////////////////
+            uint32_t yMax = a->y + a->height;
+            //
+            for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+                for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                    c = child[yi][xi];
+                    if(!c || c->culled) continue;
+                    if(c->allocation.y >= yMax) {
+                        // No chance to fit.  If it spans more rows it
+                        // does not matter (we checked it's starting y
+                        // position), we can just cull it and continue
+                        // culling more.  All children in this child "c"
+                        // are culled too.
+                        c->culled = true;
+                        haveCullRet |= GOT_CULL;
+                        continue;
+                    }
+                    if(c->allocation.y + c->allocation.height > yMax) {
+                        bool haveCull = false;
+                        // Squish "c".
+                        c->allocation.height = yMax - c->allocation.y;
+                        // See if it gets widget culls and it should.
+                        if(HaveChildren(c)) {
+                            haveCull = (haveCullRet |=
+                                ClipOrCullChildren(c, &c->allocation));
+                            DASSERT(haveCullRet);
+                        } else {
+                            haveCull = c->culled = true;
+                            haveCullRet |= GOT_CULL;
+                        }
+                        if(c->pg.rSpan > 1 && haveCull)
+                            // We just culled a multi-row spanning
+                            // child than we need to finish this culling
+                            // pass.  The shape of the whole grid can
+                            // change a lot from this.
+                            //
+                            // Multi-span in grids (tables) are a pain in
+                            // the ass.
+                            //
+                            // TODO: We may add more checks here to see if
+                            // the whole grid changed a lot, and if not,
+                            // do not return now.  Letting it cull more in
+                            // the next culling pass does not make this
+                            // wrong, but maybe just a little slower.
+                            return haveCullRet;
+                    }
+                }
+            }
+
             return haveCullRet;
         }
 

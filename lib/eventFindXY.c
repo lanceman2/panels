@@ -13,9 +13,12 @@
 
 
 // Find the most childish surface (widget) that has the mouse pointer
-// position, d.x and d.y, in it.
+// position, x and y, in it.
 //
-// TODO: Do we need a faster surface search data structure?
+// TODO: Do we need a faster surface search data structure?  Yes.  We
+// should make the searching of lists converge with O(logN) (base 2),
+// using an interaction that is bisecting the iterator.  Halving the
+// search pool at each iteration step.
 //
 // TODO: Maybe the widget (surface) order in the searching could be more
 // optimal.
@@ -150,6 +153,22 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
                 return c;
             }
             break;
+
+        case PnLayout_Grid: {
+#if 0
+            // Do a bisection search for O(2*log2N).
+            DASSERT(s->g.grid);
+            struct PnSurface ***child = s->g.grid->child;
+            DASSERT(child);
+            DASSERT(s->g.numRows);
+            DASSERT(s->g.numColumns);
+            uint32_t *x = s->g.grid->x;
+            DASSERT(x);
+            uint32_t *y = s->g.grid->x;
+            DASSERT(y);
+#endif
+
+        }
 
         default:
             ASSERT(0, "Write more code");
