@@ -1489,9 +1489,11 @@ static inline void ExpandGrid(const struct PnSurface *s,
     uint32_t border = GetBWidth(s);
     uint32_t numExpand = 0;
     uint32_t needed = 0;
+    uint32_t sectionCount = 0;
 
     for(uint32_t xi=s->g.numColumns-1; xi!=-1; --xi) {
         if(!widths[xi]) continue;
+        ++sectionCount;
         // Tally the total width needed.
         needed += border + widths[xi];
         for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
@@ -1520,7 +1522,14 @@ static inline void ExpandGrid(const struct PnSurface *s,
     if(numExpand) {
         padPer = extra/numExpand;
         endPad = extra - padPer * numExpand;
-    }
+        sectionCount = 0;
+    } else if(s->expand & PnExpand_H && sectionCount) {
+        // Special case the grid expands but no children expand.
+        // We expand all the cells uniformly.
+        padPer = extra/sectionCount;
+        endPad = extra - padPer * sectionCount;
+    } else
+        sectionCount = 0;
 
     uint32_t *X = s->g.grid->x;
     DASSERT(X);
@@ -1542,7 +1551,7 @@ static inline void ExpandGrid(const struct PnSurface *s,
             // This column is not showing.
             continue;
         // Can this column, xi, expand? 
-        bool canExpand = false;
+        bool canExpand = sectionCount?true:false;
         for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
             c = child[yi][xi];
             if(!c || c->culled) continue;
@@ -1593,8 +1602,11 @@ static inline void ExpandGrid(const struct PnSurface *s,
     border = GetBHeight(s);
     numExpand = 0;
     needed = 0;
+    sectionCount = 0;
+
     for(uint32_t yi=s->g.numRows-1; yi!=-1; --yi) {
         if(!heights[yi]) continue;
+        ++sectionCount;
         // Tally the total width needed.
         needed += border + heights[yi];
         for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
@@ -1622,7 +1634,15 @@ static inline void ExpandGrid(const struct PnSurface *s,
     if(numExpand) {
         padPer = extra/numExpand;
         endPad = extra - padPer * numExpand;
-    }
+        sectionCount = 0;
+    } else if(s->expand & PnExpand_H && sectionCount) {
+        // Special case the grid expands but no children expand.
+        // We expand all the cells uniformly.
+        padPer = extra/sectionCount;
+        endPad = extra - padPer * sectionCount;
+    } else
+        sectionCount = 0;
+
 
     uint32_t *Y = s->g.grid->y;
     DASSERT(Y);
@@ -1638,7 +1658,7 @@ static inline void ExpandGrid(const struct PnSurface *s,
             // This column is not showing.
             continue;
         // Can this column, xi, expand? 
-        bool canExpand = false;
+        bool canExpand = sectionCount?true:false;
         for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
             c = child[yi][xi];
             if(!c || c->culled) continue;

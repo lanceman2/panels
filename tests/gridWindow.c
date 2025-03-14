@@ -40,7 +40,7 @@ void Widget(uint32_t x, uint32_t y) {
     struct PnWidget *w = pnWidget_createInGrid((void *) win,
             67/*width*/, 50/*height*/,
         PnLayout_One,
-        0/*align*/, Rand(0,3)/*Expand*/, 
+        0/*align*/, Rand(0,0)/*Expand*/, 
         x/*columnNum*/, y/*rowNum*/,
         1/*columnSpan*/, 1/*rowSpan*/,
         0/*size*/);
@@ -58,7 +58,7 @@ int main(void) {
     srand(2);
 
     win = pnWindow_createAsGrid(0/*parent*/,
-            0/*width*/, 0/*height*/, 0/*x*/, 0/*y*/,
+            4/*width*/, 4/*height*/, 0/*x*/, 0/*y*/,
             0/*align*/, PnExpand_HV/*expand*/,
             numColumns, numRows);
     ASSERT(win);
