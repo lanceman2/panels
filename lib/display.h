@@ -241,7 +241,7 @@ struct PnSurface {
         } pl; // my parent container is a list (pl)
         struct {
             // row y -> child[y]  child[y][x]
-            uint32_t row, column, rSpan, cSpan;
+            uint32_t row, column, cSpan, rSpan;
         } pg; // my parent container is a grid (pg)
     };
 
@@ -608,6 +608,23 @@ bool IsUpperLeftCell(struct PnSurface *c,
         struct PnSurface ***cells, uint32_t x, uint32_t y) {
     return (c && (!x || c != cells[y][x-1]) &&
             (!y || c != cells[y-1][x]));
+}
+
+
+static bool inline HaveChildren(const struct PnSurface *s) {
+    DASSERT(s);
+    ASSERT(s->layout < PnLayout_Callback, "WRITE MORE CODE");
+
+    if(s->layout < PnLayout_Grid) {
+        DASSERT((s->l.firstChild && s->l.lastChild) ||
+                (!s->l.firstChild && !s->l.lastChild));
+        return (s->l.firstChild);
+    }
+
+    // else
+    DASSERT(s->layout == PnLayout_Grid);
+
+    return (s->g.grid->numChildren);
 }
 
 extern void GetSurfaceDamageFunction(struct PnWindow *win);

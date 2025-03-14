@@ -155,26 +155,82 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             break;
 
         case PnLayout_Grid: {
-#if 0
             // Do a bisection search for O(2*log2N).
+            //
+            // TODO: Looks like a lot of overhead for small grids.
+            //
             DASSERT(s->g.grid);
             struct PnSurface ***child = s->g.grid->child;
             DASSERT(child);
-            DASSERT(s->g.numRows);
             DASSERT(s->g.numColumns);
-            uint32_t *x = s->g.grid->x;
-            DASSERT(x);
-            uint32_t *y = s->g.grid->x;
-            DASSERT(y);
-#endif
+            DASSERT(s->g.numRows);
+            uint32_t *X = s->g.grid->x;
+            DASSERT(X);
+            if(X[0] > x)
+                // Special case: it's in the left border.
+                break;
+            if(x >= X[s->g.numColumns])
+                break;
+            uint32_t i = s->g.numColumns/2;
+            uint32_t *Y = s->g.grid->y;
+            DASSERT(Y);
+            if(Y[0] > y)
+                // Special case: it's in the top border.
+                break;
+            if(y >= Y[s->g.numRows])
+                break;
+            uint32_t j = s->g.numRows/2;
+            // Find i and j such that:
+            // X[i] <= x < X[i+1] and Y[j] <= y < Y[j+1].
+            if(i) {
+                uint32_t step = i;
+                if(step == 0) step = 1;
+                while(X[i] > x || x >= X[i+1]) {
+                    if(step >= 2)
+                        step /= 2;
+                    if(X[i] > x)
+                        i -= step;
+                    else
+                        i += step;
+                }
+            }
+            if(j) {
+                uint32_t step = j;
+                if(step == 0) step = 1;
+                while(Y[j] > y || y >= Y[j+1]) {
+                    if(step >= 2)
+                        step /= 2;
+                    if(Y[j] > y)
+                        j -= step;
+                    else
+                        j += step;
+                }
 
+            }
+            DASSERT(X[i] <= x);
+            DASSERT(x < X[i+1]);
+            DASSERT(Y[j] <= y);
+            DASSERT(y < Y[j+1]);
+
+            c = child[j][i];
+            if(!c || c->culled) break;
+            // See if child "c" has the pointer in it.
+
+            if(c->allocation.x <= x &&
+                    x < c->allocation.x + c->allocation.width &&
+                    c->allocation.y <= y &&
+                    y < c->allocation.y + c->allocation.height) {
+                if(HaveChildren(c))
+                    return FindSurface(win, c, x, y);
+                return c;
+            }
+            break;
         }
 
         default:
             ASSERT(0, "Write more code");
             return 0;
     }
-
 
     return s;
 }

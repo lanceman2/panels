@@ -18,6 +18,23 @@ const uint32_t numColumns = 18, numRows = 10;
 
 struct PnWindow *win;
 
+uint32_t color;
+
+bool enter(struct PnWidget *w,
+            uint32_t x, uint32_t y, void *userData) {
+
+    color = pnWidget_getBackgroundColor(w);
+    pnWidget_setBackgroundColor(w, 0xAAFF0000);
+    pnWidget_queueDraw(w);
+    return true;
+}
+
+void leave(struct PnWidget *w, void *userData) {
+
+    pnWidget_setBackgroundColor(w, color);
+    pnWidget_queueDraw(w);
+}
+
 void Widget(uint32_t x, uint32_t y) {
 
     struct PnWidget *w = pnWidget_createInGrid((void *) win,
@@ -28,6 +45,9 @@ void Widget(uint32_t x, uint32_t y) {
         1/*columnSpan*/, 1/*rowSpan*/,
         0/*size*/);
     pnWidget_setBackgroundColor(w, Color());
+
+    pnWidget_setEnter(w, enter, 0/*userData*/);
+    pnWidget_setLeave(w, leave, 0/*userData*/);
 }
 
 
@@ -38,7 +58,7 @@ int main(void) {
     srand(2);
 
     win = pnWindow_createAsGrid(0/*parent*/,
-            5/*width*/, 5/*height*/, 0/*x*/, 0/*y*/,
+            15/*width*/, 15/*height*/, 0/*x*/, 0/*y*/,
             0/*align*/, PnExpand_HV/*expand*/,
             numColumns, numRows);
     ASSERT(win);

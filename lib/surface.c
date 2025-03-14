@@ -351,6 +351,8 @@ void AddChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s,
 
     s->pg.row = row;
     s->pg.column = column;
+    s->pg.cSpan = cSpan;
+    s->pg.rSpan = rSpan;
 }
 
 // Add the child, s, to the parent.

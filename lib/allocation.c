@@ -9,23 +9,6 @@
 #include  "display.h"
 
 
-
-static bool inline HaveChildren(const struct PnSurface *s) {
-    DASSERT(s);
-    ASSERT(s->layout < PnLayout_Callback, "WRITE MORE CODE");
-
-    if(s->layout < PnLayout_Grid) {
-        DASSERT((s->l.firstChild && s->l.lastChild) ||
-                (!s->l.firstChild && !s->l.lastChild));
-        return (s->l.firstChild);
-    }
-
-    // else
-    DASSERT(s->layout == PnLayout_Grid);
-
-    return (s->g.grid->numChildren);
-}
-
 // We use lots of function recursion to get widget positions, sizes, and
 // culling.  This code may hurt your head.
 
@@ -551,7 +534,7 @@ static inline bool RecurseCullX(
     DASSERT(c->layout != PnLayout_Grid);
     DASSERT(!c->culled);
 
-    if(ca->x > a->x + a->width) {
+    if(ca->x >= a->x + a->width) {
         // The inner edge does not even fit.
         // Cull this whole widget.
         c->culled = true;
@@ -607,7 +590,7 @@ static inline bool RecurseCullY(
     DASSERT(c->layout != PnLayout_Grid);
     DASSERT(!c->culled);
 
-    if(ca->y > a->y + a->height) {
+    if(ca->y >= a->y + a->height) {
         // The inner edge does not even fit.
         // Cull this whole widget.
         c->culled = true;
@@ -1113,11 +1096,14 @@ void ExpandHShared(const struct PnSurface *s,
     if(neededWidth + border < a->width)
         extra = a->width - (neededWidth + border);
     uint32_t padPer = 0;
-    if(numExpand)
+    uint32_t endPiece = 0;
+    if(numExpand) {
         padPer = extra/numExpand;
-    // endPiece is the leftover pixels from extra not being a integer
-    // multiple of padPer.  It's added to the last widget width.
-    uint32_t endPiece = extra - numExpand * padPer;
+        // endPiece is the leftover pixels from extra not being a integer
+        // multiple of padPer.  We add them one per widget until we run
+        // out.
+        endPiece = extra - numExpand * padPer;
+    }
     // The starting left side widget has the smallest x position.
     uint32_t x = a->x;
 
@@ -1128,15 +1114,16 @@ void ExpandHShared(const struct PnSurface *s,
         // Add to the width if we can.
         if(c->canExpand & PnExpand_H) {
             ca->width += padPer;
-            --numExpand;
-            if(!numExpand)
-                // endPiece can be zero.
-                ca->width += endPiece;
+            if(endPiece) {
+                ++ca->width;
+                --endPiece;
+            }
         } // else ca->width does not change.
         x += ca->width;
     }
     DASSERT(x <= a->x + a->width);
     DASSERT(a->x + a->width >= x);
+    DASSERT(!endPiece);
 
     uint32_t rightBorderWidth = a->x + a->width - x;
 
@@ -1221,11 +1208,14 @@ void ExpandVShared(const struct PnSurface *s,
     if(neededHeight + border < a->height)
         extra = a->height - (neededHeight + border);
     uint32_t padPer = 0;
-    if(numExpand)
+    uint32_t endPiece = 0;
+    if(numExpand) {
         padPer = extra/numExpand;
-    // endPiece is the leftover pixels from extra not being a integer
-    // multiple of padPer.  It's added to the last widget height.
-    uint32_t endPiece = extra - numExpand * padPer;
+        // endPiece is the leftover pixels from extra not being a integer
+        // multiple of padPer.  It's added to the widget height one at a
+        // time.
+        endPiece = extra - numExpand * padPer;
+    }
     // The starting top side widget has the smallest y position.
     uint32_t y = a->y;
 
@@ -1236,15 +1226,16 @@ void ExpandVShared(const struct PnSurface *s,
         // Add to the height if we can.
         if(c->canExpand & PnExpand_V) {
             ca->height += padPer;
-            --numExpand;
-            if(!numExpand)
-                // endPiece can be zero.
-                ca->height += endPiece;
+            if(endPiece) {
+                ++ca->height;
+                --endPiece;
+            }
         } // else ca->height does not change.
         y += ca->height;
     }
     DASSERT(y <= a->y + a->height);
     DASSERT(a->y + a->height >= y);
+    DASSERT(!endPiece);
 
     uint32_t bottomBorderHeight = a->y + a->height - y;
 
@@ -1476,6 +1467,223 @@ void AlignY(const struct PnSurface *s,
         }
 }
 
+
+// Expand the grid to fit in "s" and "a".
+//
+static inline void ExpandGrid(const struct PnSurface *s,
+        const struct PnAllocation *a) {
+
+    DASSERT(s->g.numColumns);
+    DASSERT(s->g.numRows);
+    DASSERT(s->g.grid);
+    DASSERT(s->g.grid->child);
+    DASSERT(s->g.grid->numChildren);
+    struct PnSurface ***child = s->g.grid->child;
+    DASSERT(child);
+    uint32_t *widths = s->g.grid->widths;
+    uint32_t *heights = s->g.grid->heights;
+    DASSERT(widths);
+    DASSERT(heights);
+    struct PnSurface *c;
+
+    uint32_t border = GetBWidth(s);
+    uint32_t numExpand = 0;
+    uint32_t needed = 0;
+
+    for(uint32_t xi=s->g.numColumns-1; xi!=-1; --xi) {
+        if(!widths[xi]) continue;
+        // Tally the total width needed.
+        needed += border + widths[xi];
+        for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+            c = child[yi][xi];
+            if(!c || c->culled) continue;
+            if(!IsUpperLeftCell(c, child, xi, yi))
+                // We have to count each child once.
+                continue;
+            if(c->canExpand & PnExpand_H) {
+                ++numExpand;
+                break;
+            }
+        }
+    }
+
+    if(needed)
+        needed += border;
+
+    uint32_t extra = 0;
+    if(a->width > needed)
+        extra = a->width - needed;
+
+    uint32_t padPer = 0;
+    uint32_t endPad = 0;
+
+    if(numExpand) {
+        padPer = extra/numExpand;
+        endPad = extra - padPer * numExpand;
+    }
+
+    uint32_t *X = s->g.grid->x;
+    DASSERT(X);
+    uint32_t numColumns = s->g.numColumns;
+
+    // At this point we assume that the arrays
+    // s->g.grid->widths[] and s->g.grid->heights[] have 
+    // correct values for the unexpanded and culled grid.
+    // We need to add to all these widths[] and heights[]
+    // just to expand by extra = a->width - needed.
+
+    // Start adding space in x:
+    //
+    uint32_t x = border;
+
+    for(uint32_t xi=0; xi<numColumns; ++xi) {
+        X[xi] = x;
+        if(!widths[xi])
+            // This column is not showing.
+            continue;
+        // Can this column, xi, expand? 
+        bool canExpand = false;
+        for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+            c = child[yi][xi];
+            if(!c || c->culled) continue;
+            if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+            if(c->canExpand & PnExpand_H) {
+                canExpand = true;
+                break;
+            }
+        }
+        if(canExpand) {
+            widths[xi] += padPer;
+            if(endPad) {
+                // Add 1 more until endPad is gone.
+                ++widths[xi];
+                --endPad;
+            }
+        }
+        x += widths[xi] + border;
+    }
+    X[numColumns] = x;
+    DASSERT(!endPad);
+
+    // Now we have all the widths[] and X[] for the whole grid.
+    //
+    // Here we set the children x positions and widths.
+    // Children that can't expand have a good width already.
+    //
+    for(uint32_t xi=0; xi<numColumns; ++xi) {
+        for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+            c = child[yi][xi];
+            if(!c || c->culled) continue;
+            if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+            // Even if we did not expand this column we still needed this
+            // widget "c" x position.
+            c->allocation.x = X[xi];
+            if(c->canExpand & PnExpand_H) {
+                c->allocation.width = widths[xi];
+                DASSERT(c->pg.cSpan);
+                for(uint32_t span=c->pg.cSpan-1; span; --span)
+                    c->allocation.width += (widths[xi+span] + border);
+            } // else "c" width does not change.
+        }
+    }
+
+
+    // Now do it for y:
+    ////////////////////////////////////////////////////////////////////
+    border = GetBHeight(s);
+    numExpand = 0;
+    needed = 0;
+    for(uint32_t yi=s->g.numRows-1; yi!=-1; --yi) {
+        if(!heights[yi]) continue;
+        // Tally the total width needed.
+        needed += border + heights[yi];
+        for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+            c = child[yi][xi];
+            if(!c || c->culled) continue;
+            if(!IsUpperLeftCell(c, child, xi, yi))
+                // We have to count each child once.
+                continue;
+            if(c->canExpand & PnExpand_V) {
+                ++numExpand;
+                break;
+            }
+        }
+    }
+    if(needed)
+        needed += border;
+
+    extra = 0;
+    if(a->height > needed)
+        extra = a->height - needed;
+
+    padPer = 0;
+    endPad = 0;
+
+    if(numExpand) {
+        padPer = extra/numExpand;
+        endPad = extra - padPer * numExpand;
+    }
+
+    uint32_t *Y = s->g.grid->y;
+    DASSERT(Y);
+    uint32_t numRows = s->g.numRows;
+    //
+    // Start adding space in y:
+    /////////////////////////////////////////////////////////
+    uint32_t y = border;
+
+    for(uint32_t yi=0; yi<numRows; ++yi) {
+        Y[yi] = y;
+        if(!heights[yi])
+            // This column is not showing.
+            continue;
+        // Can this column, xi, expand? 
+        bool canExpand = false;
+        for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+            c = child[yi][xi];
+            if(!c || c->culled) continue;
+            if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+            if(c->canExpand & PnExpand_V) {
+                canExpand = true;
+                break;
+            }
+        }
+        if(canExpand) {
+            heights[yi] += padPer;
+            if(endPad) {
+                // Add 1 more until endPad is gone.
+                ++heights[yi];
+                --endPad;
+            }
+        }
+        y += heights[yi] + border;
+    }
+    Y[numRows] = y;
+    DASSERT(!endPad);
+
+    // Now we have all the heights[] and Y[] for the whole grid.
+    //
+    // Here we set the children y positions and heights.
+    // Children that can't expand have a good width already.
+    //
+    for(uint32_t yi=0; yi<numRows; ++yi) {
+        for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+            c = child[yi][xi];
+            if(!c || c->culled) continue;
+            if(!IsUpperLeftCell(c, child, xi, yi)) continue;
+            // Even if we did not expand this row we still needed this
+            // widget "c" y position.
+            c->allocation.y = Y[yi];
+            if(c->canExpand & PnExpand_V) {
+                c->allocation.height = heights[yi];
+                DASSERT(c->pg.rSpan);
+                for(uint32_t span=c->pg.rSpan-1; span; --span)
+                    c->allocation.height += (heights[yi+span] + border);
+            } // else "c" height does not change.
+        }
+    }
+}
+
 // This function calls itself.
 //
 // At this call "s" has it's position and size set "correctly" and so do
@@ -1560,11 +1768,9 @@ static void ExpandChildren(const struct PnSurface *s,
                     AlignY(s, a, &c->allocation, endBorder);
             break;
 
-        case PnLayout_Grid: {
-
-        //ASSERT(0, "WRITE MORE CODE HERE");
+        case PnLayout_Grid:
+            ExpandGrid(s, &s->allocation);
             break;
-        }
 
         case PnLayout_None:
         default:
@@ -1576,9 +1782,17 @@ static void ExpandChildren(const struct PnSurface *s,
         DASSERT(s->g.grid);
         DASSERT(s->g.grid->child);
         DASSERT(s->g.grid->numChildren);
-
-        //ASSERT(0, "WRITE MORE CODE HERE");
-
+        
+        struct PnSurface ***child = s->g.grid->child;
+        DASSERT(child);
+        for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
+            for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
+                c = child[yi][xi];
+                if(!c || c->culled) continue;
+                if(HaveChildren(c))
+                    ExpandChildren(c, &c->allocation);
+            }
+        }
         return;
     }
 
@@ -1588,32 +1802,6 @@ static void ExpandChildren(const struct PnSurface *s,
     for(c = s->l.firstChild; c; c = c->pl.nextSibling)
         if(!c->culled && c->l.firstChild)
             ExpandChildren(c, &c->allocation);
-}
-
-// We must set the positions even if the relative positions do not appear
-// to change, because if a grand parent (or greater) moves for a past
-// call, these children need to reposition too, even if the alignment in
-// this container does not change.  So:
-//
-// Position the children.
-//
-// The positions and size of the container is fixed and correct.
-//
-static inline
-void AlignXRight(const struct PnSurface *s,
-        const struct PnAllocation *a,
-        struct PnSurface *first,
-        struct PnSurface *(*next)(struct PnSurface *s)) {
-
-    uint32_t border = GetBWidth(s);
-    // childrenWidth is the sum of children width with a border added.
-    uint32_t childrenWidth = 0;
-    struct PnSurface *c;
-
-    for(c = first; c ; c = next(c)) {
-        if(c->culled) continue;
-        childrenWidth += c->width + border;
-    }
 }
 
 
@@ -1693,7 +1881,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
     // We set haveChildShowing after many calculations.
     bool haveChildShowing = false;
-
 
     do {
         // Save the width and height.
@@ -1850,6 +2037,8 @@ void GetWidgetAllocations(struct PnWindow *win) {
     // Expand widgets that can be expanded.  Note: this only fills in
     // otherwise blank container spaces; but by doing so has to move the
     // child widgets; they push each other around when they expand.
+    //
+    // Also aligns the widgets.
     //
     // PASS 6
     ExpandChildren(s, a);

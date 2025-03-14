@@ -43,7 +43,7 @@ struct PnLabel {
 #define PRESSED    (2)
 #define ACTIVE     (3) // animation, released
 // TOGGLED is higher bits than the above.
-#define TOGGLED    (1 << 2)
+#define TOGGLED    (1 << 2) // 4
 
 // This must be true.  We cannot share bits between the first 4 state
 // flags and TOGGLED.  In code we say:
