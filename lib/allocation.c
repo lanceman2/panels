@@ -1711,16 +1711,27 @@ static void ExpandChildren(const struct PnSurface *s,
     // size, or the bottom edge border padding size (in pixels).
     uint32_t endBorder = UINT32_MAX;
 
+#if 0
     if(GetBWidth(s) || GetBHeight(s))
         // This container has a top and/or left border showing, so it has
         // non-zero area showing; so it will need some drawing for sure.
-        ((struct PnSurface *)s)->noDrawing = false;
+        // TODO: This does not work all the time when child surfaces do
+        // not expand with their parents.  There's more to it.
+        ((struct PnSurface *)s)->noDrawing = false; // was false
     else
         // No showing surface yet, but it may get set later in this
         // function call, in Expand?Shared() or in Expand?() where we
         // check if any part of this container "s" is showing between its
         // children.
-        ((struct PnSurface *)s)->noDrawing = true;
+        //
+        /// TODO: This does not work all the time when child surfaces do
+        // not expand with their parents.  There's more to it.
+        ((struct PnSurface *)s)->noDrawing = false; // was true
+#else
+        // TODO: We need to see if we can apply this noDrawing option.
+        ((struct PnSurface *)s)->noDrawing = false;
+#endif
+
 
     struct PnSurface *c;
 
