@@ -1586,13 +1586,41 @@ static inline void ExpandGrid(const struct PnSurface *s,
             if(!IsUpperLeftCell(c, child, xi, yi)) continue;
             // Even if we did not expand this column we still needed this
             // widget "c" x position.
+            // We start with the x position of "c" on the left side of the
+            // cell.
             c->allocation.x = X[xi];
             if(c->canExpand & PnExpand_H) {
                 c->allocation.width = widths[xi];
                 DASSERT(c->pg.cSpan);
                 for(uint32_t span=c->pg.cSpan-1; span; --span)
-                    c->allocation.width += (widths[xi+span] + border);
-            } // else "c" width does not change.
+                    if(widths[xi+span])
+                        c->allocation.width += (widths[xi+span] + border);
+            } else { // "c" width does not change.
+                // Align it horizontally with the given empty horizontal
+                // space in the cell.
+                //
+                // Let w be the x space available to use for the widget
+                // "c".
+                uint32_t w = widths[xi];
+                // If the widget spans more than one column:
+                for(uint32_t span=c->pg.cSpan-1; span; --span)
+                    if(widths[xi+span])
+                        w += (widths[xi+span] + border);
+                // We better have at least enough space to fix the widget
+                // in the cell.
+                DASSERT(w >= c->allocation.width);
+                switch(c->align & PN_ALIGN_X) {
+                    case PN_ALIGN_X_CENTER:
+                    case PN_ALIGN_X_JUSTIFIED:
+                        c->allocation.x = X[xi] + (w - c->allocation.width)/2;
+                        break;
+                    case PN_ALIGN_X_RIGHT:
+                        c->allocation.x = X[xi] + w - c->allocation.width;
+                        break;
+                    default:
+                    //case PN_ALIGN_X_LEFT:
+                }
+            }
         }
     }
 
@@ -1693,13 +1721,40 @@ static inline void ExpandGrid(const struct PnSurface *s,
             if(!IsUpperLeftCell(c, child, xi, yi)) continue;
             // Even if we did not expand this row we still needed this
             // widget "c" y position.
+            // We start with the y position of "c" at the top of the cell.
             c->allocation.y = Y[yi];
             if(c->canExpand & PnExpand_V) {
                 c->allocation.height = heights[yi];
                 DASSERT(c->pg.rSpan);
                 for(uint32_t span=c->pg.rSpan-1; span; --span)
-                    c->allocation.height += (heights[yi+span] + border);
-            } // else "c" height does not change.
+                    if(heights[yi+span])
+                        c->allocation.height += (heights[yi+span] + border);
+            } else { // "c" height does not change.
+                // Align it vertically with the given empty vertical space
+                // in the cell.
+                //
+                // Let h be the y space available to use for the widget
+                // "c".
+                uint32_t h = heights[yi];
+                // If the widget spans more than one column:
+                for(uint32_t span=c->pg.cSpan-1; span; --span)
+                    if(heights[yi+span])
+                        h += (heights[yi+span] + border);
+                // We better have at least enough space to fix the widget
+                // in the cell.
+                DASSERT(h >= c->allocation.height);
+                switch(c->align & PN_ALIGN_Y) {
+                    case PN_ALIGN_Y_CENTER:
+                    case PN_ALIGN_Y_JUSTIFIED:
+                        c->allocation.y = Y[yi] + (h - c->allocation.height)/2;
+                        break;
+                    case PN_ALIGN_Y_BOTTOM:
+                        c->allocation.y = Y[yi] + h - c->allocation.height;
+                        break;
+                    default:
+                    //case PN_ALIGN_Y_LEFT:
+                }
+            }
         }
     }
 }

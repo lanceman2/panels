@@ -140,28 +140,53 @@ enum PnExpand {
 };
 
 
+// The align attribute is a little bit wonky.  There seems to be no way
+// around it, if we wish to minimize the widget interfaces.
+//
 // Align is a:
-//   1. Container widget attribute for child widget layout, and
-//   2. A Label widget attribute for test layout.
 //
-// If there is extra space for a widget that will not be filled, we
-// align (float) the widget into position.
+//   1. Container (non-grid) widget attribute for child widget layout,
+//   2. A Label widget attribute for test layout, and
+//   3. A widget attribute for widgets that are directly in a grid cell.
 //
-// The default is PnAlign_LT will push the widgets to the top left corner
-// which is were the window manager (compositor) puts the x and y
-// positions at zero and zero.  That's just a given convention that we go
-// along with.  All popular operating systems with windowing follow that
-// convention.
+// Reasoning:
 //
+//   1. The alignment of many children in a hBox or vBox needs one
+//   parameter.  We can't align cells that are together in different
+//   alignment ways, the same sibling children widgets have to share the
+//   same alignment attribute.
+//   2. The label widget needs to control placement of the text on it's
+//   drawing surface.
+//   3. We want to be able to make something like HTML tables where
+//   each table cell can have different alignments.  Menus require this
+//   too.  Same sibling children widgets in a grid cannot share the same
+//   alignment attribute.
+//
+// It goes without saying that a widget that can expand, can't align, it
+// just fills the available space in the direction of interest (X or Y).
 // If any of the widgets in the container can expand, than the Align
 // value of the container is not considered.
 //
 // Put another way: the "align" widget attribute does not adjust the child
 // widget sizes, it can just change the child widgets positions; but only
 // if none of the sibling widgets expand to take all the "extra" space.
+//
+// If there is extra space for a widget that will not be filled, we
+// align (float) the widget into position.
+//
 
-// The default "align" is:
-//     Left X-direction (horizontal) and Top Y-direction (verLayout/
+// There is another aspect widget alignment that seem to be set by the
+// windowing managers (compositor for WayLand) on all common operating
+// systems.  That is how are widgets aligned before culling happens.
+// Notice that widgets in most windows get culled from right to left and
+// from bottom to top; so that the widgets at the left top are the last to
+// be culled as the window is made smaller.  The widget placement and
+// sizing (space allocation) code is based on this idea.  libpanels.so
+// lets you have windows of any size with and any number of widgets.  The
+// widgets get culled using the left top alignment rule, and then the
+// users coded in alignment rules are applied after the widget culling.
+
+// The default "align" is centered along x and y:
 
 // x -> first 2 bits  y -> next 2 bits
 
@@ -181,7 +206,7 @@ enum PnExpand {
 
 enum PnAlign {
 
-    // x -> first 2 bits  y -> next 2 bits
+    // x -> first 2 bits  y -> next 2 bits  16 values total
 
     PnAlign_CC = (PN_ALIGN_X_CENTER    | PN_ALIGN_Y_CENTER), // = 0
     PnAlign_LC = (PN_ALIGN_X_LEFT      | PN_ALIGN_Y_CENTER),
