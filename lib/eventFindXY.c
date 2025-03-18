@@ -301,26 +301,26 @@ void GetSurfaceWithXY(const struct PnWindow *win,
 #define ERR_LEN  (5) // Have seen assertion with ERR_LEN (2)
         DASSERT(d.x >= - ERR_LEN);
         DASSERT(d.y >= - ERR_LEN);
-        DASSERT(d.x < win->surface.allocation.width + ERR_LEN);
-        DASSERT(d.y < win->surface.allocation.height + ERR_LEN);
+        DASSERT(d.x < win->widget.surface.allocation.width + ERR_LEN);
+        DASSERT(d.y < win->widget.surface.allocation.height + ERR_LEN);
 #endif
 
         if(d.x < 0)
             d.x = 0;
-        else if(d.x >= win->surface.allocation.width)
-            d.x = win->surface.allocation.width - 1;
+        else if(d.x >= win->widget.surface.allocation.width)
+            d.x = win->widget.surface.allocation.width - 1;
         if(d.y < 0)
             d.y = 0;
-        else if(d.y >= win->surface.allocation.height)
-            d.y = win->surface.allocation.height - 1;
+        else if(d.y >= win->widget.surface.allocation.height)
+            d.y = win->widget.surface.allocation.height - 1;
     } else
         // The mouse pointer can send events if there is a pointer grab and in
         // that case the position made be to the left and/or above the window,
         // making d.x and/or d.y negative or larger than the width and height
         // of the window.
         if(d.x < 0 || d.y < 0 ||
-                d.x >= win->surface.allocation.width ||
-                d.y >= win->surface.allocation.height)
+                d.x >= win->widget.surface.allocation.width ||
+                d.y >= win->widget.surface.allocation.height)
             return;
 
     GetPointerSurface(win);

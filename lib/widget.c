@@ -205,7 +205,7 @@ void pnWidget_destroy(struct PnWidget *w) {
 void pnWidget_show(struct PnWidget *widget, bool show) {
 
     DASSERT(widget);
-    DASSERT(widget->surface.type & WIDGET);
+    ASSERT(widget->surface.type & WIDGET);
 
     // Make it be one of two values.  Because we can have things like (3)
     // == true

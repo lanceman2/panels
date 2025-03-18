@@ -1904,7 +1904,7 @@ static void ExpandChildren(const struct PnSurface *s,
 void GetWidgetAllocations(struct PnWindow *win) {
 
     DASSERT(win);
-    struct PnSurface *s = &win->surface;
+    struct PnSurface *s = &win->widget.surface;
     struct PnAllocation *a = &s->allocation;
     DASSERT(s->type == PnSurfaceType_toplevel ||
             s->type == PnSurfaceType_popup);

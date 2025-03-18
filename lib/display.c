@@ -55,8 +55,8 @@ static void enter(void *data,
     DASSERT(!d.pointerWindow);
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
     DASSERT(d.pointerWindow->wl_surface == wl_surface);
-    DASSERT(d.pointerWindow->surface.allocation.x == 0);
-    DASSERT(d.pointerWindow->surface.allocation.y == 0);
+    DASSERT(d.pointerWindow->widget.surface.allocation.x == 0);
+    DASSERT(d.pointerWindow->widget.surface.allocation.y == 0);
 
     GetSurfaceWithXY(d.pointerWindow, x, y, true);
 

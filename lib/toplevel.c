@@ -25,18 +25,18 @@ static void configure(struct PnWindow *win,
 
     // Make it like it would be if we could not change width or height
     // based on the API user window surface PnExpand setting.
-    if(!(win->surface.expand & PnExpand_H) &&
-            win->surface.allocation.width)
-        w = win->surface.allocation.width;
+    if(!(win->widget.surface.expand & PnExpand_H) &&
+            win->widget.surface.allocation.width)
+        w = win->widget.surface.allocation.width;
     //
-    if(!(win->surface.expand & PnExpand_V) &&
-            win->surface.allocation.height)
-        h = win->surface.allocation.height;
+    if(!(win->widget.surface.expand & PnExpand_V) &&
+            win->widget.surface.allocation.height)
+        h = win->widget.surface.allocation.height;
 
-    if(win->surface.allocation.width != w ||
-            win->surface.allocation.height != h) {
-        win->surface.allocation.width = w;
-        win->surface.allocation.height = h;
+    if(win->widget.surface.allocation.width != w ||
+            win->widget.surface.allocation.height != h) {
+        win->widget.surface.allocation.width = w;
+        win->widget.surface.allocation.height = h;
         // We have a RESIZE.
         win->needDraw = true;
 
@@ -66,7 +66,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 bool InitToplevel(struct PnWindow *win) {
 
     DASSERT(win);
-    DASSERT(win->surface.type == PnSurfaceType_toplevel);
+    DASSERT(win->widget.surface.type == PnSurfaceType_toplevel);
     DASSERT(!win->toplevel.xdg_toplevel);
 
     win->toplevel.xdg_toplevel =

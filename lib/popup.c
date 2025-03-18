@@ -64,12 +64,12 @@ bool InitPopup(struct PnWindow *win,
         int32_t x, int32_t y) {
 
     DASSERT(win);
-    DASSERT(win->surface.type == PnSurfaceType_popup);
+    DASSERT(win->widget.surface.type == PnSurfaceType_popup);
     struct PnWindow *parent = win->popup.parent;
     DASSERT(parent);
 
     // A user could do this accidentally, I did and I'm a developer.
-    ASSERT(parent->surface.type == PnSurfaceType_toplevel);
+    ASSERT(parent->widget.surface.type == PnSurfaceType_toplevel);
 
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);

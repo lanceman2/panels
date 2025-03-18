@@ -432,9 +432,19 @@ struct PnDrawQueue {
 // surface type can be a toplevel or a popup
 struct PnWindow {
 
+    // TODO: We added more functionality and data by making PnWindow also
+    // be a PnWidget (a super-set of PnSurface).  It used to be just a
+    // PnSurface.  We'll leave this note here, in case we fine a bug
+    // related to this change.  This change makes the user function
+    // interfaces simpler, and adds some more function the window. 
+    //struct PnSurface surface;
+
     // 1st inherit widget
-    //struct PnWidget widget;
-    struct PnSurface surface;
+    struct PnWidget widget;
+
+    // Windows are widgets with additions for drawing pixels on Wayland
+    // surfaces.  The widget tree contained in windows use the Wayland
+    // surfaces in the top most widget which is the window.
 
     // We use two draw queues, one we read from (and dequeue) and one we
     // write draw requests to from the API user.  This code dequeues one

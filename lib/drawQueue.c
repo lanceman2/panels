@@ -157,12 +157,12 @@ bool DrawFromQueue(struct PnWindow *win) {
     DASSERT(!win->needDraw);
 
     struct PnBuffer *buffer = GetNextBuffer(win,
-            win->surface.allocation.width,
-            win->surface.allocation.height);
+            win->widget.surface.allocation.width,
+            win->widget.surface.allocation.height);
 
     DASSERT(buffer);
-    DASSERT(win->surface.allocation.width == buffer->width);
-    DASSERT(win->surface.allocation.height == buffer->height);
+    DASSERT(win->widget.surface.allocation.width == buffer->width);
+    DASSERT(win->widget.surface.allocation.height == buffer->height);
 
     // Switch the write and read draw queues.
     struct PnDrawQueue *q = win->dqWrite;

@@ -98,8 +98,8 @@ void RecreateCairos(struct PnWindow *win) {
     DASSERT(buffer->stride);
     DASSERT(buffer->wl_buffer);
 
-    DestroyCairos(&win->surface);
-    CreateCairos(buffer, &win->surface);
+    DestroyCairos(&win->widget.surface);
+    CreateCairos(buffer, &win->widget.surface);
 }
 
 void DestroyCairo(struct PnSurface *s) {
