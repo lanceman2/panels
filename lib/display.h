@@ -343,9 +343,9 @@ struct PnAction {
 
 // surface type PnSurfaceType_widget
 //
-// Widgets do not have a wayland surface (wl_surface) or other related
-// wayland client objects in them.  Widgets use the parent window (parent
-// most) objects wayland client stuff to draw to.
+// Widgets do not have a Wayland surface (wl_surface) or other related
+// Wayland client objects in them.  Widgets use the parent window (parent
+// most) objects Wayland client stuff to draw to.
 struct PnWidget {
 
     // 1st inherit surface
@@ -380,9 +380,8 @@ struct PnWidget {
     // or removes an action all the widget indexes need to adjust their
     // fixed values (a compile time change).  It appears that the setup of
     // signals/slots is a compile time thing in Qt, so I think it's very
-    // hard to justify that all that added complexity.  In GTK it looks
-    // like it could be done at run-time, but I never see it used that
-    // way.
+    // hard to justify all that added complexity.  In GTK it looks like it
+    // could be done at run-time, but I never see it used that way.
     //
     // So: the particular indexes (example PN_BUTTON_CB_CLICK) into this
     // array are set at compile time.
@@ -390,10 +389,14 @@ struct PnWidget {
     // Qt says: "callbacks can be unintuitive and may suffer from problems
     // in ensuring the type-correctness of callback arguments."  We
     // require that widget makers and users don't fuck up their function
-    // pointer prototypes.  If function prototypes change with panel
-    // callbacks you're screwed, i.e. you must be careful.  GTK uses CPP
-    // MACRO madness to check types.  I find that GTK MARCO gobject code
-    // is impossible to follow.
+    // pointer prototypes.  If custom widget function prototypes change
+    // with panel callbacks you're screwed, i.e. you must be careful. The
+    // compiler will check the function types for you.  If the ABI
+    // (applcation binary interface) changes, ya no fucking shit, it will
+    // crash.  GTK uses CPP MACRO madness to check types.  I find that GTK
+    // CPP macro gobject code is impossible to follow, code scoping CPP
+    // macros is a pain.  Keep the power of C and: don't read a double as
+    // an int; unless you know you are decoding it.
     //
     // This is the shit!  Simple and fast.
     //
@@ -429,7 +432,8 @@ struct PnDrawQueue {
 // surface type can be a toplevel or a popup
 struct PnWindow {
 
-    // 1st inherit surface
+    // 1st inherit widget
+    //struct PnWidget widget;
     struct PnSurface surface;
 
     // We use two draw queues, one we read from (and dequeue) and one we
