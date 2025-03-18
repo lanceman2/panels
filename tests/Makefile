@@ -156,6 +156,12 @@ gridWindow_run_SOURCES := gridWindow.c
 gridWindow_run_LDFLAGS := $(PN_LIB)
 gridWindow_run_CPPFLAGS := -DRUN
 
+134_gridSpan_SOURCES := gridSpan.c
+134_gridSpan_LDFLAGS := $(PN_LIB)
+
+gridSpan_run_SOURCES := gridSpan.c
+gridSpan_run_LDFLAGS := $(PN_LIB)
+gridSpan_run_CPPFLAGS := -DRUN
 
 
 CLEANFILES := $(wildcard tmp_*)

@@ -62,7 +62,10 @@ libpanels.so_SOURCES :=\
  popup.c\
  allocation.c\
  drawQueue.c\
- eventFindXY.c
+ eventFindXY.c\
+ surface_draw.c\
+ surface_set.c\
+ widget_action.c
 
 ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\
