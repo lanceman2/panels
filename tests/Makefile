@@ -149,6 +149,7 @@ scribble_run_CPPFLAGS := -DRUN
 102_scribble_run_SOURCES := scribble.c
 102_scribble_run_LDFLAGS := $(PN_LIB)
 
+
 130_gridWindow_SOURCES := gridWindow.c
 130_gridWindow_LDFLAGS := $(PN_LIB)
 
@@ -162,6 +163,14 @@ gridWindow_run_CPPFLAGS := -DRUN
 gridSpan_run_SOURCES := gridSpan.c
 gridSpan_run_LDFLAGS := $(PN_LIB)
 gridSpan_run_CPPFLAGS := -DRUN
+
+136_GridWithNoChildren_SOURCES := GridWithNoChildren.c
+136_GridWithNoChildren_LDFLAGS := $(PN_LIB)
+
+GridWithNoChildren_run_SOURCES := GridWithNoChildren.c
+GridWithNoChildren_run_LDFLAGS := $(PN_LIB)
+GridWithNoChildren_run_CPPFLAGS := -DRUN
+
 
 
 CLEANFILES := $(wildcard tmp_*)

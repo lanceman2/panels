@@ -20,7 +20,9 @@ void DestroySurfaceChildren(struct PnWidget *s) {
         while(s->l.firstChild)
             pnWidget_destroy((void *) s->l.firstChild);
     else {
-        DASSERT(s->g.grid);
+        if(!s->g.grid)
+            // "s" has no children.
+            return;
         struct PnWidget ***child = s->g.grid->child;
         DASSERT(child);
         for(uint32_t y=s->g.numRows-1; y != -1; --y)
@@ -135,9 +137,23 @@ void AddChildSurfaceList(struct PnWidget *parent, struct PnWidget *s) {
 // Oh what fun.
 //
 static inline
-void RecreateGrid(struct PnWidget *s, uint32_t numColumns, uint32_t numRows) {
-
+void RecreateGrid(struct PnWidget *s,
+        uint32_t numColumns, uint32_t numRows) {
+    DASSERT(s);
     DASSERT(s->layout == PnLayout_Grid);
+
+    // -1. Special Case, the grid was never made.
+    ////////////////////////////////////////////////////////////////////
+    if(!s->g.grid) {
+        if(!numColumns) {
+            DASSERT(!numRows);
+            // The grid was never used as a grid of widgets.
+            return;
+        } else {
+            DASSERT(numRows);
+        }
+    }
+
 
     if(!s->g.grid) {
         s->g.grid = calloc(1, sizeof(*s->g.grid));
@@ -149,6 +165,7 @@ void RecreateGrid(struct PnWidget *s, uint32_t numColumns, uint32_t numRows) {
     ASSERT(s->g.numColumns || !child);
     ASSERT(s->g.numRows || !child);
     ASSERT((numColumns && numRows) || (!numColumns && !numRows));
+
 
 
     // 0. Setup x[], y[], widths[] and heights[] arrays.
@@ -463,7 +480,14 @@ bool InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
     if(s->layout == PnLayout_Grid) {
         DASSERT(!s->g.numRows);
         DASSERT(!s->g.numColumns);
-        RecreateGrid(s, column, row);
+        if(column) {
+            DASSERT(row);
+            RecreateGrid(s, column, row);
+        } else
+            // The grid can be made and/or resized later when columns and
+            // rows are added to add children (widgets) to it.  For now
+            // it's just a widget with no children.
+            DASSERT(!row);
     }
 
     if(!s->parent) {

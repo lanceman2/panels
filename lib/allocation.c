@@ -277,6 +277,9 @@ void TallyRequestedSizes(const struct PnWidget *s,
                 a->width += borderX;
             break;
         case PnLayout_Grid: {
+            if(!s->g.grid)
+                // The grid is not set up yet.
+                break;
             // Good luck following this shit.  I think it's inherently
             // complex.  I suck at writing, but I think the codes okay.
             //
@@ -531,7 +534,7 @@ static inline bool RecurseCullX(
         const struct PnAllocation *a,
         struct PnWidget *c, struct PnAllocation *ca) {
 
-    DASSERT(c->layout != PnLayout_Grid);
+    DASSERT(c->parent->layout != PnLayout_Grid);
     DASSERT(!c->culled);
 
     if(ca->x >= a->x + a->width) {
@@ -587,7 +590,7 @@ static inline bool RecurseCullY(
         const struct PnAllocation *a,
         struct PnWidget *c, struct PnAllocation *ca) {
 
-    DASSERT(c->layout != PnLayout_Grid);
+    DASSERT(c->parent->layout != PnLayout_Grid);
     DASSERT(!c->culled);
 
     if(ca->y >= a->y + a->height) {
@@ -643,7 +646,8 @@ uint32_t CullX(const struct PnAllocation *a, struct PnWidget *c) {
     DASSERT(c);
     DASSERT(c->parent);
     DASSERT(c->parent->layout == PnLayout_TB ||
-            c->parent->layout == PnLayout_BT);
+            c->parent->layout == PnLayout_BT ||
+            c->parent->layout == PnLayout_One);
 
     bool haveChildShowing = false;
     uint32_t haveCullRet = 0;
@@ -670,7 +674,8 @@ uint32_t CullY(const struct PnAllocation *a, struct PnWidget *c) {
     DASSERT(c);
     DASSERT(c->parent);
     DASSERT(c->parent->layout == PnLayout_LR ||
-            c->parent->layout == PnLayout_RL);
+            c->parent->layout == PnLayout_RL ||
+            c->parent->layout == PnLayout_One);
 
     bool haveChildShowing = false;
     uint32_t haveCullRet = 0;

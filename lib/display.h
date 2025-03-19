@@ -622,6 +622,7 @@ static bool inline HaveChildren(const struct PnWidget *s) {
 
     // else
     DASSERT(s->layout == PnLayout_Grid);
+    if(!s->g.grid) return false;
 
     return (s->g.grid->numChildren);
 }

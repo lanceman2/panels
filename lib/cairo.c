@@ -53,6 +53,9 @@ static void CreateCairos(struct PnBuffer *buffer,
             CreateCairos(buffer, s);
         return;
     }
+    if(!s->g.grid)
+        // This has no children in it's grid yet.
+        return;
 
     // s is a grid container.
     struct PnWidget ***child = s->g.grid->child;
@@ -128,6 +131,12 @@ void DestroyCairos(struct PnWidget *s) {
             DestroyCairos(s);
         return;
     }
+
+    if(!s->g.grid)
+        // No grid has been allocated yet; so it's just a leaf widget for
+        // now.
+        return;
+
     //
     // s is a grid container.
     struct PnWidget ***child = s->g.grid->child;

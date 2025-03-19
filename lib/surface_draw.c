@@ -84,7 +84,9 @@ drawChildren:
                 pnSurface_draw(c, buffer);
         }
     else {
-        DASSERT(s->g.grid);
+        if(!s->g.grid)
+            // No children yet.
+            return;
         // s is a grid container.
         struct PnWidget ***child = s->g.grid->child;
         DASSERT(child);

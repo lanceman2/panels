@@ -68,8 +68,8 @@ struct PnWidget *_pnWidget_createFull(
     * (enum PnExpand *) &widget->expand = expand;
     widget->type = PnSurfaceType_widget;
     if(widget->layout == PnLayout_Grid) {
-        DASSERT(column);
-        DASSERT(row);
+        //DASSERT(column);
+        //DASSERT(row);
         DASSERT(column != -1);
         DASSERT(row != -1);
         widget->g.numColumns = column;
