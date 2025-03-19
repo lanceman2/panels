@@ -167,7 +167,6 @@ void RecreateGrid(struct PnWidget *s,
     ASSERT((numColumns && numRows) || (!numColumns && !numRows));
 
 
-
     // 0. Setup x[], y[], widths[] and heights[] arrays.
     ////////////////////////////////////////////////////////////////////
     if(numColumns && numColumns != s->g.numColumns) {
