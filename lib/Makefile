@@ -64,7 +64,7 @@ libpanels.so_SOURCES :=\
  drawQueue.c\
  eventFindXY.c\
  surface_draw.c\
- surface_set.c\
+ widget_set.c\
  widget_action.c
 
 ifdef WITH_FONTCONFIG
