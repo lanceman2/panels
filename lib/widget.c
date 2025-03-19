@@ -14,16 +14,12 @@
 
 static inline
 struct PnWidget *_pnWidget_createFull(
-        struct PnWidget *p, uint32_t w, uint32_t h,
+        struct PnWidget *parent, uint32_t w, uint32_t h,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, 
         uint32_t column, uint32_t row,
         uint32_t cSpan, uint32_t rSpan,
         size_t size) {
-
-    struct PnSurface *parent = 0;
-    if(p)
-        parent = &p->surface;
 
     // We can make widgets without having a window yet, so we need to make
     // sure that we have a PnDisplay (process singleton).
@@ -32,19 +28,19 @@ struct PnWidget *_pnWidget_createFull(
     if(!parent)
         // Use the god parent.  This will start existent as an unseen
         // widget without a top level window (window widget).
-        parent = (void *) &d.surface;
+        parent = (void *) &d.widget;
 
     DASSERT(parent->layout != PnLayout_None);
     DASSERT(parent->layout != PnLayout_One || !parent->l.firstChild);
 
     if(parent->layout == PnLayout_None) {
-        ERROR("Parent surface cannot have children");
+        ERROR("Parent widget cannot have children");
         return 0;
     }
 
     if(parent->layout == PnLayout_One &&
             parent->l.firstChild) {
-        ERROR("Parent surface cannot have more than one child");
+        ERROR("Parent widget cannot have more than one child");
         return 0;
     }
 
@@ -66,30 +62,30 @@ struct PnWidget *_pnWidget_createFull(
 #ifdef DEBUG
     widget->size = size;
 #endif
-    widget->surface.parent = parent;
-    widget->surface.layout = layout;
-    widget->surface.align = align;
-    * (enum PnExpand *) &widget->surface.expand = expand;
-    widget->surface.type = PnSurfaceType_widget;
-    if(widget->surface.layout == PnLayout_Grid) {
+    widget->parent = parent;
+    widget->layout = layout;
+    widget->align = align;
+    * (enum PnExpand *) &widget->expand = expand;
+    widget->type = PnSurfaceType_widget;
+    if(widget->layout == PnLayout_Grid) {
         DASSERT(column);
         DASSERT(row);
         DASSERT(column != -1);
         DASSERT(row != -1);
-        widget->surface.g.numColumns = column;
-        widget->surface.g.numRows = row;
+        widget->g.numColumns = column;
+        widget->g.numRows = row;
     }
 
     if(parent->type & WIDGET)
-        widget->surface.window = parent->window;
+        widget->window = parent->window;
     else
-        widget->surface.window = (void *) parent;
+        widget->window = (void *) parent;
 
     // This is how we C casting to change const variables:
-    *((uint32_t *) &widget->surface.width) = w;
-    *((uint32_t *) &widget->surface.height) = h;
+    *((uint32_t *) &widget->width) = w;
+    *((uint32_t *) &widget->height) = h;
 
-    if(InitSurface((void *) widget, column, row, cSpan, rSpan))
+    if(InitSurface(widget, column, row, cSpan, rSpan))
         goto fail;
 
     return widget;
@@ -128,9 +124,9 @@ struct PnWidget *pnWidget_createInGrid(
         uint32_t columnSpan, uint32_t rowSpan,
         size_t size) {
     ASSERT(grid);
-    ASSERT(grid->surface.layout == PnLayout_Grid);
-    ASSERT(grid->surface.g.numColumns > columnNum);
-    ASSERT(grid->surface.g.numRows > rowNum);
+    ASSERT(grid->layout == PnLayout_Grid);
+    ASSERT(grid->g.numColumns > columnNum);
+    ASSERT(grid->g.numRows > rowNum);
     return _pnWidget_createFull(grid, w, h, layout, align, expand, 
             columnNum, rowNum, columnSpan, rowSpan, size);
 }
@@ -166,8 +162,8 @@ void RemoveCallback(struct PnAction *a, struct PnCallback *c) {
 void pnWidget_destroy(struct PnWidget *w) {
 
     DASSERT(w);
-    DASSERT(w->surface.parent);
-    ASSERT(w->surface.type & WIDGET);
+    DASSERT(w->parent);
+    ASSERT(w->type & WIDGET);
 
     // Free actions
     if(w->actions) {
@@ -182,9 +178,9 @@ void pnWidget_destroy(struct PnWidget *w) {
         free(w->actions);
     }
 
-    // If there is state in the display that refers to this surface (w)
-    // take care to not refer to it.  Like if this widget (w) had focus,
-    // for example.
+    // If there is state in the display that refers to this widget surface
+    // (w) take care to not refer to it.  Like if this widget (w) had
+    // focus, for example.
     RemoveSurfaceFromDisplay((void *) w);
 
     while(w->destroys) {
@@ -198,11 +194,11 @@ void pnWidget_destroy(struct PnWidget *w) {
     }
 
     // Destroy children.
-    // Destroy all child widgets in the list from w->surface.l.firstChild
-    // or w->surface.g.child[][].
-    DestroySurfaceChildren(&w->surface);
+    // Destroy all child widgets in the list from w->l.firstChild
+    // or w->g.child[][].
+    DestroySurfaceChildren(w);
 
-    DestroySurface(&w->surface);
+    DestroySurface(w);
     DZMEM(w, w->size);
     free(w);
 }
@@ -210,7 +206,7 @@ void pnWidget_destroy(struct PnWidget *w) {
 void pnWidget_show(struct PnWidget *widget, bool show) {
 
     DASSERT(widget);
-    ASSERT(widget->surface.type & WIDGET);
+    ASSERT(widget->type & WIDGET);
 
     // Make it be one of two values.  Because we can have things like (3)
     // == true
@@ -223,14 +219,14 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     //
     show = show ? true : false;
 
-    if(widget->surface.hidden == !show)
+    if(widget->hidden == !show)
         // No change.
         return;
 
-    widget->surface.hidden = !show;
+    widget->hidden = !show;
     // This change may change the size of the window and many of the
     // widgets in the window.
 
-    widget->surface.window->needAllocate = true; 
+    widget->window->needAllocate = true; 
 }
 

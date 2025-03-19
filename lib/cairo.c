@@ -16,7 +16,7 @@
 
 
 static inline void CreateCairo(struct PnBuffer *buffer,
-        struct PnSurface *s) {
+        struct PnWidget *s) {
 
     DASSERT(s);
     DASSERT(buffer);
@@ -42,7 +42,7 @@ static inline void CreateCairo(struct PnBuffer *buffer,
 }
 
 static void CreateCairos(struct PnBuffer *buffer,
-        struct PnSurface *s) {
+        struct PnWidget *s) {
 
     DASSERT(s);
 
@@ -55,11 +55,11 @@ static void CreateCairos(struct PnBuffer *buffer,
     }
 
     // s is a grid container.
-    struct PnSurface ***child = s->g.grid->child;
+    struct PnWidget ***child = s->g.grid->child;
     DASSERT(child);
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-            struct PnSurface *c = child[y][x];
+            struct PnWidget *c = child[y][x];
             if(!c || c->culled) continue;
             if(IsUpperLeftCell(child[y][x], child, x, y))
                 CreateCairos(buffer, c);
@@ -67,24 +67,25 @@ static void CreateCairos(struct PnBuffer *buffer,
 }
 
 void pnWidget_setCairoDraw(struct PnWidget *w,
-        int (*draw)(struct PnWidget *surface, cairo_t *cr, void *userData),
+        int (*draw)(struct PnWidget *surface,
+                cairo_t *cr, void *userData),
         void *userData) {
     DASSERT(w);
-    DASSERT(w->surface.window);
-    w->surface.cairoDraw = draw;
-    w->surface.cairoDrawData = userData;
+    DASSERT(w->window);
+    w->cairoDraw = draw;
+    w->cairoDrawData = userData;
 
-    if(draw && !w->surface.cr && w->surface.window->buffer.wl_buffer)
+    if(draw && !w->cr && w->window->buffer.wl_buffer)
         // This surface, "s", might need a Cairo surface (and Cairo
         // object).
-        CreateCairo(&w->surface.window->buffer, &w->surface);
-    else if(!draw && w->surface.draw)
-        // This surface, "s", will not use Cairo to draw.  The user is
-        // unsetting the Cairo draw callback.
-        DestroyCairo(&w->surface);
+        CreateCairo(&w->window->buffer, w);
+    else if(!draw && w->draw)
+        // This widget surface, "s", will not use Cairo to draw.  The user
+        // is unsetting the Cairo draw callback.
+        DestroyCairo(w);
 
-    // We'll let the user queue the draw of this surface, if they need to.
-    // Also it could be the window is not being shown now.
+    // We'll let the user queue the draw of this widget surface, if they
+    // need to.  Also it could be the window is not being shown now.
 }
 
 
@@ -98,11 +99,11 @@ void RecreateCairos(struct PnWindow *win) {
     DASSERT(buffer->stride);
     DASSERT(buffer->wl_buffer);
 
-    DestroyCairos(&win->widget.surface);
-    CreateCairos(buffer, &win->widget.surface);
+    DestroyCairos(&win->widget);
+    CreateCairos(buffer, &win->widget);
 }
 
-void DestroyCairo(struct PnSurface *s) {
+void DestroyCairo(struct PnWidget *s) {
     DASSERT(s);
     if(s->cr) {
         DASSERT(s->cairo_surface);
@@ -115,7 +116,7 @@ void DestroyCairo(struct PnSurface *s) {
     }
 }
 
-void DestroyCairos(struct PnSurface *s) {
+void DestroyCairos(struct PnWidget *s) {
 
     DASSERT(s);
     DestroyCairo(s);
@@ -129,11 +130,11 @@ void DestroyCairos(struct PnSurface *s) {
     }
     //
     // s is a grid container.
-    struct PnSurface ***child = s->g.grid->child;
+    struct PnWidget ***child = s->g.grid->child;
     DASSERT(child);
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-            struct PnSurface *c = child[y][x];
+            struct PnWidget *c = child[y][x];
             if(!c || c->culled) continue;
             if(IsUpperLeftCell(c, child, x, y))
                 DestroyCairos(c);

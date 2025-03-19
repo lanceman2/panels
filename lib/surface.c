@@ -14,18 +14,18 @@
 #include "../include/panels_drawingUtils.h"
 
 
-void DestroySurfaceChildren(struct PnSurface *s) {
+void DestroySurfaceChildren(struct PnWidget *s) {
 
     if(s->layout != PnLayout_Grid)
         while(s->l.firstChild)
             pnWidget_destroy((void *) s->l.firstChild);
     else {
         DASSERT(s->g.grid);
-        struct PnSurface ***child = s->g.grid->child;
+        struct PnWidget ***child = s->g.grid->child;
         DASSERT(child);
         for(uint32_t y=s->g.numRows-1; y != -1; --y)
             for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-                struct PnSurface *c = child[y][x];
+                struct PnWidget *c = child[y][x];
                 // rows and columns can share widgets; like for row span 2
                 // and column span 2; that is adjacent cells that share
                 // the same widget.
@@ -97,7 +97,7 @@ void GetSurfaceDamageFunction(struct PnWindow *win) {
 }
 
 static inline
-void AddChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
+void AddChildSurfaceList(struct PnWidget *parent, struct PnWidget *s) {
 
     DASSERT(parent);
     DASSERT(s);
@@ -135,7 +135,7 @@ void AddChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
 // Oh what fun.
 //
 static inline
-void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
+void RecreateGrid(struct PnWidget *s, uint32_t numColumns, uint32_t numRows) {
 
     DASSERT(s->layout == PnLayout_Grid);
 
@@ -144,7 +144,7 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         ASSERT(s->g.grid, "calloc(1,%zu) failed", sizeof(*s->g.grid));
     }
 
-    struct PnSurface ***child = s->g.grid->child;
+    struct PnWidget ***child = s->g.grid->child;
 
     ASSERT(s->g.numColumns || !child);
     ASSERT(s->g.numRows || !child);
@@ -187,7 +187,7 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
     for(; y >= numRows && y != -1; --y) {
         // Remove existing row child[y].
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-            struct PnSurface *c = child[y][x];
+            struct PnWidget *c = child[y][x];
             // rows and columns can share widgets; like for row span 2
             // and column span 3; that is adjacent cells that share
             // the same widget.
@@ -249,7 +249,7 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
         for(; y!=-1; --y) {
             for(uint32_t x=s->g.numColumns-1;
                     x>=numColumns && x!=-1; --x) {
-                struct PnSurface *c = child[y][x];
+                struct PnWidget *c = child[y][x];
                 if(IsUpperLeftCell(c, child, x, y))
                     pnWidget_destroy((void *) c);
                 child[y][x] = 0; // DEBUG memset 0 thingy
@@ -320,7 +320,7 @@ void RecreateGrid(struct PnSurface *s, uint32_t numColumns, uint32_t numRows) {
 
 
 static inline
-void AddChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s,
+void AddChildSurfaceGrid(struct PnWidget *grid, struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(cSpan);
@@ -340,7 +340,7 @@ void AddChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s,
     DASSERT(grid->g.grid);
     DASSERT(grid->g.numColumns > column);
     DASSERT(grid->g.numRows > row);
-    struct PnSurface ***child = grid->g.grid->child;
+    struct PnWidget ***child = grid->g.grid->child;
     DASSERT(child);
     for(uint32_t y=row+rSpan-1; y>=row && y!=-1; --y)
         for(uint32_t x=column+cSpan-1; x>=column && x!=-1; --x)
@@ -357,7 +357,7 @@ void AddChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s,
 
 // Add the child, s, to the parent.
 static inline
-void AddChildSurface(struct PnSurface *parent, struct PnSurface *s,
+void AddChildSurface(struct PnWidget *parent, struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(parent);
@@ -372,7 +372,7 @@ void AddChildSurface(struct PnSurface *parent, struct PnSurface *s,
 }
     
 static inline
-void RemoveChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
+void RemoveChildSurfaceList(struct PnWidget *parent, struct PnWidget *s) {
 
     if(s->pl.nextSibling) {
         DASSERT(parent->l.lastChild != s);
@@ -396,10 +396,10 @@ void RemoveChildSurfaceList(struct PnSurface *parent, struct PnSurface *s) {
 }
 
 static inline
-void RemoveChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s) {
+void RemoveChildSurfaceGrid(struct PnWidget *grid, struct PnWidget *s) {
 
     DASSERT(grid->g.grid);
-    struct PnSurface ***child = grid->g.grid->child;
+    struct PnWidget ***child = grid->g.grid->child;
     DASSERT(child);
     uint32_t numColumns = grid->g.numColumns;
     uint32_t numRows = grid->g.numRows;
@@ -434,7 +434,7 @@ void RemoveChildSurfaceGrid(struct PnSurface *grid, struct PnSurface *s) {
 }
 
 static inline
-void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
+void RemoveChildSurface(struct PnWidget *parent, struct PnWidget *s) {
 
     DASSERT(s);
     DASSERT(parent);
@@ -454,7 +454,7 @@ void RemoveChildSurface(struct PnSurface *parent, struct PnSurface *s) {
 //
 // column and row are -1 for the unused case.
 //
-bool InitSurface(struct PnSurface *s, uint32_t column, uint32_t row,
+bool InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
         uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(s);
@@ -484,7 +484,7 @@ bool InitSurface(struct PnSurface *s, uint32_t column, uint32_t row,
 }
 
 
-void DestroySurface(struct PnSurface *s) {
+void DestroySurface(struct PnWidget *s) {
 
     DASSERT(s);
 
@@ -502,7 +502,7 @@ void DestroySurface(struct PnSurface *s) {
 bool pnWidget_isInSurface(const struct PnWidget *w,
         uint32_t x, uint32_t y) {
     DASSERT(w);
-    return (w->surface.allocation.x <= x && w->surface.allocation.y <= y &&
-            x < w->surface.allocation.x + w->surface.allocation.width && 
-            y < w->surface.allocation.y + w->surface.allocation.height);
+    return (w->allocation.x <= x && w->allocation.y <= y &&
+            x < w->allocation.x + w->allocation.width && 
+            y < w->allocation.y + w->allocation.height);
 }

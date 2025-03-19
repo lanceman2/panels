@@ -55,12 +55,12 @@ static void enter(void *data,
     DASSERT(!d.pointerWindow);
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
     DASSERT(d.pointerWindow->wl_surface == wl_surface);
-    DASSERT(d.pointerWindow->widget.surface.allocation.x == 0);
-    DASSERT(d.pointerWindow->widget.surface.allocation.y == 0);
+    DASSERT(d.pointerWindow->widget.allocation.x == 0);
+    DASSERT(d.pointerWindow->widget.allocation.y == 0);
 
     GetSurfaceWithXY(d.pointerWindow, x, y, true);
 
-    DASSERT(d.pointerSurface);
+    DASSERT(d.pointerWidget);
     DoEnterAndLeave();
 }
 
@@ -75,13 +75,13 @@ static void leave(void *data, struct wl_pointer *p,
     DASSERT((void *) d.pointerWindow ==
             wl_surface_get_user_data(wl_surface));
 
-    if(d.focusSurface && d.focusSurface->leave)
-        d.focusSurface->leave((void *) d.focusSurface,
-                d.focusSurface->leaveData);
+    if(d.focusWidget && d.focusWidget->leave)
+        d.focusWidget->leave((void *) d.focusWidget,
+                d.focusWidget->leaveData);
 
     d.pointerWindow = 0;
-    d.pointerSurface = 0;
-    d.focusSurface = 0;
+    d.pointerWidget = 0;
+    d.focusWidget = 0;
 }
 
 // Window motion.
@@ -93,46 +93,46 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
-    DASSERT(d.pointerSurface);
+    DASSERT(d.pointerWidget);
     DASSERT(d.pointerWindow);
 
-    if(d.buttonGrabSurface) {
+    if(d.buttonGrabWidget) {
         DASSERT(d.buttonGrab);
-        struct PnSurface *s = d.buttonGrabSurface;
+        struct PnWidget *s = d.buttonGrabWidget;
         DASSERT(s->press);
         DASSERT(s->release);
-        // We need the to know where the pointerSurface is so we can do an
-        // "enter" event if the pointer is on a different surface when the
-        // button grab is released.
-        if(d.pointerWindow == d.buttonGrabSurface->window) {
-            // We get the surface that pointer has the pointer if we can.
+        // We need the to know where the pointerWidget is so we can do an
+        // "enter" event if the pointer is on a different widget surface
+        // when the button grab is released.
+        if(d.pointerWindow == d.buttonGrabWidget->window) {
+            // We get the widget that pointer has the pointer if we can.
             GetSurfaceWithXY(d.pointerWindow, x, y, false);
 //WARN("            %d,%d", d.x, d.y);
-            DASSERT(s == d.buttonGrabSurface);
+            DASSERT(s == d.buttonGrabWidget);
             if(s->motion)
                 // We will let only the grab widget (or window) see this
                 // motion.  Later at the release (release of this mouse
-                // pointer grab) event we will let another surface get a
-                // motion event (even when there is no motion from the
-                // wayland compositor at that time).
+                // pointer grab) event we will let another widget surface
+                // get a motion event (even when there is no motion from
+                // the wayland compositor at that time).
                 s->motion((void *) s, d.x, d.y, s->motionData);
         }
 
         return;
     }
 
-    // Save old pointer surface.
-    struct PnSurface *s = d.pointerSurface;
-    // We get the surface that pointer has the pointer if we can.
+    // Save old pointer widget surface.
+    struct PnWidget *s = d.pointerWidget;
+    // We get the widget surface that pointer has the pointer if we can.
     GetSurfaceWithXY(d.pointerWindow, x, y, false);
 
-    if(s != d.pointerSurface)
-        // The surface we are pointing to changed.
+    if(s != d.pointerWidget)
+        // The widget surface we are pointing to changed.
         // The focused widget may be changed.
         DoEnterAndLeave();
 
-    if(d.focusSurface)
-        DoMotion(d.focusSurface);
+    if(d.focusWidget)
+        DoMotion(d.focusWidget);
 }
 
 static void button(void *, struct wl_pointer *p,
@@ -145,7 +145,7 @@ static void button(void *, struct wl_pointer *p,
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
 
-    if(!d.focusSurface) return;
+    if(!d.focusWidget) return;
 
     switch(button) {
         case 272: // left
@@ -172,30 +172,30 @@ static void button(void *, struct wl_pointer *p,
 //WARN("BUTTON (%" PRIu32 ") RELEASE", button);
             if(d.buttonGrab) {
                 // We have a mouse button grab with this button.
-                DASSERT(d.buttonGrabSurface);
-                DASSERT(d.buttonGrabSurface == d.focusSurface);
-                DASSERT(d.buttonGrabSurface->release);
-                DASSERT(d.buttonGrabSurface->press);
+                DASSERT(d.buttonGrabWidget);
+                DASSERT(d.buttonGrabWidget == d.focusWidget);
+                DASSERT(d.buttonGrabWidget->release);
+                DASSERT(d.buttonGrabWidget->press);
                 // Release the button grab:
                 d.buttonGrab &= ~(01 << button);
-                if(d.buttonGrabSurface->release)
-                    d.buttonGrabSurface->release(
-                            (void *) d.buttonGrabSurface, button,
+                if(d.buttonGrabWidget->release)
+                    d.buttonGrabWidget->release(
+                            (void *) d.buttonGrabWidget, button,
                             d.x, d.y,
-                            d.buttonGrabSurface->pressData);
+                            d.buttonGrabWidget->pressData);
                 if(!d.buttonGrab) {
                     GetPointerSurface(d.pointerWindow);
-                    if(d.buttonGrabSurface != d.pointerSurface) {
-                        // The surface we are pointing to changed.
+                    if(d.buttonGrabWidget != d.pointerWidget) {
+                        // The widget surface we are pointing to changed.
                         // The focused widget may be changed.
                         DoEnterAndLeave();
                     }
-                    d.buttonGrabSurface = 0;
+                    d.buttonGrabWidget = 0;
                 }
                 return;
             }
 
-            for(struct PnSurface *s = d.focusSurface; s; s = s->parent)
+            for(struct PnWidget *s = d.focusWidget; s; s = s->parent)
                 if(s->release && s->release((void *) s, button,
                             d.x, d.y, s->releaseData))
                     break;
@@ -205,24 +205,24 @@ case WL_POINTER_BUTTON_STATE_PRESSED:
 //WARN("BUTTON (%" PRIu32 ") PRESS", button);
 
             if(d.buttonGrab) {
-                DASSERT(d.buttonGrabSurface);
-                DASSERT(d.buttonGrabSurface->press);
-                DASSERT(d.buttonGrabSurface->release);
+                DASSERT(d.buttonGrabWidget);
+                DASSERT(d.buttonGrabWidget->press);
+                DASSERT(d.buttonGrabWidget->release);
                 DASSERT(!(d.buttonGrab & (01 << button)));
                 d.buttonGrab |= (01 << button);
-                if(d.buttonGrabSurface->press)
-                    d.buttonGrabSurface->press(
-                            (void *) d.buttonGrabSurface, button,
+                if(d.buttonGrabWidget->press)
+                    d.buttonGrabWidget->press(
+                            (void *) d.buttonGrabWidget, button,
                             d.x, d.y,
-                            d.buttonGrabSurface->pressData);
+                            d.buttonGrabWidget->pressData);
                 return;
             }
 
-            for(struct PnSurface *s = d.focusSurface; s; s = s->parent)
+            for(struct PnWidget *s = d.focusWidget; s; s = s->parent)
                 if(s->press && s->press((void *) s, button,
                             d.x, d.y, s->pressData)) {
                     if(s->release) {
-                        d.buttonGrabSurface = s;
+                        d.buttonGrabWidget = s;
                         d.buttonGrab |= (01 << button);
                     }
                     break;
@@ -485,7 +485,7 @@ static int _pnDisplay_create(void) {
 
     // This toplevel surface is never rendered.  We just use it to store
     // orphaned widgets.  Orphaned widgets may get parents later.
-    d.surface.type = PnSurfaceType_toplevel;
+    d.widget.type = PnSurfaceType_toplevel;
 
     d.wl_display = wl_display_connect(0);
     RET_ERROR(d.wl_display, 1, "wl_display_connect() failed");
@@ -552,14 +552,14 @@ static void _pnDisplay_destroy(void) {
 
     // Destroy stuff in reverse order of creation, pretty much.
 
-    DASSERT(d.surface.type == PnSurfaceType_toplevel);
-    DASSERT(d.surface.layout == PnLayout_LR);
+    DASSERT(d.widget.type == PnSurfaceType_toplevel);
+    DASSERT(d.widget.layout == PnLayout_LR);
     DASSERT(PnLayout_LR == 0);
 
-    while(d.surface.l.firstChild) {
+    while(d.widget.l.firstChild) {
         // Destroy widgets without regular parents.
-        DASSERT(d.surface.l.firstChild->type & WIDGET);
-        pnWidget_destroy((void *) d.surface.l.firstChild);
+        DASSERT(d.widget.l.firstChild->type & WIDGET);
+        pnWidget_destroy((void *) d.widget.l.firstChild);
     }
 
     // Destroy all the windows.

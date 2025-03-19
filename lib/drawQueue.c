@@ -10,9 +10,9 @@
 
 
 static inline
-struct PnSurface *PopQueue(struct PnDrawQueue *q) {
+struct PnWidget *PopQueue(struct PnDrawQueue *q) {
 
-    struct PnSurface *s = q->first;
+    struct PnWidget *s = q->first;
     if(!s) return s;
 
     DASSERT(s->isQueued);
@@ -35,7 +35,7 @@ struct PnSurface *PopQueue(struct PnDrawQueue *q) {
 // Remove "s" from a drawQueue doubly linked list.
 //
 static inline void RemoveFromDrawQueue(struct PnDrawQueue *q,
-        struct PnSurface *s) {
+        struct PnWidget *s) {
 
     DASSERT(s);
     DASSERT(s->isQueued);
@@ -68,16 +68,16 @@ static inline void RemoveFromDrawQueue(struct PnDrawQueue *q,
 // This function calls itself.
 //
 // Check and dequeue all children from a window draw queue.
-static void DequeueChildren(struct PnDrawQueue *q, struct PnSurface *s) {
+static void DequeueChildren(struct PnDrawQueue *q, struct PnWidget *s) {
 
     DASSERT(q);
     DASSERT(s);
 
-    struct PnSurface *c;
+    struct PnWidget *c;
     for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
-        // If the surface "c" is culled it can get un-culled at any time
-        // so we just work with it.  It could happen that things change
-        // before we get to draw.  Drawing events are somewhat
+        // If the widget surface "c" is culled it can get un-culled at any
+        // time so we just work with it.  It could happen that things
+        // change before we get to draw.  Drawing events are somewhat
         // asynchronous to this process.
         if(c->isQueued)
             RemoveFromDrawQueue(q, c);
@@ -87,10 +87,7 @@ static void DequeueChildren(struct PnDrawQueue *q, struct PnSurface *s) {
     }
 }
 
-void pnWidget_queueDraw(struct PnWidget *w) {
-
-    DASSERT(w);
-    struct PnSurface *s = &w->surface;
+void pnWidget_queueDraw(struct PnWidget *s) {
 
     DASSERT(s);
     struct PnWindow *win = s->window;
@@ -117,7 +114,7 @@ void pnWidget_queueDraw(struct PnWidget *w) {
         return;
 
     // The rule is that if a parent (or higher parentage) of this surface
-    // it queued than so is this surface, "s".
+    // it queued than so is this widget surface, "s".
 
     // Remove any descendants from the draw queue.  They get queued
     // implicitly by this, "s", being queued.  If a parent surface gets
@@ -125,7 +122,7 @@ void pnWidget_queueDraw(struct PnWidget *w) {
     // designed this widgets inside container widgets thing.
     DequeueChildren(win->dqWrite, s);
 
-    // Now queue this surface "s" at win->dqWrite->last.
+    // Now queue this widget surface "s" at win->dqWrite->last.
     DASSERT(!s->dqNext);
     DASSERT(!s->dqPrev);
 
@@ -160,12 +157,12 @@ bool DrawFromQueue(struct PnWindow *win) {
     DASSERT(!win->needDraw);
 
     struct PnBuffer *buffer = GetNextBuffer(win,
-            win->widget.surface.allocation.width,
-            win->widget.surface.allocation.height);
+            win->widget.allocation.width,
+            win->widget.allocation.height);
 
     DASSERT(buffer);
-    DASSERT(win->widget.surface.allocation.width == buffer->width);
-    DASSERT(win->widget.surface.allocation.height == buffer->height);
+    DASSERT(win->widget.allocation.width == buffer->width);
+    DASSERT(win->widget.allocation.height == buffer->height);
 
     // Switch the write and read draw queues.
     struct PnDrawQueue *q = win->dqWrite;
@@ -179,7 +176,7 @@ bool DrawFromQueue(struct PnWindow *win) {
     // Note: we call it the "read" queue but we are reading and dequeueing
     // (writing) it here.  It's more like reading what to draw, so ya,
     // read.
-    struct PnSurface *s;
+    struct PnWidget *s;
 
     while((s = PopQueue(q))) {
         pnSurface_draw(s, buffer);

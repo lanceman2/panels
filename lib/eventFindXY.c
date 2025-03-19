@@ -23,8 +23,8 @@
 // TODO: Maybe the widget (surface) order in the searching could be more
 // optimal.
 //
-static struct PnSurface *FindSurface(const struct PnWindow *win,
-        struct PnSurface *s, uint32_t x, uint32_t y) {
+static struct PnWidget *FindSurface(const struct PnWindow *win,
+        struct PnWidget *s, uint32_t x, uint32_t y) {
 
     DASSERT(win);
 
@@ -49,7 +49,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
     // At this point in the code "s" contains the pointer position, x,y.
     // Now search the children to see if x,y is in one of them.
 
-    struct PnSurface *c;
+    struct PnWidget *c;
 
     switch(s->layout) {
 
@@ -160,7 +160,7 @@ static struct PnSurface *FindSurface(const struct PnWindow *win,
             // TODO: Looks like a lot of overhead for small grids.
             //
             DASSERT(s->g.grid);
-            struct PnSurface ***child = s->g.grid->child;
+            struct PnWidget ***child = s->g.grid->child;
             DASSERT(child);
             DASSERT(s->g.numColumns);
             DASSERT(s->g.numRows);
@@ -240,33 +240,33 @@ void GetPointerSurface(const struct PnWindow *win) {
 
     // Lets guess that the mouse pointer is at the same widget.
     // If not then:
-    if(!(d.pointerSurface &&
-                d.pointerSurface->allocation.x <= d.x && 
-                d.x < d.pointerSurface->allocation.x + 
-                        d.pointerSurface->allocation.width &&
-                d.pointerSurface->allocation.y <= d.y && 
-                d.y < d.pointerSurface->allocation.y + 
-                        d.pointerSurface->allocation.height))
+    if(!(d.pointerWidget &&
+                d.pointerWidget->allocation.x <= d.x && 
+                d.x < d.pointerWidget->allocation.x + 
+                        d.pointerWidget->allocation.width &&
+                d.pointerWidget->allocation.y <= d.y && 
+                d.y < d.pointerWidget->allocation.y + 
+                        d.pointerWidget->allocation.height))
         // Start at the window surface.
-        d.pointerSurface = (void *) d.pointerWindow;
+        d.pointerWidget = (void *) d.pointerWindow;
 
-    // The d.x, d.y position can move out from the pointerSurface
-    // without changing the pointerSurface because of a pointer grab.
+    // The d.x, d.y position can move out from the pointerWidget
+    // without changing the pointerWidget because of a pointer grab.
 
-    if(d.pointerSurface->l.firstChild &&
-            d.x >= d.pointerSurface->allocation.x &&
-            d.y >= d.pointerSurface->allocation.y &&
-            d.x < d.pointerSurface->allocation.x +
-                d.pointerSurface->allocation.width &&
-            d.y < d.pointerSurface->allocation.y +
-                d.pointerSurface->allocation.height)
+    if(d.pointerWidget->l.firstChild &&
+            d.x >= d.pointerWidget->allocation.x &&
+            d.y >= d.pointerWidget->allocation.y &&
+            d.x < d.pointerWidget->allocation.x +
+                d.pointerWidget->allocation.width &&
+            d.y < d.pointerWidget->allocation.y +
+                d.pointerWidget->allocation.height)
         // See if it's in a deeper child surface.
-        d.pointerSurface = FindSurface(d.pointerWindow, d.pointerSurface,
+        d.pointerWidget = FindSurface(d.pointerWindow, d.pointerWidget,
                 d.x, d.y);
 }
 
 
-// Find d.x, d.y, and d.pointerSurface which is the x,y position and
+// Find d.x, d.y, and d.pointerWidget which is the x,y position and
 // surface (widget) that contains that position.
 //
 // The mouse pointer window, d.pointerWindow, must be known.
@@ -301,48 +301,48 @@ void GetSurfaceWithXY(const struct PnWindow *win,
 #define ERR_LEN  (5) // Have seen assertion with ERR_LEN (2)
         DASSERT(d.x >= - ERR_LEN);
         DASSERT(d.y >= - ERR_LEN);
-        DASSERT(d.x < win->widget.surface.allocation.width + ERR_LEN);
-        DASSERT(d.y < win->widget.surface.allocation.height + ERR_LEN);
+        DASSERT(d.x < win->widget.allocation.width + ERR_LEN);
+        DASSERT(d.y < win->widget.allocation.height + ERR_LEN);
 #endif
 
         if(d.x < 0)
             d.x = 0;
-        else if(d.x >= win->widget.surface.allocation.width)
-            d.x = win->widget.surface.allocation.width - 1;
+        else if(d.x >= win->widget.allocation.width)
+            d.x = win->widget.allocation.width - 1;
         if(d.y < 0)
             d.y = 0;
-        else if(d.y >= win->widget.surface.allocation.height)
-            d.y = win->widget.surface.allocation.height - 1;
+        else if(d.y >= win->widget.allocation.height)
+            d.y = win->widget.allocation.height - 1;
     } else
         // The mouse pointer can send events if there is a pointer grab and in
         // that case the position made be to the left and/or above the window,
         // making d.x and/or d.y negative or larger than the width and height
         // of the window.
         if(d.x < 0 || d.y < 0 ||
-                d.x >= win->widget.surface.allocation.width ||
-                d.y >= win->widget.surface.allocation.height)
+                d.x >= win->widget.allocation.width ||
+                d.y >= win->widget.allocation.height)
             return;
 
     GetPointerSurface(win);
 }
 
-// Find the next focused widget (focusSurface), switch between the last
+// Find the next focused widget (focusWidget), switch between the last
 // focused widget and the next, calling next focused widget enter callback
 // and then the previous focused widget leave callback.
 //
 void DoEnterAndLeave(void) {
 
-    DASSERT(d.pointerSurface);
-    // d.pointerSurface is the surface with the mouse pointer in it.
+    DASSERT(d.pointerWidget);
+    // d.pointerWidget is the surface with the mouse pointer in it.
 
-    struct PnSurface *oldFocus = d.focusSurface;
-    d.focusSurface = 0;   
+    struct PnWidget *oldFocus = d.focusWidget;
+    d.focusWidget = 0;   
 
-    for(struct PnSurface *s = d.pointerSurface; s; s = s->parent) {
+    for(struct PnWidget *s = d.pointerWidget; s; s = s->parent) {
         DASSERT(!s->culled);
         if(oldFocus == s) {
-            // This surface "s" already has focus.
-            d.focusSurface = s;
+            // This widget surface "s" already has focus.
+            d.focusWidget = s;
             break;
         }
 
@@ -353,8 +353,8 @@ void DoEnterAndLeave(void) {
                 oldFocus = 0;
             }
             if(s->enter((void *) s, d.x, d.y, s->enterData) && s->leave)
-                // We have a new focused surface.
-                d.focusSurface = s;
+                // We have a new focused widget surface.
+                d.focusWidget = s;
             else
                 // "s" did not take focus.
                 continue;
@@ -362,13 +362,13 @@ void DoEnterAndLeave(void) {
         }
     }
 
-    if(oldFocus && d.focusSurface != oldFocus) {
+    if(oldFocus && d.focusWidget != oldFocus) {
         DASSERT(oldFocus->leave);
         oldFocus->leave((void *) oldFocus, oldFocus->leaveData);
     }
 }
 
-void DoMotion(struct PnSurface *s) {
+void DoMotion(struct PnWidget *s) {
 
     DASSERT(s);
     for(; s; s = s->parent) {

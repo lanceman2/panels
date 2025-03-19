@@ -29,7 +29,7 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
     DASSERT(text);
     DASSERT(strlen(text));
 
-    const uint32_t color = l->widget.surface.backgroundColor;
+    const uint32_t color = l->widget.backgroundColor;
 
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
@@ -53,7 +53,7 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
 
     double x, y;
 
-    switch(l->widget.surface.align & PN_ALIGN_X) {
+    switch(l->widget.align & PN_ALIGN_X) {
         case PN_ALIGN_X_LEFT:
             x = - extents.x_bearing + l->xPadding;
             break;
@@ -67,7 +67,7 @@ static inline void Draw(struct PnLabel *l, cairo_t *cr) {
             break;
     }
 
-    switch(l->widget.surface.align & PN_ALIGN_Y) {
+    switch(l->widget.align & PN_ALIGN_Y) {
         case PN_ALIGN_Y_TOP:
             y = - extents.y_bearing + l->yPadding;
             break;
@@ -205,11 +205,11 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
         return 0; // Failure.
 
     // It starts out life as a widget:
-    DASSERT(l->widget.surface.type == PnSurfaceType_widget);
+    DASSERT(l->widget.type == PnSurfaceType_widget);
     // And now it becomes a label:
-    l->widget.surface.type = PnSurfaceType_label;
+    l->widget.type = PnSurfaceType_label;
     // which is also a widget too (and more bits):
-    DASSERT(l->widget.surface.type & WIDGET);
+    DASSERT(l->widget.type & WIDGET);
 
     l->fontSize = fontSize;
     l->fontColor = 0xFF000000;
@@ -228,7 +228,7 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
 void pnLabel_setFontColor(struct PnWidget *w, uint32_t color) {
 
     DASSERT(w);
-    ASSERT(w->surface.type == PnSurfaceType_label);
+    ASSERT(w->type == PnSurfaceType_label);
     struct PnLabel *l = (void *) w;
     l->fontColor = color;
 }

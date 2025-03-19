@@ -61,7 +61,7 @@ static inline void Draw(cairo_t *cr, struct PnButton *b) {
 
     uint32_t color;
 
-    color = b->widget.surface.backgroundColor;
+    color = b->widget.backgroundColor;
     cairo_set_source_rgba(cr,
             PN_R_DOUBLE(color), PN_G_DOUBLE(color),
             PN_B_DOUBLE(color), PN_A_DOUBLE(color));
@@ -183,13 +183,13 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
     DASSERT(b = (void *) w);
 
-    if(w->surface.type & W_BUTTON) {
+    if(w->type & W_BUTTON) {
         DASSERT(b->colors);
         DZMEM(b->colors,
                 PnButtonState_NumRegularStates*sizeof(*b->colors));
         free(b->colors);
     } else {
-        DASSERT(w->surface.type & W_TOGGLE_BUTTON);
+        DASSERT(w->type & W_TOGGLE_BUTTON);
         ASSERT(0, "WRITE MORE CODE");
     }
 }
@@ -293,9 +293,9 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     // increase the complexity.  See enum PnSurfaceType in display.h.
     // It's so easy to forget about all these bits, but DASSERT() is my
     // hero.
-    DASSERT(b->widget.surface.type == PnSurfaceType_widget);
-    b->widget.surface.type = PnSurfaceType_button;
-    DASSERT(b->widget.surface.type & WIDGET);
+    DASSERT(b->widget.type == PnSurfaceType_widget);
+    b->widget.type = PnSurfaceType_button;
+    DASSERT(b->widget.type & WIDGET);
 
     pnWidget_setEnter(&b->widget, (void *) enter, b);
     pnWidget_setLeave(&b->widget, (void *) leave, b);
@@ -316,7 +316,7 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
             PnButtonState_NumRegularStates*sizeof(*b->colors));
     // Default state colors:
     //b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
-    b->colors[PnButtonState_Normal] = b->widget.surface.backgroundColor;
+    b->colors[PnButtonState_Normal] = b->widget.backgroundColor;
     b->colors[PnButtonState_Hover] =   0xFF00EDFF;
     b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
     b->colors[PnButtonState_Active] =  0xFF0BD109;

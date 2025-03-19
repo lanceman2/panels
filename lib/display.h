@@ -88,15 +88,18 @@ enum PnSurfaceType {
 };
 
 
+struct PnWidget;
+
+
 struct PnGrid {
 
-    // child[y][x] points to a widget (surface).
-    struct PnSurface ***child;
+    // child[y][x] points to a widget.
+    struct PnWidget ***child;
 
     // Positions of the grid lines starting at the top left of the grid
-    // surface.  For any m and n, x[m], y[n] is to the upper left corner
-    // of a cell where a contained widget can be positioned if it is
-    // aligned top left.  We must remember that there can be a border
+    // surface (widget).  For any m and n, x[m], y[n] is to the upper left
+    // corner of a cell where a contained widget can be positioned if it
+    // is aligned top left.  We must remember that there can be a border
     // between cells and widgets in the cells may not necessarily fill the
     // whole cell space.
     //
@@ -128,173 +131,6 @@ struct PnGrid {
     uint32_t numChildren;
 };
 
-
-struct PnWidget;
-
-
-// A widget or window (toplevel window or popup window) has a surface.
-//
-struct PnSurface {
-
-    enum PnSurfaceType type;
-
-    // A link in the draw queue.
-    struct PnSurface *dqNext, *dqPrev;
-
-    // API user requested size.  What they get may be different.
-    //
-    // width and height are CONSTANT after they are first set!!!
-    //
-    // For container windows and widgets width is left and right border
-    // width, and height is top and bottom border thickness.  A container
-    // with no children will have width and height.  In this sense the
-    // container owns the pixels of the border, so it draws them before
-    // the children are drawn.
-    const uint32_t width, height;
-
-    // What they really get for surface size:
-    struct PnAllocation allocation;
-
-
-    // user set event callbacks
-    //
-    // TODO: Is this too many pointers; should we allocate memory for it
-    // so that it this memory is not used unless the widget sets these
-    // callbacks?
-    //
-    // API user passed in draw function:
-    int (*draw)(struct PnWidget *surface, uint32_t *pixels,
-            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
-            void *userData);
-    // To pass to draw():
-    void *drawData;
-    //
-    void (*config)(struct PnWidget *surface, uint32_t *pixels,
-            uint32_t x, uint32_t y,
-            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
-            void *userData);
-    void *configData;
-    //
-    // The enter callback is special, as it sets the surface (widget or
-    // window) to "focus", which we define as to receive the other
-    // events.  The "focused" widget can press up the "focused" events
-    // to it's parent by returning false.
-    //
-    bool (*enter)(struct PnWidget *surface,
-            uint32_t x, uint32_t y, void *userData);
-    void *enterData;
-    void (*leave)(struct PnWidget *surface, void *userData);
-    void *leaveData;
-    bool (*press)(struct PnWidget *surface,
-            uint32_t which, int32_t x, int32_t y,
-            void *userData);
-    void *pressData;
-    bool (*release)(struct PnWidget *surface,
-            uint32_t which, int32_t x, int32_t y,
-            void *userData);
-    void *releaseData;
-    bool (*motion)(struct PnWidget *surface,
-            int32_t x, int32_t y,
-            void *userData);
-    void *motionData;
-
-#ifdef WITH_CAIRO
-    int (*cairoDraw)(struct PnWidget *surface,
-            cairo_t *cr, void *userData);
-    void *cairoDrawData;
-    cairo_t *cr;
-    cairo_surface_t *cairo_surface;
-#endif
-
-    // We keep a linked list (tree like) graph of surfaces starting at a
-    // window with PnSurface::parent == 0.
-    //
-    // The toplevel parent windows are owned by and listed in PnDisplay
-    // (display).
-    //
-    // Popup windows also have PnSurface::parent == 0 here and popup
-    // windows are owned by their parent toplevel window, but listed in
-    // the with PnWindow::prev,next at PnWindow::toplevel.popups.
-    //
-    // So, this parent=0 for toplevel windows and popup windows.
-    //
-    struct PnSurface *parent;
-
-    union {
-        // For containers to see their children.
-        ////////////////////////////////////////////////////////
-        struct {
-            struct PnSurface *firstChild, *lastChild;
-        } l; // surface is a container list (l)
-
-        struct {
-            // We make this "g" the same size as PnSurface::l by
-            // allocating grid.  Otherwise it would be much larger than
-            // PnSurface::l above.
-            struct PnGrid *grid;
-            uint32_t numColumns, numRows;
-        } g; // surface is a container grid (g)
-    };
-
-    union {
-        // For children to go through the lists they are in.
-        ////////////////////////////////////////////////////////
-        struct {
-            struct PnSurface *nextSibling, *prevSibling;
-        } pl; // my parent container is a list (pl)
-        struct {
-            // row y -> child[y]  child[y][x]
-            uint32_t row, column, cSpan, rSpan;
-        } pg; // my parent container is a grid (pg)
-    };
-
-    struct PnWindow *window; // The top most surface is a this window.
-
-    // 32 color bits in the byte order Alpha Red Green Blue:
-    uint32_t backgroundColor;
-
-    enum PnLayout layout;
-    enum PnAlign align;
-    const enum PnExpand expand;
-
-    // "canExpand" is used to mark container widgets as expandable, due to
-    // leaf widgets being expandable (and not directly the container being
-    // expandable), while we calculate all the widget positions and sizes.
-    // A container widget can be expandable because its children widgets
-    // are expandable; even if it does not mark it's own expand flag.  How
-    // else could the container widgets hold an arbitrary number of child
-    // widgets?
-    //
-    enum PnExpand canExpand;
-
-    // Windows are NOT showing after pnWindow_create().
-    //
-    // Widgets are showing after pnWidget_create().  The user sets this
-    // with PnWidget_show().
-    bool hidden;
-
-    // "culled" is set to true if the top window surface is not large
-    // enough (and hence the container is not large enough) to show this
-    // surface.  It is not showing because we don't have the space for it,
-    // not because the user deliberately chooses not to show it.
-    //
-    // top window surfaces do not use this variable.
-    //
-    bool culled;
-
-    // If a container widget has 0 width borders and no size open between
-    // children widgets we set this flag, so that we do not call a widget
-    // draw function for a container widget that has none of its own area
-    // showing, though it has children widgets showing and their draw
-    // functions get called.
-    //
-    // The "culled" acts before this, "noDrawing" flag.
-    //
-    bool noDrawing; // true if zero size showing.
-
-    // Is in the window draw queue.
-    bool isQueued;
-};
 
 // This makes a stack list of widget destroy functions.  Destroy()
 // functions are called in the reverse order that they are added.
@@ -351,11 +187,119 @@ struct PnAction {
 // most) objects Wayland client stuff to draw to.
 struct PnWidget {
 
-    // 1st inherit surface
-    struct PnSurface surface;
+    enum PnSurfaceType type;
 
-    // The window this widget is part of.
-    struct PnWindow *window;
+    // A link in the draw queue.
+    struct PnWidget *dqNext, *dqPrev;
+
+    // API user requested size.  What they get may be different.
+    //
+    // width and height are CONSTANT after they are first set!!!
+    //
+    // For container windows and widgets width is left and right border
+    // width, and height is top and bottom border thickness.  A container
+    // with no children will have width and height.  In this sense the
+    // container owns the pixels of the border, so it draws them before
+    // the children are drawn.
+    const uint32_t width, height;
+
+    // What they really get for surface size.  Changes when the parent
+    // window is resized.
+    struct PnAllocation allocation;
+
+    // user set event callbacks
+    //
+    // TODO: Is this too many pointers; should we allocate memory for it
+    // so that it this memory is not used unless the widget sets these
+    // callbacks?
+    //
+    // API user passed in draw function:
+    int (*draw)(struct PnWidget *widget, uint32_t *pixels,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData);
+    // To pass to draw():
+    void *drawData;
+    //
+    void (*config)(struct PnWidget *widget, uint32_t *pixels,
+            uint32_t x, uint32_t y,
+            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
+            void *userData);
+    void *configData;
+    //
+    // The enter callback is special, as it sets the widget to "focus",
+    // which we define as to receive the other events.  The "focused"
+    // widget can press up the "focused" events to it's parent by
+    // returning false.
+    //
+    bool (*enter)(struct PnWidget *w,
+            uint32_t x, uint32_t y, void *userData);
+    void *enterData;
+    void (*leave)(struct PnWidget *w, void *userData);
+    void *leaveData;
+    bool (*press)(struct PnWidget *w,
+            uint32_t which, int32_t x, int32_t y,
+            void *userData);
+    void *pressData;
+    bool (*release)(struct PnWidget *w,
+            uint32_t which, int32_t x, int32_t y,
+            void *userData);
+    void *releaseData;
+    bool (*motion)(struct PnWidget *w,
+            int32_t x, int32_t y,
+            void *userData);
+    void *motionData;
+
+#ifdef WITH_CAIRO
+    int (*cairoDraw)(struct PnWidget *w,
+            cairo_t *cr, void *userData);
+    void *cairoDrawData;
+    cairo_t *cr;
+    cairo_surface_t *cairo_surface;
+#endif
+
+    // We keep a linked list (tree like) graph of widget starting at a
+    // window with PnWidget::parent == 0.
+    //
+    // The toplevel parent windows are owned by and listed in PnDisplay
+    // (display).
+    //
+    // Popup windows also have PnWidget::parent == 0 here and popup
+    // windows are owned by their parent toplevel window, but listed in
+    // the with PnWindow::prev,next at PnWindow::toplevel.popups.
+    //
+    // So, this parent=0 for toplevel windows and popup windows.
+    //
+    struct PnWidget *parent;
+
+    union {
+        // For containers to see their children.
+        ////////////////////////////////////////////////////////
+        struct {
+            struct PnWidget *firstChild, *lastChild;
+        } l; // widget is a container list (l)
+
+        struct {
+            // We make this "g" the same size as PnWidget::l by
+            // allocating grid.  Otherwise it would be much larger than
+            // PnWidget::l above.
+            struct PnGrid *grid;
+            uint32_t numColumns, numRows;
+        } g; // widget is a container grid (g)
+    };
+
+    union {
+        // For children to go through the lists they are in.
+        ////////////////////////////////////////////////////////
+        struct {
+            struct PnWidget *nextSibling, *prevSibling;
+        } pl; // my parent container is a list (pl)
+        struct {
+            // row y -> child[y]  child[y][x]
+            uint32_t row, column, cSpan, rSpan;
+        } pg; // my parent container is a grid (pg)
+    };
+
+    struct PnWindow *window; // The top most widget is a this window.
 
     struct PnWidgetDestroy *destroys;
 
@@ -410,6 +354,51 @@ struct PnWidget {
 #ifdef DEBUG
     size_t size;
 #endif
+
+    // 32 color bits in the byte order Alpha Red Green Blue:
+    uint32_t backgroundColor;
+
+    enum PnLayout layout;
+    enum PnAlign align;
+    const enum PnExpand expand;
+
+    // "canExpand" is used to mark container widgets as expandable, due to
+    // leaf widgets being expandable (and not directly the container being
+    // expandable), while we calculate all the widget positions and sizes.
+    // A container widget can be expandable because its children widgets
+    // are expandable; even if it does not mark it's own expand flag.  How
+    // else could the container widgets hold an arbitrary number of child
+    // widgets?
+    //
+    enum PnExpand canExpand;
+
+    // Windows are NOT showing after pnWindow_create().
+    //
+    // Widgets are showing after pnWidget_create().  The user sets this
+    // with PnWidget_show().
+    bool hidden;
+
+    // "culled" is set to true if the top window surface is not large
+    // enough (and hence the container is not large enough) to show this
+    // widget surface.  It is not showing because we don't have the space
+    // for it, not because the user deliberately chooses not to show it.
+    //
+    // Top window widgets do not use this variable.
+    //
+    bool culled;
+
+    // If a container widget has 0 width borders and no size open between
+    // children widgets we set this flag, so that we do not call a widget
+    // draw function for a container widget that has none of its own area
+    // showing, though it has children widgets showing and their draw
+    // functions get called.
+    //
+    // The "culled" acts before this, "noDrawing" flag.
+    //
+    bool noDrawing; // true if zero size showing.
+
+    // Is in the window draw queue.
+    bool isQueued;
 };
 
 struct PnBuffer {
@@ -429,18 +418,11 @@ struct PnBuffer {
 };
 
 struct PnDrawQueue {
-    struct PnSurface *first, *last;
+    struct PnWidget *first, *last;
 };
 
-// surface type can be a toplevel or a popup
+// surface type (widget.type) can be a toplevel or a popup
 struct PnWindow {
-
-    // TODO: We added more functionality and data by making PnWindow also
-    // be a PnWidget (a super-set of PnSurface).  It used to be just a
-    // PnSurface.  We'll leave this note here, in case we fine a bug
-    // related to this change.  This change makes the user function
-    // interfaces simpler, and adds some more function the window. 
-    //struct PnSurface surface;
 
     // 1st inherit widget
     struct PnWidget widget;
@@ -519,18 +501,18 @@ struct PnWindow {
 //
 struct PnDisplay {
 
-    // Inherit surface for orphaned children surfaces (widgets).  That is,
+    // Inherit widget for orphaned children widgets.  That is,
     // widgets without parents.  This display thingy is the god parent of
     // all widgets without parents.  The widgets in this "list" do not get
     // drawn unless they get new parents that belong to a PnWindow at a
     // top parenting level.
     //
     // TODO: This does not ever use a lot of the data in this structure,
-    // given this surface is never drawn and so on.  But, it's not a huge
-    // amount of data.  Maybe brake PnSurface into two smaller structures?
-    // And use just the parenting part of a surface here.
+    // given this widget surface is never drawn and so on.  But, it's not
+    // a huge amount of data.  Maybe brake PnWidget into two smaller
+    // structures?  And use just the parenting part of a widget here.
     //
-    struct PnSurface surface;
+    struct PnWidget widget;
 
 
     // 9 singleton wayland client objects:
@@ -573,25 +555,25 @@ struct PnDisplay {
     //
     // Set the window with mouse pointer focus (from enter and leave):
     struct PnWindow *pointerWindow;
-    // The child most surface that has the pointer in it.
-    struct PnSurface *pointerSurface;
-    // The child most surface that has the pointer in it and
+    // The child most widget that has the pointer in it.
+    struct PnWidget *pointerWidget;
+    // The child most widget that has the pointer in it and
     // has taken "panels focus" by returning true from it's enter
     // callback.
-    struct PnSurface *focusSurface;
+    struct PnWidget *focusWidget;
     // In panels all x,y coordinates are given relative to the window's
-    // surface (Not like GTK's widget relative coordinates).
+    // widget (Not like GTK's widget relative coordinates).
     //
     // We set this x,y with wayland mouse pointer enter and mouse pointer
     // motion events.
     int32_t x, y; // pointer position.
 
-    struct PnSurface *buttonGrabSurface;
+    struct PnWidget *buttonGrabWidget;
     uint32_t buttonGrab;
 
     // Set the window with keyboard focus (from enter and leave):
     struct PnWindow *kbWindow;
-    struct PnSurface *kbSurface;
+    struct PnWidget *kbWidget;
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.
@@ -621,14 +603,14 @@ static inline bool CheckDisplay(void) {
 // in the grid; like in RecreateGrid() in surface.c.
 //
 static inline
-bool IsUpperLeftCell(struct PnSurface *c,
-        struct PnSurface ***cells, uint32_t x, uint32_t y) {
+bool IsUpperLeftCell(struct PnWidget *c,
+        struct PnWidget ***cells, uint32_t x, uint32_t y) {
     return (c && (!x || c != cells[y][x-1]) &&
             (!y || c != cells[y-1][x]));
 }
 
 
-static bool inline HaveChildren(const struct PnSurface *s) {
+static bool inline HaveChildren(const struct PnWidget *s) {
     DASSERT(s);
     ASSERT(s->layout < PnLayout_Callback, "WRITE MORE CODE");
 
@@ -656,14 +638,14 @@ extern bool InitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y);
 
-extern bool InitSurface(struct PnSurface *s,
+extern bool InitSurface(struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan);
-extern void DestroySurface(struct PnSurface *s);
-extern void DestroySurfaceChildren(struct PnSurface *s);
+extern void DestroySurface(struct PnWidget *s);
+extern void DestroySurfaceChildren(struct PnWidget *s);
 
 extern void GetWidgetAllocations(struct PnWindow *win);
 
-extern void pnSurface_draw(struct PnSurface *s,
+extern void pnSurface_draw(struct PnWidget *s,
         struct PnBuffer *buffer);
 
 extern void FlushDrawQueue(struct PnWindow *win);
@@ -678,29 +660,29 @@ extern void GetSurfaceWithXY(const struct PnWindow *win,
 
 #ifdef WITH_CAIRO
 extern void RecreateCairos(struct PnWindow *win);
-extern void DestroyCairos(struct PnSurface *win);
-extern void DestroyCairo(struct PnSurface *s);
+extern void DestroyCairos(struct PnWidget *win);
+extern void DestroyCairo(struct PnWidget *s);
 #endif
 
 
-// Sets d.focusSurface
+// Sets d.focusWidget
 extern void DoEnterAndLeave(void);
-// Sets d.pointerSurface
+// Sets d.pointerWidget
 extern void GetPointerSurface(const struct PnWindow *win);
-// Calls motion() callback until a surface returns true.
-extern void DoMotion(struct PnSurface *s);
+// Calls motion() callback until a widget callback returns true.
+extern void DoMotion(struct PnWidget *s);
 
 
-static inline void RemoveSurfaceFromDisplay(struct PnSurface *s) {
+static inline void RemoveSurfaceFromDisplay(struct PnWidget *s) {
 
-    if(d.buttonGrabSurface == s)
-        d.buttonGrabSurface = 0;
+    if(d.buttonGrabWidget == s)
+        d.buttonGrabWidget = 0;
 
-    if(d.focusSurface == s)
-        d.focusSurface = 0;
+    if(d.focusWidget == s)
+        d.focusWidget = 0;
 
-    if(d.pointerSurface == s)
-        d.pointerSurface = 0;
+    if(d.pointerWidget == s)
+        d.pointerWidget = 0;
 }
 
 static inline void ResetDisplaySurfaces(void) {
@@ -708,12 +690,12 @@ static inline void ResetDisplaySurfaces(void) {
     // TODO: Do we really want to keep these marked surfaces?  Like after
     // a call to GetWidgetAllocations().
 
-    if(d.buttonGrabSurface && d.buttonGrabSurface->culled)
-        d.buttonGrabSurface = 0;
+    if(d.buttonGrabWidget && d.buttonGrabWidget->culled)
+        d.buttonGrabWidget = 0;
 
-    if(d.focusSurface && d.focusSurface->culled)
-        d.focusSurface = 0;
+    if(d.focusWidget && d.focusWidget->culled)
+        d.focusWidget = 0;
 
-    if(d.pointerSurface && d.pointerSurface->culled)
-        d.pointerSurface = 0;
+    if(d.pointerWidget && d.pointerWidget->culled)
+        d.pointerWidget = 0;
 }

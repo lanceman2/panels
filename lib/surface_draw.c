@@ -17,7 +17,7 @@
 
 // This function calls itself.
 //
-void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
+void pnSurface_draw(struct PnWidget *s, struct PnBuffer *buffer) {
 
     DASSERT(s);
     DASSERT(!s->culled);
@@ -71,28 +71,28 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 
 drawChildren:
 
-    // TODO: If we add more surface layout types that would make the below more
-    // than two if() options, than make the below ifs into a switch()
-    // statement.  That goes for a lot of surface layout type if switches
-    // in many files.
+    // TODO: If we add more widget surface layout types that would make
+    // the below more than two if() options, than make the below ifs into
+    // a switch() statement.  That goes for a lot of widget surface layout
+    // type if switches in many files.
 
     // Now draw children (widgets).
     if(s->layout != PnLayout_Grid)
         // The s container uses some kind of listed list.
-        for(struct PnSurface *c = s->l.firstChild; c; c = c->pl.nextSibling) {
+        for(struct PnWidget *c = s->l.firstChild; c; c = c->pl.nextSibling) {
             if(!c->culled)
                 pnSurface_draw(c, buffer);
         }
     else {
         DASSERT(s->g.grid);
         // s is a grid container.
-        struct PnSurface ***child = s->g.grid->child;
+        struct PnWidget ***child = s->g.grid->child;
         DASSERT(child);
         DASSERT(s->g.numRows);
         DASSERT(s->g.numColumns);
         for(uint32_t y=s->g.numRows-1; y != -1; --y)
             for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-                struct PnSurface *c = child[y][x];
+                struct PnWidget *c = child[y][x];
                 if(!c || c->culled) continue;
                 // rows and columns can share widgets; like for row span N
                 // and/or column span N; that is adjacent cells that share

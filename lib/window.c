@@ -33,8 +33,8 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     // is getting.
     if(!buffer)
         buffer = GetNextBuffer(win,
-                win->widget.surface.allocation.width,
-                win->widget.surface.allocation.height);
+                win->widget.allocation.width,
+                win->widget.allocation.height);
     if(!buffer) {
         // I think this is okay.  The wayland compositor is just a little
         // busy now.  I think we will get this done later from a wl_buffer
@@ -59,10 +59,10 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
         DASSERT(!win->dqWrite->last);
     }
 
-    DASSERT(win->widget.surface.allocation.width == buffer->width);
-    DASSERT(win->widget.surface.allocation.height == buffer->height);
+    DASSERT(win->widget.allocation.width == buffer->width);
+    DASSERT(win->widget.allocation.height == buffer->height);
 
-    pnSurface_draw(&win->widget.surface, buffer);
+    pnSurface_draw(&win->widget, buffer);
 
     if(win->needAllocate)
         win->needAllocate = false;
@@ -90,7 +90,8 @@ static void configure(struct PnWindow *win,
 
     xdg_surface_ack_configure(win->xdg_surface, serial);
 
-    if(!win->widget.surface.allocation.width || !win->widget.surface.allocation.height) {
+    if(!win->widget.allocation.width ||
+            !win->widget.allocation.height) {
         // This is the first call to draw real pixels.
         win->needAllocate = true;
         DrawAll(win, 0);
@@ -203,22 +204,22 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
     // This is how we C casting to change const variables:
-    *((uint32_t *) &win->widget.surface.width) = w;
-    *((uint32_t *) &win->widget.surface.height) = h;
+    *((uint32_t *) &win->widget.width) = w;
+    *((uint32_t *) &win->widget.height) = h;
 
     if(parent) {
         // A popup
         win->popup.parent = parent;
-        win->widget.surface.type = PnSurfaceType_popup;
+        win->widget.type = PnSurfaceType_popup;
         AddWindow(win, parent->toplevel.popups,
                 &parent->toplevel.popups);
     } else {
         // A toplevel
-        win->widget.surface.type = PnSurfaceType_toplevel;
+        win->widget.type = PnSurfaceType_toplevel;
         AddWindow(win, d.windows, &d.windows);
     }
 
-    DASSERT(win->widget.surface.type < PnSurfaceType_widget);
+    DASSERT(win->widget.type < PnSurfaceType_widget);
 
     win->buffer.pixels = MAP_FAILED;
     win->buffer.fd = -1;
@@ -226,17 +227,17 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
     win->dqWrite = win->drawQueues;
     win->dqRead = win->drawQueues + 1;
 
-    * (enum PnExpand *) &win->widget.surface.expand = expand;
-    win->widget.surface.layout = layout;
-    win->widget.surface.align = align;
-    win->widget.surface.backgroundColor = PN_WINDOW_BGCOLOR;
+    * (enum PnExpand *) &win->widget.expand = expand;
+    win->widget.layout = layout;
+    win->widget.align = align;
+    win->widget.backgroundColor = PN_WINDOW_BGCOLOR;
     win->needDraw = true;
-    win->widget.surface.window = win;
+    win->widget.window = win;
     // Default for windows so that user build the window before showing
     // it.
-    win->widget.surface.hidden = true;
+    win->widget.hidden = true;
 
-    InitSurface(&win->widget.surface, numColumns, numRows, 0, 0);
+    InitSurface(&win->widget, numColumns, numRows, 0, 0);
 
     win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
     if(!win->wl_surface) {
@@ -262,7 +263,7 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
         goto fail;
     }
 
-    switch(win->widget.surface.type) {
+    switch(win->widget.type) {
         case PnSurfaceType_toplevel:
             if(InitToplevel(win))
                 goto fail;
@@ -273,7 +274,7 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
                 goto fail;
             break;
         default:
-            ASSERT(0, "Write more code here case=%d", win->widget.surface.type);
+            ASSERT(0, "Write more code here case=%d", win->widget.type);
     }
 
     return win;
@@ -289,7 +290,7 @@ struct PnWidget *pnWindow_createAsGrid(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
-    ASSERT(!parent || parent->surface.type < PnSurfaceType_widget);
+    ASSERT(!parent || parent->type < PnSurfaceType_widget);
     DASSERT(numColumns);
     DASSERT(numRows);
     return (void *) _pnWindow_createFull((void *) parent, w, h, x, y,
@@ -300,7 +301,7 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand) {
-    ASSERT(!parent || parent->surface.type < PnSurfaceType_widget);
+    ASSERT(!parent || parent->type < PnSurfaceType_widget);
     ASSERT(layout != PnLayout_Grid);
     return (void *) _pnWindow_createFull((void *) parent, w, h, x, y, layout, align,
             expand, -1/*numColumns*/, -1/*numRows*/);
@@ -310,7 +311,7 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
 void pnWindow_show(struct PnWidget *w, bool show) {
 
     DASSERT(w);
-    ASSERT(w->surface.type < PnSurfaceType_widget);
+    ASSERT(w->type < PnSurfaceType_widget);
     struct PnWindow *win = (void *) w;
     DASSERT(win->wl_surface);
     ASSERT(show, "WRITE MORE CODE FOR THIS CASE");
@@ -321,16 +322,16 @@ void pnWindow_show(struct PnWidget *w, bool show) {
     // Make it be one of two values.
     show = show ? true: false;
 
-    if(win->widget.surface.hidden == !show)
+    if(win->widget.hidden == !show)
         // No change.
         //
         // TODO: Nothing to do unless we can pop up the window that is
         // hidden by the desktop window manager.
         return;
 
-    win->widget.surface.hidden = !show;
+    win->widget.hidden = !show;
 
-    // The win->widget.surface.culled variable is not used in windows.
+    // The win->widget.culled variable is not used in windows.
 
     if(show && !win->buffer.wl_buffer)
         // This is the first surface commit.
@@ -345,7 +346,7 @@ void pnWindow_destroy(struct PnWidget *w) {
 
     DASSERT(w);
     DASSERT(d.wl_display);
-    ASSERT(w->surface.type < PnSurfaceType_widget);
+    ASSERT(w->type < PnSurfaceType_widget);
 
     struct PnWindow *win = (void *) w;
 
@@ -358,23 +359,23 @@ void pnWindow_destroy(struct PnWidget *w) {
     // had focus for example.
     RemoveSurfaceFromDisplay((void *) win);
 
-    // Destroy all child widgets in the list from win->widget.surface.l.firstChild
-    // or win->widget.surface.g.child[][].
-    DestroySurfaceChildren(&win->widget.surface);
+    // Destroy all child widgets in the list from win->widget.l.firstChild
+    // or win->widget.g.child[][].
+    DestroySurfaceChildren(&win->widget);
 
-    DestroySurface(&win->widget.surface);
+    DestroySurface(&win->widget);
 
-    if(win->widget.surface.type == PnSurfaceType_popup) {
+    if(win->widget.type == PnSurfaceType_popup) {
         // A popup
         DASSERT(win->popup.parent);
-        DASSERT(win->popup.parent->widget.surface.type ==
+        DASSERT(win->popup.parent->widget.type ==
                 PnSurfaceType_toplevel);
         // Remove this popup from the parents popup window list
         RemoveWindow(win, win->popup.parent->toplevel.popups,
                 &win->popup.parent->toplevel.popups);
     } else {
         // A toplevel
-        DASSERT(win->widget.surface.type == PnSurfaceType_toplevel);
+        DASSERT(win->widget.type == PnSurfaceType_toplevel);
         // Remove this toplevel from the displays toplevel window list
         RemoveWindow(win, d.windows, &d.windows);
         // Destroy any child popup windows that this toplevel owns.
@@ -391,7 +392,7 @@ void pnWindow_destroy(struct PnWidget *w) {
     FreeBuffer(&win->buffer);
 
 
-    switch(win->widget.surface.type) {
+    switch(win->widget.type) {
         case PnSurfaceType_toplevel:
             if(win->decoration)
                 zxdg_toplevel_decoration_v1_destroy(
@@ -428,7 +429,7 @@ void pnWindow_setDestroy(struct PnWidget *w,
         void *userData) {
 
     DASSERT(w);
-    ASSERT(w->surface.type < PnSurfaceType_widget);
+    ASSERT(w->type < PnSurfaceType_widget);
     struct PnWindow *win = (void *) w;
     DASSERT(win);
 
@@ -467,7 +468,7 @@ bool _pnWindow_addCallback(struct PnWindow *win) {
 bool pnWindow_isDrawn(struct PnWidget *w) {
 
     DASSERT(w);
-    ASSERT(w->surface.type < PnSurfaceType_widget);
+    ASSERT(w->type < PnSurfaceType_widget);
     struct PnWindow *win = (void *) w;
 
     if(win->haveDrawn >= 2)
@@ -486,7 +487,7 @@ bool pnWindow_isDrawn(struct PnWidget *w) {
 void pnWindow_isDrawnReset(struct PnWidget *w) {
 
     DASSERT(w);
-    ASSERT(w->surface.type < PnSurfaceType_widget);
+    ASSERT(w->type < PnSurfaceType_widget);
     struct PnWindow *win = (void *) w;
     _pnWindow_addCallback(win);
     win->haveDrawn = 1;

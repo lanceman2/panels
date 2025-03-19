@@ -12,8 +12,8 @@
 #include  "display.h"
 
 
-// Popup windows (surfaces) get/have a pointer focus grab as part of the
-// wayland protocol.  Popups are special/temporary.
+// Popup windows (widget surfaces) get/have a pointer focus grab as part
+// of the wayland protocol.  Popups are special/temporary.
 
 // From:
 // https://wayland-client-d.dpldocs.info/wayland.client.protocol.wl_shell_surface_set_popup.html
@@ -64,12 +64,12 @@ bool InitPopup(struct PnWindow *win,
         int32_t x, int32_t y) {
 
     DASSERT(win);
-    DASSERT(win->widget.surface.type == PnSurfaceType_popup);
+    DASSERT(win->widget.type == PnSurfaceType_popup);
     struct PnWindow *parent = win->popup.parent;
     DASSERT(parent);
 
     // A user could do this accidentally, I did and I'm a developer.
-    ASSERT(parent->widget.surface.type == PnSurfaceType_toplevel);
+    ASSERT(parent->widget.type == PnSurfaceType_toplevel);
 
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);
