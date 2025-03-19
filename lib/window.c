@@ -280,34 +280,38 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
 
 fail:
 
-    pnWindow_destroy(win);
+    pnWindow_destroy(&win->widget);
 
     return 0;
 }
 
-struct PnWindow *pnWindow_createAsGrid(struct PnWindow *parent,
+struct PnWidget *pnWindow_createAsGrid(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
+    ASSERT(!parent || parent->surface.type < PnSurfaceType_widget);
     DASSERT(numColumns);
     DASSERT(numRows);
-    return _pnWindow_createFull(parent, w, h, x, y,
+    return (void *) _pnWindow_createFull((void *) parent, w, h, x, y,
             PnLayout_Grid, align, expand, numColumns, numRows);
 }
 
-struct PnWindow *pnWindow_create(struct PnWindow *parent,
+struct PnWidget *pnWindow_create(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand) {
+    ASSERT(!parent || parent->surface.type < PnSurfaceType_widget);
     ASSERT(layout != PnLayout_Grid);
-    return _pnWindow_createFull(parent, w, h, x, y, layout, align,
+    return (void *) _pnWindow_createFull((void *) parent, w, h, x, y, layout, align,
             expand, -1/*numColumns*/, -1/*numRows*/);
 }
 
 
-void pnWindow_show(struct PnWindow *win, bool show) {
+void pnWindow_show(struct PnWidget *w, bool show) {
 
-    DASSERT(win);
+    DASSERT(w);
+    ASSERT(w->surface.type < PnSurfaceType_widget);
+    struct PnWindow *win = (void *) w;
     DASSERT(win->wl_surface);
     ASSERT(show, "WRITE MORE CODE FOR THIS CASE");
 
@@ -334,18 +338,20 @@ void pnWindow_show(struct PnWindow *win, bool show) {
         // This has no error return.
         wl_surface_commit(win->wl_surface);
     else
-        pnWindow_queueDraw(win);
+        pnWidget_queueDraw(w);
 }
 
-void pnWindow_destroy(struct PnWindow *win) {
+void pnWindow_destroy(struct PnWidget *w) {
 
-    DASSERT(win);
+    DASSERT(w);
     DASSERT(d.wl_display);
-    DASSERT(win->widget.surface.type < PnSurfaceType_widget);
+    ASSERT(w->surface.type < PnSurfaceType_widget);
+
+    struct PnWindow *win = (void *) w;
 
     if(win->destroy)
         // This is called before we start destroying stuff.
-        win->destroy(win, win->destroyData);
+        win->destroy(w, win->destroyData);
 
     // If there is state in the display that refers to this surface
     // (window) take care to not refer to it.  Like if this window surface
@@ -373,7 +379,7 @@ void pnWindow_destroy(struct PnWindow *win) {
         RemoveWindow(win, d.windows, &d.windows);
         // Destroy any child popup windows that this toplevel owns.
         while(win->toplevel.popups)
-            pnWindow_destroy(win->toplevel.popups);
+            pnWindow_destroy(&win->toplevel.popups->widget);
     }
 
     // Clean up stuff in reverse order that stuff was created.
@@ -417,10 +423,13 @@ void pnWindow_destroy(struct PnWindow *win) {
     free(win);
 }
 
-void pnWindow_setDestroy(struct PnWindow *win,
-        void (*destroy)(struct PnWindow *window, void *userData),
+void pnWindow_setDestroy(struct PnWidget *w,
+        void (*destroy)(struct PnWidget *window, void *userData),
         void *userData) {
 
+    DASSERT(w);
+    ASSERT(w->surface.type < PnSurfaceType_widget);
+    struct PnWindow *win = (void *) w;
     DASSERT(win);
 
     win->destroy = destroy;
@@ -455,8 +464,11 @@ bool _pnWindow_addCallback(struct PnWindow *win) {
 
 // This is not that show/hide stuff; though it's related.
 //
-bool pnWindow_isDrawn(struct PnWindow *win) {
-    DASSERT(win);
+bool pnWindow_isDrawn(struct PnWidget *w) {
+
+    DASSERT(w);
+    ASSERT(w->surface.type < PnSurfaceType_widget);
+    struct PnWindow *win = (void *) w;
 
     if(win->haveDrawn >= 2)
         return true;
@@ -471,8 +483,11 @@ bool pnWindow_isDrawn(struct PnWindow *win) {
     return false;
 }
 
-void pnWindow_isDrawnReset(struct PnWindow *win) {
-    DASSERT(win);
+void pnWindow_isDrawnReset(struct PnWidget *w) {
+
+    DASSERT(w);
+    ASSERT(w->surface.type < PnSurfaceType_widget);
+    struct PnWindow *win = (void *) w;
     _pnWindow_addCallback(win);
     win->haveDrawn = 1;
 }

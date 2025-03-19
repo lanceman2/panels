@@ -14,20 +14,25 @@
 
 static inline
 struct PnWidget *_pnWidget_createFull(
-        struct PnSurface *parent, uint32_t w, uint32_t h,
+        struct PnWidget *p, uint32_t w, uint32_t h,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, 
         uint32_t column, uint32_t row,
         uint32_t cSpan, uint32_t rSpan,
         size_t size) {
 
+    struct PnSurface *parent = 0;
+    if(p)
+        parent = &p->surface;
+
     // We can make widgets without having a window yet, so we need to make
     // sure that we have a PnDisplay (process singleton).
     if(CheckDisplay()) return 0;
 
     if(!parent)
-        // Use the god parent.
-        parent = &d.surface;
+        // Use the god parent.  This will start existent as an unseen
+        // widget without a top level window (window widget).
+        parent = (void *) &d.surface;
 
     DASSERT(parent->layout != PnLayout_None);
     DASSERT(parent->layout != PnLayout_One || !parent->l.firstChild);
@@ -96,7 +101,7 @@ fail:
 }
 
 struct PnWidget *pnWidget_createAsGrid(
-        struct PnSurface *parent, uint32_t w, uint32_t h,
+        struct PnWidget *parent, uint32_t w, uint32_t h,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows,
         size_t size) {
@@ -106,7 +111,7 @@ struct PnWidget *pnWidget_createAsGrid(
 }
 
 struct PnWidget *pnWidget_create(
-        struct PnSurface *parent, uint32_t w, uint32_t h,
+        struct PnWidget *parent, uint32_t w, uint32_t h,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand, size_t size) {
     ASSERT(layout != PnLayout_Grid);
@@ -116,16 +121,16 @@ struct PnWidget *pnWidget_create(
 }
 
 struct PnWidget *pnWidget_createInGrid(
-        struct PnSurface *grid, uint32_t w, uint32_t h,
+        struct PnWidget *grid, uint32_t w, uint32_t h,
         enum PnLayout layout,
         enum PnAlign align, enum PnExpand expand, 
         uint32_t columnNum, uint32_t rowNum,
         uint32_t columnSpan, uint32_t rowSpan,
         size_t size) {
     ASSERT(grid);
-    ASSERT(grid->layout == PnLayout_Grid);
-    ASSERT(grid->g.numColumns > columnNum);
-    ASSERT(grid->g.numRows > rowNum);
+    ASSERT(grid->surface.layout == PnLayout_Grid);
+    ASSERT(grid->surface.g.numColumns > columnNum);
+    ASSERT(grid->surface.g.numRows > rowNum);
     return _pnWidget_createFull(grid, w, h, layout, align, expand, 
             columnNum, rowNum, columnSpan, rowSpan, size);
 }
@@ -227,7 +232,5 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     // widgets in the window.
 
     widget->surface.window->needAllocate = true; 
-
-    //pnWindow_queueDraw(widget->window);
 }
 

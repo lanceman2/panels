@@ -27,7 +27,7 @@ void catcher(int sig) {
 
 
 static struct PnSurface *containers[MAX_CONTAINERS] = {0};
-static struct PnWindow *win = 0;
+static struct PnWidget *win = 0;
 static uint32_t num_containers = 0;
 
 
@@ -50,19 +50,19 @@ void CheckAddContainer(struct PnWidget *w) {
         containers[Rand(0, num_containers-1)] = (void *) w;
 }
 
-static bool EnterW(struct PnWindow *w,
+static bool EnterW(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
 
-    pnWindow_setBackgroundColor(w, 0xFFFF0000);
-    pnWindow_queueDraw(w);
+    pnWidget_setBackgroundColor(w, 0xFFFF0000);
+    pnWidget_queueDraw(w);
 
     return true; // take focus.
 }
 
-static void LeaveW(struct PnWindow *w, void *userData) {
+static void LeaveW(struct PnWidget *w, void *userData) {
 
-    pnWindow_setBackgroundColor(w, *(uint32_t *) userData);
-    pnWindow_queueDraw(w);
+    pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
+    pnWidget_queueDraw(w);
 }
 
 static bool Press(struct PnWidget *w, uint32_t which,
@@ -131,12 +131,12 @@ static struct PnWidget *Widget() {
     DASSERT(win);
 
     // Get a parent at random:
-    void *parent = GetContainer();
+    struct PnWidget *parent = GetContainer();
 
     DASSERT(parent);
 
     struct PnWidget *w = pnWidget_create(
-            (struct PnSurface *) parent,
+            parent,
             Unit * Rand(0,2)/*width*/,
             Unit * Rand(0,2)/*height*/,
             Rand(0,1) + SkewMinRand(0, 2, 2) /*layout*/,
@@ -172,9 +172,9 @@ int main(void) {
             0/*align*/, PnExpand_HV);
     ASSERT(win);
     uint32_t color = 0xFF000000;
-    pnWindow_setBackgroundColor(win, color);
-    pnWindow_setEnter(win, EnterW, &color);
-    pnWindow_setLeave(win, LeaveW, &color);
+    pnWidget_setBackgroundColor(win, color);
+    pnWidget_setEnter(win, EnterW, &color);
+    pnWidget_setLeave(win, LeaveW, &color);
 
     containers[0] = (void *) win;
     num_containers = 1;

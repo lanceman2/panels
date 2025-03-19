@@ -20,7 +20,7 @@ void catcher(int sig) {
 
 static int labelCount = 0;
 
-static struct PnWindow *win;
+static struct PnWidget *win;
 
 
 static void Label(void) {
@@ -34,8 +34,8 @@ static void Label(void) {
     char text[Len];
     snprintf(text, Len, format, labelCount++, xPadding, yPadding);
 
-    struct PnLabel *label = (void *) pnLabel_create(
-            (struct PnSurface *) win/*parent*/,
+    struct PnWidget *label = (void *) pnLabel_create(
+            win/*parent*/,
             0/*width*/, 30/*height*/,
             xPadding, yPadding,
             Rand(0,15)/*align*/,
@@ -43,7 +43,7 @@ static void Label(void) {
             text, 0/*size*/);
     ASSERT(label);
     pnLabel_setFontColor(label, 0xF0000000);
-    pnWidget_setBackgroundColor((void *)label, Color());
+    pnWidget_setBackgroundColor(label, Color());
 }
 
 
@@ -56,7 +56,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWindow_setBackgroundColor(win, 0xA0010101);
+    pnWidget_setBackgroundColor(win, 0xA0010101);
 
     for(int i=0; i<5; ++i)
         Label();

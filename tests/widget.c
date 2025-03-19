@@ -20,20 +20,20 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    struct PnWindow *win = pnWindow_create(0, 30, 30,
+    struct PnWidget *win = pnWindow_create(0, 30, 30,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create(
-            (struct PnSurface *) win/*parent*/,
+            win/*parent*/,
             100/*width*/, 200/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCCCF0000);
 
-    w = pnWidget_create((struct PnSurface *) win/*parent*/,
+    w = pnWidget_create(win/*parent*/,
             100/*width*/, 300/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
@@ -42,7 +42,7 @@ int main(void) {
     //pnWidget_show(w, false);
 
     struct PnWidget *cw = pnWidget_create(
-            (struct PnSurface *) win/*parent*/,
+            win/*parent*/,
             100/*width*/, 100/*height*/,
             PnLayout_LR/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
@@ -51,7 +51,7 @@ int main(void) {
 
 #if 1
     {
-        w = pnWidget_create((struct PnSurface *) cw/*parent*/,
+        w = pnWidget_create(cw/*parent*/,
             130/*width*/, 100/*height*/,
             0/*layout*/, 0/*align*/, PnExpand_V & 0/*expand*/,
             0);
@@ -59,7 +59,7 @@ int main(void) {
         pnWidget_setBackgroundColor(w, 0xCCCFFF00);
         //pnWidget_show(w, false);
 
-        w = pnWidget_create((struct PnSurface *) cw/*parent*/,
+        w = pnWidget_create(cw/*parent*/,
             100/*width*/, 100/*height*/,
             0/*layout*/, 0/*align*/, EXPAND & 0/*expand*/,
             0);

@@ -16,9 +16,9 @@ uint32_t GetColor(void) {
 
 
 static
-struct PnWidget *W(void *container, enum PnLayout layout) {
+struct PnWidget *W(struct PnWidget *container, enum PnLayout layout) {
 
-    struct PnWidget *w = pnWidget_create((void *) container,
+    struct PnWidget *w = pnWidget_create(container,
             14/*width*/, 14/*height*/,
             layout, 0/*align*/,
             PnExpand_H | PnExpand_V/*expand*/, 0);
@@ -41,7 +41,7 @@ int main(void) {
 
     srand(89);
 
-    struct PnWindow *win = pnWindow_create(0, 10, 10,
+    struct PnWidget *win = pnWindow_create(0, 10, 10,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);

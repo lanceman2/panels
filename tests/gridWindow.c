@@ -16,7 +16,7 @@ void catcher(int sig) {
 
 const uint32_t numColumns = 18, numRows = 10;
 
-struct PnWindow *win;
+struct PnWidget *win;
 
 uint32_t color;
 
@@ -37,7 +37,7 @@ void leave(struct PnWidget *w, void *userData) {
 
 void Widget(uint32_t x, uint32_t y) {
 
-    struct PnWidget *w = pnWidget_createInGrid((void *) win,
+    struct PnWidget *w = pnWidget_createInGrid(win,
             40/*width*/, 30/*height*/,
         PnLayout_One,
         Rand(0,16)/*align*/, Rand(0,0)/*Expand*/, 

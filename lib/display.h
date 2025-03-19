@@ -129,6 +129,9 @@ struct PnGrid {
 };
 
 
+struct PnWidget;
+
+
 // A widget or window (toplevel window or popup window) has a surface.
 //
 struct PnSurface {
@@ -160,13 +163,13 @@ struct PnSurface {
     // callbacks?
     //
     // API user passed in draw function:
-    int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+    int (*draw)(struct PnWidget *surface, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData);
     // To pass to draw():
     void *drawData;
     //
-    void (*config)(struct PnSurface *surface, uint32_t *pixels,
+    void (*config)(struct PnWidget *surface, uint32_t *pixels,
             uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData);
@@ -177,26 +180,26 @@ struct PnSurface {
     // events.  The "focused" widget can press up the "focused" events
     // to it's parent by returning false.
     //
-    bool (*enter)(struct PnSurface *surface,
+    bool (*enter)(struct PnWidget *surface,
             uint32_t x, uint32_t y, void *userData);
     void *enterData;
-    void (*leave)(struct PnSurface *surface, void *userData);
+    void (*leave)(struct PnWidget *surface, void *userData);
     void *leaveData;
-    bool (*press)(struct PnSurface *surface,
+    bool (*press)(struct PnWidget *surface,
             uint32_t which, int32_t x, int32_t y,
             void *userData);
     void *pressData;
-    bool (*release)(struct PnSurface *surface,
+    bool (*release)(struct PnWidget *surface,
             uint32_t which, int32_t x, int32_t y,
             void *userData);
     void *releaseData;
-    bool (*motion)(struct PnSurface *surface,
+    bool (*motion)(struct PnWidget *surface,
             int32_t x, int32_t y,
             void *userData);
     void *motionData;
 
 #ifdef WITH_CAIRO
-    int (*cairoDraw)(struct PnSurface *surface,
+    int (*cairoDraw)(struct PnWidget *surface,
             cairo_t *cr, void *userData);
     void *cairoDrawData;
     cairo_t *cr;
@@ -484,7 +487,7 @@ struct PnWindow {
     struct PnBuffer buffer;
 
 
-    void (*destroy)(struct PnWindow *window, void *userData);
+    void (*destroy)(struct PnWidget *window, void *userData);
     void *destroyData;
 
     // "needAllocate" is a flag to said that we need to recompute all

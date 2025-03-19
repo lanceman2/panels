@@ -76,7 +76,8 @@ static void leave(void *data, struct wl_pointer *p,
             wl_surface_get_user_data(wl_surface));
 
     if(d.focusSurface && d.focusSurface->leave)
-        d.focusSurface->leave(d.focusSurface, d.focusSurface->leaveData);
+        d.focusSurface->leave((void *) d.focusSurface,
+                d.focusSurface->leaveData);
 
     d.pointerWindow = 0;
     d.pointerSurface = 0;
@@ -114,7 +115,7 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
                 // pointer grab) event we will let another surface get a
                 // motion event (even when there is no motion from the
                 // wayland compositor at that time).
-                s->motion(s, d.x, d.y, s->motionData);
+                s->motion((void *) s, d.x, d.y, s->motionData);
         }
 
         return;
@@ -179,7 +180,7 @@ static void button(void *, struct wl_pointer *p,
                 d.buttonGrab &= ~(01 << button);
                 if(d.buttonGrabSurface->release)
                     d.buttonGrabSurface->release(
-                            d.buttonGrabSurface, button,
+                            (void *) d.buttonGrabSurface, button,
                             d.x, d.y,
                             d.buttonGrabSurface->pressData);
                 if(!d.buttonGrab) {
@@ -195,7 +196,7 @@ static void button(void *, struct wl_pointer *p,
             }
 
             for(struct PnSurface *s = d.focusSurface; s; s = s->parent)
-                if(s->release && s->release(s, button,
+                if(s->release && s->release((void *) s, button,
                             d.x, d.y, s->releaseData))
                     break;
             return;
@@ -211,14 +212,14 @@ case WL_POINTER_BUTTON_STATE_PRESSED:
                 d.buttonGrab |= (01 << button);
                 if(d.buttonGrabSurface->press)
                     d.buttonGrabSurface->press(
-                            d.buttonGrabSurface, button,
+                            (void *) d.buttonGrabSurface, button,
                             d.x, d.y,
                             d.buttonGrabSurface->pressData);
                 return;
             }
 
             for(struct PnSurface *s = d.focusSurface; s; s = s->parent)
-                if(s->press && s->press(s, button,
+                if(s->press && s->press((void *) s, button,
                             d.x, d.y, s->pressData)) {
                     if(s->release) {
                         d.buttonGrabSurface = s;
@@ -564,7 +565,7 @@ static void _pnDisplay_destroy(void) {
     // Destroy all the windows.
     while(d.windows)
         // Which destroys all the widgets in them.
-        pnWindow_destroy(d.windows);
+        pnWindow_destroy(&d.windows->widget);
 
     if(d.zxdg_decoration_manager)
         zxdg_decoration_manager_v1_destroy(d.zxdg_decoration_manager);

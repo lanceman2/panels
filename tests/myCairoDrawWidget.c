@@ -104,13 +104,13 @@ int main(int argc, char **argv) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    struct PnWindow *win = pnWindow_create(0, 30, 30,
+    struct PnWidget *win = pnWindow_create(0, 30, 30,
             0/*x*/, 0/*y*/, PnLayout_RL/*layout*/, PnAlign_RB,
             PnExpand_HV);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create(
-            (struct PnSurface *) win/*parent*/,
+            win/*parent*/,
             300/*width*/, 300/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_None/*expand*/, 0);
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
     pnWidget_setConfig(w, config, (void *) (uintptr_t)(argc - 1));
 
 
-    w = pnWidget_create((struct PnSurface *) win/*parent*/,
+    w = pnWidget_create(win/*parent*/,
             100/*width*/, 400/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_V/*expand*/, 0);

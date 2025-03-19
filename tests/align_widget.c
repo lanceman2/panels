@@ -17,12 +17,12 @@ void catcher(int sig) {
 }
 
 
-static struct PnWidget *Widget(void *parent) {
+static struct PnWidget *Widget(struct PnWidget *parent) {
 
     DASSERT(parent);
 
     struct PnWidget *w = pnWidget_create(
-            (struct PnSurface *) parent,
+            parent,
             50/*width*/,
             50/*height*/,
             0/*layout*/,
@@ -41,15 +41,15 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(SEED);
 
-    struct PnWindow *win = pnWindow_create(0,\
+    struct PnWidget *win = pnWindow_create(0,\
             20/*width*/, 20/*height*/,
             0/*x*/, 0/*y*/, PnLayout_TB/*layout*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
-    pnWindow_setBackgroundColor(win, 0xFF000000);
+    pnWidget_setBackgroundColor(win, 0xFF000000);
 
     struct PnWidget *w = pnWidget_create(
-            (struct PnSurface *) win,
+            win,
             40/*width*/,
             40/*height*/,
             PnLayout_LR/*layout*/,
@@ -63,7 +63,7 @@ int main(void) {
         Widget(w);
 
     w = pnWidget_create(
-            (struct PnSurface *) win,
+            win,
             40/*width*/,
             40/*height*/,
             PnLayout_BT/*layout*/,

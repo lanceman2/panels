@@ -17,7 +17,7 @@ void catcher(int sig) {
 
 static int buttonCount = 0;
 
-static struct PnWindow *win;
+static struct PnWidget *win;
 
 struct button {
     // Fuck, fuck, shit, we can't inherit PnButton because it's opaque
@@ -26,11 +26,11 @@ struct button {
     // inherit classes.
     //
     // We just have the PnButton pointer and not the data here:
-    struct PnButton *button;
+    struct PnWidget *button;
     int buttonNum;
 };
 
-static bool click(struct PnButton *button, struct button *b) {
+static bool click(struct PnWidget *button, struct button *b) {
 
     ASSERT(b);
     ASSERT(button);
@@ -40,7 +40,7 @@ static bool click(struct PnButton *button, struct button *b) {
     return false;
 }
 
-static bool press(struct PnButton *button, struct button *b) {
+static bool press(struct PnWidget *button, struct button *b) {
 
     ASSERT(b);
     ASSERT(button);
@@ -51,19 +51,20 @@ static bool press(struct PnButton *button, struct button *b) {
 }
 
 
-static void destroy(struct PnButton *button, struct button *b) {
+static void destroy(struct PnWidget *button, void *b) {
 
-    DZMEM(b, sizeof(*b));
+    DZMEM(b, sizeof(struct button));
     free(b);
 }
 
 static void Button(void) {
 
+    ASSERT(win);
     struct button *b = calloc(1, sizeof(*b));
     ASSERT(b, "calloc(1,%zu) failed", sizeof(*b));
 
-    b->button = (void *) pnButton_create(
-            (struct PnSurface *) win/*parent*/,
+    b->button = pnButton_create(
+            win/*parent*/,
             30/*width*/, 20/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/,
@@ -72,12 +73,12 @@ static void Button(void) {
 
     b->buttonNum = buttonCount++;
 
-    pnWidget_addCallback((void *) b->button,
+    pnWidget_addCallback(b->button,
             PN_BUTTON_CB_CLICK, click, b);
-    pnWidget_addCallback((void *) b->button,
+    pnWidget_addCallback(b->button,
             PN_BUTTON_CB_PRESS, press, b);
-    pnWidget_addDestroy((void *) b->button, (void *) destroy, b);
-    pnWidget_setBackgroundColor((void *) b->button, 0xFF707070);
+    pnWidget_addDestroy(b->button, destroy, b);
+    pnWidget_setBackgroundColor(b->button, 0xFF707070);
 }
 
 
@@ -89,7 +90,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_LR, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWindow_setBackgroundColor(win, 0xAA010101);
+    pnWidget_setBackgroundColor(win, 0xAA010101);
 
     for(int i=0; i<8; ++i)
         Button();

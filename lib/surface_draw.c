@@ -22,9 +22,9 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
     DASSERT(s);
     DASSERT(!s->culled);
     DASSERT(s->window);
-
+ 
     if(s->window->needAllocate && s->config)
-        s->config(s,
+        s->config((void *) s,
                 buffer->pixels +
                 s->allocation.y * buffer->stride +
                 s->allocation.x,
@@ -39,8 +39,8 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
 #ifdef WITH_CAIRO
     if(s->cairoDraw) {
         DASSERT(s->cr);
-        if(s->cairoDraw(s, s->cr, s->cairoDrawData) == 1)
-            pnSurface_queueDraw(s);
+        if(s->cairoDraw((void *) s, s->cr, s->cairoDrawData) == 1)
+            pnWidget_queueDraw((void *) s);
     } else if(!s->draw) {
         DASSERT(s->cr);
         uint32_t c = s->backgroundColor;
@@ -61,13 +61,13 @@ void pnSurface_draw(struct PnSurface *s, struct PnBuffer *buffer) {
                 s->backgroundColor /*color in ARGB*/);
 #endif
     else
-        if(s->draw(s,
+        if(s->draw((void *) s,
                 buffer->pixels +
                 s->allocation.y * buffer->stride +
                 s->allocation.x,
                 s->allocation.width, s->allocation.height,
                 buffer->stride, s->drawData) == 1)
-            pnSurface_queueDraw(s);
+            pnWidget_queueDraw((void *) s);
 
 drawChildren:
 

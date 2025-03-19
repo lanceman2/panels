@@ -20,7 +20,7 @@ int main(void) {
 
     srand(2);
 
-    struct PnWindow *win = pnWindow_create(0/*parent*/,
+    struct PnWidget *win = pnWindow_create(0/*parent*/,
             0/*width*/, 0/*height*/, 0/*x*/, 0/*y*/,
             PnLayout_One,
             0/*align*/, PnExpand_HV/*expand*/);

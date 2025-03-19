@@ -87,7 +87,10 @@ static void DequeueChildren(struct PnDrawQueue *q, struct PnSurface *s) {
     }
 }
 
-void pnSurface_queueDraw(struct PnSurface *s) {
+void pnWidget_queueDraw(struct PnWidget *w) {
+
+    DASSERT(w);
+    struct PnSurface *s = &w->surface;
 
     DASSERT(s);
     struct PnWindow *win = s->window;

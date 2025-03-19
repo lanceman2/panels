@@ -149,7 +149,7 @@ static bool release(struct PnWidget *w,
 
     if(which == 0) {
         if(b->state == PnButtonState_Pressed &&
-                pnSurface_isInSurface(&w->surface, x, y)) {
+                pnWidget_isInSurface(w, x, y)) {
             SetState(b, PnButtonState_Active);
             pnWidget_callAction(w, PN_BUTTON_CB_CLICK);
             b->frames = NUM_FRAMES;
@@ -257,7 +257,7 @@ static bool clickAction(struct PnButton *b,
 }
 
 
-struct PnWidget *pnButton_create(struct PnSurface *parent,
+struct PnWidget *pnButton_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,

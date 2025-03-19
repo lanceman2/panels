@@ -499,20 +499,10 @@ void DestroySurface(struct PnSurface *s) {
         RecreateGrid(s, 0, 0);
 }
 
-bool pnSurface_isInSurface(const struct PnSurface *s,
+bool pnWidget_isInSurface(const struct PnWidget *w,
         uint32_t x, uint32_t y) {
-    DASSERT(s);
-    return (s->allocation.x <= x && s->allocation.y <= y &&
-            x < s->allocation.x + s->allocation.width && 
-            y < s->allocation.y + s->allocation.height);
+    DASSERT(w);
+    return (w->surface.allocation.x <= x && w->surface.allocation.y <= y &&
+            x < w->surface.allocation.x + w->surface.allocation.width && 
+            y < w->surface.allocation.y + w->surface.allocation.height);
 }
-
-#if 0
-void pnSurface_setMinWidth(struct PnSurface *s, uint32_t width) {
-    DASSERT(s);
-    if(s->width != width)
-        *((uint32_t *) &s->width) = width;
-
-    // TODO: Let the user queue the draw??
-}
-#endif

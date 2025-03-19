@@ -5,7 +5,7 @@
 #include "run.h"
 
 
-static struct PnWindow *win;
+static struct PnWidget *win;
 
 static void CreateWindow(uint32_t w, uint32_t h) {
 

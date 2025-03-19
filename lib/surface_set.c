@@ -12,110 +12,109 @@
 #include "display.h"
 
 
-static bool MotionEnter(struct PnSurface *surface,
+static bool MotionEnter(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
-    DASSERT(surface);
+    DASSERT(w);
     return true; // Take focus so we can get motion events.
 }
 
-static void MotionLeave(struct PnSurface *surface, void *userData) {
-    DASSERT(surface);
+static void MotionLeave(struct PnWidget *w, void *userData) {
+    DASSERT(w);
 }
 
 
-void pnSurface_setDraw(
-        struct PnSurface *s,
-        int (*draw)(struct PnSurface *surface, uint32_t *pixels,
+void pnWidget_setDraw(
+        struct PnWidget *widget,
+        int (*draw)(struct PnWidget *widget, uint32_t *pixels,
             uint32_t w, uint32_t h, uint32_t stride,
             void *userData), void *userData) {
-    DASSERT(s);
-
-    s->draw = draw;
-    s->drawData = userData;
+    DASSERT(widget);
+    widget->surface.draw = draw;
+    widget->surface.drawData = userData;
 }
 
-void pnSurface_setConfig(struct PnSurface *s,
-        void (*config)(struct PnSurface *surface, uint32_t *pixels,
+void pnWidget_setConfig(struct PnWidget *widget,
+        void (*config)(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData) {
-    DASSERT(s);
-    s->config = config;
-    s->configData = userData;
+    DASSERT(widget);
+    widget->surface.config = config;
+    widget->surface.configData = userData;
 }
 
-void pnSurface_getAllocation(const struct PnSurface *s,
+void pnWidget_getAllocation(const struct PnWidget *w,
         struct PnAllocation *a) {
-    DASSERT(s);
-    memcpy(a, &s->allocation, sizeof(*a));
+    DASSERT(w);
+    memcpy(a, &w->surface.allocation, sizeof(*a));
 }
 
-void pnSurface_setBackgroundColor(
-        struct PnSurface *s, uint32_t argbColor) {
-    s->backgroundColor = argbColor;
+void pnWidget_setBackgroundColor(
+        struct PnWidget *w, uint32_t argbColor) {
+    w->surface.backgroundColor = argbColor;
 }
 
-uint32_t pnSurface_getBackgroundColor(struct PnSurface *s) {
-    DASSERT(s);
-    return s->backgroundColor;
+uint32_t pnWidget_getBackgroundColor(struct PnWidget *w) {
+    DASSERT(w);
+    return w->surface.backgroundColor;
 }
 
-void pnSurface_setEnter(struct PnSurface *s,
-        bool (*enter)(struct PnSurface *surface,
+void pnWidget_setEnter(struct PnWidget *w,
+        bool (*enter)(struct PnWidget *surface,
             uint32_t x, uint32_t y, void *userData),
         void *userData) {
 
-    DASSERT(s);
-    s->enter = enter;
-    s->enterData = userData;
+    DASSERT(w);
+    w->surface.enter = enter;
+    w->surface.enterData = userData;
 
     if(!enter) {
         // Motion, Enter, and Leave are closely related.  See
-        // pnSurface_setMotion().
-        if(s->motion)
-            s->enter = MotionEnter;
+        // pnWidget_setMotion().
+        if(w->surface.motion)
+            w->surface.enter = MotionEnter;
     }
 }
 
-void pnSurface_setLeave(struct PnSurface *s,
-        void (*leave)(struct PnSurface *surface, void *userData),
+void pnWidget_setLeave(struct PnWidget *w,
+        void (*leave)(struct PnWidget *surface, void *userData),
         void *userData) {
 
-    DASSERT(s);
-    s->leave = leave;
-    s->leaveData = userData;
+    DASSERT(w);
+    w->surface.leave = leave;
+    w->surface.leaveData = userData;
 
     if(!leave) {
         // Motion, Enter, and Leave are closely related.  See
-        // pnSurface_setMotion().
-        if(s->motion)
-            s->leave = MotionLeave;
+        // pnWidget_setMotion().
+        if(w->surface.motion)
+            w->surface.leave = MotionLeave;
     }
 
 }
 
-void pnSurface_setPress(struct PnSurface *s,
-        bool (*press)(struct PnSurface *surface,
+void pnWidget_setPress(struct PnWidget *w,
+        bool (*press)(struct PnWidget *surface,
             uint32_t which,
             int32_t x, int32_t y, void *userData),
         void *userData) {
 
-    DASSERT(s);
-    s->press = press;
-    s->pressData = userData;
+    DASSERT(w);
+    w->surface.press = press;
+    w->surface.pressData = userData;
 }
 
-void pnSurface_setRelease(struct PnSurface *s,
-        bool (*release)(struct PnSurface *surface,
+void pnWidget_setRelease(struct PnWidget *w,
+        bool (*release)(struct PnWidget *surface,
             uint32_t which,
             int32_t x, int32_t y, void *userData),
         void *userData) {
 
-    DASSERT(s);
-    s->release = release;
-    s->releaseData = userData;
+    DASSERT(w);
+    w->surface.release = release;
+    w->surface.releaseData = userData;
 
-    if(!release && d.buttonGrabSurface == s) {
+    if(!release && d.buttonGrabSurface == &w->surface) {
         // If we are removing the release callback (setting to 0), we need
         // to make sure that there is no pending button grab, and if there
         // is a button grab we must release the grab.
@@ -124,37 +123,37 @@ void pnSurface_setRelease(struct PnSurface *s,
     }
 }
 
-void pnSurface_setMotion(struct PnSurface *s,
-        bool (*motion)(struct PnSurface *surface,
+void pnWidget_setMotion(struct PnWidget *w,
+        bool (*motion)(struct PnWidget *surface,
             int32_t x, int32_t y, void *userData),
         void *userData) {
 
-    DASSERT(s);
-    s->motion = motion;
-    s->motionData = userData;
+    DASSERT(w);
+    w->surface.motion = motion;
+    w->surface.motionData = userData;
 
     // We need to get focus (from the enter event) if we want motion
     // events.  Enter, Leave, and Motion are closely related; that's just
     // the way things are.
 
     if(motion) {
-        if(!s->enter)
-            s->enter = MotionEnter;
-        if(!s->leave)
-            s->leave = MotionLeave;
+        if(!w->surface.enter)
+            w->surface.enter = MotionEnter;
+        if(!w->surface.leave)
+            w->surface.leave = MotionLeave;
     } else {
-        if(s->enter == MotionEnter)
-            s->enter = 0;
-        if(s->leave == MotionLeave)
-            s->leave = 0;
+        if(w->surface.enter == MotionEnter)
+            w->surface.enter = 0;
+        if(w->surface.leave == MotionLeave)
+            w->surface.leave = 0;
     }
 }
 
 #if 0
-void pnSurface_setMinWidth(struct PnSurface *s, uint32_t width) {
-    DASSERT(s);
-    if(s->width != width)
-        *((uint32_t *) &s->width) = width;
+void pnWidget_setMinWidth(struct PnWidget *w, uint32_t width) {
+    DASSERT(w);
+    if(w->surface.width != width)
+        *((uint32_t *) &w->surface.width) = width;
 
     // TODO: Let the user queue the draw??
 }

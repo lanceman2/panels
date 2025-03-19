@@ -165,7 +165,7 @@ uint32_t GetWidthAndFontSize(const char *text, uint32_t h,
 }
 
 
-struct PnWidget *pnLabel_create(struct PnSurface *parent,
+struct PnWidget *pnLabel_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         uint32_t xPadding, uint32_t yPadding,
         enum PnAlign align, // for text alignment
@@ -225,8 +225,10 @@ struct PnWidget *pnLabel_create(struct PnSurface *parent,
     return &l->widget; // We inherited PnWidget.
 }
 
-void pnLabel_setFontColor(struct PnLabel *l, uint32_t color) {
+void pnLabel_setFontColor(struct PnWidget *w, uint32_t color) {
 
-    DASSERT(l);
+    DASSERT(w);
+    ASSERT(w->surface.type == PnSurfaceType_label);
+    struct PnLabel *l = (void *) w;
     l->fontColor = color;
 }

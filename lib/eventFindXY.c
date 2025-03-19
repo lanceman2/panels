@@ -349,10 +349,10 @@ void DoEnterAndLeave(void) {
         if(s->enter) {
             if(oldFocus) {
                 DASSERT(oldFocus->leave);
-                oldFocus->leave(oldFocus, oldFocus->leaveData);
+                oldFocus->leave((void *) oldFocus, oldFocus->leaveData);
                 oldFocus = 0;
             }
-            if(s->enter(s, d.x, d.y, s->enterData) && s->leave)
+            if(s->enter((void *) s, d.x, d.y, s->enterData) && s->leave)
                 // We have a new focused surface.
                 d.focusSurface = s;
             else
@@ -364,7 +364,7 @@ void DoEnterAndLeave(void) {
 
     if(oldFocus && d.focusSurface != oldFocus) {
         DASSERT(oldFocus->leave);
-        oldFocus->leave(oldFocus, oldFocus->leaveData);
+        oldFocus->leave((void *) oldFocus, oldFocus->leaveData);
     }
 }
 
@@ -373,7 +373,7 @@ void DoMotion(struct PnSurface *s) {
     DASSERT(s);
     for(; s; s = s->parent) {
         DASSERT(!s->culled);
-        if(s->motion && s->motion(s, d.x, d.y, s->motionData))
+        if(s->motion && s->motion((void *) s, d.x, d.y, s->motionData))
             break;
     }
 }

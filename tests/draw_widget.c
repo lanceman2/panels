@@ -132,13 +132,13 @@ int main(int argc, char **argv) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(2); // rand() seed
 
-    struct PnWindow *win = pnWindow_create(0, 30, 30,
+    struct PnWidget *win = pnWindow_create(0, 30, 30,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
 
     struct PnWidget *w = pnWidget_create(
-            (struct PnSurface *) win/*parent*/,
+            win/*parent*/,
             500/*width*/, 400/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     pnWidget_setConfig(w, config, (void *) (uintptr_t)(argc - 1));
 
 
-    w = pnWidget_create((struct PnSurface *) win/*parent*/,
+    w = pnWidget_create(win/*parent*/,
             100/*width*/, 400/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);

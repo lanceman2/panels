@@ -1,5 +1,5 @@
 
-static inline void Run(struct PnWindow *win) {
+static inline void Run(struct PnWidget *win) {
 #ifdef RUN
     // Run the main loop until the GUI user causes it to stop.
     while(pnDisplay_dispatch());
