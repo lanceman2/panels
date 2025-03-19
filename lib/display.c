@@ -647,7 +647,6 @@ void pnDisplay_destroy(void) {
         DASSERT(!d.wl_shm);
         DASSERT(!d.wl_compositor);
         DASSERT(!d.xdg_wm_base);
-
         DASSERT(!d.windows);
         return;
     }

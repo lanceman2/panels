@@ -232,6 +232,7 @@ enum PnAlign {
 struct PnWidget;
 
 
+PN_EXPORT void pnDisplay_destroy(void);
 PN_EXPORT bool pnDisplay_dispatch(void);
 PN_EXPORT bool pnDisplay_haveXDGDecoration(void);
 

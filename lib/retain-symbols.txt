@@ -1,4 +1,5 @@
 pnButton_create
+pnDisplay_destroy
 pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
 pnFindFont
