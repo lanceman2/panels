@@ -10,9 +10,6 @@
 #ifdef WITH_CAIRO
 #  include <cairo.h>
 #endif
-#ifdef WITH_FONTCONFIG
-#  include <fontconfig/fontconfig.h>
-#endif
 
 #include "../include/panels.h"
 
@@ -21,13 +18,6 @@
 
 
 static void __attribute__((constructor)) constructor(void) {
-
-#ifdef WITH_FONTCONFIG
-    // TODO: forcing us to need these two libraries at compile time; at
-    // least for DEBUG builds.  At least until other code that uses
-    // fontconfig and cairo is written.
-    fprintf(stderr, "FcPatternGetString=%p\n", FcPatternGetString);
-#endif
 
     DSPEW();
 }
@@ -39,6 +29,7 @@ static void __attribute__((destructor)) destructor(void) {
         pnDisplay_destroy();
 
 #ifdef WITH_CAIRO
+    // TODO: There the question: is anyone still using cairo?
     cairo_debug_reset_static_data();
 #endif
 
