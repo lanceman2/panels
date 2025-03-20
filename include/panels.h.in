@@ -278,6 +278,12 @@ PN_EXPORT struct PnWidget *pnWidget_createInGrid(
         uint32_t columnNum, uint32_t rowNum,
         uint32_t columnSpan, uint32_t rowSpan,
         size_t size);
+PN_EXPORT void pnWidget_addChild(struct PnWidget *parent,
+        struct PnWidget *child);
+PN_EXPORT void pnWidget_addChildToGrid(struct PnWidget *parent,
+        struct PnWidget *child,
+        uint32_t columnNum, uint32_t rowNum,
+        uint32_t columnSpan, uint32_t rowSpan);
 
 PN_EXPORT void pnWidget_show(struct PnWidget *widget, bool show);
 PN_EXPORT void pnWidget_destroy(struct PnWidget *widget);
@@ -398,6 +404,8 @@ PN_EXPORT struct PnWidget *pnButton_create(struct PnWidget *parent,
         const char *label, bool toggle, size_t size);
 
 PN_EXPORT struct PnWidget *pnLabel_create(struct PnWidget *parent,
+        // width = 0 --> figure out width.
+        // height = 0 --> figure out height.
         uint32_t width, uint32_t height,
         uint32_t xPadding, uint32_t yPadding,
         enum PnAlign align, // for text alignment

@@ -639,8 +639,10 @@ extern bool InitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y);
 
-extern bool InitSurface(struct PnWidget *s,
+extern void InitSurface(struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan);
+extern void RemoveChildSurface(struct PnWidget *parent,
+        struct PnWidget *s);
 extern void DestroySurface(struct PnWidget *s);
 extern void DestroySurfaceChildren(struct PnWidget *s);
 

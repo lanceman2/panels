@@ -15,17 +15,33 @@ void catcher(int sig) {
 }
 
 static struct PnWidget *grid;
+static const uint32_t width = 35, height = 25;
 
-static inline void AddWidget(uint32_t column, uint32_t row,
+
+static inline void AddWidget(const char *text,
+        uint32_t column, uint32_t row,
         uint32_t cSpan, uint32_t rSpan) {
+    struct PnWidget *w;
 
-    struct PnWidget *w = pnWidget_createInGrid(
-        grid, 5/*width*/, 5/*height*/,
-        PnLayout_None,
-        0/*align*/, PnExpand_HV/*expand*/,
-        column, row,
-        cSpan, rSpan,
-        0/*size*/);
+    if(text)
+        w = pnLabel_create(
+                0, 0, height,
+                10/*xPadding*/, 5/*yPadding*/,
+                PnAlign_RC/*align*/, PnExpand_HV/*expand*/,
+                text, 0/*size*/);
+    else
+        w = pnWidget_createInGrid(
+                grid, width, height,
+                PnLayout_None,
+                0/*align*/, PnExpand_HV/*expand*/,
+                column, row,
+                cSpan, rSpan,
+                0/*size*/);
+
+    if(text)
+        pnWidget_addChildToGrid(grid, w,
+            column, row, cSpan, rSpan);
+
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
 }
@@ -35,7 +51,7 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    srand(2);
+    srand(1);
 
     struct PnWidget *win = pnWindow_create(0/*parent*/,
             0/*width*/, 0/*height*/, 0/*x*/, 0/*y*/,
@@ -51,11 +67,18 @@ int main(void) {
     ASSERT(grid);
     pnWidget_setBackgroundColor(grid, 0xFF000000);
 
-    AddWidget(0, 0, 1, 1);
-    AddWidget(1, 0, 1, 1);
-    AddWidget(0, 1, 1, 1);
-    AddWidget(1, 1, 1, 1);
-    AddWidget(0, 2, 1, 1);
+    AddWidget("text", 0, 0, 1, 1);
+    AddWidget(0, 0, 1, 1, 1);
+    AddWidget(0, 1, 0, 1, 1);
+    AddWidget(0, 1, 1, 1, 1);
+    AddWidget(0, 1, 0, 1, 1);
+    AddWidget(0, 1, 1, 1, 1);
+
+    AddWidget(0, 2, 1, 1, 1);
+
+
+
+    AddWidget(0, 0, 2, 2, 1);
 
 
     pnWindow_show(win, true);

@@ -172,7 +172,6 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
         enum PnExpand expand,
         const char *text, size_t size) {
 
-    DASSERT(parent);
     DASSERT(text);
     DASSERT(strlen(text));
     ASSERT(yPadding < height);

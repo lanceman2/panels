@@ -85,15 +85,9 @@ struct PnWidget *_pnWidget_createFull(
     *((uint32_t *) &widget->width) = w;
     *((uint32_t *) &widget->height) = h;
 
-    if(InitSurface(widget, column, row, cSpan, rSpan))
-        goto fail;
+    InitSurface(widget, column, row, cSpan, rSpan);
 
     return widget;
-
-fail:
-
-    pnWidget_destroy(widget);
-    return 0;
 }
 
 struct PnWidget *pnWidget_createAsGrid(
@@ -228,3 +222,34 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     widget->window->needAllocate = true; 
 }
 
+void pnWidget_addChild(struct PnWidget *parent,
+        struct PnWidget *child) {
+    DASSERT(parent);
+    DASSERT(child);
+    DASSERT(parent->layout != PnLayout_Grid);
+
+    if(child->parent)
+        RemoveChildSurface(child->parent, child);
+    child->parent = parent;
+    InitSurface(child, -1, -1, 0, 0);
+}
+
+void pnWidget_addChildToGrid(struct PnWidget *parent,
+        struct PnWidget *child,
+        uint32_t columnNum, uint32_t rowNum,
+        uint32_t columnSpan, uint32_t rowSpan) {
+    DASSERT(parent);
+    DASSERT(child);
+    if(columnNum == -1 || rowNum == -1) {
+        DASSERT(parent->layout != PnLayout_Grid);
+        columnNum = -1;
+        rowNum = -1;
+        columnSpan = 0;
+        rowSpan = 0;
+    }
+
+    if(child->parent)
+        RemoveChildSurface(child->parent, child);
+    child->parent = parent;
+    InitSurface(child, columnNum, rowNum, columnSpan, rowSpan);
+}

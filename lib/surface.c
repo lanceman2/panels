@@ -211,7 +211,7 @@ void RecreateGrid(struct PnWidget *s,
             // Note: the element spans may change, if the spans go across
             // cells that are kept and cells that are removed.
             if(IsUpperLeftCell(c, child, x, y))
-                pnWidget_destroy((void *) c);
+                pnWidget_destroy(c);
             child[y][x] = 0; // DEBUG memset 0 thingy
         }
         // Remove unneeded row pointers.
@@ -358,10 +358,21 @@ void AddChildSurfaceGrid(struct PnWidget *grid, struct PnWidget *s,
     DASSERT(grid->g.numRows > row);
     struct PnWidget ***child = grid->g.grid->child;
     DASSERT(child);
+
+    // The added child can span more cells; so we loop over all the cells
+    // it spans.
+    //
     for(uint32_t y=row+rSpan-1; y>=row && y!=-1; --y)
-        for(uint32_t x=column+cSpan-1; x>=column && x!=-1; --x)
-            // The added child can span more cells.
+        for(uint32_t x=column+cSpan-1; x>=column && x!=-1; --x) {
+            struct PnWidget *c = child[y][x];
+            if(c)
+                // There is a widget in this cell already.
+                //
+                // This will also remove this widget "c" from the cell and
+                // all the cells it spans.
+                pnWidget_destroy(c);
             child[y][x] = s;
+        }
 
     ++grid->g.grid->numChildren;
 
@@ -449,7 +460,7 @@ void RemoveChildSurfaceGrid(struct PnWidget *grid, struct PnWidget *s) {
     s->pg.column = 0;
 }
 
-static inline
+
 void RemoveChildSurface(struct PnWidget *parent, struct PnWidget *s) {
 
     DASSERT(s);
@@ -470,7 +481,7 @@ void RemoveChildSurface(struct PnWidget *parent, struct PnWidget *s) {
 //
 // column and row are -1 for the unused case.
 //
-bool InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
+void InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
         uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(s);
@@ -492,7 +503,7 @@ bool InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
     if(!s->parent) {
         DASSERT(!(s->type & WIDGET));
         // this is a window.
-        return false;
+        return;
     }
     // this is a widget
     DASSERT(s->type & WIDGET);
@@ -502,8 +513,6 @@ bool InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
     s->backgroundColor = s->parent->backgroundColor;
 
     AddChildSurface(s->parent, s, column, row, cSpan, rSpan);
-
-    return false;
 }
 
 
