@@ -125,8 +125,6 @@ struct PnWidget *pnWidget_createInGrid(
         size_t size) {
     ASSERT(grid);
     ASSERT(grid->layout == PnLayout_Grid);
-    ASSERT(grid->g.numColumns > columnNum);
-    ASSERT(grid->g.numRows > rowNum);
     return _pnWidget_createFull(grid, w, h, layout, align, expand, 
             columnNum, rowNum, columnSpan, rowSpan, size);
 }

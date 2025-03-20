@@ -250,10 +250,10 @@ void GetPointerSurface(const struct PnWindow *win) {
         // Start at the window surface.
         d.pointerWidget = (void *) d.pointerWindow;
 
-    // The d.x, d.y position can move out from the pointerWidget
-    // without changing the pointerWidget because of a pointer grab.
+    // The d.x, d.y position can move out from the pointerWidget without
+    // changing the pointerWidget because of a pointer grab.
 
-    if(d.pointerWidget->l.firstChild &&
+    if(HaveChildren(d.pointerWidget) &&
             d.x >= d.pointerWidget->allocation.x &&
             d.y >= d.pointerWidget->allocation.y &&
             d.x < d.pointerWidget->allocation.x +
