@@ -32,6 +32,7 @@ static inline bool GridResetChildrenCull(struct PnWidget *s) {
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
             struct PnWidget *c = child[y][x];
+            if(!c) continue;
             c->culled = ResetChildrenCull(c);
 
             if(!c->culled && culled)
