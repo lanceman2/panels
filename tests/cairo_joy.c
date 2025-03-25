@@ -1,4 +1,5 @@
 #include <cairo.h>
+#include <fontconfig/fontconfig.h>
 
 int main(void) {
 
@@ -30,6 +31,7 @@ int main(void) {
     cairo_surface_destroy(surface);
 
     cairo_debug_reset_static_data();
+    FcFini();
 
     return 0;
 }

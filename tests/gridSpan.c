@@ -15,6 +15,7 @@ void catcher(int sig) {
 }
 
 static struct PnWidget *grid;
+static const uint32_t textHeight = 25;
 static const uint32_t width = 35, height = 25;
 
 
@@ -25,7 +26,7 @@ static inline void AddWidget(const char *text,
 
     if(text)
         w = pnLabel_create(
-                0, 0, height,
+                0, 0/*width*/, textHeight,
                 10/*xPadding*/, 5/*yPadding*/,
                 PnAlign_RC/*align*/, PnExpand_HV/*expand*/,
                 text, 0/*size*/);

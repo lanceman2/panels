@@ -13,6 +13,9 @@ CAIRO_CFLAGS := $(shell pkg-config --cflags cairo)
 
 ifeq ($(libdir),)
 ifdef WITH_CAIRO
+ifndef WITH_FONTCONFIG
+$(error WITH_FONTCONFIG is required WITH_CAIRO)
+endif
 $(error software package cairo was not found)
 else
 $(warning software package cairo was not found)

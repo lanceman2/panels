@@ -13,10 +13,16 @@
     ...
 }
 {
+   Ignone libld bug
+   Memcheck:Leak
+   ...
+   fun:tls_get_addr_tail
+   ...
+}
+{
    Ignore dlopen bug.
    Memcheck:Leak
    ...
    fun:_dl_open
    ...
 }
-

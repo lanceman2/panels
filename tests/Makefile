@@ -1,8 +1,8 @@
 root := ..
 
-include $(root)/pkg-cairo.make
 include $(root)/config.make
-
+include $(root)/pkg-fontconfig.make
+include $(root)/pkg-cairo.make
 
 PN_LIB := -L../lib -lpanels -Wl,-rpath=\$$ORIGIN/../lib
 
@@ -97,15 +97,15 @@ myCairoDrawWidget_run_SOURCES := myCairoDrawWidget.c
 myCairoDrawWidget_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 myCairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-112_cairo_joy_SOURCES := cairo_joy.c
-112_cairo_joy_LDFLAGS := $(CAIRO_LDFLAGS)
-112_cairo_joy_CPPFLAGS := $(CAIRO_CFLAGS)
+108_cairo_joy_SOURCES := cairo_joy.c
+108_cairo_joy_LDFLAGS := $(CAIRO_LDFLAGS) $(FONTCONFIG_LDFLAGS)
+108_cairo_joy_CPPFLAGS := $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS)
 
 # figuring out how to get the size of text without
 # creating a panel widget.
 110_CairoTextSizeFit_SOURCES := CairoTextSizeFit.c ../lib/debug.c
-110_CairoTextSizeFit_LDFLAGS := $(CAIRO_LDFLAGS)
-110_CairoTextSizeFit_CPPFLAGS := $(CAIRO_CFLAGS)
+110_CairoTextSizeFit_LDFLAGS := $(CAIRO_LDFLAGS) $(FONTCONFIG_LDFLAGS)
+110_CairoTextSizeFit_CPPFLAGS := $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS)
 endif
 
 
@@ -125,6 +125,30 @@ cairoDrawWidget_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 button_run_SOURCES := button.c
 button_run_LDFLAGS := $(PN_LIB)
 button_run_CPPFLAGS := -DRUN
+
+111_fontconfig_SOURCES := fontconfig.c
+111_fontconfig_LDFLAGS := $(PN_LIB) $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
+111_fontconfig_CPPFLAGS := $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS)
+fontconfig_run_SOURCES := fontconfig.c
+fontconfig_run_LDFLAGS := $(PN_LIB) $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
+fontconfig_run_CPPFLAGS := $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS) -DRUN
+
+fontconfig.so_SOURCES := fontconfig.c
+fontconfig.so_LDFLAGS := $(PN_LIB) $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
+fontconfig.so_CPPFLAGS := $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS) -DDSO
+
+fontconfig_run.so_SOURCES := fontconfig.c
+fontconfig_run.so_LDFLAGS := $(PN_LIB) $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
+fontconfig_run.so_CPPFLAGS := $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS) -DDSO -DRUN
+
+112_load_fontconfig_SOURCES := load_fontconfig.c ../lib/debug.c
+112_load_fontconfig_CPPFLAGS := -DDSO_FILE=\"./fontconfig.so\" $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS)
+112_load_fontconfig_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS) -ldl
+
+load_fontconfig_run_SOURCES := load_fontconfig.c  ../lib/debug.c
+load_fontconfig_run_CPPFLAGS := -DDSO_FILE=\"./fontconfig_run.so\" $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS)
+load_fontconfig_run_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS) -ldl
+
 
 115_label_SOURCES := label.c
 115_label_LDFLAGS := $(PN_LIB)
