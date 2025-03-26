@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <locale.h>
 
 #include <wayland-client.h>
 
@@ -20,9 +21,15 @@
 #include  "display.h"
 
 
+char decimal_point = 0;
+
 static void __attribute__((constructor)) constructor(void) {
 
     DSPEW();
+    if(!decimal_point) {
+        decimal_point = *localeconv()->decimal_point;
+        DASSERT(decimal_point);
+    }
 }
 
 

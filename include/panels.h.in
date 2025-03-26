@@ -413,7 +413,22 @@ PN_EXPORT struct PnWidget *pnLabel_create(struct PnWidget *parent,
         const char *text, size_t size);
 
 
-PN_EXPORT void pnLabel_setFontColor(struct PnWidget *label, uint32_t color);
+PN_EXPORT void pnLabel_setFontColor(struct PnWidget *label,
+        uint32_t color);
+
+
+// Advanced API:
+///////////////////////////////////////////////////////////////////
+struct PnGraph;
+
+PN_EXPORT void pnGraph_drawGrids(const struct PnGraph *g,
+        cairo_t *cr, bool show_subGrid);
+PN_EXPORT void pnGraph_pushZoom(struct PnGraph *g,
+        double xMin, double xMax, double yMin, double yMax);
+// Returns true if there are zooms left to pop after this call; else it
+// returns false.  Frees zooms that are popped.  This will not free the
+// last (current) zoom.  Returns false when there is one left.
+PN_EXPORT bool pnGraph_popZoom(struct PnGraph *g);
 
 
 

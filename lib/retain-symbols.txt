@@ -3,6 +3,9 @@ pnDisplay_destroy
 pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
 pnFindFont
+pnGraph_drawGrids
+pnGraph_pushZoom
+pnGraph_popZoom
 pnLabel_create
 pnLabel_setFontColor
 pnWidget_addAction

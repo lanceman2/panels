@@ -142,13 +142,26 @@ fontconfig_run.so_LDFLAGS := $(PN_LIB) $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
 fontconfig_run.so_CPPFLAGS := $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS) -DDSO -DRUN
 
 112_load_fontconfig_SOURCES := load_fontconfig.c ../lib/debug.c
-112_load_fontconfig_CPPFLAGS := -DDSO_FILE=\"./fontconfig.so\" $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS)
-112_load_fontconfig_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS) -ldl
+112_load_fontconfig_CPPFLAGS :=\
+ -DDSO_FILE=\"./fontconfig.so\"\
+ $(FONTCONFIG_CFLAGS)\
+ $(CAIRO_CFLAGS)
+112_load_fontconfig_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
 
 load_fontconfig_run_SOURCES := load_fontconfig.c  ../lib/debug.c
-load_fontconfig_run_CPPFLAGS := -DDSO_FILE=\"./fontconfig_run.so\" $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS)
-load_fontconfig_run_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS) -ldl
+load_fontconfig_run_CPPFLAGS :=\
+ -DDSO_FILE=\"./fontconfig_run.so\"\
+ $(FONTCONFIG_CFLAGS)\
+ $(CAIRO_CFLAGS)
+load_fontconfig_run_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
 
+DrawGridLines_run_SOURCES := DrawGridLines.c
+DrawGridLines_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+DrawGridLines_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+221_DrawGridLines_SOURCES := DrawGridLines.c
+221_DrawGridLines_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+221_DrawGridLines_CPPFLAGS := $(CAIRO_CFLAGS)
 
 115_label_SOURCES := label.c
 115_label_LDFLAGS := $(PN_LIB)

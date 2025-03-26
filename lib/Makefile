@@ -76,7 +76,8 @@ ifdef WITH_CAIRO
 libpanels.so_SOURCES +=\
  cairo.c\
  cairoButton.c\
- cairoLabel.c
+ cairoLabel.c\
+ DrawGridLines.c
 endif
 
 

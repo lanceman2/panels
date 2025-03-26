@@ -11,7 +11,7 @@
 
 #include "../include/panels.h"
 #include "debug.h"
-#include  "display.h"
+#include "display.h"
 
 
 // struct PnDisplay encapsulate the wayland per process singleton objects,

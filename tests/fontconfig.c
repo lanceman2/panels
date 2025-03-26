@@ -54,6 +54,7 @@ int runLabels(void) {
     FcObjectSetDestroy(os);
     FcPatternDestroy(pat);
     //FcConfigDestroy(config);
+    // Trying to brake it:
     FcFini();
     FcFini();
     FcFini();
@@ -107,7 +108,9 @@ cairo_debug_reset_static_data();
     Run(win);
 #endif
 
-    FcFini();
+    // Adding this two lines brakes it with valgrind.
+    //cairo_debug_reset_static_data();
+    //FcFini();
 
     return 0;
 }
