@@ -2,11 +2,48 @@
 
 If your not a C developer, go away.  This project is just starting.
 
+## Design decisions
+
+This is the story of an inquisitive C computer programmer.  This
+programmer did not like programming on computers with "black box"
+operating systems, for all the interesting details were kept secret.
+Hence "panels" is free (and open source) as in speech.
+
+This programmer got the rug pulled out from beneath his feet when X11 was
+no longer the underlying (API) standard for the free desktop, and is now
+being replaced by Wayland.  Porting to "black box" operating systems is
+not a primary concern: hence "panels" is based on Wayland client.  Using a
+X11 wrapper layer adds complexity, aging legacy, that would erode future
+maintainability; does not get out weighed by the added functionality (like
+standardized networked displays) which is destined to die with X11.
+
+This programmer wanted to very directly change the color of a pixel on the
+screen by changing the value of a 32 bit integer with just 10 lines of C
+code.  Wayland client lets you do that with about 200 lines of C code.
+Wayland client is not quite at the C library layer that can do that.
+
+It would appear that Wayland is the only free desktop standard that
+"panels" needs to use.  We don't see the need to port develop to
+"black box" operating systems.
+
+This programmer sees that there are some simple and basic libraries that
+form the basis for free desktops.  Hence "panels" depends on a small
+number of fairly popular and robust libraries.
+
+
+## What is Panels?
+
 This software project is strictly for a Wayland compositor based windowing
 desktop systems, like on a GNU/Linux computer system; Wayland being the
 new replacement to the X11 window desktop system on UNIX like operating
-systems.  Currently being developed on Debian GNU/Linux 12 with KDE Plasma
-Wayland.
+systems.  Panels is currently being developed on Debian GNU/Linux 12 with
+KDE Plasma Wayland.  Currently KDE Plasma KWin compositor is popular and a
+little buggy (random stray 1 pixel wide border lines between user
+windows), but provides the built-in compositor side window borders.
+On Gnome the mutter Wayland compositor suffers from what can described
+as dynamic linker loader diarrhea; it forces windows to use lots of
+leaky libraries.  In the end we wish to make libpanels unload-able
+and that is not easy with leaky libraries.
 
 Panels provides a C API (application programming interface) library
 and utility programs.  It can be used with C++.
@@ -27,7 +64,7 @@ Mostly "panels" is minimalistic.  We wanted to:
 5. keep it small.
 
 We also wanted to be able to create simple windows and draw to
-"raw" pixels, without requiring a widget abstraction.
+"raw" pixels, without a ton of dependencies.
 
 
 ## Why not Qt or GTK?
@@ -37,7 +74,12 @@ to create an on-the-fly programming paradigm that requires that running
 programs can load and unload compiled code.  The Qt and GTK libraries
 can't be unloaded, and it's by design.  Fixing that is a social problem.
 As best as I can tell I could change the codes to fix them, the social
-hurdlers seem higher than the coding challenge.
+hurdlers seem higher than the coding challenge.  Most people do not feel
+that the dynamic linker is a tool that should be made useful by users of
+shared libraries. Too me it's obvious, let all things do their thing.  The
+cost of making libraries unload-able is just cleaning up all the library's
+objects (for all constructors, there is a destructor); that's all they
+have to do is clean house.
 
 As seen from above, Qt and GTK are not modular.  They are designed to take
 over and be central to your development.  They are that way by design.
@@ -54,14 +96,6 @@ been much much more efficient had they not required using their main loop
 code.  gthreads may wrap all of pthreads (and I don't think it does) but
 it's not near as standard and robust as pthreads, and it can't be, it's
 built on pthreads.
-
-
-## 3D Graphics and GPUs
-
-I don't understand why the wayland compositors do not automatically use
-what GPU resources it can find.  Why not automatically use GPU resources
-for both 2D and 3D drawing?  At least make CPU rendering not be the
-default if it's slower.
 
 
 ## Dependencies
@@ -86,10 +120,23 @@ say), in a large class of cases.  So, panels provides access to "raw"
 pixels.
 
 There are other libraries that these depend on, but they appear to be
-robust and stable.
+more common, robust and stable.
 
 
-## Reference Examples
+## Icons
+
+I'm at the point where I see I need the idea of icons in this panels
+software project.  
+
+[specifications.freedesktop.org](
+https://specifications.freedesktop.org/icon-theme-spec/latest/)
+looks like must read.
+
+
+## References
 
  * [hello wayland](https://github.com/emersion/hello-wayland.git)
  * [wleird](https://github.com/emersion/wleird.git)
+ * [freedesktop.org](https://www.freedesktop.org/)
+   * [freedesktop.org icons](
+     https://specifications.freedesktop.org/icon-theme-spec/latest/)
