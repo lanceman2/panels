@@ -24,6 +24,13 @@ windows_run_SOURCES := windows.c
 windows_run_LDFLAGS := $(PN_LIB)
 windows_run_CPPFLAGS := -DRUN
 
+025_reinit_singleton_SOURCES := reinit_singleton.c
+025_reinit_singleton_LDFLAGS := $(PN_LIB)
+
+reinit_singleton_run_SOURCES := reinit_singleton.c
+reinit_singleton_run_LDFLAGS := $(PN_LIB)
+reinit_singleton_run_CPPFLAGS := -DRUN
+
 027_popup_SOURCES := popup.c
 027_popup_LDFLAGS := $(PN_LIB)
 
@@ -110,6 +117,15 @@ endif
 
 
 ifdef WITH_CAIRO
+
+125_reinit_singleton_Cairo_SOURCES := reinit_singleton.c
+125_reinit_singleton_Cairo_LDFLAGS := $(PN_LIB)
+125_reinit_singleton_Cairo_CPPFLAGS := -DWITH_CAIRO
+
+reinit_singleton_run_Cairo_SOURCES := reinit_singleton.c
+reinit_singleton_run_Cairo_LDFLAGS := $(PN_LIB)
+reinit_singleton_run_Cairo_CPPFLAGS := -DRUN -DWITH_CAIRO
+
 # ../lib/libpanel.so is not required to be linked with libcairo.so
 097_cairoDrawWidget_SOURCES := cairoDrawWidget.c
 097_cairoDrawWidget_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)

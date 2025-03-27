@@ -5,14 +5,14 @@ INSTALL_DIR = $(PREFIX)/include
 
 
 ifdef WITH_FONTCONFIG
-define_WITH_FONTCONFIG := \#define WITH_FONTCONFIG
+define_WITH_FONTCONFIG := \#define PN_WITH_FONTCONFIG
 else
-define_WITH_FONTCONFIG := //\#define WITH_FONTCONFIG
+define_WITH_FONTCONFIG := //\#define PN_WITH_FONTCONFIG
 endif
 ifdef WITH_CAIRO
-define_WITH_CAIRO := \#define WITH_CAIRO
+define_WITH_CAIRO := \#define PN_WITH_CAIRO
 else
-define_WITH_CAIRO := //\#define WITH_CAIRO
+define_WITH_CAIRO := //\#define PN_WITH_CAIRO
 endif
 
 IN_VARS :=\

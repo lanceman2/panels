@@ -41,12 +41,17 @@ extern "C" {
 #define PN_DEFAULT_WIDGET_WIDTH  (40)
 #define PN_DEFAULT_WIDGET_HEIGHT (40)
 
-#ifndef PN_LIB_CODE
+
+// We are putting this in libpanels API users C/C++ code.
+// We define the PN_WITH_CAIRO and PN_WITH_FONTCONFIG
+// when the libpanels library has additional interfaces that
+// require it to be linked with libcairo and other libraries.
+//
 @define_WITH_FONTCONFIG@
 @define_WITH_CAIRO@
-#endif
 
-#ifdef WITH_CAIRO
+
+#ifdef PN_WITH_CAIRO
 #include <cairo/cairo.h>
 #endif
 
@@ -383,15 +388,15 @@ PN_EXPORT bool pnWidget_isInSurface(const struct PnWidget *w,
 
 /////////////////////////////////////////////////////////////////
 // If libpanels.so is built with libfontconfig.so
-#ifdef WITH_FONTCONFIG
+#ifdef PN_WITH_FONTCONFIG
 
 PN_EXPORT char *pnFindFont(const char *exp);
 
-#endif // #ifdef WITH_FONTCONFIG
+#endif // #ifdef PN_WITH_FONTCONFIG
 
 /////////////////////////////////////////////////////////////////
 // If libpanels.so is built with libcairo.so
-#ifdef WITH_CAIRO
+#ifdef PN_WITH_CAIRO
 
 PN_EXPORT void pnWidget_setCairoDraw(struct PnWidget *widget,
         int (*draw)(struct PnWidget *w, cairo_t *cr, void *userData),
@@ -437,7 +442,7 @@ PN_EXPORT bool pnGraph_popZoom(struct PnGraph *g);
 #define PN_B_DOUBLE(color) (( color & 0x000000FF)/(255.0))
 #define PN_A_DOUBLE(color) (((color & 0xFF000000) >> 24)/(255.0))
 
-#endif // #ifdef WITH_CAIRO
+#endif // #ifdef PN_WITH_CAIRO
 
 
 #ifdef __cplusplus

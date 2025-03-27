@@ -580,9 +580,19 @@ struct PnDisplay {
 };
 
 
-
-// One big ass global display thingy that has 9 wayland display thingys in
-// it:
+// We put all the data that is the only "display singleton" object.
+// It gets cleaned up in the library destructor, and/or with
+// pnDisplay_destroy(); and there are other like global singleton objects
+// that come from using libcairo (with libfontconfig and etc) that are
+// cleaned up with cairo_debug_reset_static_data() and FcFini().  The
+// calling of cairo_debug_reset_static_data() and FcFini() do not appear
+// to effect programs that link with libpanels and directly use libcairo
+// (or libfontconfig) that can also call cairo_debug_reset_static_data()
+// and FcFini().  See ../tests/fontconfig.c, and
+// ../tests/load_fontconfig.c.
+//
+// One big ass global display thingy that has 9 wayland-client display
+// thingys in it:
 extern struct PnDisplay d;
 
 extern int pnDisplay_create(void);
