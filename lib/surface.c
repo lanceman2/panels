@@ -339,8 +339,11 @@ static inline
 void AddChildSurfaceGrid(struct PnWidget *grid, struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan) {
 
-    DASSERT(cSpan);
-    DASSERT(rSpan);
+    // Remove this error case.  Spans cannot be 0.
+    if(cSpan < 1)
+        cSpan = 1;
+    if(rSpan < 1)
+        rSpan = 1;
 
     if(column + cSpan > grid->g.numColumns ||
             row + rSpan > grid->g.numRows) {

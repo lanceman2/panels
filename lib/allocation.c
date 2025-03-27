@@ -2082,7 +2082,7 @@ void GetWidgetAllocations(struct PnWindow *win) {
 
         ++loopCount;
 
-        if(loopCount >= 4) {
+        if(loopCount >= 6) {
             // TODO: change this to DSPEW() or remove loopCount.
             INFO("calling ClipOrCullChildren() %" PRIu32 " times",
                     loopCount);
