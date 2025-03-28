@@ -257,6 +257,12 @@ PN_EXPORT struct PnWidget *pnWindow_createAsGrid(
         uint32_t width, uint32_t height, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows);
+// We have one theme per app process.
+//
+// TODO: Have many themes per process?
+// Cool to see widgets and windows in an app with many different themes.
+PN_EXPORT void pnDisplay_setTheme(const char *theme);
+
 PN_EXPORT bool pnWindow_isDrawn(struct PnWidget *window);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWidget *window);
 PN_EXPORT void pnWindow_destroy(struct PnWidget *window);
@@ -367,8 +373,7 @@ PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
             // The callback() can be any function prototype.  It's just a
             // pointer to any kind of function.  We'll pass this pointer
             // to the action function that knows what to do with it.
-            void *callback, void *userData,
-            void *actionData),
+            void *callback, void *userData, void *actionData),
         void *actionData);
 
 PN_EXPORT void pnWidget_callAction(struct PnWidget *widget,

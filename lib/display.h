@@ -514,6 +514,8 @@ struct PnDisplay {
     //
     struct PnWidget widget;
 
+    char *theme;
+
 
     // 9 singleton wayland client objects:
     //

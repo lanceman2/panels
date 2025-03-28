@@ -78,7 +78,7 @@ libpanels.so_SOURCES +=\
  cairoButton.c\
  cairoLabel.c\
  DrawGridLines.c\
- icons.c
+ image.c
 endif
 
 

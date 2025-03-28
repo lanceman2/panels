@@ -2,6 +2,7 @@ pnButton_create
 pnDisplay_destroy
 pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
+pnDisplay_setTheme
 pnFindFont
 pnGraph_drawGrids
 pnGraph_pushZoom

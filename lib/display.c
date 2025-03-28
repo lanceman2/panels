@@ -545,6 +545,14 @@ static int _pnDisplay_create(void) {
     return err; // return 0 => success.
 }
 
+static inline void FreeTheme(void) {
+
+    if(d.theme) {
+        DZMEM(d.theme, strlen(d.theme));
+        free(d.theme);
+        d.theme = 0;
+    }
+}
 
 static void _pnDisplay_destroy(void) {
 
@@ -596,6 +604,8 @@ static void _pnDisplay_destroy(void) {
         wl_registry_destroy(d.wl_registry);
 
     wl_display_disconnect(d.wl_display);
+
+    FreeTheme();
 
     memset(&d, 0, sizeof(d));
 }
@@ -681,4 +691,17 @@ bool pnDisplay_dispatch(void) {
         return true;
 
     return false;
+}
+
+void pnDisplay_setTheme(const char *theme) {
+
+    if(!d.wl_display)
+        _pnDisplay_create();
+
+    FreeTheme();
+
+    if(theme && theme[0]) {
+        d.theme = strdup(theme);
+        ASSERT(d.theme, "strdup() failed");
+    }
 }
