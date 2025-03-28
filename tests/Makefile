@@ -171,6 +171,14 @@ load_fontconfig_run_CPPFLAGS :=\
  $(CAIRO_CFLAGS)
 load_fontconfig_run_LDFLAGS := $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
 
+114_loadAndUnloadCheckMaps_SOURCES := loadAndUnloadCheckMaps.c ../lib/debug.c
+114_loadAndUnloadCheckMaps_CPPFLAGS :=\
+ -DDSO_FILE=\"./fontconfig.so\"
+
+loadAndUnloadCheckMaps_run_SOURCES := loadAndUnloadCheckMaps.c  ../lib/debug.c
+loadAndUnloadCheckMaps_run_CPPFLAGS :=\
+ -DDSO_FILE=\"./fontconfig_run.so\"
+
 DrawGridLines_run_SOURCES := DrawGridLines.c
 DrawGridLines_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 DrawGridLines_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
