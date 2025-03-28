@@ -75,10 +75,10 @@ endif
 ifdef WITH_CAIRO
 libpanels.so_SOURCES +=\
  cairo.c\
- cairoButton.c\
- cairoLabel.c\
- DrawGridLines.c\
- image.c
+ button.c\
+ label.c\
+ image.c\
+ DrawGridLines.c
 endif
 
 

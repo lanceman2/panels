@@ -94,8 +94,10 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
 
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnButton *b) {
-
     DASSERT(b);
+    DASSERT(w->type == PnSurfaceType_button);
+    DASSERT(b == (void *) w);
+    DASSERT(cr);
     DASSERT(b->state < PnButtonState_NumRegularStates);
 
     if(b->state != PnButtonState_Active) {
@@ -181,7 +183,7 @@ static
 void destroy(struct PnWidget *w, struct PnButton *b) {
 
     DASSERT(b);
-    DASSERT(b = (void *) w);
+    DASSERT(b == (void *) w);
 
     if(w->type & W_BUTTON) {
         DASSERT(b->colors);

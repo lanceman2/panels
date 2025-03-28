@@ -40,19 +40,23 @@
 //
 // RANT: Why can't the wayland client C API just hide all these global
 // singleton objects, and make them as they become necessary in the
-// process.  All of these potential singleton objects are either existing
-// or not; and libwayland-client (the wayland client library) should be
-// able to keep track the things that are needed, like the X11 client
-// display connection object did.  I can't see how there is a big
-// performance gain in not doing this.  It's just a list of dependences
-// that could be automatically generated.  How can a user use a wl_surface
-// without any fucking pixels?  Yes, yes, layers give you control, but
-// come on, layering and exposing 5 objects down to get to coloring a
-// fucking pixel seems silly.
+// process? (There's likely good reason, I'm just ranting) All of these
+// potential singleton objects are either existing or not; and
+// libwayland-client (the wayland client library) should be able to keep
+// track the things that are needed, like the X11 client display
+// connection object did.  I can't see how there is a big performance
+// gain in not doing this.  It's just a list of dependences that could be
+// automatically generated.  How can a user use a wl_surface without any
+// fucking pixels?  Yes, yes, layers give you control, but come on,
+// layering and exposing 5 objects down to get to coloring a fucking
+// pixel seems silly.
+//
+// I grant you X11 maybe did not expose enough object layers; which maybe
+// in time caused to blow up with extensions, and server internal bloat.
 
 // Constrained by libwayland-client, we can only have one Pn Display
 // object in a process.  Not our fucking choose.  We're lucky that
-// it's not leaky (memory) like most libraries.
+// it's not leaky (memory, files, and shit) like most libraries.
 
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set
@@ -64,6 +68,7 @@
 #define W_TOGGLE_BUTTON  (3 << 3)
 #define W_MENU           (4 << 3)
 #define W_MENUITEM       (5 << 3)
+#define W_IMAGE          (6 << 3)
 
 
 // If we add more surface types we'll need to check all the code.
@@ -84,7 +89,8 @@ enum PnSurfaceType {
     PnSurfaceType_label      = (WIDGET | W_LABEL), // a label widget
     PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget
     PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
-    PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM)
+    PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
+    PnSurfaceType_image      = (WIDGET | W_IMAGE)
 };
 
 

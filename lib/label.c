@@ -90,10 +90,11 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t w, uint32_t h,
             uint32_t stride/*4 byte chunks*/,
             struct PnLabel *l) {
-DASSERT(l);
+    DASSERT(l);
     DASSERT(l == (void *) widget);
     DASSERT(w);
     DASSERT(h);
+    DASSERT(widget->type == PnSurfaceType_label);
     //l->width = w;
     //l->height = h;
 }
@@ -101,7 +102,8 @@ DASSERT(l);
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnLabel *l) {
     DASSERT(l);
-    DASSERT(l = (void *) w);
+    DASSERT(w->type == PnSurfaceType_label);
+    DASSERT(l == (void *) w);
     DASSERT(cr);
 
     Draw(l, cr);

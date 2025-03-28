@@ -92,3 +92,13 @@ struct PnToggleButton {
 
     struct PnButton button; // inherit first
 };
+
+
+struct PnImage {
+
+    struct PnWidget widget; // inherit first
+    cairo_surface_t *surface;
+    // The surface width and height in Cairo int type.  Not necessarily
+    // the width and height allocated for the mapped widget pixels.
+    int width, height;
+};

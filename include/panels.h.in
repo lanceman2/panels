@@ -144,27 +144,33 @@ enum PnExpand {
 };
 
 
-// The align attribute is a little bit wonky.  There seems to be no way
-// around it, if we wish to minimize the widget interfaces.
+// The "align" attribute is a little bit wonky.  There seems to be no way
+// around it, if we wish to minimize the number of widget interfaces.  And
+// also, the English language that I know does not have enough variability
+// to have more specific words to use.  Align has at least three different
+// meanings in the libpanels API.  Words words words.
 //
 // Align is a:
 //
 //   1. Container (non-grid) widget attribute for child widget layout,
-//   2. A Label widget attribute for test layout, and
-//   3. A widget attribute for widgets that are directly in a grid cell.
+//   2. A leaf widget attribute for leaf widgets (like to align a text
+//   label, image, ... in the leaf widget space), and
+//   3. Grid widgets use their align widget attribute the same way leaf
+//   widgets do.
 //
 // Reasoning:
 //
-//   1. The alignment of many children in a hBox or vBox needs one
-//   parameter.  We can't align cells that are together in different
-//   alignment ways, the same sibling children widgets have to share the
-//   same alignment attribute.
-//   2. The label widget needs to control placement of the text on it's
-//   drawing surface.
-//   3. We want to be able to make something like HTML tables where
-//   each table cell can have different alignments.  Menus require this
-//   too.  Same sibling children widgets in a grid cannot share the same
-//   alignment attribute.
+//   1. The alignment of many children in a hBox or vBox needs only one
+//   parameter (not one for each child).  We can't align cells that are
+//   together in different alignment ways, the same sibling children
+//   widgets have to share the same alignment attribute.
+//   2. The leaf widget needs to control placement of the something on
+//   it's drawing surface, like text or an image.
+//   3. When grid widgets can't expand in a particular direction they
+//   slide to align like a leaf widget does.  A grid container already has
+//   a children alignment strategy as its name implies, it's a grid of
+//   widgets; the children align with the grid.  The children align inside
+//   their particular grid cells (via 2.)
 //
 // It goes without saying that a widget that can expand, can't align, it
 // just fills the available space in the direction of interest (X or Y).
@@ -181,12 +187,12 @@ enum PnExpand {
 
 // There is another aspect widget alignment that seem to be set by the
 // windowing managers (compositor for WayLand) on all common operating
-// systems.  That is how are widgets aligned before culling happens.
+// systems: that is how are widgets aligned before culling happens.
 // Notice that widgets in most windows get culled from right to left and
 // from bottom to top; so that the widgets at the left top are the last to
 // be culled as the window is made smaller.  The widget placement and
 // sizing (space allocation) code is based on this idea.  libpanels.so
-// lets you have windows of any size with and any number of widgets.  The
+// lets you have windows of any size and with any number of widgets.  The
 // widgets get culled using the left top alignment rule, and then the
 // users coded in alignment rules are applied after the widget culling.
 
@@ -426,6 +432,14 @@ PN_EXPORT struct PnWidget *pnLabel_create(struct PnWidget *parent,
 PN_EXPORT void pnLabel_setFontColor(struct PnWidget *label,
         uint32_t color);
 
+PN_EXPORT struct PnWidget *pnImage_create(struct PnWidget *parent,
+        const char *filename,
+        // We'll use this width and height to scale the image.  If the
+        // user wants padding then they can add that by putting this in a
+        // container widget.
+        uint32_t width, uint32_t height,
+        enum PnAlign align,
+        enum PnExpand expand, size_t size);
 
 // Advanced API:
 ///////////////////////////////////////////////////////////////////

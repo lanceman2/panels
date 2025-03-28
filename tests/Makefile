@@ -200,6 +200,14 @@ labeledButton_run_CPPFLAGS := -DRUN
 
 120_labeledButton_SOURCES := labeledButton.c
 120_labeledButton_LDFLAGS := $(PN_LIB)
+
+image_run_SOURCES := image.c
+image_run_LDFLAGS := $(PN_LIB)
+image_run_CPPFLAGS := -DRUN
+
+133_image_SOURCES := image.c
+133_image_LDFLAGS := $(PN_LIB)
+
 endif
 
 
