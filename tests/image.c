@@ -41,8 +41,8 @@ int main(void) {
     srand(123);
 
     win = pnWindow_create(0, 10/*width*/, 10/*height*/,
-            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, PnAlign_CC/*align*/,
-            PnExpand_HV);
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/,
+            PnAlign_CC/*align*/, PnExpand_HV);
     ASSERT(win);
     pnWidget_setBackgroundColor(win, 0xFF000000);
 
