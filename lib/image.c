@@ -56,11 +56,6 @@ static int cairoDraw(struct PnWidget *widget,
     double h = cairo_image_surface_get_height(surface);
     DASSERT(h);
 
-    // We happen to know this should be true, otherwise
-    // the widget would be culled (and not drawn):
-    ASSERT(w >= (double) image->width);
-    ASSERT(h >= (double) image->height);
-
     const uint32_t color = widget->backgroundColor;
 
     cairo_set_source_rgba(cr,

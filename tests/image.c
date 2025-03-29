@@ -20,8 +20,8 @@ static void W(const char *filename, uint32_t w, uint32_t h) {
     struct PnWidget *widget = pnImage_create(win/*parent*/,
             filename,
             w/*width*/, h/*height*/,
-            PnAlign_CC/*align image relative to the widget surface*/,
-            PnExpand_None/*expand*/, 0/*mem size*/);
+            PnAlign_RC/*align image relative to the widget surface*/,
+            PnExpand_HV/*expand*/, 0/*mem size*/);
     ASSERT(widget);
     //TODO: What does image widget do with background color.
     pnWidget_setBackgroundColor(widget, Color());
@@ -47,9 +47,9 @@ int main(void) {
     pnWidget_setBackgroundColor(win, 0xFF000000);
 
     W(FILENAME, 0, 0);
-    W(FILENAME, 0, 0);
-    W(FILENAME, 0, 0);
-    W(FILENAME, 0, 0);
+    W(FILENAME, 0, 100);
+    W(FILENAME, 100, 100);
+    W(FILENAME, 100, 0);
 
     pnWindow_show(win, true);
 
