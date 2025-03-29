@@ -1137,11 +1137,13 @@ void ExpandHShared(const struct PnWidget *s,
         // There will be part of "s" container showing to draw.
         ((struct PnWidget *)s)->noDrawing = false;
 
-    if(!(s->align & PN_ALIGN_X) || rightBorderWidth <= border)
+    if(((s->align & PN_ALIGN_X) == PN_ALIGN_X_LEFT) ||
+            rightBorderWidth <= border)
+        // It's already aligned to the left or there is no extra
+        // room to move the widgets into alignment with.
         return;
 
     // Now we move the children based on the "Align" attribute of "s".
-    // The default "align" was PN_ALIGN_X_LEFT which is 0.
     // The container "s" is now aligned left.
 
     rightBorderWidth -= border;
@@ -1249,11 +1251,13 @@ void ExpandVShared(const struct PnWidget *s,
         // There will be part of "s" container showing to draw.
         ((struct PnWidget *)s)->noDrawing = false;
 
-    if(!(s->align & PN_ALIGN_Y) || bottomBorderHeight <= border)
+    if(((s->align & PN_ALIGN_Y) == PN_ALIGN_Y_TOP) ||
+            bottomBorderHeight <= border)
+        // It's already aligned to the top or there is no extra
+        // room to move the widgets into alignment with.
         return;
 
     // Now we move the children based on the "Align" attribute of "s".
-    // The default "align" was PN_ALIGN_Y_TOP which is 0.
     // The container "s" is now aligned top.
 
     bottomBorderHeight -= border;

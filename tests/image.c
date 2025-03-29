@@ -20,7 +20,7 @@ static void W(const char *filename, uint32_t w, uint32_t h) {
     struct PnWidget *widget = pnImage_create(win/*parent*/,
             filename,
             w/*width*/, h/*height*/,
-            PnAlign_CC/*align*/,
+            PnAlign_CC/*align image relative to the widget surface*/,
             PnExpand_None/*expand*/, 0/*mem size*/);
     ASSERT(widget);
     //TODO: What does image widget do with background color.
@@ -41,7 +41,7 @@ int main(void) {
     srand(123);
 
     win = pnWindow_create(0, 10/*width*/, 10/*height*/,
-            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, PnAlign_CC/*align*/,
             PnExpand_HV);
     ASSERT(win);
     pnWidget_setBackgroundColor(win, 0xFF000000);
