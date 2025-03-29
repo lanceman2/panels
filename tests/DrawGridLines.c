@@ -206,7 +206,7 @@ int main(void) {
 
     struct PnWidget *w = pnWidget_create(
             win/*parent*/,
-            100/*width*/, 110/*height*/,
+            70/*width*/, 50/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
