@@ -33,7 +33,6 @@ static void catcher(int sig) {
 }
 
 
-
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
