@@ -478,6 +478,11 @@ struct PnWindow {
     void (*destroy)(struct PnWidget *window, void *userData);
     void *destroyData;
 
+    // This is set with pnWindow_setPreferedSize().
+    // preferedWidth, preferedHeight are used as the window size at the
+    // first showing, and maybe the saved size.
+    uint32_t preferedWidth, preferedHeight;
+
     // "needAllocate" is a flag to said that we need to recompute all
     // widget allocations, that is widget (and window) sizes and
     // positions.

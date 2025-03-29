@@ -68,6 +68,10 @@ bool pnGraph_popZoom(struct PnGraph *g) {
 static inline void _PushZoom(struct PnGraph *g,
         double xMin, double xMax, double yMin, double yMax) {
 
+    DASSERT(g);
+    DASSERT(g->width);
+    DASSERT(g->height);
+
     struct PnZoom *z = malloc(sizeof(*z));
     ASSERT(z, "malloc(%zu) failed", sizeof(*z));
 

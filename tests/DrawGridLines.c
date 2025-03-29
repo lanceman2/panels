@@ -77,8 +77,8 @@ struct PnGraph g = {
     .padX=0, .padY=0, // in pixels
 
     // Colors in:         A,R,G,B
-    .subGridColor =   { 1.0, 0.9, 0.4, 0.4 },
-    .gridColor =      { 1.0, 0.9, 0.9, 0.9 },
+    .subGridColor =   { 1.0, 0.5, 0.8, 0.4 },
+    .gridColor =      { 1.0, 0.8, 0.8, 0.8 },
     .axesLabelColor = { 1.0, 1.0, 1.0, 1.0 },
 
     // width and height of the drawing area in pixels.
@@ -132,6 +132,25 @@ static inline void CreateBGSurface(uint32_t w, uint32_t h) {
     DASSERT(bgSurface);
 }
 
+// TODO: Add a zoom rescaler.
+//
+static void FreeZooms(void) {
+
+    if(!g.zoom) return;
+
+    DASSERT(g.top);
+
+    // Free the zooms.
+    while(pnGraph_popZoom(&g));
+
+    // Free the last zoom, that will not pop.  If it did pop, that would
+    // suck for user's zooming ability.
+    DZMEM(g.zoom, sizeof(*g.zoom));
+    free(g.zoom);
+    g.zoom = 0;
+    g.top = 0;
+}
+
 
 static void Config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
@@ -144,58 +163,63 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     if(bgSurface && g.width == w && g.height == h)
         return;
 
+    FreeZooms();
+
     DestroyBGSurface();
     CreateBGSurface(w, h);
+
+    // Now we have the graph width and height we can
+    // create a zoom.
+    pnGraph_pushZoom(&g, 0.0, 1.0, 0.0, 1.0);
+
+    cairo_t *cr = cairo_create(bgSurface);
+    pnGraph_drawGrids(&g, cr, true/*show_subGrid*/);
+    cairo_destroy(cr);
 
     INFO();
 }
 
-static
-int Draw(struct PnWidget *w, cairo_t *pn_cr,
+static int cairoDraw(struct PnWidget *w, cairo_t *cr,
             void *userData) {
 
-    cairo_set_source_rgba(pn_cr, 1, 0, 0.9, 0.5);
-    cairo_paint(pn_cr);
+    cairo_set_source_rgba(cr, 1, 0, 0.9, 0.5);
+    cairo_paint(cr);
+
+    // Transfer the bgSurface to this cr (and its surface).
+    cairo_set_source_surface(cr, bgSurface, g.padX, g.padY);
+    cairo_rectangle(cr, g.padX, g.padY, g.width, g.height);
+    cairo_fill(cr);
 
     return 0;
 }
-
 
 
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    pnGraph_pushZoom(&g, 0.0, 1.0, 0.0, 1.0);
-
     struct PnWidget *win = pnWindow_create(0, 30, 30,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
+    pnWindow_setPreferedSize(win, 900, 700);
 
     struct PnWidget *w = pnWidget_create(
             win/*parent*/,
-            500/*width*/, 450/*height*/,
+            100/*width*/, 110/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCCCF0000);
-    pnWidget_setCairoDraw(w, Draw, 0);
+    pnWidget_setCairoDraw(w, cairoDraw, 0);
     pnWidget_setConfig(w, Config, 0);
-
 
     pnWindow_show(win, true);
 
     Run(win);
 
+    FreeZooms();
     DestroyBGSurface();
-    while(pnGraph_popZoom(&g));
-
-    // Free the last zoom, that will not pop.  If it did pop, that would
-    // suck for user's zooming ability.
-    ASSERT(g.zoom);
-    DZMEM(g.zoom, sizeof(*g.zoom));
-    free(g.zoom);
 
     return 0;
 }

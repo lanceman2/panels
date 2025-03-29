@@ -38,4 +38,5 @@ pnWindow_destroy
 pnWindow_isDrawn
 pnWindow_isDrawnReset
 pnWindow_setDestroy
+pnWindow_setPreferedSize
 pnWindow_show
