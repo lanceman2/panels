@@ -1627,8 +1627,6 @@ static inline void ExpandGrid(const struct PnWidget *s,
                     case PN_ALIGN_X_RIGHT:
                         c->allocation.x = X[xi] + w - c->allocation.width;
                         break;
-                    default:
-                    //case PN_ALIGN_X_LEFT:
                 }
             }
         }
@@ -1761,7 +1759,6 @@ static inline void ExpandGrid(const struct PnWidget *s,
                     case PN_ALIGN_Y_BOTTOM:
                         c->allocation.y = Y[yi] + h - c->allocation.height;
                         break;
-                    default:
                     //case PN_ALIGN_Y_LEFT:
                 }
             }
