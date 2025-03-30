@@ -19,72 +19,6 @@ void catcher(int sig) {
 
 
 
-static inline void DestroyBGSurface(struct PnGraph *g) {
-    if(g->bgSurface) {
-        DASSERT(g->width);
-        DASSERT(g->height);
-        DASSERT(g->bgMemory);
-        DZMEM(g->bgMemory, sizeof(*g->bgMemory)*g->width*g->height);
-        free(g->bgMemory);
-        cairo_surface_destroy(g->bgSurface);
-        g->bgSurface = 0;
-        g->bgMemory = 0;
-        g->width = 0;
-        g->height = 0;
-    } else {
-        DASSERT(!g->width);
-        DASSERT(!g->height);
-        DASSERT(!g->bgMemory);
-    }
-}
-
-static inline void CreateBGSurface(struct PnGraph *g,
-        uint32_t w, uint32_t h) {
-
-    g->width = w;
-    g->height = h;
-
-    // Add the view box wiggle room, so that the user could pan the view
-    // plus and minus the pad values (padX, panY), with the mouse pointer
-    // or something.
-    //
-    // TODO: We could make the padX, and padY, a function of w, and h.
-    //
-    w += 2 * g->padX;
-    h += 2 * g->padY;
-
-    g->bgMemory = calloc(sizeof(*g->bgMemory), w * h);
-    ASSERT(g->bgMemory, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
-            sizeof(*g->bgMemory), w, h);
-
-    g->bgSurface = cairo_image_surface_create_for_data(
-            (void *) g->bgMemory,
-            CAIRO_FORMAT_ARGB32,
-            w, h,
-            w * 4/*stride in bytes*/);
-    DASSERT(g->bgSurface);
-}
-
-// TODO: Add a zoom rescaler.
-//
-static void FreeZooms(struct PnGraph *g) {
-
-    if(!g->zoom) return;
-
-    DASSERT(g->top);
-
-    // Free the zooms.
-    while(pnGraph_popZoom(g));
-
-    // Free the last zoom, that will not pop.  If it did pop, that would
-    // suck for user's zooming ability.
-    DZMEM(g->zoom, sizeof(*g->zoom));
-    free(g->zoom);
-    g->zoom = 0;
-    g->top = 0;
-}
-
-
 static void Config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
@@ -152,7 +86,7 @@ int main(void) {
         // The rest is zero.
     };
 
-    // Could it pop this assertion(s) on an old compiler?
+    // Could it pop these assertion(s) on an old compiler?
     ASSERT(graph.bgSurface == 0);
     ASSERT(graph.bgMemory == 0);
 
