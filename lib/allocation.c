@@ -1924,10 +1924,10 @@ void GetWidgetAllocations(struct PnWindow *win) {
     DASSERT(!s->culled);
     DASSERT(win->needAllocate);
 
-    if(win->preferedWidth && win->preferedHeight && !a->width) {
+    if(win->preferredWidth && win->preferredHeight && !a->width) {
         DASSERT(!a->height);
-        a->width = win->preferedWidth;
-        a->height = win->preferedHeight;
+        a->width = win->preferredWidth;
+        a->height = win->preferredHeight;
     }
 
     if(!a->width && !HaveChildren(s)) {

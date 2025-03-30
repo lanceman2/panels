@@ -50,18 +50,70 @@ struct PnZoom {
 };
 
 
-
 struct PnColor {
 
+    // For Cairo drawing we need floating point numbers.
     double a, r, g, b;
 };
 
+
+// A 2D plotter has a lot of parameters.  This "graph" thingy is just the
+// parameters that we choose to draw the background line grid of a 2D
+// graph (plotter).  It has a "zoom" object in it that is parametrization
+// of the 2D (linear) transformation for the window (widget/pixels) view.
+// This is the built-in stuff.  Of course a user could draw arbitrarily
+// pixels on top of this.  And so, yes, this is not natively 2D vector
+// graphics, but one could over-lay a reduction of 2D vector graphics on
+// top of this.  I don't think that computers are fast enough to make
+// real-time (operator-in-the-loop) 2D vector graphics (at 60 Hz or
+// faster), we must use pixels as the basis, though the grid uses Cairo, a
+// floating point calculation of pixels values for the very static (not
+// changing fast) background plotter grid lines.
+//
+// Note: we could speed up the background grid drawing by not using Cairo,
+// because the background grid drawing requires just horizontal and
+// vertical line drawing which is easy to calculate the anti-aliasing then
+// Cairo's general anti-aliased line (lines at all angles).  But, the
+// grid background drawing is not a performance bottleneck, so fuck it.
+//
+// The foreground points plotted may just directly set the pixel colors as
+// a uint32_t (32 bit int), or a slower Cairo based foreground drawing.
+// Cairo drawing can be about 10 to 1000 times slower than just changing a
+// few individual pixels numbers in the mapped memory.  It's just that we
+// are comparing the speed of doing something (memory copying all the
+// fucking widget pixels for any one frame, after floating point fucking
+// all of them) to the speed of doing next to nothing (like 1 out of a
+// 1000 pixels being changed).  It depends where the bottleneck is.  If
+// you do not need fast pixel changes, Cairo drawing could be fine.
+// Cairo drawing will likely look better than just simple integer pixel
+// bit diddling.  It's hard to do anti-aliasing without floating point
+// calculations.
+//
+// Purpose slowly draw background once (one frame), then quickly draw on
+// top of it, 20 million points over many many frames.
+//
+// We already have a layout widget called PnGrid, so:
+//
+// The auto 2D plotter grid (graph)
+//
 struct PnGraph {
+
+    // This bgSurface uses a alloc(3) allocated memory buffer; and is not
+    // the mmap(2) pixel buffer that is created for us by libpanels that
+    // the Cairo object is tied to in our draw function (Draw() or
+    // carioDraw()).  We use it just to store a background image of grid
+    // lines that we "paste" to the Cairo object that is tied to in our
+    // draw function.  In this sense we are double buffering.  We are
+    // assuming there will be many 2D plot points plotted over time as
+    // this "background grid" changes more slowly then we plot points.
+    //
+    cairo_surface_t *bgSurface;
+    uint32_t *bgMemory; // This is the memory for the Cairo surface.
 
     // Pointers to a doubly listed list of Zooms.
     //
     // top is the first zoom level we start with.
-    struct PnZoom *top;  // first zoom level
+    struct PnZoom *top; // first zoom level
     // zoom is the current zoom we are using.
     struct PnZoom *zoom; // current zoom level
 

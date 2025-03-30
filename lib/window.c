@@ -493,7 +493,7 @@ void pnWindow_isDrawnReset(struct PnWidget *w) {
     win->haveDrawn = 1;
 }
 
-void pnWindow_setPreferedSize(struct PnWidget *w,
+void pnWindow_setPreferredSize(struct PnWidget *w,
         uint32_t width, uint32_t height) {
     DASSERT(w);
     ASSERT(w->type == PnSurfaceType_toplevel);
@@ -501,6 +501,6 @@ void pnWindow_setPreferedSize(struct PnWidget *w,
     struct PnWindow *win = (void *) w;
     // Note: the value(s) zero works okay, and means that these
     // are unset.
-    win->preferedWidth = width;
-    win->preferedHeight = height;
+    win->preferredWidth = width;
+    win->preferredHeight = height;
 }

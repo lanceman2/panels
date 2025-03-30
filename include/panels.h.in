@@ -270,7 +270,7 @@ PN_EXPORT struct PnWidget *pnWindow_createAsGrid(
 PN_EXPORT void pnDisplay_setTheme(const char *theme);
 
 PN_EXPORT bool pnWindow_isDrawn(struct PnWidget *window);
-PN_EXPORT void pnWindow_setPreferedSize(struct PnWidget *window,
+PN_EXPORT void pnWindow_setPreferredSize(struct PnWidget *window,
         uint32_t width, uint32_t height);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWidget *window);
 PN_EXPORT void pnWindow_destroy(struct PnWidget *window);
