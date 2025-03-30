@@ -78,7 +78,7 @@ int main(void) {
         .padY=0,
 
         // Colors bytes in order: A,R,G,B
-        .subGridColor = 0xFFE0F0C0,
+        .subGridColor = 0xFF70B070,
         .gridColor = 0xFFE0E0E0,
         .axesLabelColor = 0xFFFFFFFF
 
