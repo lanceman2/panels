@@ -76,8 +76,13 @@ int draw1(struct PnWidget *surface, uint32_t *pixels,
             (Saw(phi + thirdPeriod2) << 8) | // green
             (Saw(phi + thirdPeriod)); // blue
 
-        for(uint32_t x = 0; x < w; ++x)
-            *pix++ = c;
+        for(uint32_t x = 0; x < w; ++x) {
+            // Just wanted to see a vertical strip of the color
+            // of the parent widget below.
+            if(x < 130 || x > 170)
+                *pix = c;
+            ++pix;
+        }
         pix += stride;
         phi += 1;
     }
@@ -139,7 +144,7 @@ int main(int argc, char **argv) {
 
     struct PnWidget *w = pnWidget_create(
             win/*parent*/,
-            500/*width*/, 400/*height*/,
+            150/*width*/, 40/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
     ASSERT(w);
@@ -148,13 +153,14 @@ int main(int argc, char **argv) {
 
 
     w = pnWidget_create(win/*parent*/,
-            100/*width*/, 400/*height*/,
+            100/*width*/, 100/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
     pnWidget_setDraw(w, draw2, 0);
 
+    pnWindow_setPreferredSize(win, 1100, 900);
     pnWindow_show(win, true);
 
     Run(win);
