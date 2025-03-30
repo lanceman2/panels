@@ -78,7 +78,8 @@ libpanels.so_SOURCES +=\
  button.c\
  label.c\
  image.c\
- DrawGridLines.c
+ plot.c\
+ plot.h
 endif
 
 

@@ -4,9 +4,8 @@
 #include <stdlib.h>
 
 #include "../include/panels.h"
-
 #include "../lib/debug.h"
-#include "../lib/gridLines.h"
+#include "../lib/plot.h"
 
 #include "run.h"
 
@@ -78,10 +77,10 @@ int main(void) {
         .padX=0,
         .padY=0,
 
-        // Colors in:         A,R,G,B
-        .subGridColor = { 1.0, 0.5, 0.8, 0.4 },
-        .gridColor = { 1.0, 0.8, 0.8, 0.8 },
-        .axesLabelColor = { 1.0, 1.0, 1.0, 1.0 }
+        // Colors bytes in order: A,R,G,B
+        .subGridColor = 0xFFE0F0C0,
+        .gridColor = 0xFFE0E0E0,
+        .axesLabelColor = 0xFFFFFFFF
 
         // The rest is zero.
     };

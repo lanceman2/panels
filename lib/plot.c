@@ -1,4 +1,3 @@
-
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdbool.h>
@@ -12,7 +11,7 @@
 #include "../include/panels.h"
 
 #include "debug.h"
-#include "gridLines.h"
+#include "plot.h"
 
 
 
@@ -549,8 +548,9 @@ void pnGraph_drawGrids(const struct PnGraph *g, cairo_t *cr,
     if(!show_subGrid)
       goto drawGrid;
 
-    cairo_set_source_rgb(cr,
-            g->subGridColor.r, g->subGridColor.g, g->subGridColor.b);
+    cairo_set_source_rgba(cr, PN_R_DOUBLE(g->subGridColor),
+            PN_G_DOUBLE(g->subGridColor), PN_B_DOUBLE(g->subGridColor),
+            PN_A_DOUBLE(g->subGridColor));
 
     switch(subDividerX) {
         case 10:
@@ -627,16 +627,17 @@ void pnGraph_drawGrids(const struct PnGraph *g, cairo_t *cr,
 
 drawGrid:
 
-    cairo_set_source_rgb(cr,
-            g->gridColor.r, g->gridColor.g, g->gridColor.b);
+    cairo_set_source_rgba(cr, PN_R_DOUBLE(g->gridColor),
+            PN_G_DOUBLE(g->gridColor), PN_B_DOUBLE(g->gridColor),
+            PN_A_DOUBLE(g->gridColor));
     DrawVGrid(cr, lineWidth, g->zoom, g,
             fontSize, startX, deltaX);
     DrawHGrid(cr, lineWidth, g->zoom, g,
             fontSize, startY, deltaY);
 
-    cairo_set_source_rgb(cr,
-            g->axesLabelColor.r, g->axesLabelColor.g,
-            g->axesLabelColor.b);
+    cairo_set_source_rgba(cr, PN_R_DOUBLE(g->axesLabelColor),
+            PN_G_DOUBLE(g->axesLabelColor), PN_B_DOUBLE(g->axesLabelColor),
+            PN_A_DOUBLE(g->axesLabelColor));
     DrawVGridLabels(cr, lineWidth, g->zoom, g,
             fontSize, startX, deltaX, powX);
     DrawHGridLabels(cr, lineWidth, g->zoom, g,

@@ -29,9 +29,10 @@
 
   The user of this Cairo Surface can slide this
   area relative to the VIEW BOX with:
-
+        cairo_set_source_surface(cr, grid_surface, padX, padY);
         cairo_set_source_surface(cr, grid_surface,
                 - padX + slideX, - padY + slideY);
+        cairo_fill(cr);
 
   where slideX and slideY is the distance in pixels to move the grid line
   surface, grid_surface relative to the current cr surface.
@@ -47,13 +48,6 @@ struct PnZoom {
     double ySlope/* = (yMin - yMax)/pixHeight */;
     double xShift/* = xMin - padX * xSlope */;
     double yShift/* = yMax - padY * ySlope */;
-};
-
-
-struct PnColor {
-
-    // For Cairo drawing we need floating point numbers.
-    double a, r, g, b;
 };
 
 
@@ -125,7 +119,7 @@ struct PnGraph {
     // See the ASCII art above.
     uint32_t padX, padY;
 
-    struct PnColor subGridColor, gridColor, axesLabelColor;
+    uint32_t subGridColor, gridColor, axesLabelColor;
 
     // width and height of the view box; that is the width and height
     // without the padX and padY added to all sides.

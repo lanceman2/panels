@@ -179,13 +179,13 @@ loadAndUnloadCheckMaps_run_SOURCES := loadAndUnloadCheckMaps.c  ../lib/debug.c
 loadAndUnloadCheckMaps_run_CPPFLAGS :=\
  -DDSO_FILE=\"./fontconfig_run.so\"
 
-DrawGridLines_run_SOURCES := DrawGridLines.c
-DrawGridLines_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-DrawGridLines_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+plot_run_SOURCES := plot.c
+plot_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+plot_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-221_DrawGridLines_SOURCES := DrawGridLines.c
-221_DrawGridLines_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-221_DrawGridLines_CPPFLAGS := $(CAIRO_CFLAGS)
+221_plot_SOURCES := plot.c
+221_plot_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+221_plot_CPPFLAGS := $(CAIRO_CFLAGS)
 
 115_label_SOURCES := label.c
 115_label_LDFLAGS := $(PN_LIB)
