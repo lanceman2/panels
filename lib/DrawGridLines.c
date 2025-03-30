@@ -9,10 +9,11 @@
 
 #include <cairo/cairo.h>
 
+#include "../include/panels.h"
+
+#include "debug.h"
 #include "gridLines.h"
 
-#include "../include/panels.h"
-#include "debug.h"
 
 
 // TODO: Should this be in a header file?
