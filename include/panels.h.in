@@ -81,17 +81,49 @@ enum PnLayout {
     // PnLayout is a attribute of a widget (surface) container (or lack
     // thereof), be it a widget or window.
 
-    // PnLayout_None and PnLayout_One just add failure modes for when
-    // the user adds extra children.
+    // PnLayout_None and PnLayout_One just add failure modes for when the
+    // user adds extra children.  The code for them is mostly from the
+    // HBox and VBox packing widgets that are the layouts PnLayout_RL,
+    // PnLayout_LR, PnLayout_TB, and PnLayout_BT.
 
     // no gravity to hold widgets.  Cannot have any children.
-    PnLayout_None = -2, // For non-container widgets or windows
+    PnLayout_None = -3, // For non-container widgets or windows
 
-    // The container surface can only have zero or one widget.
+    // A container that can have one child that covers the container.
+    //
+    // Note the container may show through the alpha channel in a child
+    // that covers it. This is true for all container types but for this
+    // one there no border width and height for the container, the child
+    // widget perfectly align with and cover the container below it.
+    //
+    // The container widget surface can only have zero or one widget child
+    // on top of it.  If you need more widgets in this stack of widgets
+    // just put a PnLayout_Cover on top of a PnLayout_Cover on top of a
+    // PnLayout_Cover to infinity (and beyond).  The top leaf widget is
+    // drawn on top of the lower widgets in this stack.  The lower widgets
+    // are like backgrounds for the upper widgets.  This obviously needs
+    // the widget builder to use the pixel alpha channel in order to take
+    // advantage of the pixel layers.
+    //
+    // If your using Cairo drawing you need to consider using
+    // cairo_set_operator() in the cairoDraw() callback so that you may
+    // customize how pixel layers are combined.
+    //
+    PnLayout_Cover = -2,
+
+    // The container widget surface can only have zero or one widget in
+    // it.  This container can have a border width and height.  Width and
+    // height will give the size of this widget if there are no
+    // children.
+    //
     PnLayout_One = -1,
 
-    // Windows (and widgets) with all the below gravities can have zero
-    // or more children.
+    // Windows (and widgets) with all the below gravities (layouts) can
+    // have zero or more children.  If these HBox and VBox like widgets
+    // have width and height set than it will be used as the border width
+    // and height between their child widgets, else if they have no
+    // children than width and height are the width and height (with some
+    // restrictions).
 
     // T Top, B Bottom, L Left, R Right
     //
@@ -115,8 +147,9 @@ enum PnLayout {
     // (M-1,N-1).
     PnLayout_Grid = 4
 
-    // We could use this layout to make a notebook, or other container
-    // packing method. The window or widget will define its own packing.
+    // TODO: We could use this layout to make a notebook, or other
+    // container packing method. The widget will define its own packing
+    // via callback function?
     //PnLayout_Callback
 };
 
@@ -125,14 +158,16 @@ enum PnLayout {
 // container it is in.  A container that contains a widget that can
 // expand, can also expand given space to the contained widget while not
 // expanding it's border sizes.  The expand attribute of a container
-// widget does not effect the container widgets border size unless all
-// the children widgets do not expand (in the direction of interest).
+// widget does not effect the container widgets border size unless all the
+// children widgets do not expand (in the direction of interest, X or
+// Y).
 //
 // Sibling widgets (widgets in the same container) that can expand share
 // the extra space.
 //
 // Exception: A top level window that cannot expand (resize) unless the
-// user set its expand flag; in pnWindow_create() or other function.
+// user set its expand flag; in pnWindow_create() or other related
+// function.
 //
 enum PnExpand {
     // H Horizontal first bit, V Vertical second bit
@@ -179,7 +214,8 @@ enum PnExpand {
 //
 // Put another way: the "align" widget attribute does not adjust the child
 // widget sizes, it can just change the child widgets positions; but only
-// if none of the sibling widgets expand to take all the "extra" space.
+// if none of the sibling widgets expand to take all the "extra" space
+// in the container widget.
 //
 // If there is extra space for a widget that will not be filled, we
 // align (float) the widget into position.

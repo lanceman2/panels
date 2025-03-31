@@ -20,8 +20,6 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    // The auto 2D plotter grid (graph)
-
     struct PnWidget *win = pnWindow_create(0, 10, 10,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);

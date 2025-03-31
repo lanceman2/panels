@@ -30,15 +30,25 @@ struct PnWidget *_pnWidget_createFull(
         // widget without a top level window (window widget).
         parent = (void *) &d.widget;
 
-    DASSERT(parent->layout != PnLayout_None);
-    DASSERT(parent->layout != PnLayout_One || !parent->l.firstChild);
-
+    // Miss-use cases.  The code assumes this to be true.  You can't just
+    // remove these assumptions without trashing the running program.  If
+    // you don't like it, rewrite all the code.  The code is currently
+    // highly dependent on this being so.
+    //
+    DASSERT(parent->layout != PnLayout_None,
+            "Widget can't have children");
+    DASSERT(!parent->l.firstChild ||
+            (parent->layout != PnLayout_One &&
+            parent->layout != PnLayout_Cover),
+            "Widget can only have one child");
+    //
     if(parent->layout == PnLayout_None) {
         ERROR("Parent widget cannot have children");
         return 0;
     }
-
-    if(parent->layout == PnLayout_One &&
+    //
+    if((parent->layout == PnLayout_One ||
+            parent->layout == PnLayout_Cover) &&
             parent->l.firstChild) {
         ERROR("Parent widget cannot have more than one child");
         return 0;

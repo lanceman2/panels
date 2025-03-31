@@ -810,7 +810,7 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     plot = (void *) pnWidget_create(
             parent/*parent*/,
             80/*width*/, 60/*height*/,
-            PnLayout_One/* => We can have a child that is drawn on top of
+            PnLayout_Cover/* => We can have a child that is drawn on top of
                            this grid lines "plot" widget.  That one way to
                            make a 2D plotter.  The transparent part of the
                            child widget will show the under laying grid
@@ -825,7 +825,6 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     // which is also a widget too (and more bits):
     DASSERT(plot->widget.type & WIDGET);
 
-    //pnWidget_setBackgroundColor(&plot->widget, 0xCCCF0000);
     pnWidget_setCairoDraw(&plot->widget, (void *) cairoDraw, plot);
     pnWidget_setConfig(&plot->widget, (void *) Config, plot);
     pnWidget_addDestroy(&plot->widget, (void *) destroy, plot);

@@ -179,14 +179,28 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 // and/or height.  We only let it be zero if it's a container (has
 // children).  If it's a leaf widget we force it to have non-zero width.
 //
+// Okay: Here's where it gets fucked up; we make it so containers with
+// children and layout set to PnLayout_Cover have width and height of
+// there children.  The culled flag will not effect this because the
+// container and covering children are either all culled or none are
+// culled.  The width and heights of all the widgets in a "cover" family
+// must all have the same width and height.  For this code to be simple
+// the width and height then will be the width and height of the top
+// (leaf) child.
+//
 // If it's a container widget (surface), get this left and right widget
 // border width, else if it's a leaf widget (surface) return the minimum
 // width of the widget (surface).
 //
 static inline uint32_t GetBWidth(const struct PnWidget *s) {
 
+    if(s->layout == PnLayout_Cover && HaveChildren(s))
+        // The container with PnLayout_Cover can't have borders
+        // the are not covered by the children.
+        return 0;
+
     if(HaveChildren(s) || s->width)
-        // It can be zero.
+        // It can be zero.  It's just a border that's 0.
         return s->width;
 
     if(s->type & WIDGET)
@@ -206,8 +220,13 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
 
 static inline uint32_t GetBHeight(const struct PnWidget *s) {
 
+    if(s->layout == PnLayout_Cover && HaveChildren(s))
+        // The container with PnLayout_Cover can't have borders
+        // the are not covered by the children.
+        return 0;
+
     if(HaveChildren(s) || s->height)
-        // It can be zero.
+        // It can be zero. It's just a border that's 0.
         return s->height;
 
     if(s->type & WIDGET)
@@ -247,7 +266,8 @@ void TallyRequestedSizes(const struct PnWidget *s,
         case PnLayout_None:
             break;
         case PnLayout_One:
-            DASSERT((!s->l.firstChild && !s->l.lastChild)
+        case PnLayout_Cover:
+             DASSERT((!s->l.firstChild && !s->l.lastChild)
                     || s->l.firstChild == s->l.lastChild);
         case PnLayout_LR:
         case PnLayout_RL:
@@ -409,6 +429,7 @@ static void GetChildrenXY(const struct PnWidget *s,
     switch(s->layout) {
 
         case PnLayout_One:
+        case PnLayout_Cover:
         case PnLayout_TB:
             for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
                 if(c->culled) continue;
@@ -648,7 +669,8 @@ uint32_t CullX(const struct PnAllocation *a, struct PnWidget *c) {
     DASSERT(c->parent);
     DASSERT(c->parent->layout == PnLayout_TB ||
             c->parent->layout == PnLayout_BT ||
-            c->parent->layout == PnLayout_One);
+            c->parent->layout == PnLayout_One ||
+            c->parent->layout == PnLayout_Cover);
 
     bool haveChildShowing = false;
     uint32_t haveCullRet = 0;
@@ -676,7 +698,8 @@ uint32_t CullY(const struct PnAllocation *a, struct PnWidget *c) {
     DASSERT(c->parent);
     DASSERT(c->parent->layout == PnLayout_LR ||
             c->parent->layout == PnLayout_RL ||
-            c->parent->layout == PnLayout_One);
+            c->parent->layout == PnLayout_One ||
+            c->parent->layout == PnLayout_Cover);
 
     bool haveChildShowing = false;
     uint32_t haveCullRet = 0;
@@ -740,6 +763,7 @@ static uint32_t ClipOrCullChildren(const struct PnWidget *s,
     switch(s->layout) {
 
         case PnLayout_One:
+        case PnLayout_Cover:
         case PnLayout_TB:
             haveCullRet = CullX(a, s->l.firstChild);
             if(haveCullRet) return haveCullRet;
@@ -1822,6 +1846,7 @@ static void ExpandChildren(const struct PnWidget *s,
     switch(s->layout) {
 
         case PnLayout_One:
+        case PnLayout_Cover:
             DASSERT(s->l.firstChild == s->l.lastChild);
         case PnLayout_LR:
             ExpandHShared(s, a, s->l.firstChild, Next);

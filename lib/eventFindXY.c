@@ -54,6 +54,7 @@ static struct PnWidget *FindSurface(const struct PnWindow *win,
     switch(s->layout) {
 
         case PnLayout_One:
+        case PnLayout_Cover:
         case PnLayout_LR:
             for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
                 if(c->culled) continue;
