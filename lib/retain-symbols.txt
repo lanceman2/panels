@@ -4,12 +4,10 @@ pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
 pnDisplay_setTheme
 pnFindFont
-pnGraph_drawGrids
-pnGraph_pushZoom
-pnGraph_popZoom
 pnImage_create
 pnLabel_create
 pnLabel_setFontColor
+pnPlot_create
 pnWidget_addAction
 pnWidget_addCallback
 pnWidget_addChild

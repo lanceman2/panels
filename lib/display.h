@@ -69,6 +69,7 @@
 #define W_MENU           (4 << 3)
 #define W_MENUITEM       (5 << 3)
 #define W_IMAGE          (6 << 3)
+#define W_PLOT           (7 << 3) // plot grid lines
 
 
 // If we add more surface types we'll need to check all the code.
@@ -81,8 +82,8 @@ enum PnSurfaceType {
     // a popup, and not a toplevel, and so does wayland-client.
 
     // 2 Window Surface types:
-    PnSurfaceType_toplevel = TOPLEVEL, // From xdg_surface_get_toplevel()
-    PnSurfaceType_popup = POPUP,    // From wl_shell_surface_set_popup()
+    PnSurfaceType_toplevel   = TOPLEVEL, // From xdg_surface_get_toplevel()
+    PnSurfaceType_popup      = POPUP,    // From wl_shell_surface_set_popup()
 
     // Widget Surface types:  Not a wayland client thing.
     PnSurfaceType_widget     = WIDGET, // a rectangular piece of a surface
@@ -90,7 +91,8 @@ enum PnSurfaceType {
     PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget
     PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
     PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
-    PnSurfaceType_image      = (WIDGET | W_IMAGE)
+    PnSurfaceType_image      = (WIDGET | W_IMAGE),
+    PnSurfaceType_plot       = (WIDGET | W_PLOT)
 };
 
 
@@ -635,7 +637,7 @@ bool IsUpperLeftCell(struct PnWidget *c,
 
 static bool inline HaveChildren(const struct PnWidget *s) {
     DASSERT(s);
-    ASSERT(s->layout < PnLayout_Callback, "WRITE MORE CODE");
+    ASSERT(s->layout <= PnLayout_Grid, "WRITE MORE CODE");
 
     if(s->layout < PnLayout_Grid) {
         DASSERT((s->l.firstChild && s->l.lastChild) ||

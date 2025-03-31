@@ -113,11 +113,11 @@ enum PnLayout {
 
     // X/Y indexed grid layout container.  Coordinates are (0,0) to
     // (M-1,N-1).
-    PnLayout_Grid = 4,
+    PnLayout_Grid = 4
 
     // We could use this layout to make a notebook, or other container
     // packing method. The window or widget will define its own packing.
-    PnLayout_Callback
+    //PnLayout_Callback
 };
 
 
@@ -443,19 +443,14 @@ PN_EXPORT struct PnWidget *pnImage_create(struct PnWidget *parent,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
 
+PN_EXPORT struct PnWidget *pnPlot_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height,
+        enum PnAlign align,
+        enum PnExpand expand, size_t size);
+
+
 // Advanced API:
 ///////////////////////////////////////////////////////////////////
-struct PnGraph;
-
-PN_EXPORT void pnGraph_drawGrids(const struct PnGraph *g,
-        cairo_t *cr, bool show_subGrid);
-PN_EXPORT void pnGraph_pushZoom(struct PnGraph *g,
-        double xMin, double xMax, double yMin, double yMax);
-// Returns true if there are zooms left to pop after this call; else it
-// returns false.  Frees zooms that are popped.  This will not free the
-// last (current) zoom.  Returns false when there is one left.
-PN_EXPORT bool pnGraph_popZoom(struct PnGraph *g);
-
 
 
 #define PN_R_DOUBLE(color) (((color & 0x00FF0000) >> 16)/(255.0))

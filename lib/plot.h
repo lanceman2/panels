@@ -42,7 +42,7 @@
 
 struct PnZoom {
 
-    struct PnZoom *prev, *next; // To keep a list of zooms
+    struct PnZoom *prev, *next; // To keep a list of zooms in PnPlot
 
     double xSlope/* = (xMax - xMin)/pixWidth */;
     double ySlope/* = (yMin - yMax)/pixHeight */;
@@ -51,7 +51,7 @@ struct PnZoom {
 };
 
 
-// A 2D plotter has a lot of parameters.  This "graph" thingy is just the
+// A 2D plotter has a lot of parameters.  This "plot" thingy is just the
 // parameters that we choose to draw the background line grid of a 2D
 // graph (plotter).  It has a "zoom" object in it that is parametrization
 // of the 2D (linear) transformation for the window (widget/pixels) view.
@@ -88,9 +88,11 @@ struct PnZoom {
 //
 // We already have a layout widget called PnGrid, so:
 //
-// The auto 2D plotter grid (graph)
+// The auto 2D plotter grid (graph) like part of quickplot.
 //
-struct PnGraph {
+struct PnPlot {
+
+    struct PnWidget widget; // inherit first.
 
     // This bgSurface uses a alloc(3) allocated memory buffer; and is not
     // the mmap(2) pixel buffer that is created for us by libpanels that
@@ -124,10 +126,15 @@ struct PnGraph {
     // width and height of the view box; that is the width and height
     // without the padX and padY added to all sides.
     //
-    //     surface_width  = width  + 2 * padX
-    //     surface_height = height + 2 * padY
+    //     cairo_surface_width  = width  + 2 * padX
+    //     cairo_surface_height = height + 2 * padY
     //
     //     padX and/or padY can be 0.
+    //
+    // Is may be redundant, and the same as the widget size allocation
+    // width and height.  But, we kind of need it when we free the
+    // bgMemory, at which time the widget size allocation may not exist;
+    // at least with DEBUG builds.
     //
     uint32_t width, height;
 
@@ -168,70 +175,4 @@ static inline double yToPix(double y, const struct PnZoom *z) {
 //
 static inline double pixToY(double p, const struct PnZoom *z) {
     return p * z->ySlope + z->yShift;
-}
-
-
-static inline void DestroyBGSurface(struct PnGraph *g) {
-    if(g->bgSurface) {
-        DASSERT(g->width);
-        DASSERT(g->height);
-        DASSERT(g->bgMemory);
-        DZMEM(g->bgMemory, sizeof(*g->bgMemory)*g->width*g->height);
-        free(g->bgMemory);
-        cairo_surface_destroy(g->bgSurface);
-        g->bgSurface = 0;
-        g->bgMemory = 0;
-        g->width = 0;
-        g->height = 0;
-    } else {
-        DASSERT(!g->width);
-        DASSERT(!g->height);
-        DASSERT(!g->bgMemory);
-    }
-}
-
-static inline void CreateBGSurface(struct PnGraph *g,
-        uint32_t w, uint32_t h) {
-
-    g->width = w;
-    g->height = h;
-
-    // Add the view box wiggle room, so that the user could pan the view
-    // plus and minus the pad values (padX, panY), with the mouse pointer
-    // or something.
-    //
-    // TODO: We could make the padX, and padY, a function of w, and h.
-    //
-    w += 2 * g->padX;
-    h += 2 * g->padY;
-
-    g->bgMemory = calloc(sizeof(*g->bgMemory), w * h);
-    ASSERT(g->bgMemory, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
-            sizeof(*g->bgMemory), w, h);
-
-    g->bgSurface = cairo_image_surface_create_for_data(
-            (void *) g->bgMemory,
-            CAIRO_FORMAT_ARGB32,
-            w, h,
-            w * 4/*stride in bytes*/);
-    DASSERT(g->bgSurface);
-}
-
-// TODO: Add a zoom rescaler.
-//
-static inline void FreeZooms(struct PnGraph *g) {
-
-    if(!g->zoom) return;
-
-    DASSERT(g->top);
-
-    // Free the zooms.
-    while(pnGraph_popZoom(g));
-
-    // Free the last zoom, that will not pop.  If it did pop, that would
-    // suck for user's zooming ability.
-    DZMEM(g->zoom, sizeof(*g->zoom));
-    free(g->zoom);
-    g->zoom = 0;
-    g->top = 0;
 }
