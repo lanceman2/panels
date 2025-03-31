@@ -529,13 +529,19 @@ struct PnDisplay {
 
     char *theme;
 
-
-    // 9 singleton wayland client objects:
+    // 10 singleton wayland client objects:
     //
     // We have not confirmed that there can only be one of the following
     // objects (some we have), but there may be no point in making more
     // than one of these per process.  They are somewhat in order of
     // creation.
+    //
+    // wl_output seems to be for monitors.  Does a single wl_display
+    // have more than one wl_output?  Maybe one for each monitor?
+    // TODO: I've got to plug in another monitor and see.
+    // Does the number of monitors depend on compositor configuration?
+    // For example, can I have two physical monitors act as one in code?
+    // I think that's required.
     //
     struct wl_display *wl_display;                              // 1
     struct wl_registry *wl_registry;                            // 2
@@ -546,6 +552,7 @@ struct PnDisplay {
     struct wl_pointer *wl_pointer;                              // 7
     struct wl_keyboard *wl_keyboard;                            // 8
     struct zxdg_decoration_manager_v1 *zxdg_decoration_manager; // 9
+    struct wl_output *wl_output;                                // 10
 
     uint32_t handle_global_error;
 
@@ -592,6 +599,8 @@ struct PnDisplay {
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.
+
+    uint32_t screen_width, screen_height;
 };
 
 
@@ -651,6 +660,8 @@ static bool inline HaveChildren(const struct PnWidget *s) {
 
     return (s->g.grid->numChildren);
 }
+
+extern const struct wl_output_listener output_listener;
 
 extern void GetSurfaceDamageFunction(struct PnWindow *win);
 

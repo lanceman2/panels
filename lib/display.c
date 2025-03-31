@@ -423,6 +423,19 @@ static void handle_global(void *data, struct wl_registry *registry,
             d.handle_global_error = 7;
             return;
         }
+    } else if(strcmp(interface, wl_output_interface.name) == 0) {
+        d.wl_output = wl_registry_bind(registry,
+                name, &wl_output_interface, version);
+        if(!d.wl_output) {
+            ERROR("wl_registry_bind(,,) for wl_output_interface failed");
+            d.handle_global_error = 8;
+            return;
+        }
+        if(wl_output_add_listener(d.wl_output, &output_listener, 0)) {
+            ERROR("wl_output_add_listener(,,) for wl_output_interface failed");
+            d.handle_global_error = 9;
+            return;
+        }
     }
 }
 
@@ -525,6 +538,8 @@ static int _pnDisplay_create(void) {
     RET_ERROR(d.wl_compositor, 7, "cannot get wl_compositor");
     RET_ERROR(d.xdg_wm_base,   8, "cannot get xdg_wm_base");
     RET_ERROR(d.wl_seat,       9, "cannot get wl_seat");
+    RET_ERROR(d.wl_output,     10, "cannot get wl_output");
+
 
     if(!d.zxdg_decoration_manager)
         // This will happen on a GNOME 3 wayland desktop.
@@ -597,6 +612,9 @@ static void _pnDisplay_destroy(void) {
     if(d.wl_compositor)
         wl_compositor_destroy(d.wl_compositor);
 
+    if(d.wl_output)
+        wl_output_destroy(d.wl_output);
+
     if(d.wl_shm)
         wl_shm_destroy(d.wl_shm);
 
@@ -656,6 +674,7 @@ void pnDisplay_destroy(void) {
         DASSERT(!d.wl_registry);
         DASSERT(!d.wl_shm);
         DASSERT(!d.wl_compositor);
+        DASSERT(!d.wl_output);
         DASSERT(!d.xdg_wm_base);
         DASSERT(!d.windows);
         return;

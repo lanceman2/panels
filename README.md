@@ -67,37 +67,6 @@ We also wanted to be able to create simple windows and draw to
 "raw" pixels, without a ton of dependencies.
 
 
-## Why not Qt or GTK?
-
-Mostly because Qt and GTK are bloated and leak system resources.  I wish
-to create an on-the-fly programming paradigm that requires that running
-programs can load and unload compiled code.  The Qt and GTK libraries
-can't be unloaded, and it's by design.  Fixing that is a social problem.
-As best as I can tell I could change the codes to fix them, the social
-hurdlers seem higher than the coding challenge.  Most people do not feel
-that the dynamic linker is a tool that should be made useful by users of
-shared libraries. Too me it's obvious, let all things do their thing.  The
-cost of making libraries unload-able is just cleaning up all the library's
-objects (for all constructors, there is a destructor); that's all they
-have to do is clean house.
-
-As seen from above, Qt and GTK are not modular.  They are designed to take
-over and be central to your development.  They are that way by design.
-There may be modular aspects to Qt and GTK, but it is constrained to be
-internal to their respective libraries.  Once you use a part of them
-you'll likely be stuck with innate incompatibilities when trying to use
-them with other code outside these frameworks.  As a very common example
-if you wish to code with pthreads (NPTL) and GTK you'll need to understand
-the internal workings of the GTK main loop code.  I wrote a hack to do it
-(in the same process without changing GTK codes), but if GTK was not
-designed to be the main loop controller of your code it would have been
-trivial to do; taking hours instead of weeks to code; and it would have
-been much much more efficient had they not required using their main loop
-code.  gthreads may wrap all of pthreads (and I don't think it does) but
-it's not near as standard and robust as pthreads, and it can't be, it's
-built on pthreads.
-
-
 ## Dependencies
 
 Panels only depends on libraries which we have found to be robust
@@ -119,24 +88,67 @@ faster than drawing by just changing the pixel values by hand (as they
 say), in a large class of cases.  So, panels provides access to "raw"
 pixels.
 
-There are other libraries that these depend on, but they appear to be
-more common, robust and stable.
+There are other libraries that these depend on, but those other libraries
+appear to be more common, robust, and stable.  They are so good as to go
+unnoticed.  They just work.  A job done well.
 
 
-## Icons
+## Icons and Themes
 
-I'm at the point where I see I need the idea of icons in this panels
-software project.  
+I'm at the point where I see I need the idea of icons and themes in this
+panels software project.  
 
 [specifications.freedesktop.org](
 https://specifications.freedesktop.org/icon-theme-spec/latest/)
 looks like must read.
 
 
-## References
+## Development References
 
  * [hello wayland](https://github.com/emersion/hello-wayland.git)
  * [wleird](https://github.com/emersion/wleird.git)
  * [freedesktop.org](https://www.freedesktop.org/)
    * [freedesktop.org icons](
      https://specifications.freedesktop.org/icon-theme-spec/latest/)
+ * [GLFW](https://github.com/glfw/glfw/)
+   GLFW is a great package for seeing how to interface with Wayland in
+   C/C++.  I don't think it has anything to do with widgets.
+
+
+## Why not Qt or GTK?
+
+Mostly because Qt and GTK are bloated and leak system resources.  I wish
+to create an on-the-fly programming paradigm that requires that running
+programs can load and unload compiled code.  The Qt and GTK libraries
+can't be unloaded, and it's by design.  Fixing that is a social problem.
+As best as I can tell I could change the codes to fix them, the social
+hurdlers seem higher than the coding challenge.  Most people do not feel
+that the dynamic linker is a tool that should be made useful by users of
+shared libraries. Too me it's obvious, let all things do their thing.  The
+cost of making libraries unload-able is just cleaning up all the library's
+objects (for all constructors, there is a destructors); all they have to
+do is clean house.
+
+As seen from above, Qt and GTK are not modules.  They are designed to take
+over and be central to your development.  They are that way by design.
+There may be modular aspects to Qt and GTK, but it is constrained to be
+internal to their respective libraries and framworks.  Once you use a part
+of them you'll likely be stuck with innate incompatibilities when trying
+to use them with other code outside those frameworks.  As a very common
+example, if you wish to code with pthreads (NPTL) and GTK you'll need to
+understand the internal workings of the GTK main loop code.  I wrote a
+hack to do it (in the same process without changing GTK codes), but if GTK
+was not designed to be the main loop controller of your code it would have
+been trivial to do; taking hours instead of weeks to code; and it would
+have been much more efficient had they not required using their main loop
+code in order to use GTK GUIs.  gthreads may wrap all of pthreads (and I
+don't think it does) but it's not near as standard and robust as pthreads,
+and it can't be, it's built on pthreads.  Qt is much worse, if you develop
+with Qt you are married to the Qt development framework.  Qt even has it's
+own, unique, develop language called MOC which compiles into C++.  It's
+been said that C++ will likely get enough functionality to replace MOC in
+the future.
+
+Don't get me wrong.  GTK and Qt are great things.  But, they are what they
+are, large and dominate.  You can't develop with either one of them
+without it dominating all aspects of your projects coding design.

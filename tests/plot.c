@@ -35,7 +35,7 @@ int main(void) {
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
     //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(w, 0x4C601010);
+    pnWidget_setBackgroundColor(w, 0x00601010);
 
     pnWindow_show(win, true);
 
