@@ -182,6 +182,13 @@ static inline
 void GetPadding(uint32_t width, uint32_t height,
         uint32_t *padX, uint32_t *padY) {
 
+    if(true) {
+        // TODO: Disabling this for now.
+        *padX = 0;
+        *padY = 0;
+        return;
+    }
+
     if(width < d.screen_width/3)
         *padX = width;
     else
@@ -211,9 +218,6 @@ static inline void FixZoomsScale(struct PnPlot *g,
     DASSERT(g->zoom);
     DASSERT(g->xMin < g->xMax);
     DASSERT(g->yMin < g->yMax);
-
-    if(g->width == width && g->height == height)
-        return;
 
     uint32_t padX, padY;
     // Get the new padding for the new width and height.
