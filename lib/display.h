@@ -508,6 +508,22 @@ struct PnWindow {
     uint32_t haveDrawn;
 };
 
+// Just a dumb wrapper of the wayland wl_output object.  wl_output seems
+// to be the computer monitor class.  If we find more monitors we add more
+// PnOutput objects to the PnDisplay (below).
+struct PnOutput {
+
+    struct wl_output *wl_output;
+
+    // I don't quite understand way do we need to store this info when
+    // Wayland makes us a wl_output for getting the info.  I guess it just
+    // sets up a channel to get this information.  Seems like sending a
+    // truck for each one carrot at a time.  Why not just provide/send a
+    // Wayland monitor structure?  See monitor.c.
+    uint32_t screen_width, screen_height; // in pixels
+    uint32_t physical_width, physical_height; // in mm (millimeters)
+};
+
 
 // Making wayland client objects into one big ass display thing, like
 // a X11 display.
@@ -536,13 +552,6 @@ struct PnDisplay {
     // than one of these per process.  They are somewhat in order of
     // creation.
     //
-    // wl_output seems to be for monitors.  Does a single wl_display
-    // have more than one wl_output?  Maybe one for each monitor?
-    // TODO: I've got to plug in another monitor and see.
-    // Does the number of monitors depend on compositor configuration?
-    // For example, can I have two physical monitors act as one in code?
-    // I think that's required.
-    //
     struct wl_display *wl_display;                              // 1
     struct wl_registry *wl_registry;                            // 2
     struct wl_shm *wl_shm;                                      // 3
@@ -550,9 +559,10 @@ struct PnDisplay {
     struct xdg_wm_base *xdg_wm_base;                            // 5
     struct wl_seat *wl_seat;                                    // 6
     struct wl_pointer *wl_pointer;                              // 7
-    struct wl_keyboard *wl_keyboard;                            // 8
+    struct wl_keyboard *wl_keyboard;                            // 8 + ?
     struct zxdg_decoration_manager_v1 *zxdg_decoration_manager; // 9
-    struct wl_output *wl_output;                                // 10
+    struct PnOutput **outputs; // array of monitors pointers    //10 + more
+    uint32_t numOutputs;
 
     uint32_t handle_global_error;
 
@@ -599,8 +609,6 @@ struct PnDisplay {
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.
-
-    uint32_t screen_width, screen_height;
 };
 
 

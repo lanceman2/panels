@@ -736,16 +736,26 @@ static inline
 void GetPadding(uint32_t width, uint32_t height,
         uint32_t *padX, uint32_t *padY) {
 
+    // TODO: Figure out the correct monitor display we are using.
+    // Starting with d.outputs[0]
 
-    if(width < d.screen_width/3)
+    DASSERT(d.numOutputs);
+    DASSERT(d.outputs);
+    DASSERT(d.outputs[0]);
+    const uint32_t screen_width = d.outputs[0]->screen_width;
+    const uint32_t screen_height = d.outputs[0]->screen_height;
+    DASSERT(screen_width);
+    DASSERT(screen_height);
+
+    if(width < screen_width/3)
         *padX = width;
     else
-        *padX = d.screen_width/3 + (width - d.screen_width/3)/4;
+        *padX = screen_width/3 + (width - screen_width/3)/4;
 
-    if(height < d.screen_height/3)
+    if(height < screen_height/3)
         *padY = height;
     else
-        *padY = d.screen_height/3 + (height - d.screen_height/3)/4;
+        *padY = screen_height/3 + (height - screen_height/3)/4;
 
     if(*padX < MINPAD)
         *padX = MINPAD;

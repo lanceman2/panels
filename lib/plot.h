@@ -155,7 +155,7 @@ struct PnPlot {
 #define PIXELS_PER_MAJOR_GRID_LINE   (160)
 
 
-// These are mappings to (and from) pixels on a cairo surface we are
+// These are mappings to (and from) pixels on a Cairo surface we are
 // plotting points and/or lines on.
 //
 // Note: In Cairo pixel distances tend to be doubles hence
@@ -178,6 +178,4 @@ static inline double pixToY(double p, const struct PnZoom *z) {
 }
 
 #define MINPAD   (100)
-
-
 

@@ -33,27 +33,35 @@ static void HandleMonitorGeometry(void *data,
         struct wl_output *wl_output, int32_t x, int32_t y,
         int32_t physical_width, int32_t physical_height, int32_t subpixel,
         const char *make, const char *model, int32_t transform) {
-
-    INFO("Physical screen size= %" PRIi32 " mm, %" PRIi32 " mm",
+    DASSERT(physical_width > 0);
+    DASSERT(physical_height > 0);
+    INFO("Physical screen size= %" PRIi32 " mm X %" PRIi32 " mm",
             physical_width, physical_height);
+    struct PnOutput *output = data;
+    DASSERT(output->wl_output == wl_output);
+    output->physical_width = physical_width;
+    output->physical_height = physical_height;
 }
 
 static void HandleMonitorPixelContents(void *data,
                 struct wl_output *wl_output,
                 uint32_t flags,
                 int32_t width, int32_t height, int32_t refresh) {
-
+    DASSERT(width > 0);
+    DASSERT(height > 0);
     INFO("Screen size=%" PRIi32 ",%" PRIi32
             " refresh=%" PRIi32 " milli Hz",
             width, height, refresh);
 
-    d.screen_width = width;
-    d.screen_height = height;
+    struct PnOutput *output = data;
+    DASSERT(output->wl_output == wl_output, "%p != %p",
+            output->wl_output, wl_output);
+    output->screen_width = width;
+    output->screen_height = height;
 }
 
 static void HandleMonitorInformationSent(void *data,
                 struct wl_output *wl_output) {
-    DASSERT(wl_output == d.wl_output);
 }
 
 static void HandleMonitorScale(void *data,

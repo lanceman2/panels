@@ -365,6 +365,12 @@ static const struct wl_seat_listener seat_listener = {
     .capabilities = seat_handle_capabilities,
 };
 
+static inline void FreeOutput(struct PnOutput *output) {
+    DASSERT(output);
+    DZMEM(output, sizeof(*output));
+    free(output);
+}
+
 
 static void handle_global(void *data, struct wl_registry *registry,
             uint32_t name, const char *interface, uint32_t version) {
@@ -424,16 +430,44 @@ static void handle_global(void *data, struct wl_registry *registry,
             return;
         }
     } else if(strcmp(interface, wl_output_interface.name) == 0) {
-        d.wl_output = wl_registry_bind(registry,
+        // Add a Wayland output (monitor thingy).
+        //
+        // We use an array of monitor pointers, handles; so that
+        // we can keep the struct PnOutput at a constant address;
+        // so the PnOutput address does not change when we realloc()
+        // to make the array larger.
+        //
+        ++d.numOutputs;
+        d.outputs =
+            realloc(d.outputs, d.numOutputs*sizeof(*d.outputs));
+        ASSERT(d.outputs, "realloc(,%zu) failed",
+                d.numOutputs*sizeof(*d.outputs));
+
+        // We keep this "output" address until the PnDisplay is
+        // destroyed; so that we can always refer to it in callbacks;
+        // unless we fail below.
+        struct PnOutput *output = calloc(1, sizeof(*output));
+
+        ASSERT(output, "calloc(1,%zu) failed", sizeof(*output));
+        output->wl_output = wl_registry_bind(registry,
                 name, &wl_output_interface, version);
-        if(!d.wl_output) {
+        d.outputs[d.numOutputs-1] = output;
+
+        // TODO: What do we do if a monitor is removed?  Oh boy.
+
+        if(!output->wl_output) {
             ERROR("wl_registry_bind(,,) for wl_output_interface failed");
             d.handle_global_error = 8;
+            // The pnDisplay_destroy() will clean all this stuff.
             return;
         }
-        if(wl_output_add_listener(d.wl_output, &output_listener, 0)) {
+
+        if(wl_output_add_listener(output->wl_output,
+                    &output_listener,
+                    output/*user data*/)) {
             ERROR("wl_output_add_listener(,,) for wl_output_interface failed");
             d.handle_global_error = 9;
+            // The pnDisplay_destroy() will clean all this stuff.
             return;
         }
     }
@@ -538,7 +572,7 @@ static int _pnDisplay_create(void) {
     RET_ERROR(d.wl_compositor, 7, "cannot get wl_compositor");
     RET_ERROR(d.xdg_wm_base,   8, "cannot get xdg_wm_base");
     RET_ERROR(d.wl_seat,       9, "cannot get wl_seat");
-    RET_ERROR(d.wl_output,     10, "cannot get wl_output");
+    RET_ERROR(d.outputs,      10, "cannot get wl_output");
 
 
     if(!d.zxdg_decoration_manager)
@@ -612,8 +646,21 @@ static void _pnDisplay_destroy(void) {
     if(d.wl_compositor)
         wl_compositor_destroy(d.wl_compositor);
 
-    if(d.wl_output)
-        wl_output_destroy(d.wl_output);
+    if(d.outputs) {
+        DASSERT(d.numOutputs);
+        // Destroy an array of outputs (wayland monitor thingys).
+        uint32_t numOutputs = d.numOutputs;
+        while(numOutputs) {
+            if(d.outputs[numOutputs-1]->wl_output)
+                wl_output_destroy(d.outputs[numOutputs-1]->wl_output);
+            FreeOutput(d.outputs[numOutputs-1]);
+            d.outputs[numOutputs-1] = 0;
+            --numOutputs;
+        }
+        free(d.outputs);
+        d.outputs = 0;
+        d.numOutputs = 0;
+    }
 
     if(d.wl_shm)
         wl_shm_destroy(d.wl_shm);
@@ -674,7 +721,8 @@ void pnDisplay_destroy(void) {
         DASSERT(!d.wl_registry);
         DASSERT(!d.wl_shm);
         DASSERT(!d.wl_compositor);
-        DASSERT(!d.wl_output);
+        DASSERT(!d.outputs);
+        DASSERT(!d.numOutputs);
         DASSERT(!d.xdg_wm_base);
         DASSERT(!d.windows);
         return;
