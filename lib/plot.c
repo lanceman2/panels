@@ -95,6 +95,8 @@ static inline void CreateBGSurface(struct PnPlot *g,
     w += 2 * g->padX;
     h += 2 * g->padY;
 
+    // Note: the memory and Cairo surface may be larger than g->width
+    // times g->height (with the padding).
     g->bgMemory = calloc(sizeof(*g->bgMemory), w * h);
     ASSERT(g->bgMemory, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
             sizeof(*g->bgMemory), w, h);
@@ -730,7 +732,6 @@ void destroy(struct PnWidget *w, struct PnPlot *p) {
     FreeZooms(p);
 }
 
-
 static void Config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
@@ -746,12 +747,15 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
 
     DestroyBGSurface(g);
 
-    g->width = w;
-    g->height = h;
-
-    if(!g->zoom)
+    if(!g->zoom) {
+        // For starting with the first rendering of g->bgSurface.
+        g->width = w;
+        g->height = h;
+        GetPadding(h, h, &g->padX, &g->padY);
         _pnPlot_pushZoom(g, 0.0, 1.0, 0.0, 1.0);
-    else
+    } else
+        // This sets g->width, g->height, g->padX, and g->padY too.
+        // This fixes all the zooms in the list.
         FixZoomsScale(g, w, h);
 
 
@@ -775,12 +779,12 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
 
     // Transfer the bgSurface to this cr (and its surface).
     //
-    // We let the background that we just painted to seem, that is
-    // if it's not transparent.
+    // We let the background pixels that we just painted to be seen, that
+    // is if the pixels are not transparent.  Alpha is fun.
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_surface(cr, g->bgSurface, g->padX, g->padY);
-    cairo_rectangle(cr, g->padX, g->padY, g->width, g->height);
-    cairo_fill(cr);
+    cairo_set_source_surface(cr, g->bgSurface,
+            - g->padX + g->slideX, - g->padY + g->slideY);
+    cairo_paint(cr);
 
     return 0;
 }
@@ -824,12 +828,6 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     plot->xMax=1.0;
     plot->yMin=0.0;
     plot->yMax=1.0;
-
-    // hidden edges of "zoom box" or "view box", in pixels; until
-    // you slide the surface with the mouse pointer (or other).
-    // See ASCII art in plot.h.
-    plot->padX=0;
-    plot->padY=0;
 
     // Colors bytes in order: A,R,G,B
     plot->subGridColor   = 0xFF70B070;

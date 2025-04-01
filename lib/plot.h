@@ -14,7 +14,7 @@
   |          |      |                  |          |
   |          |  vbHeight               |          |
   |          |      |                  |          |
-  |<- padX ->|      |   VIEW BOX (vb)  |<- padX ->|
+  |<- padX ->|      |    VIEW BOX      |<- padX ->|
   |          |      |                  |          |
   |          |<-----|--- vbWidth ----->|          |
   |          |      |                  |          |
@@ -28,7 +28,7 @@
   -------------------------------------------------
 
   The user of this Cairo Surface can slide this
-  area relative to the VIEW BOX with:
+  surface relative to the VIEW BOX with:
         cairo_set_source_surface(cr, grid_surface, padX, padY);
         cairo_set_source_surface(cr, grid_surface,
                 - padX + slideX, - padY + slideY);
@@ -67,8 +67,8 @@ struct PnZoom {
 // Note: we could speed up the background grid drawing by not using Cairo,
 // because the background grid drawing requires just horizontal and
 // vertical line drawing which is easy to calculate the anti-aliasing then
-// Cairo's general anti-aliased line (lines at all angles).  But, the
-// grid background drawing is not a performance bottleneck, so fuck it.
+// Cairo's general anti-aliased line (lines at all angles).  But, the grid
+// background drawing is not a performance bottleneck, so fuck it.
 //
 // The foreground points plotted may just directly set the pixel colors as
 // a uint32_t (32 bit int), or a slower Cairo based foreground drawing.
@@ -78,9 +78,9 @@ struct PnZoom {
 // fucking widget pixels for any one frame, after floating point fucking
 // all of them) to the speed of doing next to nothing (like 1 out of a
 // 1000 pixels being changed).  It depends where the bottleneck is.  If
-// you do not need fast pixel changes, Cairo drawing could be fine.
-// Cairo drawing will likely look better than just simple integer pixel
-// bit diddling.  It's hard to do anti-aliasing without floating point
+// you do not need fast pixel changes, Cairo drawing could be fine.  Cairo
+// drawing will likely look better than just simple integer pixel bit
+// diddling.  It's hard to do anti-aliasing without floating point
 // calculations.
 //
 // Purpose slowly draw background once (one frame), then quickly draw on
@@ -133,24 +133,24 @@ struct PnPlot {
     //
     // Is may be redundant, and the same as the widget size allocation
     // width and height.  But, we kind of need it when we free the
-    // bgMemory, at which time the widget size allocation may not exist;
-    // at least with DEBUG builds.
+    // bgMemory, at which time the widget size allocation may not exist.
     //
     uint32_t width, height;
+
+    uint32_t slideX, slideY; // mouse pointer or "other" plot sliding.
 
     uint32_t zoomCount;
 };
 
 
 
-
 // The major grid lines get labeled with numbers.
 //
-// The closer together minor (sub) grid lines do not not get labeled with
+// The closer together minor (sub) grid lines do not get labeled with
 // numbers.  There's an unusual case where grid line number labels can get
 // large like for example 6.75684e-05 and the next grid line number is
 // like 6.75685e-05; note the relative difference is 1.0e-10. Math round
-// off errors start to kill the "plotting" at that point.
+// off errors start to kill the plot number labeling at that point.
 //
 #define PIXELS_PER_MAJOR_GRID_LINE   (160)
 
@@ -177,17 +177,13 @@ static inline double pixToY(double p, const struct PnZoom *z) {
     return p * z->ySlope + z->yShift;
 }
 
+#define MINPAD   (100)
+
 
 static inline
 void GetPadding(uint32_t width, uint32_t height,
         uint32_t *padX, uint32_t *padY) {
 
-    if(true) {
-        // TODO: Disabling this for now.
-        *padX = 0;
-        *padY = 0;
-        return;
-    }
 
     if(width < d.screen_width/3)
         *padX = width;
@@ -199,9 +195,13 @@ void GetPadding(uint32_t width, uint32_t height,
     else
         *padY = d.screen_height/3 + (height - d.screen_height/3)/4;
 
+    if(*padX < MINPAD)
+        *padX = MINPAD;
+    if(*padY < MINPAD)
+        *padY = MINPAD;
+
     //DSPEW("                padX=%d  padY=%d", *padX, *padY);
 }
-
 
 // The width and/or height of the drawing Area changed and so must all the
 // zoom scaling.  Create a zoom if there are none.
@@ -218,7 +218,10 @@ static inline void FixZoomsScale(struct PnPlot *g,
     DASSERT(g->zoom);
     DASSERT(g->xMin < g->xMax);
     DASSERT(g->yMin < g->yMax);
+    // The width and height should have changed.
+    DASSERT(g->width != width || g->height != height);
 
+    // The padX and padY may or may not be changing.
     uint32_t padX, padY;
     // Get the new padding for the new width and height.
     GetPadding(width, height, &padX, &padY);
