@@ -26,8 +26,8 @@ static inline void AddWidget(const char *text,
 
     if(text)
         w = pnLabel_create(
-                0, 0/*width*/, textHeight,
-                10/*xPadding*/, 5/*yPadding*/,
+                0/*parent*/, 0/*width*/, textHeight,
+                10/*xPadding*/, 0/*yPadding*/,
                 PnAlign_RC/*align*/, PnExpand_HV/*expand*/,
                 text, 0/*size*/);
     else
