@@ -766,7 +766,7 @@ void GetPadding(uint32_t width, uint32_t height,
 }
 
 // The width and/or height of the drawing Area changed and so must all the
-// zoom scaling.  Create a zoom if there are none.
+// zoom scaling.
 //
 // This assumes that the displayed user values did not change, just the
 // drawing area changed size; i.e. there is a bigger or smaller user view
@@ -869,8 +869,7 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
 
 
 struct PnWidget *pnPlot_create(struct PnWidget *parent,
-        uint32_t width, uint32_t height,
-        enum PnAlign align,
+        uint32_t width, uint32_t height, enum PnAlign align,
         enum PnExpand expand, size_t size) {
 
     struct PnPlot *plot;
