@@ -68,8 +68,6 @@ static inline void DestroyBGSurface(struct PnPlot *g) {
         cairo_surface_destroy(g->bgSurface);
         g->bgSurface = 0;
         g->bgMemory = 0;
-        g->width = 0;
-        g->height = 0;
     } else {
         DASSERT(!g->width);
         DASSERT(!g->height);
@@ -175,7 +173,6 @@ static inline void _PushZoom(struct PnPlot *g,
 }
 
 
-static
 void _pnPlot_pushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax) {
 
@@ -320,7 +317,6 @@ static inline double GetVGrid(cairo_t *cr,
         uint32_t *subDivider, int32_t *pow) {
 
     DASSERT(lineWidth <= pixelSpace);
-
     // delta is in user values not pixels.
     double delta = z->xSlope * pixelSpace;
     delta = RoundUp(delta, subDivider, pow);
@@ -601,9 +597,9 @@ static inline void DrawHGridLabels(cairo_t *cr,
 
 // TODO: There are a lot of user configurable parameters in this
 // function.
-static
-void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr,
-        bool show_subGrid) {
+void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr) {
+
+    bool show_subGrid = g->show_subGrid;
 
     cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL,
             CAIRO_FONT_WEIGHT_NORMAL);
@@ -622,6 +618,11 @@ void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr,
             g->zoom, g->width + 2*g->padX, g->height + 2*g->padY,
             fontSize, &startY, &subDividerY, &powY);
 
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 0, 0, 0, 0);
+    cairo_paint(cr);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
     if(!show_subGrid)
       goto drawGrid;
@@ -780,6 +781,8 @@ static inline void FixZoomsScale(struct PnPlot *g,
     DASSERT(g->zoom);
     DASSERT(g->xMin < g->xMax);
     DASSERT(g->yMin < g->yMax);
+    DASSERT(g->width);
+    DASSERT(g->height);
     // The width and height should have changed.
     DASSERT(g->width != width || g->height != height);
 
@@ -826,20 +829,28 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     DestroyBGSurface(g);
 
     if(!g->zoom) {
+        DASSERT(!g->top);
+        DASSERT(!g->width);
+        DASSERT(!g->height);
+        DASSERT(!g->padX);
+        DASSERT(!g->padY);
         // For starting with the first rendering of g->bgSurface.
         g->width = w;
         g->height = h;
         GetPadding(h, h, &g->padX, &g->padY);
         _pnPlot_pushZoom(g, 0.0, 1.0, 0.0, 1.0);
-    } else
+    } else {
+        DASSERT(g->top);
+        DASSERT(g->width);
+        DASSERT(g->height);
         // This sets g->width, g->height, g->padX, and g->padY too.
         // This fixes all the zooms in the list.
         FixZoomsScale(g, w, h);
-
+    }
 
     CreateBGSurface(g, w, h);
     cairo_t *cr = cairo_create(g->bgSurface);
-    _pnPlot_drawGrids(g, cr, true/*show_subGrid*/);
+    _pnPlot_drawGrids(g, cr);
     cairo_destroy(cr);
 }
 
@@ -900,11 +911,11 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     pnWidget_setConfig(&plot->widget, (void *) Config, plot);
     pnWidget_addDestroy(&plot->widget, (void *) destroy, plot);
     //
-    pnWidget_setEnter(&plot->widget, (void *) enter, plot);
-    pnWidget_setLeave(&plot->widget, (void *) leave, plot);
-    pnWidget_setPress(&plot->widget, (void *) press, plot);
+    pnWidget_setEnter(&plot->widget,   (void *) enter, plot);
+    pnWidget_setLeave(&plot->widget,   (void *) leave, plot);
+    pnWidget_setPress(&plot->widget,   (void *) press, plot);
     pnWidget_setRelease(&plot->widget, (void *) release, plot);
-    pnWidget_setRelease(&plot->widget, (void *) motion, plot);
+    pnWidget_setMotion(&plot->widget,  (void *) motion, plot);
  
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):
@@ -917,6 +928,8 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     plot->subGridColor   = 0xFF70B070;
     plot->gridColor      = 0xFFE0E0E0;
     plot->axesLabelColor = 0xFFFFFFFF;
+
+    plot->show_subGrid = true;
 
     // The rest of PnPlot is zero from pnWidget_create() -> calloc()
     // above.
