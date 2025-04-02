@@ -895,10 +895,17 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     // which is also a widget too (and more bits):
     DASSERT(plot->widget.type & WIDGET);
 
+    // Add widget callback functions:
     pnWidget_setCairoDraw(&plot->widget, (void *) cairoDraw, plot);
     pnWidget_setConfig(&plot->widget, (void *) Config, plot);
     pnWidget_addDestroy(&plot->widget, (void *) destroy, plot);
-
+    //
+    pnWidget_setEnter(&plot->widget, (void *) enter, plot);
+    pnWidget_setLeave(&plot->widget, (void *) leave, plot);
+    pnWidget_setPress(&plot->widget, (void *) press, plot);
+    pnWidget_setRelease(&plot->widget, (void *) release, plot);
+    pnWidget_setRelease(&plot->widget, (void *) motion, plot);
+ 
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):
     plot->xMin=0.0;

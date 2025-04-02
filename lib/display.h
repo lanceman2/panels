@@ -35,28 +35,27 @@
 // side, wayland is much less complex than X11, and could in many cases
 // have better performance (depends on a lot of shit, I suppose).
 //
-// X11 is a huge beast of complexity with a six pack abs.  Wayland is
-// simple, but its guts are hanging out.
+// When comparing the X11 client and the Wayland client: X11 is a huge
+// beast of complexity, Wayland is simple with more of its guts hanging
+// out.  Wayland broke up all the opaque X11 like display object into many
+// opaque Wayland objects.  Wayland seems to providing more
+// compartmentalization (more parts) then X11.  Wayland in effect exposes
+// more of what would be internal (X11) components.  The Wayland client
+// way have more control, but at a cost of having to write more code in
+// many cases.
 //
-// RANT: Why can't the wayland client C API just hide all these global
-// singleton objects, and make them as they become necessary in the
-// process? (There's likely good reason, I'm just ranting) All of these
-// potential singleton objects are either existing or not; and
-// libwayland-client (the wayland client library) should be able to keep
-// track the things that are needed, like the X11 client display
-// connection object did.  I can't see how there is a big performance
-// gain in not doing this.  It's just a list of dependences that could be
-// automatically generated.  How can a user use a wl_surface without any
-// fucking pixels?  Yes, yes, layers give you control, but come on,
-// layering and exposing 5 objects down to get to coloring a fucking
-// pixel seems silly.
-//
-// I grant you X11 maybe did not expose enough object layers; which maybe
-// in time caused to blow up with extensions, and server internal bloat.
+// I grant you, X11 maybe did not expose enough object layers; which maybe
+// in time caused to blow up with extensions and force server internal
+// bloat.  I love the simple idea of writing to shared memory pixels that
+// exists in Wayland client; the X11 client API approach of providing a
+// drawing primitives just smells of inefficiency and inflexibility.
 
 // Constrained by libwayland-client, we can only have one Pn Display
-// object in a process.  Not our fucking choose.  We're lucky that
-// it's not leaky (memory, files, and shit) like most libraries.
+// object in a process.  Not our fucking choose.  We're lucky that it's
+// not leaky (memory, files, and shit) like most libraries.  It appears
+// that for every Wayland client object that you can create there is a
+// destroy function, and that's a real good thing.  Most of the larger
+// popular libraries do not do this.
 
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set

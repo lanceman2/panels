@@ -299,6 +299,7 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     b->widget.type = PnSurfaceType_button;
     DASSERT(b->widget.type & WIDGET);
 
+    // Add widget callback functions:
     pnWidget_setEnter(&b->widget, (void *) enter, b);
     pnWidget_setLeave(&b->widget, (void *) leave, b);
     pnWidget_setPress(&b->widget, (void *) press, b);

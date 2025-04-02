@@ -80,6 +80,7 @@ libpanels.so_SOURCES +=\
  label.c\
  image.c\
  plot.c\
+ plotCallbacks.c\
  plot.h
 endif
 
