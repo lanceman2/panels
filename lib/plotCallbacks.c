@@ -27,8 +27,8 @@
 // We have: drag zooming, box zooming
 
 // Which mouse button does what:
-#define BUTTON_DRAG     0 // left = 0
-#define BUTTON_BOX      2 // right = 2
+#define BUTTON_DRAG     0 // left mouse button = 0
+#define BUTTON_BOX      2 // right mouse button = 2
 
 
 // State in state flag:
@@ -161,7 +161,6 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
         // may need to make a zoom action.  We can have a mouse button
         // press event without having motion.
         state |= MOVED;
-
 
     switch(action) {
         case ACTION_DRAG: {
