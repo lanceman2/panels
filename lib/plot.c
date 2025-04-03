@@ -119,8 +119,6 @@ bool _pnPlot_popZoom(struct PnPlot *g) {
     return _PopZoom(g);
 }
 
-// TODO: Add a zoom rescaler.
-//
 static inline void FreeZooms(struct PnPlot *g) {
 
     if(!g->zoom) return;
@@ -171,7 +169,6 @@ static inline void _PushZoom(struct PnPlot *g,
     g->zoom = z;
 }
 
-
 void _pnPlot_pushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax) {
 
@@ -195,7 +192,6 @@ void _pnPlot_pushZoom(struct PnPlot *g,
 
     _PushZoom(g, xMin, xMax, yMin, yMax);
 }
-
 
 static inline double RoundUp(double x, uint32_t *subDivider,
                     int32_t *p_out) {
@@ -276,7 +272,6 @@ static inline double RoundUp(double x, uint32_t *subDivider,
 
     return x;
 }
-
 
 static inline void DrawVSubGrid(cairo_t *cr, const struct PnZoom *z,
         double start, double delta, double end, double height) {
@@ -368,7 +363,6 @@ static inline double GetHGrid(cairo_t *cr,
     return delta;
 }
 
-
 static inline char *StripZeros(char *label) {
 
     char *s = label + strlen(label) - 1;
@@ -391,7 +385,6 @@ static inline size_t CountToPoint(char *s) {
     }
     return l;
 }
-
 
 // Count the non-zero digits to the right of decimal_point
 static inline size_t CountLabel(char *label, size_t LEN,
@@ -437,7 +430,6 @@ static inline void GetLabel(char *label, size_t LEN,
     if(x != 0)
         snprintf(label+l, LEN-l, "e%+d", pow);
 }
-
 
 static inline void DrawVGrid(cairo_t *cr,
         double lineWidth/*vertical line width in pixels*/, 
@@ -516,7 +508,6 @@ static inline void DrawVGridLabels(cairo_t *cr,
     }
 }
 
-
 static inline void DrawHGrid(cairo_t *cr,
         double lineWidth/*vertical line width in pixels*/, 
         const struct PnZoom *z, const struct PnPlot *g,
@@ -537,7 +528,6 @@ static inline void DrawHGrid(cairo_t *cr,
         cairo_stroke(cr);
     }
 }
-
 
 static inline void DrawHGridLabels(cairo_t *cr,
         double lineWidth/*line width in pixels*/, 
@@ -592,7 +582,6 @@ static inline void DrawHGridLabels(cairo_t *cr,
         cairo_show_text(cr, label);
      }
 }
-
 
 // TODO: There are a lot of user configurable parameters in this
 // function.
@@ -887,7 +876,6 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
 
     return 0;
 }
-
 
 struct PnWidget *pnPlot_create(struct PnWidget *parent,
         uint32_t width, uint32_t height, enum PnAlign align,
