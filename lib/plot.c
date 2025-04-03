@@ -110,7 +110,6 @@ static inline void CreateBGSurface(struct PnPlot *g,
 
 // Returns true if there are zooms left to pop after this call.
 //
-static
 bool _pnPlot_popZoom(struct PnPlot *g) {
 
     if(g->zoom == g->top)
@@ -875,6 +874,17 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
             - g->padX + g->slideX, - g->padY + g->slideY);
     cairo_paint(cr);
 
+    if(g->boxX != INT32_MAX) {
+        // Draw a zoom box.
+        cairo_set_operator(cr, CAIRO_OPERATOR_XOR);
+        cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+        cairo_rectangle(cr,
+                    g->boxX,
+                    g->boxY,
+                    g->boxWidth, g->boxHeight);
+        cairo_fill(cr);
+    }
+
     return 0;
 }
 
@@ -923,6 +933,9 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     plot->xMax=1.0;
     plot->yMin=0.0;
     plot->yMax=1.0;
+
+    // Reset zoom box draw:
+    plot->boxX = INT32_MAX;
 
     // Colors bytes in order: A,R,G,B
     plot->subGridColor   = 0xFF70B070;

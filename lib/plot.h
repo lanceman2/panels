@@ -140,6 +140,8 @@ struct PnPlot {
     // in pixels.
     int32_t slideX, slideY; // mouse pointer or "other" plot sliding.
 
+    int32_t boxX, boxY, boxWidth, boxHeight; // To draw a zoom box.
+
     uint32_t zoomCount;
 
     bool show_subGrid;
@@ -183,21 +185,22 @@ static inline double pixToY(double p, const struct PnZoom *z) {
 
 extern void _pnPlot_pushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax);
+extern bool _pnPlot_popZoom(struct PnPlot *g);
 
 extern void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr);
 
 #define MINPAD   (100)
 
 
-// widget callback functions specific to the plot:
-bool enter(struct PnWidget *w,
+// widget callback functions specific to the plot widget:
+extern bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnPlot *p);
-bool leave(struct PnWidget *w, struct PnPlot *p);
-bool press(struct PnWidget *w,
+extern bool leave(struct PnWidget *w, struct PnPlot *p);
+extern bool motion(struct PnWidget *w, int32_t x, int32_t y,
+            struct PnPlot *p);
+extern bool release(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
             struct PnPlot *p);
-bool motion(struct PnWidget *w, int32_t x, int32_t y,
-            struct PnPlot *p);
-bool release(struct PnWidget *w,
+extern bool press(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
             struct PnPlot *p);

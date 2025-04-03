@@ -24,19 +24,37 @@
 // as simple static variables (and not allocate something like them for
 // each plot).
 
-#define ENTERED   01
-#define PRESSED   02
+// We have: drag zooming, box zooming
+
+// Which mouse button does what:
+#define BUTTON_DRAG     0 // left = 0
+#define BUTTON_BOX      2 // right = 2
 
 
-static uint32_t state;
+// State in state flag:
+//
+#define ENTERED   01 // TODO: this may not be needed.
+// Did the mouse pointer move with a action button pressed?
+#define MOVED     02
+
+// Actions in state flag:
+#define ACTION_DRAG       04
+#define ACTION_BOX       010
+#define ACTIONS          (ACTION_DRAG | ACTION_BOX)
+
+
+static uint32_t state = 0;
 static int32_t x_0, y_0;
 
 
-// widget callback functions specific to the plot:
+
+
+// widget callback functions specific to the plot widget:
 //
 bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnPlot *p) {
     DASSERT(!state);
+    DASSERT(p->boxX == INT32_MAX);
     state = ENTERED;
 
     return true; // take focus
@@ -44,67 +62,65 @@ bool enter(struct PnWidget *w,
 
 bool leave(struct PnWidget *w, struct PnPlot *p) {
 
+    DASSERT(p->boxX == INT32_MAX);
     DASSERT(state & ENTERED);
+    DASSERT(!(state & MOVED));
+    DASSERT(!(state & ACTIONS));
     state = 0;
 
-    return true; // take focus
+    return true; // leave focus
 }
 
-bool press(struct PnWidget *w,
-            uint32_t which, int32_t x, int32_t y,
-            struct PnPlot *p) {
+static inline void FinishBoxZoom(struct PnPlot *p,
+        int32_t x, int32_t y) {
 
-    DASSERT(state & ENTERED);
-    if(which != 0) return false;
-    state |= PRESSED;
+    p->boxX = INT32_MAX;
 
-    x_0 = x;
-    y_0 = y;
+    if(x_0 == x || y_0 == y) {
+        _pnPlot_popZoom(p);
+        goto finish;
+    }
 
-    return true;
-}
+    double xMin = pixToX(p->padX + x_0, p->zoom);
+    double xMax = pixToX(p->padX + x, p->zoom);
+    double yMin = pixToY(p->padY + y, p->zoom);
+    double yMax = pixToY(p->padY + y_0, p->zoom);
 
-bool motion(struct PnWidget *w, int32_t x, int32_t y,
-            struct PnPlot *p) {
-    DASSERT(state & ENTERED);
-    if(!(state & PRESSED)) return false;
+    DASSERT(xMin != xMax);
+    DASSERT(yMin != yMax);
 
-//fprintf(stderr, "  %" PRIi32 ",%" PRIi32, x - x_0, y - y_0);
+    if(xMin > xMax) {
+        double min = xMin;
+        xMin = xMax;
+        xMax = min;
+    }
+    if(yMin > yMax) {
+        double min = yMin;
+        yMin = yMax;
+        yMax = min;
+    }
 
-    p->slideX = x - x_0;
-    p->slideY = y - y_0;
-    int32_t padX = p->padX;
-    int32_t padY = p->padY;
-    DASSERT(padX >= 0);
-    DASSERT(padY >= 0);
+    _pnPlot_pushZoom(p, // make a new zoom in the zoom stack
+              xMin, xMax, yMin, yMax);
 
-    if(p->slideX > padX)
-        p->slideX = padX;
-    else if(p->slideX < - padX)
-        p->slideX = - padX;
-    if(p->slideY > padY)
-        p->slideY = padY;
-    else if(p->slideY < - padY)
-        p->slideY = - padY;
+finish:
 
-//fprintf(stderr, "  %" PRIi32 ",%" PRIi32, p->slideX, p->slideY);
-
+    cairo_t *cr = cairo_create(p->bgSurface);
+    _pnPlot_drawGrids(p, cr);
+    cairo_destroy(cr);
     pnWidget_queueDraw(&p->widget);
-
-    return true;
 }
 
-bool release(struct PnWidget *w,
-            uint32_t which, int32_t x, int32_t y,
-            struct PnPlot *p) {
-    DASSERT(state & ENTERED);
-    if(which != 0) return false;
-    DASSERT(state & PRESSED);
-    state &= ~PRESSED;
+static inline void FinishDragZoom(
+        struct PnPlot *p, int32_t x, int32_t y) {
 
     double dx, dy;
     dx = x_0 - x;
     dy = y_0 - y;
+
+    if(dx == 0 && dy == 0 && !(state & MOVED))
+        // Nothing to do.
+        return;
 
     double padX = p->padX;
     double padY = p->padY;
@@ -129,8 +145,129 @@ bool release(struct PnWidget *w,
     _pnPlot_drawGrids(p, cr);
     cairo_destroy(cr);
     pnWidget_queueDraw(&p->widget);
+}
+
+bool motion(struct PnWidget *w, int32_t x, int32_t y,
+            struct PnPlot *p) {
+    DASSERT(p);
+    DASSERT(state & ENTERED);
+    uint32_t action = state & ACTIONS;
+    if(!action) return false;
+    // We can only have one action at a time.
+    DASSERT(action == ACTION_DRAG || action == ACTION_BOX);
+
+    if(!(state & MOVED))
+        // We have motion.  This lets mouse button release know that we
+        // may need to make a zoom action.  We can have a mouse button
+        // press event without having motion.
+        state |= MOVED;
 
 
-WARN();
-    return true;
+    switch(action) {
+        case ACTION_DRAG: {
+            p->slideX = x - x_0;
+            p->slideY = y - y_0;
+            int32_t padX = p->padX;
+            int32_t padY = p->padY;
+            DASSERT(padX >= 0);
+            DASSERT(padY >= 0);
+
+            if(p->slideX > padX)
+                p->slideX = padX;
+            else if(p->slideX < - padX)
+                p->slideX = - padX;
+            if(p->slideY > padY)
+                p->slideY = padY;
+            else if(p->slideY < - padY)
+                p->slideY = - padY;
+            pnWidget_queueDraw(&p->widget);
+            return true;
+        }
+        case ACTION_BOX: {
+            DASSERT(!p->slideX);
+            DASSERT(!p->slideY);
+            p->boxX = x_0;
+            p->boxY = y_0;
+            p->boxWidth = x - x_0;
+            p->boxHeight = y - y_0;
+            pnWidget_queueDraw(&p->widget);
+            return true;
+        }
+    }
+    // We should not get here.
+    DASSERT(0);
+    return false;
+}
+
+bool release(struct PnWidget *w,
+            uint32_t which, int32_t x, int32_t y,
+            struct PnPlot *p) {
+    DASSERT(p);
+    DASSERT(state & ENTERED);
+    uint32_t action = state & ACTIONS;
+    if(!action) return false;
+    // We can only have one action at a time.
+    DASSERT(action == ACTION_DRAG || action == ACTION_BOX);
+    // Reset the action state.
+    state &= ~ACTIONS;
+    if(state & MOVED)
+        // Reset MOVED state.
+        state &= ~MOVED;
+
+    switch(action) {
+        case ACTION_DRAG:
+            FinishDragZoom(p, x, y);
+            return true;
+        case ACTION_BOX:
+            // Reset zoom box draw:
+            FinishBoxZoom(p, x, y);
+            return true;
+    }
+    // We should not get here.
+    DASSERT(0);
+    return false;
+}
+
+bool press(struct PnWidget *w,
+            uint32_t which, int32_t x, int32_t y,
+            struct PnPlot *p) {
+    DASSERT(p);
+    DASSERT(state & ENTERED);
+
+    uint32_t action = state & ACTIONS;
+    // We can only have one action at a time or none.
+    DASSERT(action == ACTION_DRAG || action == ACTION_BOX ||
+            action == 0);
+    // Reset the action state.
+    state &= ~ACTIONS;
+
+    // Finish an old action, if there is one.
+    switch(action) {
+        case ACTION_DRAG:
+            FinishDragZoom(p, x, y);
+            break;
+        case ACTION_BOX:
+            break;
+    }
+
+    // Reset zoom box draw:
+    p->boxX = INT32_MAX;
+
+    // Start a new action.
+    x_0 = x;
+    y_0 = y;
+    // Reset MOVED state.
+    state &= ~MOVED;
+
+    DASSERT(state & ENTERED);
+
+    switch(which) {
+        case BUTTON_DRAG:
+            state |= ACTION_DRAG;
+            return true;
+        case BUTTON_BOX:
+            state |= ACTION_BOX;
+            return true;
+    }
+    return false;
 }
