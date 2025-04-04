@@ -21,6 +21,7 @@ pnWidget_destroy
 pnWidget_getBackgroundColor
 pnWidget_isInSurface
 pnWidget_queueDraw
+pnWidget_setAxis
 pnWidget_setBackgroundColor
 pnWidget_setCairoDraw
 pnWidget_setDraw

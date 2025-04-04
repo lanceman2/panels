@@ -914,6 +914,7 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     pnWidget_setPress(&plot->widget,   (void *) press, plot);
     pnWidget_setRelease(&plot->widget, (void *) release, plot);
     pnWidget_setMotion(&plot->widget,  (void *) motion, plot);
+    pnWidget_setAxis(&plot->widget,  (void *) axis, plot);
  
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):

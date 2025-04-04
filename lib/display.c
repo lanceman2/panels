@@ -201,7 +201,7 @@ static void button(void *, struct wl_pointer *p,
                     break;
             return;
 
-case WL_POINTER_BUTTON_STATE_PRESSED:
+        case WL_POINTER_BUTTON_STATE_PRESSED:
 //WARN("BUTTON (%" PRIu32 ") PRESS", button);
 
             if(d.buttonGrab) {
@@ -219,7 +219,7 @@ case WL_POINTER_BUTTON_STATE_PRESSED:
             }
 
             for(struct PnWidget *s = d.focusWidget; s; s = s->parent)
-                if(s->press && s->press((void *) s, button,
+                if(s->press && s->press(s, button,
                             d.x, d.y, s->pressData)) {
                     if(s->release) {
                         d.buttonGrabWidget = s;
@@ -236,16 +236,25 @@ case WL_POINTER_BUTTON_STATE_PRESSED:
     //DSPEW("button=%" PRIu32 " state=%" PRIu32, button, state);
 }
 
-static void axis(void *, struct wl_pointer *p, uint32_t,
-        uint32_t,  wl_fixed_t) {
+static void axis(void *userData, struct wl_pointer *p, uint32_t time,
+        uint32_t which, wl_fixed_t value) {
 
     DASSERT(d.wl_display);
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
+    //INFO("time=%" PRIu32 " which=%" PRIu32 " value=%16.16lf",
+    //        time, which, wl_fixed_to_double(value));
 
-    //DSPEW();
+    // TODO: Should the button grab widget take this first?
+    // I'm thinking no.
+
+    for(struct PnWidget *s = d.focusWidget; s; s = s->parent)
+        if(s->axis && s->axis(s, time, which,
+                wl_fixed_to_double(value), s->axisData))
+            return;
 }
+
 
 static const struct wl_pointer_listener pointer_listener = {
     .enter = enter,

@@ -411,6 +411,13 @@ PN_EXPORT void pnWidget_setMotion(struct PnWidget *w,
                 int32_t x, int32_t y, void *userData),
         void *userData);
 
+PN_EXPORT void pnWidget_setAxis(struct PnWidget *w,
+        bool (*axis)(struct PnWidget *w,
+            uint32_t time, uint32_t which, double value,
+            void *userData),
+        void *userData);
+
+
 PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
         uint32_t actionIndex,
         bool (*action)(struct PnWidget *widget,

@@ -129,6 +129,7 @@ void pnWidget_setMotion(struct PnWidget *w,
         void *userData) {
 
     DASSERT(w);
+    DASSERT(w->type & WIDGET);
     w->motion = motion;
     w->motionData = userData;
 
@@ -148,6 +149,20 @@ void pnWidget_setMotion(struct PnWidget *w,
             w->leave = 0;
     }
 }
+
+void pnWidget_setAxis(struct PnWidget *w,
+        bool (*axis)(struct PnWidget *w,
+            uint32_t time, uint32_t which, double value,
+            void *userData),
+        void *userData) {
+
+    DASSERT(w);
+    DASSERT(w->type & WIDGET);
+    w->axis = axis;
+    w->axisData = userData;
+}
+
+
 
 #if 0
 void pnWidget_setMinWidth(struct PnWidget *w, uint32_t width) {

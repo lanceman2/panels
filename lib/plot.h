@@ -204,3 +204,6 @@ extern bool release(struct PnWidget *w,
 extern bool press(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
             struct PnPlot *p);
+extern bool axis(struct PnWidget *w,
+            uint32_t time, uint32_t which, double value,
+            struct PnPlot *p);

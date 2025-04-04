@@ -255,6 +255,11 @@ struct PnWidget {
             int32_t x, int32_t y,
             void *userData);
     void *motionData;
+    bool (*axis)(struct PnWidget *w,
+            uint32_t time,
+            uint32_t which, double value,
+            void *userData);
+    void *axisData;
 
 #ifdef WITH_CAIRO
     int (*cairoDraw)(struct PnWidget *w,

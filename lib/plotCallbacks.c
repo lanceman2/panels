@@ -270,3 +270,15 @@ bool press(struct PnWidget *w,
     }
     return false;
 }
+
+ bool axis(struct PnWidget *w,
+            uint32_t time, uint32_t which, double value,
+            struct PnPlot *p) {
+
+     DASSERT(p);
+     DASSERT(&p->widget == w);
+
+INFO("value=%lf", value);
+
+     return true;
+}
