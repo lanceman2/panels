@@ -44,8 +44,8 @@ struct PnZoom {
 
     struct PnZoom *prev, *next; // To keep a list of zooms in PnPlot
 
-    double xSlope/* = (xMax - xMin)/pixWidth */;
-    double ySlope/* = (yMin - yMax)/pixHeight */;
+    double xSlope/* = (xMax - xMin)/vbWidth */;
+    double ySlope/* = (yMin - yMax)/vbHeight */;
     double xShift/* = xMin - padX * xSlope */;
     double yShift/* = yMax - padY * ySlope */;
 };
@@ -183,7 +183,7 @@ static inline double pixToY(double p, const struct PnZoom *z) {
 }
 
 
-extern void _pnPlot_pushZoom(struct PnPlot *g,
+extern bool _pnPlot_pushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax);
 extern bool _pnPlot_popZoom(struct PnPlot *g);
 

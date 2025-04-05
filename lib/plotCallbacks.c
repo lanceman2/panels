@@ -44,9 +44,8 @@
 
 
 static uint32_t state = 0;
-static int32_t x_0, y_0;
-
-
+static int32_t x_0, y_0; // press initial pointer position
+static int32_t x_l = INT32_MAX, y_l; // last pointer position
 
 
 // widget callback functions specific to the plot widget:
@@ -56,6 +55,9 @@ bool enter(struct PnWidget *w,
     DASSERT(!state);
     DASSERT(p->boxX == INT32_MAX);
     state = ENTERED;
+
+    x_l = x;
+    y_l = y;
 
     return true; // take focus
 }
@@ -67,6 +69,7 @@ bool leave(struct PnWidget *w, struct PnPlot *p) {
     DASSERT(!(state & MOVED));
     DASSERT(!(state & ACTIONS));
     state = 0;
+    x_l = INT32_MAX;
 
     return true; // leave focus
 }
@@ -76,7 +79,8 @@ static inline void FinishBoxZoom(struct PnPlot *p,
 
     p->boxX = INT32_MAX;
 
-    if(x_0 == x || y_0 == y) {
+    // We pop a zoom if the zoom box is very small in x or y.
+    if(abs(x - x_0) < 5 || abs(y - y_0) < 5) {
         _pnPlot_popZoom(p);
         goto finish;
     }
@@ -155,6 +159,9 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
     if(!action) return false;
     // We can only have one action at a time.
     DASSERT(action == ACTION_DRAG || action == ACTION_BOX);
+
+    x_l = x;
+    y_l = y;
 
     if(!(state & MOVED))
         // We have motion.  This lets mouse button release know that we
@@ -271,14 +278,87 @@ bool press(struct PnWidget *w,
     return false;
 }
 
- bool axis(struct PnWidget *w,
+// This is magnitude of the value I keep seeing from axis().  
+#define CLICK_VAL  (15.0)
+
+bool axis(struct PnWidget *w,
             uint32_t time, uint32_t which, double value,
             struct PnPlot *p) {
 
-     DASSERT(p);
-     DASSERT(&p->widget == w);
+    DASSERT(p);
+    DASSERT(&p->widget == w);
+    DASSERT(value);
 
-INFO("value=%lf", value);
+    // I'm going to go ahead and say that google maps axis interface is
+    // not a bad standard to follow. I observe on google maps:
+    //
+    //  [1]. + axis increases zoom, which is delta x (xMax - xMin) and delta
+    //  y (yMax - yMin) decrease (with positive axis values), as we
+    //  define it in this code.
+    //  [2]. The mouse pointer position stays on the same scaled value
+    //  before and after zooming.
+    //  [3]. Zooming keeps the aspect ratio constant.
+    //  [4]. We can think of this as giving us only one constraint variable
+    //  (parameter) left; that is related to the "speed" of the zooming
+    //  relative to the rate of values coming from the axis input.
+    //
 
-     return true;
+    if(x_l == INT32_MAX // We have no mouse pointer position
+            || value == 0.0 // We have no value
+            || state & ACTIONS // We are in the middle of zooming
+        )
+        return false;
+
+    INFO("value=%lf", value);
+
+    value /= 15.0;
+    value *= 0.01;
+
+    struct PnZoom *z = p->zoom;
+
+    // We had these values before but we re-parameterized the
+    // transformation in terms of shifts and slopes.
+    double xMin = pixToX(p->padX, z);
+    double xMax = pixToX(p->width + p->padX, z);
+    double yMax = pixToY(p->padY, z);
+    double yMin = pixToY(p->height + p->padY, z);
+
+    double d = xMax - xMin;
+    DASSERT(d > 0.0);
+    d *= value;
+    xMin -= d;
+    xMax += d;
+
+    d = yMax - yMin;
+    DASSERT(d > 0.0);
+    d *= value;
+    yMin -= d;
+    yMax += d;
+
+    // Now the relative scale if good.  But, we wish to have the current
+    // mouse position, x_l, y_l, map to the same position as it did before
+    // this scaling.
+    double X_l = pixToX(x_l + p->padX, z);
+    double Y_l = pixToY(y_l + p->padY, z);
+
+    WARN("X=%lg,%lg value = %lg x=[%lg,%lg]  y=[%lg,%lg]",
+            X_l, Y_l, value, 
+            xMin, xMax, yMin, yMax);
+
+
+    // TODO: This will make too many zooms.  Change how we store them.
+    // Not so many.  Add a zoom replace function?  Maybe just save the
+    // last 30.
+
+    if(_pnPlot_pushZoom(p, // make a new zoom in the zoom stack
+              xMin, xMax, yMin, yMax))
+        // There is no reason to redraw if pushing the new zoom
+        // failed.
+        return true;
+
+    cairo_t *cr = cairo_create(p->bgSurface);
+    _pnPlot_drawGrids(p, cr);
+    cairo_destroy(cr);
+    pnWidget_queueDraw(&p->widget);
+    return true;
 }

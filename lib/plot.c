@@ -169,7 +169,7 @@ static inline void _PushZoom(struct PnPlot *g,
     g->zoom = z;
 }
 
-void _pnPlot_pushZoom(struct PnPlot *g,
+bool _pnPlot_pushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(xMin < xMax);
@@ -187,10 +187,11 @@ void _pnPlot_pushZoom(struct PnPlot *g,
                 "lack of relative number differences.\n"
                 "The relative difference in x and y about: "
                 "%.3g and %.3g", rdx, rdy);
-        return;
+        return true;
     }
 
     _PushZoom(g, xMin, xMax, yMin, yMax);
+    return false; // success.
 }
 
 static inline double RoundUp(double x, uint32_t *subDivider,
