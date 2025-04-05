@@ -66,9 +66,10 @@ struct PnZoom {
 //
 // Note: we could speed up the background grid drawing by not using Cairo,
 // because the background grid drawing requires just horizontal and
-// vertical line drawing which is easy to calculate the anti-aliasing then
-// Cairo's general anti-aliased line (lines at all angles).  But, the grid
-// background drawing is not a performance bottleneck, so fuck it.
+// vertical line drawing with which it is easier to calculate the
+// anti-aliasing then Cairo's general anti-aliased line (lines at general
+// angles).  But, the grid background drawing is not a performance
+// bottleneck, so fuck it.
 //
 // The foreground points plotted may just directly set the pixel colors as
 // a uint32_t (32 bit int), or a slower Cairo based foreground drawing.
@@ -83,10 +84,11 @@ struct PnZoom {
 // diddling.  It's hard to do anti-aliasing without floating point
 // calculations.
 //
-// Purpose slowly draw background once (one frame), then quickly draw on
+// We can slowly draw background once (one frame), then quickly draw on
 // top of it, 20 million points over many many frames.
 //
-// We already have a layout widget called PnGrid, so:
+// We already have a layout widget called PnGrid, we don't can this grid
+// too.
 //
 // The auto 2D plotter grid (graph) like part of quickplot.
 //
@@ -161,7 +163,9 @@ struct PnPlot {
 
 
 // These are mappings to (and from) pixels on a Cairo surface we are
-// plotting points and/or lines on.
+// plotting points and/or lines on PnPlot::bgSurface.  Don't forget the
+// padding on the sides, which makes the PnPlot::bgSurface larger than the
+// widget area.
 //
 // Note: In Cairo pixel distances tend to be doubles hence
 // all these functions return double.
@@ -188,6 +192,11 @@ extern bool _pnPlot_pushZoom(struct PnPlot *g,
 extern bool _pnPlot_popZoom(struct PnPlot *g);
 
 extern void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr);
+
+extern bool CheckZoom(double xMin, double xMax,
+        double yMin, double yMax);
+
+void PushCopyZoom(struct PnPlot *p);
 
 #define MINPAD   (100)
 

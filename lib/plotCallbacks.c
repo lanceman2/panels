@@ -24,7 +24,7 @@
 // as simple static variables (and not allocate something like them for
 // each plot).
 
-// We have: drag zooming, box zooming
+// We have: drag zooming, box zooming, and axis zooming.
 
 // Which mouse button does what:
 #define BUTTON_DRAG     0 // left mouse button = 0
@@ -36,6 +36,11 @@
 #define ENTERED   01 // TODO: this may not be needed.
 // Did the mouse pointer move with a action button pressed?
 #define MOVED     02
+
+// The Axis (middle mouse scroll) zoom does not need a flag in "state"
+// because it just zooms without needing to know a previous position like
+// in grab zooming and box zooming.  We don't let it "axis zoom" if we are
+// in the middle of doing grab zooming or box zooming.
 
 // Actions in state flag:
 #define ACTION_DRAG       04
@@ -156,12 +161,17 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
     DASSERT(p);
     DASSERT(state & ENTERED);
     uint32_t action = state & ACTIONS;
+
+    // We need this position for axis zooming (if there is any).  It may
+    // be that we could have queried the mouse pointer position at the
+    // time of the axis event, but this is not much work and this can even
+    // be more efficient if we axis zoom a lot.
+    x_l = x;
+    y_l = y;
+
     if(!action) return false;
     // We can only have one action at a time.
     DASSERT(action == ACTION_DRAG || action == ACTION_BOX);
-
-    x_l = x;
-    y_l = y;
 
     if(!(state & MOVED))
         // We have motion.  This lets mouse button release know that we
@@ -292,24 +302,28 @@ bool axis(struct PnWidget *w,
     // I'm going to go ahead and say that google maps axis interface is
     // not a bad standard to follow. I observe on google maps:
     //
-    //  [1]. + axis increases zoom, which is delta x (xMax - xMin) and delta
-    //  y (yMax - yMin) decrease (with positive axis values), as we
-    //  define it in this code.
+    //  [1]. + axis increases zoom, which is delta x (xMax - xMin) and
+    //  delta y (yMax - yMin) decrease (with positive axis values), as we
+    //  define it in this code. We can think of this as giving us a
+    //  parameter related to the "speed" of the zooming relative to the
+    //  rate of values coming from the axis input event (1 constraint
+    //  equation).
     //  [2]. The mouse pointer position stays on the same scaled value
-    //  before and after zooming.
-    //  [3]. Zooming keeps the aspect ratio constant.
-    //  [4]. We can think of this as giving us only one constraint variable
-    //  (parameter) left; that is related to the "speed" of the zooming
-    //  relative to the rate of values coming from the axis input.
+    //  before and after zooming (2 equations, x, y).
+    //  [3]. Axis zooming keeps the aspect ratio constant (1 constraint
+    //  equation).
+    //
+    //  That gives 4 equations for 4 unknowns (zoom parameters).
     //
 
     if(x_l == INT32_MAX // We have no mouse pointer position
-            || value == 0.0 // We have no value
-            || state & ACTIONS // We are in the middle of zooming
+            || value == 0.0 // We have no axis event value
+            // We are in the middle of zooming using another method.
+            || state & ACTIONS
         )
         return false;
 
-    INFO("value=%lf", value);
+    //INFO("value=%lf", value);
 
     value /= 15.0;
     value *= 0.01;
@@ -318,11 +332,16 @@ bool axis(struct PnWidget *w,
 
     // We had these values before but we re-parameterized the
     // transformation in terms of shifts and slopes.
+    // This may not be optimal (for compute speed), but this
+    // is very easy to follow, and is plenty fast.
     double xMin = pixToX(p->padX, z);
     double xMax = pixToX(p->width + p->padX, z);
     double yMax = pixToY(p->padY, z);
     double yMin = pixToY(p->height + p->padY, z);
 
+
+    // Try to scale it by increasing or decreasing the difference between
+    // plotted end values (max - min).
     double d = xMax - xMin;
     DASSERT(d > 0.0);
     d *= value;
@@ -335,30 +354,51 @@ bool axis(struct PnWidget *w,
     yMin -= d;
     yMax += d;
 
-    // Now the relative scale if good.  But, we wish to have the current
-    // mouse position, x_l, y_l, map to the same position as it did before
-    // this scaling.
+    if(CheckZoom(xMin, xMax, yMin, yMax))
+        // CheckZoom() will spew.
+        //
+        // This tried to zoom too much.  The floating point round-off is
+        // too much; that is the relative differences are too small.
+        return true;
+
+    if(p->zoomCount < 2) {
+        // Save a copy of the current zoom so that the user can "zoom-out"
+        // back to it.  It's nice to be able to go back to the plot view
+        // that the plot started at.
+        PushCopyZoom(p);
+        // Now we'll change the current newer zoom.
+        z = p->zoom;
+    }
+
+    // We don't create a new zoom, except for when there a too few zooms
+    // (like the above if block).  We just recalculate the current zoom.
+    // But, first we need these mapped shifted values:
     double X_l = pixToX(x_l + p->padX, z);
     double Y_l = pixToY(y_l + p->padY, z);
+    // Now we don't need the old scales (slopes), so we get the new ones:
+    z->xSlope = (xMax - xMin)/p->width;
+    z->ySlope = (yMin - yMax)/p->height;
+    //z->xShift = xMin - p->padX * z->xSlope;
+    //z->yShift = yMax - p->padY * z->ySlope;
+    // Now the relative scale is good.  But, we wish to have the current
+    // mouse position, x_l, y_l, map to the same position as it did before
+    // this scaling.  Now we recalculate the shifts:
+    //
+    // X_1 = (x_1 + padX) * xSlope + Xshift
+    // ==> Xshift = X_1 - (x_1 + padX) * xSlope
+    z->xShift = X_l - (x_l + p->padX) * z->xSlope;
+    z->yShift = Y_l - (y_l + p->padY) * z->ySlope;
 
-    WARN("X=%lg,%lg value = %lg x=[%lg,%lg]  y=[%lg,%lg]",
-            X_l, Y_l, value, 
-            xMin, xMax, yMin, yMax);
+    //DSPEW(" %d,%d   %lg,%lg == %lg,%lg", x_l, y_l, X_l, Y_l,
+    //        pixToX(x_l + p->padX, z), pixToY(y_l + p->padY, z));
 
-
-    // TODO: This will make too many zooms.  Change how we store them.
-    // Not so many.  Add a zoom replace function?  Maybe just save the
-    // last 30.
-
-    if(_pnPlot_pushZoom(p, // make a new zoom in the zoom stack
-              xMin, xMax, yMin, yMax))
-        // There is no reason to redraw if pushing the new zoom
-        // failed.
-        return true;
+    // Draw the p->bgSurface which will be the new plot "background"
+    // surface with this zoom.
 
     cairo_t *cr = cairo_create(p->bgSurface);
     _pnPlot_drawGrids(p, cr);
     cairo_destroy(cr);
+
     pnWidget_queueDraw(&p->widget);
     return true;
 }

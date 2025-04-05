@@ -55,6 +55,8 @@ static inline bool _PopZoom(struct PnPlot *g) {
     DZMEM(z, sizeof(*z));
     free(z);
 
+    DSPEW("Zoom count %" PRIu32, g->zoomCount);
+
     return (g->zoom == g->top)?false:true;
 }
 
@@ -136,20 +138,12 @@ static inline void FreeZooms(struct PnPlot *g) {
     g->top = 0;
 }
 
-static inline void _PushZoom(struct PnPlot *g,
-        double xMin, double xMax, double yMin, double yMax) {
+// Add a zoom to the zoom list.
+//
+void AddZoom(struct PnPlot *g, struct PnZoom *z) {
 
     DASSERT(g);
-    DASSERT(g->width);
-    DASSERT(g->height);
-
-    struct PnZoom *z = malloc(sizeof(*z));
-    ASSERT(z, "malloc(%zu) failed", sizeof(*z));
-
-    z->xSlope = (xMax - xMin)/g->width;
-    z->ySlope = (yMin - yMax)/g->height;
-    z->xShift = xMin - g->padX * z->xSlope;
-    z->yShift = yMax - g->padY * z->ySlope;
+    DASSERT(z);
 
     // Add to the end of the list of zooms
     if(g->zoom) {
@@ -165,18 +159,70 @@ static inline void _PushZoom(struct PnPlot *g,
         g->top = z;
     }
     z->next = 0;
-    // The current zoom (g->zoom) is always the last one, is this one.
+    // The current zoom (g->zoom) is always the last one, it's this one.
     g->zoom = z;
 }
 
-bool _pnPlot_pushZoom(struct PnPlot *g,
+void PushCopyZoom(struct PnPlot *p) {
+
+    DASSERT(p);
+    DASSERT(p->width);
+    DASSERT(p->height);
+
+    struct PnZoom *z = malloc(sizeof(*z));
+    ASSERT(z, "malloc(%zu) failed", sizeof(*z));
+    const struct PnZoom *old = p->zoom;
+    DASSERT(old);
+
+    z->xSlope = old->xSlope;
+    z->ySlope = old->ySlope;
+    z->xShift = old->xShift;
+    z->yShift = old->yShift;
+
+    AddZoom(p, z);
+}
+
+#define ZOOM_MAX  (100)
+
+static inline void _PushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax) {
+
+    DASSERT(g);
+    DASSERT(g->width);
+    DASSERT(g->height);
+
+    struct PnZoom *z;
+
+    if(g->zoomCount < ZOOM_MAX) {
+        z = malloc(sizeof(*z));
+        ASSERT(z, "malloc(%zu) failed", sizeof(*z));
+        if(g->zoomCount == ZOOM_MAX - 1)
+            INFO("At the zoom limit of %" PRIu32,
+                    g->zoomCount + 1);
+    } else {
+        DASSERT(g->zoom);
+        DASSERT(g->top);
+        // In this case we reuse the last zoom.
+        z = g->zoom;
+    }
+
+    z->xSlope = (xMax - xMin)/g->width;
+    z->ySlope = (yMin - yMax)/g->height;
+    z->xShift = xMin - g->padX * z->xSlope;
+    z->yShift = yMax - g->padY * z->ySlope;
+
+    if(z != g->zoom)
+        AddZoom(g, z);
+}
+
+bool CheckZoom(double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(xMin < xMax);
     DASSERT(yMin < yMax);
 
     // Zooming can fail if the numbers get small relative difference
-    // values:
+    // values (this is from trial and error, fuck with it at your
+    // peril):
     double rdx = fabs(2.0*(xMax - xMin)/(xMax + xMin));
     double rdy = fabs(2.0*(yMax - yMin)/(yMax + yMin));
     if(rdx < 1.0e-8 || rdy < 1.0e-8) {
@@ -189,6 +235,17 @@ bool _pnPlot_pushZoom(struct PnPlot *g,
                 "%.3g and %.3g", rdx, rdy);
         return true;
     }
+    return false; // success.
+}
+
+bool _pnPlot_pushZoom(struct PnPlot *g,
+        double xMin, double xMax, double yMin, double yMax) {
+
+    DASSERT(xMin < xMax);
+    DASSERT(yMin < yMax);
+
+    if(CheckZoom(xMin, xMax, yMin, yMax))
+        return true;
 
     _PushZoom(g, xMin, xMax, yMin, yMax);
     return false; // success.
