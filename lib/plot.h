@@ -165,7 +165,7 @@ struct PnPlot {
 // These are mappings to (and from) pixels on a Cairo surface we are
 // plotting points and/or lines on PnPlot::bgSurface.  Don't forget the
 // padding on the sides, which makes the PnPlot::bgSurface larger than the
-// widget area.
+// widget area.  That padding (padX, padY) could be made zero.
 //
 // Note: In Cairo pixel distances tend to be doubles hence
 // all these functions return double.
