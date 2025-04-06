@@ -900,26 +900,52 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     cairo_destroy(cr);
 }
 
-static int cairoDraw(struct PnWidget *w, cairo_t *cr,
-            struct PnPlot *g) {
+static inline void DrawBackgroundColor(struct PnPlot *g,
+        cairo_t *cr) {
 
+    cairo_save(cr);
     // We want the background to be what it is and not a combo.
-    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     uint32_t bgColor = g->widget.backgroundColor;
-
+    //cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_OUT);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_IN);
     cairo_set_source_rgba(cr, PN_R_DOUBLE(bgColor),
             PN_G_DOUBLE(bgColor), PN_B_DOUBLE(bgColor),
             PN_A_DOUBLE(bgColor));
     cairo_paint(cr);
+    cairo_restore(cr);
+}
+
+static inline void OverlayGridSurface(struct PnPlot *g,
+        cairo_t *cr) {
 
     // Transfer the bgSurface to this cr (and its surface).
     //
     // We let the background pixels that we just painted to be seen, that
-    // is if the pixels are not transparent.  Alpha is fun.
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    // is if the pixels are transparent.  Alpha is fun.
+    //cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OVER);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_OVERLAY);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
+    //cairo_set_operator(cr, CAIRO_OPERATOR_ATOP);
+    //cairo_set_source_rgba(cr, 0, 0, 0, 0);
     cairo_set_source_surface(cr, g->bgSurface,
             - g->padX + g->slideX, - g->padY + g->slideY);
     cairo_paint(cr);
+    //cairo_restore(cr);
+    //cairo_fill(cr);
+}
+
+static int cairoDraw(struct PnWidget *w, cairo_t *cr,
+            struct PnPlot *g) {
+
+    DrawBackgroundColor(g, cr);
+    OverlayGridSurface(g, cr);
+    //DrawBackgroundColor(g, cr);
 
     if(g->boxX != INT32_MAX) {
         // Draw a zoom box.
