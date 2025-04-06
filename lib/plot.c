@@ -641,6 +641,19 @@ static inline void DrawHGridLabels(cairo_t *cr,
      }
 }
 
+static inline void DrawBackgroundColor(const struct PnPlot *g,
+        cairo_t *cr) {
+
+    // We want the background to be what it is and not a combo.
+    uint32_t bgColor = g->widget.backgroundColor;
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, PN_R_DOUBLE(bgColor),
+            PN_G_DOUBLE(bgColor), PN_B_DOUBLE(bgColor),
+            PN_A_DOUBLE(bgColor));
+    cairo_paint(cr);
+}
+
+
 // TODO: There are a lot of user configurable parameters in this
 // function.
 void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr) {
@@ -664,9 +677,7 @@ void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr) {
             g->zoom, g->width + 2*g->padX, g->height + 2*g->padY,
             fontSize, &startY, &subDividerY, &powY);
 
-    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_rgba(cr, 0, 0, 0, 0);
-    cairo_paint(cr);
+    DrawBackgroundColor(g, cr);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
@@ -859,6 +870,7 @@ static inline void FixZoomsScale(struct PnPlot *g,
     g->padY = padY;
 }
 
+
 static void Config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
@@ -900,24 +912,6 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     cairo_destroy(cr);
 }
 
-static inline void DrawBackgroundColor(struct PnPlot *g,
-        cairo_t *cr) {
-
-    cairo_save(cr);
-    // We want the background to be what it is and not a combo.
-    uint32_t bgColor = g->widget.backgroundColor;
-    //cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_OUT);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_IN);
-    cairo_set_source_rgba(cr, PN_R_DOUBLE(bgColor),
-            PN_G_DOUBLE(bgColor), PN_B_DOUBLE(bgColor),
-            PN_A_DOUBLE(bgColor));
-    cairo_paint(cr);
-    cairo_restore(cr);
-}
-
 static inline void OverlayGridSurface(struct PnPlot *g,
         cairo_t *cr) {
 
@@ -925,31 +919,22 @@ static inline void OverlayGridSurface(struct PnPlot *g,
     //
     // We let the background pixels that we just painted to be seen, that
     // is if the pixels are transparent.  Alpha is fun.
-    //cairo_save(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OVER);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_OVERLAY);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
-    //cairo_set_operator(cr, CAIRO_OPERATOR_ATOP);
-    //cairo_set_source_rgba(cr, 0, 0, 0, 0);
     cairo_set_source_surface(cr, g->bgSurface,
             - g->padX + g->slideX, - g->padY + g->slideY);
     cairo_paint(cr);
-    //cairo_restore(cr);
-    //cairo_fill(cr);
 }
 
 static int cairoDraw(struct PnWidget *w, cairo_t *cr,
             struct PnPlot *g) {
 
-    DrawBackgroundColor(g, cr);
     OverlayGridSurface(g, cr);
-    //DrawBackgroundColor(g, cr);
 
     if(g->boxX != INT32_MAX) {
         // Draw a zoom box.
-        cairo_set_operator(cr, CAIRO_OPERATOR_XOR);
+        //cairo_set_operator(cr, CAIRO_OPERATOR_XOR);
+        cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
+        //cairo_set_operator(cr, CAIRO_OPERATOR_EXCLUSION);
         cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
         cairo_rectangle(cr,
                     g->boxX,
@@ -957,6 +942,17 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
                     g->boxWidth, g->boxHeight);
         cairo_fill(cr);
     }
+
+#if 1 // Screwing around
+cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+cairo_set_source_rgba(cr, 1.0, 1.0, 0.0, 1.0);
+cairo_translate(cr, g->slideX, g->slideY);
+cairo_move_to (cr, 10, 10);
+cairo_line_to (cr, 10000, 10000);
+cairo_set_line_width(cr, 20);
+cairo_stroke(cr);
+cairo_identity_matrix(cr);
+#endif
 
     return 0;
 }
