@@ -123,7 +123,7 @@ struct PnPlot {
     // See the ASCII art above.
     uint32_t padX, padY;
 
-    uint32_t subGridColor, gridColor, axesLabelColor;
+    uint32_t subGridColor, gridColor, axesLabelColor, zeroLineColor;
 
     // width and height of the view box; that is the width and height
     // without the padX and padY added to all sides.
