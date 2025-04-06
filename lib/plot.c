@@ -789,7 +789,7 @@ drawGrid:
 
 
     // The zero axis grid lines are special.  If they are showing we make
-    // them stand out.
+    // them standout.
     double pix;
 
     if(haveXZero) {
@@ -810,7 +810,7 @@ drawGrid:
     }
 
     if(haveXZero) {
-        cairo_set_line_width(cr, 0.8);
+        cairo_set_line_width(cr, 1.2);
         SetColor(cr,g->zeroLineColor);
         //const double dashes[2] = { 14.0, 9.0 };
         //cairo_set_dash(cr, dashes, 2/*numDashes*/, 0.0/*startOffset*/);
@@ -820,7 +820,7 @@ drawGrid:
         cairo_stroke(cr);
     }
     if(haveYZero) {
-        cairo_set_line_width(cr, 0.8);
+        cairo_set_line_width(cr, 1.2);
         SetColor(cr,g->zeroLineColor);
         //const double dashes[2] = { 14.0, 9.0 };
         //cairo_set_dash(cr, dashes, 2/*numDashes*/, 0.0/*startOffset*/);
