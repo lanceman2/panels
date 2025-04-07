@@ -994,9 +994,9 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
         cairo_fill(cr);
     }
 
-#if 1 // Screwing around
+#if 0 // Screwing around
 cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-cairo_set_source_rgba(cr, 1.0, 1.0, 0.0, 1.0);
+cairo_set_source_rgba(cr, 1.0, 1.0, 0.6, 1.0);
 if(g->slideX || g->slideY)
   cairo_translate(cr, g->slideX, g->slideY);
 cairo_move_to (cr, 10, 10);

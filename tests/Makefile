@@ -187,6 +187,17 @@ plot_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 221_plot_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 221_plot_CPPFLAGS := $(CAIRO_CFLAGS)
 
+plotData_run_SOURCES := plotData.c
+plotData_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+plotData_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+224_plotData_SOURCES := plotData.c
+224_plotData_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+224_plotData_CPPFLAGS := $(CAIRO_CFLAGS)
+
+
+
+
 115_label_SOURCES := label.c
 115_label_LDFLAGS := $(PN_LIB)
 
