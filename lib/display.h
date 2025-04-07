@@ -68,7 +68,8 @@
 #define W_MENU           (4 << 3)
 #define W_MENUITEM       (5 << 3)
 #define W_IMAGE          (6 << 3)
-#define W_PLOT           (7 << 3) // plot grid lines
+#define W_PLOT           (7 << 3) // plot with grid lines
+
 
 
 // If we add more surface types we'll need to check all the code.

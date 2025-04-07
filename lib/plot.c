@@ -72,15 +72,19 @@ static inline void DestroyBGSurface(struct PnPlot *g) {
         DASSERT(g->width);
         DASSERT(g->height);
         DASSERT(g->bgMemory);
+        DASSERT(g->cr);
+        cairo_destroy(g->cr);
         DZMEM(g->bgMemory, sizeof(*g->bgMemory)*g->width*g->height);
         free(g->bgMemory);
         cairo_surface_destroy(g->bgSurface);
         g->bgSurface = 0;
         g->bgMemory = 0;
+        g->cr = 0;
     } else {
         DASSERT(!g->width);
         DASSERT(!g->height);
         DASSERT(!g->bgMemory);
+        DASSERT(!g->cr);
     }
 }
 
@@ -114,6 +118,8 @@ static inline void CreateBGSurface(struct PnPlot *g,
             w, h,
             w * 4/*stride in bytes*/);
     DASSERT(g->bgSurface);
+    g->cr = cairo_create(g->bgSurface);
+    DASSERT(g->cr);
 }
 
 
@@ -670,7 +676,7 @@ static inline void DrawBackgroundColor(const struct PnPlot *g,
 // TODO: There are a lot of user configurable parameters in this
 // function.  Lots of different line widths.
 //
-void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr) {
+void _pnPlot_drawGrids(struct PnPlot *g, cairo_t *cr) {
 
     bool show_subGrid = g->show_subGrid;
 
@@ -829,6 +835,7 @@ drawGrid:
         cairo_line_to(cr, g->width + 2*g->padX, pix);
         cairo_stroke(cr);
     }
+    pnWidget_callAction(&g->widget, PN_PLOT_CB_STATIC_DRAW);
 }
 
 static
@@ -929,6 +936,7 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
 
     ASSERT(w);
     ASSERT(h);
+    DASSERT(widget == (void *) g);
 
     if(g->bgSurface && g->width == w && g->height == h) {
         DASSERT(g->bgMemory);
@@ -947,7 +955,7 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
         g->width = w;
         g->height = h;
         GetPadding(h, h, &g->padX, &g->padY);
-        _pnPlot_pushZoom(g, 0.0, 1.0, 0.0, 1.0);
+        _pnPlot_pushZoom(g, g->xMin, g->xMax, g->yMin, g->yMax);
     } else {
         DASSERT(g->top);
         DASSERT(g->width);
@@ -958,15 +966,16 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     }
 
     CreateBGSurface(g, w, h);
-    cairo_t *cr = cairo_create(g->bgSurface);
-    _pnPlot_drawGrids(g, cr);
-    cairo_destroy(cr);
+    _pnPlot_drawGrids(g, g->cr);
 }
 
 static inline void OverlayGridSurface(struct PnPlot *g,
         cairo_t *cr) {
 
     // Transfer the bgSurface to this cr (and its surface).
+    //
+    // Tests show this uses 1/2 the CPU usage as redrawing the grid lines
+    // every time.
     //
     // We let the background pixels that we just painted to be seen, that
     // is if the pixels are transparent.  Alpha is fun.
@@ -999,8 +1008,8 @@ cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 cairo_set_source_rgba(cr, 1.0, 1.0, 0.6, 1.0);
 if(g->slideX || g->slideY)
   cairo_translate(cr, g->slideX, g->slideY);
-cairo_move_to (cr, 10, 10);
-cairo_line_to (cr, 10000, 10000);
+cairo_move_to(cr, 10, 10);
+cairo_line_to(cr, 10000, 10000);
 cairo_set_line_width(cr, 20);
 cairo_stroke(cr);
 if(g->slideX || g->slideY)
@@ -1008,6 +1017,31 @@ if(g->slideX || g->slideY)
 #endif
 
     return 0;
+}
+
+void pnPlot_setView(struct PnWidget *w,
+        double xMin, double xMax, double yMin, double yMax) {
+
+    DASSERT(w);
+    ASSERT(GET_WIDGET_TYPE(w->type) == W_PLOT);
+    DASSERT(xMin < xMax);
+    DASSERT(yMin < yMax);
+
+    struct PnPlot *p = (void *) w;
+
+    bool haveZooms = (p->zoom)?true:false;
+
+    if(haveZooms)
+        FreeZooms(p);
+
+    p->xMin = xMin;
+    p->xMax = xMax;
+    p->yMin = yMin;
+    p->yMax = yMax;
+
+    // We don't make a zoom if we didn't have one yet.
+    if(haveZooms)
+        _pnPlot_pushZoom(p, xMin, xMax, yMin, yMax);
 }
 
 struct PnWidget *pnPlot_create(struct PnWidget *parent,
@@ -1048,7 +1082,10 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     pnWidget_setRelease(&plot->widget, (void *) release, plot);
     pnWidget_setMotion(&plot->widget,  (void *) motion, plot);
     pnWidget_setAxis(&plot->widget,  (void *) axis, plot);
- 
+
+    pnWidget_addAction(&plot->widget, PN_PLOT_CB_STATIC_DRAW,
+            (void *) StaticDrawAction, 0/*actionData*/);
+
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):
     plot->xMin=0.0;
@@ -1059,6 +1096,8 @@ struct PnWidget *pnPlot_create(struct PnWidget *parent,
     // Reset zoom box draw:
     plot->boxX = INT32_MAX;
 
+    // Defaults:
+    //
     // Colors bytes in order: A,R,G,B
     plot->subGridColor   = 0xFF70B070;
     plot->gridColor      = 0xFFE0E0E0;

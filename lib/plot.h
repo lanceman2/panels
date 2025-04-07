@@ -107,6 +107,8 @@ struct PnPlot {
     //
     cairo_surface_t *bgSurface;
     uint32_t *bgMemory; // This is the memory for the Cairo surface.
+    cairo_t *cr; // This is temporally used at config() time.
+    cairo_t *crp; // For point drawing.
 
     // Pointers to a doubly listed list of Zooms.
     //
@@ -116,7 +118,13 @@ struct PnPlot {
     struct PnZoom *zoom; // current zoom level
 
     // User values on the edges of the drawing area.
+    //
+    // Used for the first zoom.  After the first zoom there are not kept;
+    // we keep shift and slope instead.
     double xMin, xMax, yMin, yMax;
+
+    // Last point.
+    double x, y;
 
     // padX, padY is padding size added to cairo drawing surface.  The
     // padding is added to each of the 4 sides of the Cairo surface.
@@ -187,11 +195,12 @@ static inline double pixToY(double p, const struct PnZoom *z) {
 }
 
 
+
 extern bool _pnPlot_pushZoom(struct PnPlot *g,
         double xMin, double xMax, double yMin, double yMax);
 extern bool _pnPlot_popZoom(struct PnPlot *g);
 
-extern void _pnPlot_drawGrids(const struct PnPlot *g, cairo_t *cr);
+extern void _pnPlot_drawGrids(struct PnPlot *g, cairo_t *cr);
 
 extern bool CheckZoom(double xMin, double xMax,
         double yMin, double yMax);
@@ -216,3 +225,8 @@ extern bool press(struct PnWidget *w,
 extern bool axis(struct PnWidget *w,
             uint32_t time, uint32_t which, double value,
             struct PnPlot *p);
+
+extern bool StaticDrawAction(struct PnPlot *p,
+        bool (*callback)(struct PnWidget *plot,
+                cairo_t *cr, void *userData),
+        void *userData, void *actionData);

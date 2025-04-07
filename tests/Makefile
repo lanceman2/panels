@@ -180,22 +180,20 @@ loadAndUnloadCheckMaps_run_CPPFLAGS :=\
  -DDSO_FILE=\"./fontconfig_run.so\"
 
 plot_run_SOURCES := plot.c
-plot_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+plot_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 plot_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
 221_plot_SOURCES := plot.c
-221_plot_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+221_plot_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 221_plot_CPPFLAGS := $(CAIRO_CFLAGS)
 
-plotData_run_SOURCES := plotData.c
-plotData_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-plotData_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+plotDrawOver_run_SOURCES := plotDrawOver.c
+plotDrawOver_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+plotDrawOver_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-224_plotData_SOURCES := plotData.c
-224_plotData_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-224_plotData_CPPFLAGS := $(CAIRO_CFLAGS)
-
-
+224_plotDrawOver_SOURCES := plotDrawOver.c
+224_plotDrawOver_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+224_plotDrawOver_CPPFLAGS := $(CAIRO_CFLAGS)
 
 
 115_label_SOURCES := label.c

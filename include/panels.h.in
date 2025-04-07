@@ -27,8 +27,9 @@ extern "C" {
 // to verify all these values.  If any of these numbers are wrong
 // pnWidget_addAction() will throw an assertion.
 //
-#define PN_BUTTON_CB_CLICK 0 // after release
-#define PN_BUTTON_CB_PRESS 1 // after press
+#define PN_BUTTON_CB_CLICK      0 // after release
+#define PN_BUTTON_CB_PRESS      1 // after press
+#define PN_PLOT_CB_STATIC_DRAW  0 // For static plots
 
 
 
@@ -490,6 +491,16 @@ PN_EXPORT struct PnWidget *pnPlot_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
+PN_EXPORT void pnPlot_setView(struct PnWidget *plot,
+        double xMin, double xMax, double yMin, double yMax);
+PN_EXPORT void pnPlot_drawPoint(struct PnWidget *plot,
+        double x, double y);
+PN_EXPORT void pnPlot_drawPoints(struct PnWidget *plot,
+        const double *x, const double *y, uint32_t numPoints);
+
+
+
+
 
 
 // Advanced API:

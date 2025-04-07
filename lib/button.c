@@ -199,16 +199,17 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
 
 // Press and no release yet.
 //
-static bool pressAction(struct PnButton *b,
+static bool pressAction(struct PnWidget *b,
         // This is the user callback function prototype that we choose for
         // this "press" action.  The underlying API does not give a shit
         // what this (callback) void pointer is, but we do at this
         // point.
-        bool (*callback)(struct PnButton *b, void *userData),
+        bool (*callback)(struct PnWidget *b, void *userData),
         void *userData, void *actionData) {
 
     DASSERT(b);
     DASSERT(actionData == 0);
+    ASSERT(GET_WIDGET_TYPE(b->type) == W_BUTTON);
     DASSERT(callback);
 
     // callback() is the API user set callback.
@@ -231,26 +232,26 @@ static bool pressAction(struct PnButton *b,
 // this a good comparison.  Unsafe but much faster than Qt.  I have not
 // been able to unwind (in my head) the gobject CPP Macro madness in GTK,
 // but this is butt head simple compared to connecting widget "signals"
-// in GTK.  Is it faster than GTK?  I don't know, or care enough to
+// in GTK.  Is it faster than GTK?  I don't know, or have a need to
 // measure it.  I expect they are both fast enough.
 //
-// The only things I have against GTK and Qt is they are both: (1) bloated
-// and (2) leak system resources into your process.  Both (1 and 2) are
-// unacceptable for some applications.
+// GTK and Qt are both: (1) bloated and (2) leak system resources into
+// your process.  Both (1 and 2) are unacceptable for some applications.
 //
-static bool clickAction(struct PnButton *b,
+static bool clickAction(struct PnWidget *b,
         // This is the user callback function prototype that we choose for
-        // this "click" action.  The underlying API does not give a shit
-        // what this (callback) void pointer is, but we do at this
-        // point.
-        bool (*callback)(struct PnButton *b, void *userData),
+        // this "click", PN_BUTTON_CB_CLICK, action.  The underlying API
+        // does not give a shit what this (callback) void pointer is, but
+        // we do at this point.
+        bool (*callback)(struct PnWidget *b, void *userData),
         void *userData, void *actionData) {
 
     DASSERT(b);
     DASSERT(actionData == 0);
+    ASSERT(GET_WIDGET_TYPE(b->type) == W_BUTTON);
     DASSERT(callback);
 
-    // callback() is the API user set callback.
+    // callback() is the libpanels API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
     // this function from going through (calling) all connected

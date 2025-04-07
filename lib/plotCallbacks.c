@@ -86,6 +86,11 @@ static inline void FinishBoxZoom(struct PnPlot *p,
 
     // We pop a zoom if the zoom box is very small in x or y.
     if(abs(x - x_0) < 5 || abs(y - y_0) < 5) {
+
+        if(x == x_0 && y == y_0 && !p->zoomCount)
+            // This nothing to change and no zoom box to erase.
+            return;
+
         _pnPlot_popZoom(p);
         goto finish;
     }
