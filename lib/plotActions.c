@@ -96,31 +96,38 @@ void pnPlot_drawPoint(struct PnWidget *plot,
 void pnPlot_drawPoints(struct PnWidget *plot,
         const double *ax, const double *ay, uint32_t numPoints) {
 
+    DASSERT(numPoints);
+
     struct PnPlot *p = (void *) plot;
     const double hw = 6.1;
     const double w = 2.0*hw;
 
     struct PnZoom *z = p->zoom;
     cairo_t *cr = p->cr;
+    uint32_t i = 0;
 
     // TODO: This is not very optimal.
+    
+    if(p->x == DBL_MAX) {
+        p->x = xToPix(*ax++, z);
+        p->y = yToPix(*ay++, z);
+        ++i;
+    }
 
-    for(uint32_t i=0; i<numPoints; ++i) {
+    for(; i<numPoints; ++i) {
 
         double x = xToPix(*ax++, z);
         double y = yToPix(*ay++, z);
 
-        if(p->x != DBL_MAX) {
-            cairo_move_to(cr, p->x, p->y);
-            cairo_line_to(cr, x, y);
-            // Calling this often must save having to store all
-            // those points in the cairo_t object.
-            cairo_stroke(cr);
+        cairo_move_to(cr, p->x, p->y);
+        cairo_line_to(cr, x, y);
+        // Calling this often must save having to store all
+        // those points in the cairo_t object.
+        cairo_stroke(cr);
 
-            // Draw the last x, y point.
-            cairo_rectangle(p->crp, p->x - hw, p->y - hw, w, w);
-            cairo_fill(p->crp);
-        }
+        // Draw the last x, y point.
+        cairo_rectangle(p->crp, p->x - hw, p->y - hw, w, w);
+        cairo_fill(p->crp);
 
         p->x = x;
         p->y = y;

@@ -107,7 +107,7 @@ struct PnPlot {
     //
     cairo_surface_t *bgSurface;
     uint32_t *bgMemory; // This is the memory for the Cairo surface.
-    cairo_t *cr; // This is temporally used at config() time.
+    cairo_t *cr; // This is used at config() time.
     cairo_t *crp; // For point drawing.
 
     // Pointers to a doubly listed list of Zooms.
@@ -117,9 +117,9 @@ struct PnPlot {
     // zoom is the current zoom we are using.
     struct PnZoom *zoom; // current zoom level
 
-    // User values on the edges of the drawing area.
+    // Plotted X and Y values on the edges of the drawing area.
     //
-    // Used for the first zoom.  After the first zoom there are not kept;
+    // Used for the first zoom.  After the first zoom these are not kept;
     // we keep shift and slope instead.
     double xMin, xMax, yMin, yMax;
 
