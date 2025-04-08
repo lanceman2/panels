@@ -17,7 +17,11 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-bool Plot(struct PnWidget *plot, cairo_t *cr, void *userData) {
+
+// PlotPoint() and PlotPoints() do the same thing, just using different
+// PnPlot functions.
+//
+void PlotPoint(struct PnWidget *plot) {
 
     const double tMax = 20 * M_PI;
 
@@ -25,6 +29,40 @@ bool Plot(struct PnWidget *plot, cairo_t *cr, void *userData) {
         double a = 1.0 - t/tMax;
         pnPlot_drawPoint(plot, a * cos(t), a * sin(t));
     }
+}
+
+// Very stupid, but it's just a test.
+//
+void PlotPoints(struct PnWidget *plot) {
+
+    const uint32_t Len = 10;
+    double x[Len];
+    double y[Len];
+    uint32_t i = 0;
+
+    const double tMax = 20 * M_PI;
+
+    for(double t = 0.0; t <= 2*tMax + 10; t += 0.1) {
+        double a = 1.0 - t/tMax;
+        x[i] = a * cos(t);
+        y[i++] = a * sin(t);
+        if(i == Len) {
+            pnPlot_drawPoints(plot, x, y, Len);
+            i = 0;
+        }
+    }
+    if(i)
+        pnPlot_drawPoints(plot, x, y, i);
+}
+
+bool Plot(struct PnWidget *plot, cairo_t *cr, void *userData) {
+
+    if(which % 2)
+        PlotPoint(plot);
+    else
+        PlotPoints(plot);
+
+    ++which;
     return true;
 }
 
