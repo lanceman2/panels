@@ -107,7 +107,7 @@ void pnPlot_drawPoints(struct PnWidget *plot,
     uint32_t i = 0;
 
     // TODO: This is not very optimal.
-    
+ 
     if(p->x == DBL_MAX) {
         p->x = xToPix(*ax++, z);
         p->y = yToPix(*ay++, z);
