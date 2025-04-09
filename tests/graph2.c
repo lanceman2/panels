@@ -10,8 +10,6 @@
 #include "run.h"
 
 
-static uint32_t which = 0;
-
 static
 void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
@@ -59,6 +57,8 @@ void PlotPoints(struct PnWidget *graph) {
 
 static
 bool Plot(struct PnWidget *graph, cairo_t *cr, void *userData) {
+
+    static uint32_t which = 0;
 
     if(which % 2)
         PlotPoint(graph);
