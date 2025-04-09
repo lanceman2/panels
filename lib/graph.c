@@ -1031,8 +1031,7 @@ void pnGraph_setView(struct PnWidget *w,
 
     bool haveZooms = (p->zoom)?true:false;
 
-    if(haveZooms)
-        FreeZooms(p);
+    FreeZooms(p);
 
     p->xMin = xMin;
     p->xMax = xMax;
