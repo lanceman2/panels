@@ -1029,19 +1029,14 @@ void pnGraph_setView(struct PnWidget *w,
 
     struct PnGraph *p = (void *) w;
 
-    bool haveZooms = (p->zoom)?true:false;
-
-    if(haveZooms)
-        FreeZooms(p);
+    FreeZooms(p);
 
     p->xMin = xMin;
     p->xMax = xMax;
     p->yMin = yMin;
     p->yMax = yMax;
 
-    // We don't make a zoom if we didn't have one yet.
-    if(haveZooms)
-        _pnGraph_pushZoom(p, xMin, xMax, yMin, yMax);
+    _pnGraph_pushZoom(p, xMin, xMax, yMin, yMax);
 }
 
 struct PnWidget *pnGraph_create(struct PnWidget *parent,
