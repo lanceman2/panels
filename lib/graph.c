@@ -274,7 +274,7 @@ static inline double RoundUp(double x, uint32_t *subDivider,
 
     ASSERT(x > 0.0);
     ASSERT(isnormal(x));
-    ASSERT(x < DBL_MAX/8.0); // max is about 1.0e308
+    ASSERT(x < DBL_MAX/8.0); // max is about 1.0e+308
 
     double pow = log10(x);
     // x = 10^pow
