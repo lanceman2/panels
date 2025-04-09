@@ -304,7 +304,7 @@ static inline double RoundUp(double x, uint32_t *subDivider,
 
     //DSPEW("x = %lg = %lf * 10 ^(%d)", x, mant, p);
 
-    // Now trim digits off of mant.  Like for example:
+    // Now trim digits off of mant. Rounding up.  Like for example:
     //
     //    1.1234 => 2.0   or  4.6234 => 5.0
 
