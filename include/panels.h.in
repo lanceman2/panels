@@ -497,6 +497,21 @@ PN_EXPORT void pnGraph_drawPoint(struct PnWidget *graph,
         double x, double y);
 PN_EXPORT void pnGraph_drawPoints(struct PnWidget *graph,
         const double *x, const double *y, uint32_t numPoints);
+// Set colors to 0 to turn off their drawing.
+PN_EXPORT void pnGraph_setSubGridColor(struct PnWidget *graph,
+        uint32_t color);
+PN_EXPORT void pnGraph_setGridColor(struct PnWidget *graph,
+        uint32_t color);
+PN_EXPORT void pnGraph_setAxesLabelColor(struct PnWidget *graph,
+        uint32_t color);
+PN_EXPORT void pnGraph_setAxesColor(struct PnWidget *graph,
+        uint32_t color);
+PN_EXPORT void pnGraph_setZeroLineColor(struct PnWidget *graph,
+        uint32_t color);
+
+
+
+
 
 
 

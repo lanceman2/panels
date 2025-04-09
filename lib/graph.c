@@ -787,7 +787,7 @@ drawGrid:
     DrawHGrid(cr, lineWidth, g->zoom, g,
             fontSize, startY, deltaY);
 
-    SetColor(cr, g->axesLabelColor);
+    SetColor(cr, g->axesColor);
     bool haveXZero = DrawVGridLabels(cr, lineWidth, g->zoom, g,
             fontSize, startX, deltaX, powX);
     bool haveYZero = DrawHGridLabels(cr, lineWidth, g->zoom, g,
@@ -1100,7 +1100,7 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     // Colors bytes in order: A,R,G,B
     g->subGridColor   = 0xFF70B070;
     g->gridColor      = 0xFFE0E0E0;
-    g->axesLabelColor = 0xFFFFFFFF;
+    g->axesColor = 0xFFFFFFFF;
     g->zeroLineColor  = 0xFFFF0000;
 
     g->show_subGrid = true;

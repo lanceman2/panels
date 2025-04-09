@@ -131,7 +131,7 @@ struct PnGraph {
     // See the ASCII art above.
     uint32_t padX, padY;
 
-    uint32_t subGridColor, gridColor, axesLabelColor, zeroLineColor;
+    uint32_t subGridColor, gridColor, axesColor, zeroLineColor;
 
     // width and height of the view box; that is the width and height
     // without the padX and padY added to all sides.

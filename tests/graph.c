@@ -9,7 +9,6 @@
 
 #include "run.h"
 
-uint32_t which = 0;
 
 static
 void catcher(int sig) {

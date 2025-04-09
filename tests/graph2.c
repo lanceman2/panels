@@ -9,11 +9,11 @@
 
 #include "run.h"
 
-uint32_t which = 0;
+
+static uint32_t which = 0;
 
 static
 void catcher(int sig) {
-
     ASSERT(0, "caught signal number %d", sig);
 }
 
@@ -21,6 +21,7 @@ void catcher(int sig) {
 // PlotPoint() and PlotPoints() do the same thing, just using different
 // pnGraph functions.
 //
+static
 void PlotPoint(struct PnWidget *graph) {
 
     const double tMax = 20 * M_PI;
@@ -33,6 +34,7 @@ void PlotPoint(struct PnWidget *graph) {
 
 // Very stupid, but it's just a test.
 //
+static
 void PlotPoints(struct PnWidget *graph) {
 
     const uint32_t Len = 10;
@@ -55,6 +57,7 @@ void PlotPoints(struct PnWidget *graph) {
         pnGraph_drawPoints(graph, x, y, i);
 }
 
+static
 bool Plot(struct PnWidget *graph, cairo_t *cr, void *userData) {
 
     if(which % 2)
