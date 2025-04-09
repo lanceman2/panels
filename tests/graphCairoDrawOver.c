@@ -14,7 +14,6 @@
 
 
 #include "run.h"
-#include "rand.h"
 
 
 static
@@ -23,27 +22,21 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-static int Draw(struct PnWidget *widget, uint32_t *pixels,
-            uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
-            void *userData) {
+static int cairoDraw(struct PnWidget *w, cairo_t *cr, void *userData) {
 
-    static int count = 0;
-    if(count % 60 == 0)
-        fprintf(stderr, " %d ", count);
-    uint32_t x = Rand(2, w-3);
-    uint32_t y = Rand(2, h-3);
-    uint32_t color = Color();
-    pixels[x + y * stride] = color;
-    pixels[x+1 + y * stride] = color;
-    pixels[x-1 + y * stride] = color;
-    pixels[x + (y+1) * stride] = color;
-    pixels[x + (y-1) * stride] = color;
-    pixels[x+2 + y * stride] = color;
-    pixels[x-2 + y * stride] = color;
-    pixels[x + (y+2) * stride] = color;
-    pixels[x + (y-2) * stride] = color;
-    ++count;
-    return 1;
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 1.0);
+
+    cairo_move_to(cr, 36, 36);
+    cairo_line_to(cr, 500, 500);
+    cairo_line_to(cr, 36, 500);
+    cairo_line_to(cr, 500, 36);
+    cairo_line_to(cr, 36, 36);
+    cairo_line_to(cr, 44, 44);
+    cairo_set_line_width(cr, 18);
+    cairo_stroke(cr);
+
+    return 0;
 }
 
 int main(void) {
@@ -69,7 +62,7 @@ int main(void) {
         0/*width*/, 0/*height*/, PnLayout_Cover,
         0/*align*/, PnExpand_HV, 0/*size*/);
     ASSERT(over);
-    pnWidget_setDraw(over, Draw, 0);
+    pnWidget_setCairoDraw(over, cairoDraw, 0);
 
 
     pnWindow_show(win, true);

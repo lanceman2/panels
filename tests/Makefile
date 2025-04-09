@@ -196,13 +196,22 @@ graph2_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 222_graph2_CPPFLAGS := $(CAIRO_CFLAGS)
 
 
+graphCairoDrawOver_run_SOURCES := graphCairoDrawOver.c
+graphCairoDrawOver_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+graphCairoDrawOver_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+224_graphCairoDrawOver_SOURCES := graphCairoDrawOver.c
+224_graphCairoDrawOver_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+224_graphCairoDrawOver_CPPFLAGS := $(CAIRO_CFLAGS)
+
 graphDrawOver_run_SOURCES := graphDrawOver.c
 graphDrawOver_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 graphDrawOver_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-224_graphDrawOver_SOURCES := graphDrawOver.c
-224_graphDrawOver_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-224_graphDrawOver_CPPFLAGS := $(CAIRO_CFLAGS)
+234_graphDrawOver_SOURCES := graphDrawOver.c
+234_graphDrawOver_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+234_graphDrawOver_CPPFLAGS := $(CAIRO_CFLAGS)
+
 
 
 115_label_SOURCES := label.c
