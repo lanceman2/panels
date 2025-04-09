@@ -19,7 +19,7 @@
 // not a limitation that we prefer but we did not want to make our own
 // windowing standard.  We had to start somewhere.
 //
-// I just want to make a thing that lets me quickly color pixels in a
+// I just want to make a thing that lets us quickly color pixels in a
 // window (and sub-windows) without writing ten thousand lines of compiled
 // source code.  Just a stupid little wrapper library.  "panels" is an
 // order of magnitude smaller than GTK and Qt (leaky bloat monsters).
@@ -49,13 +49,15 @@
 // bloat.  I love the simple idea of writing to shared memory pixels that
 // exists in Wayland client; the X11 client API approach of providing a
 // drawing primitives just smells of inefficiency and inflexibility.
+// For example, did all drawing operations incur a system call or two
+// (for all I know they did not all the time).
 
 // Constrained by libwayland-client, we can only have one Pn Display
 // object in a process.  Not our fucking choose.  We're lucky that it's
 // not leaky (memory, files, and shit) like most libraries.  It appears
 // that for every Wayland client object that you can create there is a
-// destroy function, and that's a real good thing.  Most of the larger
-// popular libraries do not do this.
+// destroy function, and that's a real good thing.  Most large popular
+// libraries do not do this.
 
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set
@@ -75,6 +77,8 @@
 // If we add more surface types we'll need to check all the code.
 //
 // TODO: Add a wayland subsurface to this type thingy?
+//
+// TODO: Rename SurfaceType to WidgetType?
 //
 enum PnSurfaceType {
 
