@@ -10,7 +10,7 @@
 
 #include "../lib/debug.h"
 #include "../lib/display.h"
-#include "../lib/plot.h"
+#include "../lib/graph.h"
 
 
 #include "run.h"
@@ -50,15 +50,15 @@ int main(void) {
     pnWindow_setPreferredSize(win, 1100, 900);
 
     // The auto 2D plotter grid (graph)
-    struct PnWidget *plot = pnPlot_create(
+    struct PnWidget *graph = pnGraph_create(
             win/*parent*/,
             90/*width*/, 70/*height*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
-    ASSERT(plot);
+    ASSERT(graph);
     //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(plot, 0xA0101010);
+    pnWidget_setBackgroundColor(graph, 0xA0101010);
 
-    struct PnWidget *over = pnWidget_create(plot/*parent*/,
+    struct PnWidget *over = pnWidget_create(graph/*parent*/,
         0/*width*/, 0/*height*/, PnLayout_Cover,
         0/*align*/, PnExpand_HV, 0/*size*/);
     ASSERT(over);

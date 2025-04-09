@@ -15,7 +15,7 @@
 
 #include "debug.h"
 #include "display.h"
-#include "plot.h"
+#include "graph.h"
 
 
 
@@ -33,10 +33,10 @@ static inline void SetColor(cairo_t *cr, uint32_t color) {
 
 // Return true if there are still zooms to pop.
 //
-// We do not pop (free) the last one; unless we are destroying the plot.
-// We need to keep the last one so we can draw something.
+// We do not pop (free) the last one; unless we are destroying the
+// graph. We need to keep the last one so we can draw something.
 //
-static inline bool _PopZoom(struct PnPlot *g) {
+static inline bool _PopZoom(struct PnGraph *g) {
 
     DASSERT(g->zoom);
     DASSERT(g->top);
@@ -67,7 +67,7 @@ static inline bool _PopZoom(struct PnPlot *g) {
     return (g->zoom == g->top)?false:true;
 }
 
-static inline void DestroyBGSurface(struct PnPlot *g) {
+static inline void DestroyBGSurface(struct PnGraph *g) {
     if(g->bgSurface) {
         DASSERT(g->width);
         DASSERT(g->height);
@@ -88,7 +88,7 @@ static inline void DestroyBGSurface(struct PnPlot *g) {
     }
 }
 
-static inline void CreateBGSurface(struct PnPlot *g,
+static inline void CreateBGSurface(struct PnGraph *g,
         uint32_t w, uint32_t h) {
 
     DASSERT(g);
@@ -125,7 +125,7 @@ static inline void CreateBGSurface(struct PnPlot *g,
 
 // Returns true if there are zooms left to pop after this call.
 //
-bool _pnPlot_popZoom(struct PnPlot *g) {
+bool _pnGraph_popZoom(struct PnGraph *g) {
 
     if(g->zoom == g->top)
         // No need to redraw.
@@ -134,14 +134,14 @@ bool _pnPlot_popZoom(struct PnPlot *g) {
     return _PopZoom(g);
 }
 
-static inline void FreeZooms(struct PnPlot *g) {
+static inline void FreeZooms(struct PnGraph *g) {
 
     if(!g->zoom) return;
 
     DASSERT(g->top);
 
     // Free the zooms.
-    while(_pnPlot_popZoom(g));
+    while(_pnGraph_popZoom(g));
 
     // Free the last zoom, that will not pop.  If it did pop, that would
     // suck for user's zooming ability.
@@ -153,7 +153,7 @@ static inline void FreeZooms(struct PnPlot *g) {
 
 // Add a zoom to the zoom list.
 //
-void AddZoom(struct PnPlot *g, struct PnZoom *z) {
+void AddZoom(struct PnGraph *g, struct PnZoom *z) {
 
     DASSERT(g);
     DASSERT(z);
@@ -176,7 +176,7 @@ void AddZoom(struct PnPlot *g, struct PnZoom *z) {
     g->zoom = z;
 }
 
-void PushCopyZoom(struct PnPlot *p) {
+void PushCopyZoom(struct PnGraph *p) {
 
     DASSERT(p);
     DASSERT(p->width);
@@ -197,7 +197,7 @@ void PushCopyZoom(struct PnPlot *p) {
 
 #define ZOOM_MAX  (100)
 
-static inline void _PushZoom(struct PnPlot *g,
+static inline void _PushZoom(struct PnGraph *g,
         double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(g);
@@ -251,7 +251,7 @@ bool CheckZoom(double xMin, double xMax, double yMin, double yMax) {
     return false; // success.
 }
 
-bool _pnPlot_pushZoom(struct PnPlot *g,
+bool _pnGraph_pushZoom(struct PnGraph *g,
         double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(xMin < xMax);
@@ -311,7 +311,7 @@ static inline double RoundUp(double x, uint32_t *subDivider,
     uint32_t ix = (uint32_t) mant;
 
     // We make it larger, not smaller.  Just certain values look good in
-    // plot grid lines.
+    // plot (graph) grid lines.
     //
     switch(ix) {
         case 9:
@@ -371,7 +371,7 @@ static inline void DrawHSubGrid(cairo_t *cr, const struct PnZoom *z,
 // For example a data scaled space between lines of 2.0000e-3 and not
 // 1.8263e-3.
 //
-// Returns the distance between lines for a sub grid in plot
+// Returns the distance between lines for a sub grid in graph
 // coordinates.
 //
 static inline double GetVGrid(cairo_t *cr,
@@ -504,7 +504,7 @@ static inline void GetLabel(char *label, size_t LEN,
 
 static inline void DrawVGrid(cairo_t *cr,
         double lineWidth/*vertical line width in pixels*/, 
-        const struct PnZoom *z, const struct PnPlot *g,
+        const struct PnZoom *z, const struct PnGraph *g,
         double fontSize, double start,
         double delta) {
 
@@ -527,7 +527,7 @@ static inline void DrawVGrid(cairo_t *cr,
 //
 static inline bool DrawVGridLabels(cairo_t *cr,
         double lineWidth/*vertical line width in pixels*/, 
-        const struct PnZoom *z, const struct PnPlot *g,
+        const struct PnZoom *z, const struct PnGraph *g,
         double fontSize, double start,
         double delta, int32_t pow) {
 
@@ -585,7 +585,7 @@ static inline bool DrawVGridLabels(cairo_t *cr,
 
 static inline void DrawHGrid(cairo_t *cr,
         double lineWidth/*vertical line width in pixels*/, 
-        const struct PnZoom *z, const struct PnPlot *g,
+        const struct PnZoom *z, const struct PnGraph *g,
         double fontSize, double start,
         double delta) {
 
@@ -606,7 +606,7 @@ static inline void DrawHGrid(cairo_t *cr,
 
 static inline bool DrawHGridLabels(cairo_t *cr,
         double lineWidth/*line width in pixels*/, 
-        const struct PnZoom *z, const struct PnPlot *g,
+        const struct PnZoom *z, const struct PnGraph *g,
         double fontSize, double start,
         double delta, int32_t pow) {
 
@@ -662,7 +662,7 @@ static inline bool DrawHGridLabels(cairo_t *cr,
     return haveZero;
 }
 
-static inline void DrawBackgroundColor(const struct PnPlot *g,
+static inline void DrawBackgroundColor(const struct PnGraph *g,
         cairo_t *cr) {
 
     // We want the background to be what it is and not a combo.
@@ -676,7 +676,7 @@ static inline void DrawBackgroundColor(const struct PnPlot *g,
 // TODO: There are a lot of user configurable parameters in this
 // function.  Lots of different line widths.
 //
-void _pnPlot_drawGrids(struct PnPlot *g, cairo_t *cr) {
+void _pnGraph_drawGrids(struct PnGraph *g, cairo_t *cr) {
 
     bool show_subGrid = g->show_subGrid;
 
@@ -835,11 +835,11 @@ drawGrid:
         cairo_line_to(cr, g->width + 2*g->padX, pix);
         cairo_stroke(cr);
     }
-    pnWidget_callAction(&g->widget, PN_PLOT_CB_STATIC_DRAW);
+    pnWidget_callAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW);
 }
 
 static
-void destroy(struct PnWidget *w, struct PnPlot *p) {
+void destroy(struct PnWidget *w, struct PnGraph *p) {
 
     DASSERT(p);
     DASSERT(p = (void *) w);
@@ -888,7 +888,7 @@ void GetPadding(uint32_t width, uint32_t height,
 // drawing area changed size; i.e. there is a bigger or smaller user view
 // but the plots did not shift in x or y direction.
 //
-static inline void FixZoomsScale(struct PnPlot *g,
+static inline void FixZoomsScale(struct PnGraph *g,
         uint32_t width, uint32_t height) {
 
     DASSERT(g);
@@ -932,7 +932,7 @@ static inline void FixZoomsScale(struct PnPlot *g,
 static void Config(struct PnWidget *widget, uint32_t *pixels,
             uint32_t x, uint32_t y,
             uint32_t w, uint32_t h, uint32_t stride/*4 bytes*/,
-            struct PnPlot *g) {
+            struct PnGraph *g) {
 
     ASSERT(w);
     ASSERT(h);
@@ -955,7 +955,7 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
         g->width = w;
         g->height = h;
         GetPadding(h, h, &g->padX, &g->padY);
-        _pnPlot_pushZoom(g, g->xMin, g->xMax, g->yMin, g->yMax);
+        _pnGraph_pushZoom(g, g->xMin, g->xMax, g->yMin, g->yMax);
     } else {
         DASSERT(g->top);
         DASSERT(g->width);
@@ -966,10 +966,10 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     }
 
     CreateBGSurface(g, w, h);
-    _pnPlot_drawGrids(g, g->cr);
+    _pnGraph_drawGrids(g, g->cr);
 }
 
-static inline void OverlayGridSurface(struct PnPlot *g,
+static inline void OverlayGridSurface(struct PnGraph *g,
         cairo_t *cr) {
 
     // Transfer the bgSurface to this cr (and its surface).
@@ -986,7 +986,7 @@ static inline void OverlayGridSurface(struct PnPlot *g,
 }
 
 static int cairoDraw(struct PnWidget *w, cairo_t *cr,
-            struct PnPlot *g) {
+            struct PnGraph *g) {
 
     OverlayGridSurface(g, cr);
 
@@ -1019,15 +1019,15 @@ if(g->slideX || g->slideY)
     return 0;
 }
 
-void pnPlot_setView(struct PnWidget *w,
+void pnGraph_setView(struct PnWidget *w,
         double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(w);
-    ASSERT(GET_WIDGET_TYPE(w->type) == W_PLOT);
+    ASSERT(GET_WIDGET_TYPE(w->type) == W_GRAPH);
     DASSERT(xMin < xMax);
     DASSERT(yMin < yMax);
 
-    struct PnPlot *p = (void *) w;
+    struct PnGraph *p = (void *) w;
 
     bool haveZooms = (p->zoom)?true:false;
 
@@ -1041,73 +1041,73 @@ void pnPlot_setView(struct PnWidget *w,
 
     // We don't make a zoom if we didn't have one yet.
     if(haveZooms)
-        _pnPlot_pushZoom(p, xMin, xMax, yMin, yMax);
+        _pnGraph_pushZoom(p, xMin, xMax, yMin, yMax);
 }
 
-struct PnWidget *pnPlot_create(struct PnWidget *parent,
+struct PnWidget *pnGraph_create(struct PnWidget *parent,
         uint32_t width, uint32_t height, enum PnAlign align,
         enum PnExpand expand, size_t size) {
 
-    struct PnPlot *plot;
+    struct PnGraph *g;
 
-    if(size < sizeof(*plot))
-        size = sizeof(*plot);
+    if(size < sizeof(*g))
+        size = sizeof(*g);
 
-    plot = (void *) pnWidget_create(
+    g = (void *) pnWidget_create(
             parent/*parent*/,
             80/*width*/, 60/*height*/,
             PnLayout_Cover/* => We can have a child that is drawn on top of
-                           this grid lines "plot" widget.  That one way to
+                           this grid lines "graph" widget.  That one way to
                            make a 2D plotter.  The transparent part of the
                            child widget will show the under laying grid
                            lines.*/,
             align, expand, size);
-    ASSERT(plot);
+    ASSERT(g);
 
     // It starts out life as a widget:
-    DASSERT(plot->widget.type == PnSurfaceType_widget);
-    // And now it becomes a plot:
-    plot->widget.type = PnSurfaceType_plot;
+    DASSERT(g->widget.type == PnSurfaceType_widget);
+    // And now it becomes a graph:
+    g->widget.type = PnSurfaceType_graph;
     // which is also a widget too (and more bits):
-    DASSERT(plot->widget.type & WIDGET);
+    DASSERT(g->widget.type & WIDGET);
 
     // Add widget callback functions:
-    pnWidget_setCairoDraw(&plot->widget, (void *) cairoDraw, plot);
-    pnWidget_setConfig(&plot->widget, (void *) Config, plot);
-    pnWidget_addDestroy(&plot->widget, (void *) destroy, plot);
+    pnWidget_setCairoDraw(&g->widget, (void *) cairoDraw, g);
+    pnWidget_setConfig(&g->widget, (void *) Config, g);
+    pnWidget_addDestroy(&g->widget, (void *) destroy, g);
     //
-    pnWidget_setEnter(&plot->widget,   (void *) enter, plot);
-    pnWidget_setLeave(&plot->widget,   (void *) leave, plot);
-    pnWidget_setPress(&plot->widget,   (void *) press, plot);
-    pnWidget_setRelease(&plot->widget, (void *) release, plot);
-    pnWidget_setMotion(&plot->widget,  (void *) motion, plot);
-    pnWidget_setAxis(&plot->widget,  (void *) axis, plot);
+    pnWidget_setEnter(&g->widget,   (void *) enter, g);
+    pnWidget_setLeave(&g->widget,   (void *) leave, g);
+    pnWidget_setPress(&g->widget,   (void *) press, g);
+    pnWidget_setRelease(&g->widget, (void *) release, g);
+    pnWidget_setMotion(&g->widget,  (void *) motion, g);
+    pnWidget_setAxis(&g->widget,  (void *) axis, g);
 
-    pnWidget_addAction(&plot->widget, PN_PLOT_CB_STATIC_DRAW,
+    pnWidget_addAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW,
             (void *) StaticDrawAction, 0/*actionData*/);
 
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):
-    plot->xMin=0.0;
-    plot->xMax=1.0;
-    plot->yMin=0.0;
-    plot->yMax=1.0;
+    g->xMin=0.0;
+    g->xMax=1.0;
+    g->yMin=0.0;
+    g->yMax=1.0;
 
     // Reset zoom box draw:
-    plot->boxX = INT32_MAX;
+    g->boxX = INT32_MAX;
 
     // Defaults:
     //
     // Colors bytes in order: A,R,G,B
-    plot->subGridColor   = 0xFF70B070;
-    plot->gridColor      = 0xFFE0E0E0;
-    plot->axesLabelColor = 0xFFFFFFFF;
-    plot->zeroLineColor  = 0xFFFF0000;
+    g->subGridColor   = 0xFF70B070;
+    g->gridColor      = 0xFFE0E0E0;
+    g->axesLabelColor = 0xFFFFFFFF;
+    g->zeroLineColor  = 0xFFFF0000;
 
-    plot->show_subGrid = true;
+    g->show_subGrid = true;
 
-    // The rest of PnPlot is zero from pnWidget_create() -> calloc()
+    // The rest of PnGraph is zero from pnWidget_create() -> calloc()
     // above.
 
-    return &plot->widget;
+    return &g->widget;
 }

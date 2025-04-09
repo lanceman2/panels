@@ -29,7 +29,7 @@ extern "C" {
 //
 #define PN_BUTTON_CB_CLICK      0 // after release
 #define PN_BUTTON_CB_PRESS      1 // after press
-#define PN_PLOT_CB_STATIC_DRAW  0 // For static plots
+#define PN_GRAPH_CB_STATIC_DRAW  0 // For static plots
 
 
 
@@ -487,15 +487,15 @@ PN_EXPORT struct PnWidget *pnImage_create(struct PnWidget *parent,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
 
-PN_EXPORT struct PnWidget *pnPlot_create(struct PnWidget *parent,
+PN_EXPORT struct PnWidget *pnGraph_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnAlign align,
         enum PnExpand expand, size_t size);
-PN_EXPORT void pnPlot_setView(struct PnWidget *plot,
+PN_EXPORT void pnGraph_setView(struct PnWidget *graph,
         double xMin, double xMax, double yMin, double yMax);
-PN_EXPORT void pnPlot_drawPoint(struct PnWidget *plot,
+PN_EXPORT void pnGraph_drawPoint(struct PnWidget *graph,
         double x, double y);
-PN_EXPORT void pnPlot_drawPoints(struct PnWidget *plot,
+PN_EXPORT void pnGraph_drawPoints(struct PnWidget *graph,
         const double *x, const double *y, uint32_t numPoints);
 
 

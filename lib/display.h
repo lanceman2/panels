@@ -68,7 +68,7 @@
 #define W_MENU           (4 << 3)
 #define W_MENUITEM       (5 << 3)
 #define W_IMAGE          (6 << 3)
-#define W_PLOT           (7 << 3) // plot with grid lines
+#define W_GRAPH          (7 << 3) // graph plotter with grid lines
 
 
 
@@ -92,7 +92,7 @@ enum PnSurfaceType {
     PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
     PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
     PnSurfaceType_image      = (WIDGET | W_IMAGE),
-    PnSurfaceType_plot       = (WIDGET | W_PLOT)
+    PnSurfaceType_graph      = (WIDGET | W_GRAPH)
 };
 
 

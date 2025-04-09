@@ -7,10 +7,10 @@ pnFindFont
 pnImage_create
 pnLabel_create
 pnLabel_setFontColor
-pnPlot_create
-pnPlot_setView
-pnPlot_drawPoint
-pnPlot_drawPoints
+pnGraph_create
+pnGraph_setView
+pnGraph_drawPoint
+pnGraph_drawPoints
 pnWidget_addAction
 pnWidget_addCallback
 pnWidget_addChild

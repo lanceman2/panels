@@ -79,9 +79,9 @@ libpanels.so_SOURCES +=\
  button.c\
  label.c\
  image.c\
- plot.c\
- plotCallbacks.c\
- plot.h\
+ graph.c\
+ graphCallbacks.c\
+ graph.h\
  plotActions.c 
 endif
 

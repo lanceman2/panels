@@ -179,30 +179,30 @@ loadAndUnloadCheckMaps_run_SOURCES := loadAndUnloadCheckMaps.c  ../lib/debug.c
 loadAndUnloadCheckMaps_run_CPPFLAGS :=\
  -DDSO_FILE=\"./fontconfig_run.so\"
 
-plot_run_SOURCES := plot.c
-plot_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
-plot_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+graph_run_SOURCES := graph.c
+graph_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+graph_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-221_plot_SOURCES := plot.c
-221_plot_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
-221_plot_CPPFLAGS := $(CAIRO_CFLAGS)
+221_graph_SOURCES := graph.c
+221_graph_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+221_graph_CPPFLAGS := $(CAIRO_CFLAGS)
 
-plot2_run_SOURCES := plot2.c
-plot2_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
-plot2_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+graph2_run_SOURCES := graph2.c
+graph2_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+graph2_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-222_plot2_SOURCES := plot2.c
-222_plot2_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
-222_plot2_CPPFLAGS := $(CAIRO_CFLAGS)
+222_graph2_SOURCES := graph2.c
+222_graph2_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+222_graph2_CPPFLAGS := $(CAIRO_CFLAGS)
 
 
-plotDrawOver_run_SOURCES := plotDrawOver.c
-plotDrawOver_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-plotDrawOver_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+graphDrawOver_run_SOURCES := graphDrawOver.c
+graphDrawOver_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+graphDrawOver_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-224_plotDrawOver_SOURCES := plotDrawOver.c
-224_plotDrawOver_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
-224_plotDrawOver_CPPFLAGS := $(CAIRO_CFLAGS)
+224_graphDrawOver_SOURCES := graphDrawOver.c
+224_graphDrawOver_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
+224_graphDrawOver_CPPFLAGS := $(CAIRO_CFLAGS)
 
 
 115_label_SOURCES := label.c

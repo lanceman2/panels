@@ -42,7 +42,7 @@
 
 struct PnZoom {
 
-    struct PnZoom *prev, *next; // To keep a list of zooms in PnPlot
+    struct PnZoom *prev, *next; // To keep a list of zooms in PnGraph
 
     double xSlope/* = (xMax - xMin)/vbWidth */;
     double ySlope/* = (yMin - yMax)/vbHeight */;
@@ -51,7 +51,7 @@ struct PnZoom {
 };
 
 
-// A 2D plotter has a lot of parameters.  This "plot" thingy is just the
+// A 2D plotter has a lot of parameters.  This "graph" thingy is just the
 // parameters that we choose to draw the background line grid of a 2D
 // graph (plotter).  It has a "zoom" object in it that is parametrization
 // of the 2D (linear) transformation for the window (widget/pixels) view.
@@ -92,7 +92,7 @@ struct PnZoom {
 //
 // The auto 2D plotter grid (graph) like part of quickplot.
 //
-struct PnPlot {
+struct PnGraph {
 
     struct PnWidget widget; // inherit first.
 
@@ -171,8 +171,8 @@ struct PnPlot {
 
 
 // These are mappings to (and from) pixels on a Cairo surface we are
-// plotting points and/or lines on PnPlot::bgSurface.  Don't forget the
-// padding on the sides, which makes the PnPlot::bgSurface larger than the
+// plotting points and/or lines on PnGraph::bgSurface.  Don't forget the
+// padding on the sides, which makes the PnGraph::bgSurface larger than the
 // widget area.  That padding (padX, padY) could be made zero.
 //
 // Note: In Cairo pixel distances tend to be doubles hence
@@ -196,37 +196,37 @@ static inline double pixToY(double p, const struct PnZoom *z) {
 
 
 
-extern bool _pnPlot_pushZoom(struct PnPlot *g,
+extern bool _pnGraph_pushZoom(struct PnGraph *g,
         double xMin, double xMax, double yMin, double yMax);
-extern bool _pnPlot_popZoom(struct PnPlot *g);
+extern bool _pnGraph_popZoom(struct PnGraph *g);
 
-extern void _pnPlot_drawGrids(struct PnPlot *g, cairo_t *cr);
+extern void _pnGraph_drawGrids(struct PnGraph *g, cairo_t *cr);
 
 extern bool CheckZoom(double xMin, double xMax,
         double yMin, double yMax);
 
-void PushCopyZoom(struct PnPlot *p);
+void PushCopyZoom(struct PnGraph *g);
 
 #define MINPAD   (100)
 
 
-// widget callback functions specific to the plot widget:
+// widget callback functions specific to the graph widget:
 extern bool enter(struct PnWidget *w,
-            uint32_t x, uint32_t y, struct PnPlot *p);
-extern bool leave(struct PnWidget *w, struct PnPlot *p);
+            uint32_t x, uint32_t y, struct PnGraph *p);
+extern bool leave(struct PnWidget *w, struct PnGraph *p);
 extern bool motion(struct PnWidget *w, int32_t x, int32_t y,
-            struct PnPlot *p);
+            struct PnGraph *p);
 extern bool release(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
-            struct PnPlot *p);
+            struct PnGraph *p);
 extern bool press(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
-            struct PnPlot *p);
+            struct PnGraph *p);
 extern bool axis(struct PnWidget *w,
             uint32_t time, uint32_t which, double value,
-            struct PnPlot *p);
+            struct PnGraph *p);
 
-extern bool StaticDrawAction(struct PnPlot *p,
-        bool (*callback)(struct PnWidget *plot,
+extern bool StaticDrawAction(struct PnGraph *p,
+        bool (*callback)(struct PnWidget *graph,
                 cairo_t *cr, void *userData),
         void *userData, void *actionData);

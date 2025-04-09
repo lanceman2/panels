@@ -17,13 +17,13 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-bool Plot(struct PnWidget *plot, cairo_t *cr, void *userData) {
+bool Plot(struct PnWidget *graph, cairo_t *cr, void *userData) {
 
     const double tMax = 20 * M_PI;
 
     for(double t = 0.0; t <= 2*tMax + 10; t += 0.1) {
         double a = 1.0 - t/tMax;
-        pnPlot_drawPoint(plot, a * cos(t), a * sin(t));
+        pnGraph_drawPoint(graph, a * cos(t), a * sin(t));
     }
     return true;
 }
@@ -40,7 +40,7 @@ int main(void) {
     pnWindow_setPreferredSize(win, 1100, 900);
 
     // The auto 2D plotter grid (graph)
-    struct PnWidget *w = pnPlot_create(
+    struct PnWidget *w = pnGraph_create(
             win/*parent*/,
             90/*width*/, 70/*height*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
@@ -48,8 +48,8 @@ int main(void) {
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, 0xA0101010);
 
-    pnWidget_addCallback(w, PN_PLOT_CB_STATIC_DRAW, Plot, 0);
-    pnPlot_setView(w, -1.05, 1.05, -1.05, 1.05);
+    pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot, 0);
+    pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
     pnWindow_show(win, true);
 
