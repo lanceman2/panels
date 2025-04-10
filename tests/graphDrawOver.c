@@ -12,7 +12,6 @@
 #include "../lib/display.h"
 #include "../lib/graph.h"
 
-
 #include "run.h"
 #include "rand.h"
 
@@ -70,7 +69,7 @@ int main(void) {
         0/*align*/, PnExpand_HV, 0/*size*/);
     ASSERT(over);
     pnWidget_setDraw(over, Draw, 0);
-
+    pnGraph_setLabelsColor(graph, 0xFFFF0000);
 
     pnWindow_show(win, true);
 

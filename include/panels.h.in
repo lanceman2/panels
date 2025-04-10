@@ -502,7 +502,7 @@ PN_EXPORT void pnGraph_setSubGridColor(struct PnWidget *graph,
         uint32_t color);
 PN_EXPORT void pnGraph_setGridColor(struct PnWidget *graph,
         uint32_t color);
-PN_EXPORT void pnGraph_setAxesColor(struct PnWidget *graph,
+PN_EXPORT void pnGraph_setLabelsColor(struct PnWidget *graph,
         uint32_t color);
 PN_EXPORT void pnGraph_setZeroLineColor(struct PnWidget *graph,
         uint32_t color);

@@ -11,6 +11,10 @@ pnGraph_create
 pnGraph_setView
 pnGraph_drawPoint
 pnGraph_drawPoints
+pnGraph_setSubGridColor
+pnGraph_setGridColor
+pnGraph_setLabelsColor
+pnGraph_setZeroLineColor
 pnWidget_addAction
 pnWidget_addCallback
 pnWidget_addChild

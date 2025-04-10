@@ -82,7 +82,8 @@ libpanels.so_SOURCES +=\
  graph.c\
  graphCallbacks.c\
  graph.h\
- plotActions.c 
+ plotActions.c\
+ graphSet.c
 endif
 
 

@@ -525,13 +525,12 @@ static inline void DrawVGrid(cairo_t *cr,
 
 // This is the ugliest code ever written.
 //
-static inline bool DrawVGridLabels(cairo_t *cr,
+static inline void DrawVGridLabels(cairo_t *cr,
         double lineWidth/*vertical line width in pixels*/, 
         const struct PnZoom *z, const struct PnGraph *g,
         double fontSize, double start,
         double delta, int32_t pow) {
 
-    bool haveZero = false;
     double end = pixToX(g->width + 2*g->padX, z) + delta;
 
     const size_t T_SIZE = 32;
@@ -557,13 +556,11 @@ static inline bool DrawVGridLabels(cairo_t *cr,
 
     for(double x = start; x <= end; x += delta) {
 
-        if(fabs(x) < delta/100) {
+        if(fabs(x) < delta/100)
             // With infinite precision this would not happen, but we do
             // not have infinite precision so we'll just fix the value so
             // that we print 0 and not something like 1.3e-32.
             x = 0.0;
-            haveZero = true;
-        }
 
         double pix = xToPix(x, z);
         GetLabel(label, T_SIZE, x, exp10pow, pow, mantissaLen);
@@ -580,7 +577,6 @@ static inline bool DrawVGridLabels(cairo_t *cr,
             g->height + 2 * g->padY - lineWidth);
         cairo_show_text(cr, label);
     }
-    return haveZero;
 }
 
 static inline void DrawHGrid(cairo_t *cr,
@@ -604,13 +600,12 @@ static inline void DrawHGrid(cairo_t *cr,
     }
 }
 
-static inline bool DrawHGridLabels(cairo_t *cr,
+static inline void DrawHGridLabels(cairo_t *cr,
         double lineWidth/*line width in pixels*/, 
         const struct PnZoom *z, const struct PnGraph *g,
         double fontSize, double start,
         double delta, int32_t pow) {
 
-    bool haveZero = false;
     double end = pixToY(0, z) + delta;
 
     const size_t T_SIZE = 32;
@@ -640,13 +635,11 @@ static inline bool DrawHGridLabels(cairo_t *cr,
 
     for(double y = start; y <= end; y += delta) {
 
-        if(fabs(y) < delta/100) {
+        if(fabs(y) < delta/100)
             // With infinite precision this would not happen, but we do
             // not have infinite precision so we'll just fix the value so
             // that we print 0 and not something like 1.3e-32.
             y = 0.0;
-            haveZero = true;
-        }
 
         double pix = yToPix(y, z);
         GetLabel(label, T_SIZE, y, exp10pow, pow, mantissaLen);
@@ -659,7 +652,6 @@ static inline bool DrawHGridLabels(cairo_t *cr,
         cairo_move_to(cr, textX + g->padX + g->width, pix - lineWidth - 1);
         cairo_show_text(cr, label);
      }
-    return haveZero;
 }
 
 static inline void DrawBackgroundColor(const struct PnGraph *g,
@@ -704,7 +696,12 @@ void _pnGraph_drawGrids(struct PnGraph *g, cairo_t *cr) {
     if(!show_subGrid)
       goto drawGrid;
 
-    SetColor(cr, g->subGridColor);
+    if(!g->subGridColor) {
+        subDividerX = 0;
+        subDividerY = 0;
+    } else {
+        SetColor(cr, g->subGridColor);
+    }
 
     switch(subDividerX) {
         case 10:
@@ -737,11 +734,12 @@ void _pnGraph_drawGrids(struct PnGraph *g, cairo_t *cr) {
                     pixToX(g->width+ 2*g->padX, g->zoom) + deltaX,
                     g->height + 2*g->padY);
             break;
+        case 0:
+            break;
         default:
             ASSERT(0, "Bad Code");
             break;
     }
-
 
     switch(subDividerY) {
         case 10:
@@ -774,6 +772,8 @@ void _pnGraph_drawGrids(struct PnGraph *g, cairo_t *cr) {
                     pixToY(0, g->zoom) + deltaY,
                     g->width + 2*g->padX);
             break;
+        case 0:
+            break;
         default:
             ASSERT(0, "Bad Code");
             break;
@@ -781,24 +781,25 @@ void _pnGraph_drawGrids(struct PnGraph *g, cairo_t *cr) {
 
 drawGrid:
 
-    SetColor(cr, g->gridColor);
-    DrawVGrid(cr, lineWidth, g->zoom, g,
-            fontSize, startX, deltaX);
-    DrawHGrid(cr, lineWidth, g->zoom, g,
-            fontSize, startY, deltaY);
+    if(g->gridColor) {
+        SetColor(cr, g->gridColor);
+        DrawVGrid(cr, lineWidth, g->zoom, g,
+                fontSize, startX, deltaX);
+        DrawHGrid(cr, lineWidth, g->zoom, g,
+                fontSize, startY, deltaY);
+    }
 
-    SetColor(cr, g->axesColor);
-    bool haveXZero = DrawVGridLabels(cr, lineWidth, g->zoom, g,
-            fontSize, startX, deltaX, powX);
-    bool haveYZero = DrawHGridLabels(cr, lineWidth, g->zoom, g,
-            fontSize, startY, deltaY, powY);
-
+    bool haveXZero = !((xToPix(g->xMin, g->zoom) > g->width + lineWidth*1.9 + g->padX) ||
+            (xToPix(g->xMax, g->zoom) <= - lineWidth*1.9 - g->padX));
+    bool haveYZero = !((yToPix(g->yMax, g->zoom) > g->height + lineWidth*1.9 + g->padY) ||
+            (yToPix(g->yMin, g->zoom) <= - lineWidth*1.9 - g->padY));
+WARN("haveXZero=%d  haveYZero=%d", haveXZero, haveYZero);
 
     // The zero axis grid lines are special.  If they are showing we make
     // them standout.
     double pix;
 
-    if(haveXZero) {
+    if(haveXZero && g->gridColor) {
         cairo_set_line_width(cr, lineWidth * 1.9);
         SetColor(cr, g->gridColor);
         pix = xToPix(0, g->zoom);
@@ -806,7 +807,7 @@ drawGrid:
         cairo_line_to(cr, pix, g->height + 2*g->padY);
         cairo_stroke(cr);
     }
-    if(haveYZero) {
+    if(haveYZero && g->gridColor) {
         cairo_set_line_width(cr, lineWidth * 1.9);
         SetColor(cr, g->gridColor);
         pix = yToPix(0, g->zoom);
@@ -815,7 +816,7 @@ drawGrid:
         cairo_stroke(cr);
     }
 
-    if(haveXZero) {
+    if(haveXZero && g->zeroLineColor) {
         cairo_set_line_width(cr, 1.2);
         SetColor(cr,g->zeroLineColor);
         //const double dashes[2] = { 14.0, 9.0 };
@@ -825,7 +826,7 @@ drawGrid:
         cairo_line_to(cr, pix, g->height + 2*g->padY);
         cairo_stroke(cr);
     }
-    if(haveYZero) {
+    if(haveYZero && g->zeroLineColor) {
         cairo_set_line_width(cr, 1.2);
         SetColor(cr,g->zeroLineColor);
         //const double dashes[2] = { 14.0, 9.0 };
@@ -835,6 +836,15 @@ drawGrid:
         cairo_line_to(cr, g->width + 2*g->padX, pix);
         cairo_stroke(cr);
     }
+
+    if(g->labelsColor) {
+        SetColor(cr, g->labelsColor);
+        DrawVGridLabels(cr, lineWidth, g->zoom, g,
+                fontSize, startX, deltaX, powX);
+        DrawHGridLabels(cr, lineWidth, g->zoom, g,
+                fontSize, startY, deltaY, powY);
+    }
+
     pnWidget_callAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW);
 }
 
@@ -1100,7 +1110,7 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     // Colors bytes in order: A,R,G,B
     g->subGridColor   = 0xFF70B070;
     g->gridColor      = 0xFFE0E0E0;
-    g->axesColor = 0xFFFFFFFF;
+    g->labelsColor = 0xFFFFFFFF;
     g->zeroLineColor  = 0xFFFF0000;
 
     g->show_subGrid = true;
