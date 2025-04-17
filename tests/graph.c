@@ -24,7 +24,18 @@ bool Plot(struct PnWidget *graph, cairo_t *cr, void *userData) {
         double a = 1.0 - t/tMax;
         pnGraph_drawPoint(graph, a * cos(t), a * sin(t));
     }
-    return true;
+    return false;
+}
+
+bool Plot2(struct PnWidget *graph, cairo_t *cr, void *userData) {
+
+    const double tMax = 20 * M_PI;
+
+    for(double t = 0.02; t <= 2*tMax + 10; t += 0.1) {
+        double a = 1.0 - t/tMax;
+        pnGraph_drawPoint(graph, a * sin(t), a * cos(t));
+    }
+    return false;
 }
 
 
@@ -48,6 +59,7 @@ int main(void) {
     pnWidget_setBackgroundColor(w, 0xA0101010);
 
     pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot, 0);
+    pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot2, 0);
     pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
     pnWindow_show(win, true);

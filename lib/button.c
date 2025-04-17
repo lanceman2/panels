@@ -309,9 +309,11 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     pnWidget_setCairoDraw(&b->widget, (void *) cairoDraw, b);
     pnWidget_addDestroy(&b->widget, (void *) destroy, b);
     pnWidget_addAction(&b->widget, PN_BUTTON_CB_CLICK,
-            (void *) clickAction, 0/*actionData*/);
+            (void *) clickAction, 0/*add()*/, 0/*actionData*/,
+            0/*callbackSize*/);
     pnWidget_addAction(&b->widget, PN_BUTTON_CB_PRESS,
-            (void *) pressAction, 0/*actionData*/);
+            (void *) pressAction, 0/*add()*/, 0/*actionData*/,
+            0/*callbackSize*/);
 
 
     b->colors = calloc(1, PnButtonState_NumRegularStates*

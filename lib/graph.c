@@ -791,9 +791,10 @@ drawGrid:
 
     bool haveXZero = !((xToPix(g->xMin, g->zoom) > g->width + lineWidth*1.9 + g->padX) ||
             (xToPix(g->xMax, g->zoom) <= - lineWidth*1.9 - g->padX));
-    bool haveYZero = !((yToPix(g->yMax, g->zoom) > g->height + lineWidth*1.9 + g->padY) ||
+    bool haveYZero = !((yToPix(g->yMax, g->zoom) >
+                g->height + lineWidth*1.9 + g->padY) ||
             (yToPix(g->yMin, g->zoom) <= - lineWidth*1.9 - g->padY));
-WARN("haveXZero=%d  haveYZero=%d", haveXZero, haveYZero);
+//WARN("haveXZero=%d  haveYZero=%d", haveXZero, haveYZero);
 
     // The zero axis grid lines are special.  If they are showing we make
     // them standout.
@@ -1093,7 +1094,8 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     pnWidget_setAxis(&g->widget,  (void *) axis, g);
 
     pnWidget_addAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW,
-            (void *) StaticDrawAction, 0/*actionData*/);
+            (void *) StaticDrawAction, 0/*add()*/, 0/*actionData*/,
+            sizeof(struct PnStaticPlot));
 
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):

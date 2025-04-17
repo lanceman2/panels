@@ -41,7 +41,12 @@ void pnWidget_addAction(struct PnWidget *w,
             // to the action function that knows what to do with it.
             void *callback, void *userData,
             void *actionData),
-        void *actionData) {
+        // add(), if set, is called when pnWidget_addCallback() is called.
+        // The passed callback pointer is a unique ID and opaque pointer
+        // to the struct PnCallback.
+        void (*add)(struct PnWidget *w, uint32_t actionIndex,
+                    struct PnCallback *callback, void *actionData),
+        void *actionData, size_t callbackSize) {
 
     DASSERT(w);
     DASSERT(action);
@@ -58,8 +63,14 @@ void pnWidget_addAction(struct PnWidget *w,
     struct PnAction *a = w->actions + w->numActions-1;
     a->action = action;
     a->actionData = actionData;
+    a->add = add;
     a->first = 0;
     a->last = 0;
+    a->actionIndex = actionIndex;
+    if(callbackSize > sizeof(*a->first))
+        a->callbackSize = callbackSize;
+    else
+        a->callbackSize = sizeof(*a->first);
 }
 
 void pnWidget_callAction(struct PnWidget *w, uint32_t index) {
@@ -93,7 +104,7 @@ void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
     ASSERT(callback);
 
     struct PnAction *a = w->actions + index;
-    struct PnCallback *c = calloc(1, sizeof(*c));
+    struct PnCallback *c = calloc(1, a->callbackSize);
     ASSERT(c, "calloc(1,%zu) failed", sizeof(*c));
     c->callback = callback;
     c->callbackData = userData;
@@ -110,4 +121,8 @@ void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
     }
     c->prev = a->last;
     a->last = c;
+
+    if(a->add)
+        // Tell the particular widget that we are adding a callback.
+        a->add(w, a->actionIndex, c, a->actionData);
 }

@@ -1,5 +1,4 @@
 /*
-
   The padX and padY provide extra grid line drawing area so you can move
   it relative to another cairo surface that you write it to.
 
@@ -51,6 +50,45 @@ struct PnZoom {
 };
 
 
+enum PnPlotType {
+
+    PnPlotType_static,
+    PnPlotType_dynamic
+};
+
+
+struct PnPlot {
+
+    enum PnPlotType type;
+
+    // We keep a list of plots in a graph.
+    struct PnPlot *next, *prev;
+
+    cairo_t *lineCr, *pointCr;
+
+    uint32_t lineColor, pointColor;
+
+    double lineWidth, pointSize;
+    // The last point drawn is needed to draw lines when
+    // there is a line being drawn in the future.
+    double x, y; // last point
+};
+
+// For oscilloscope like 2D plots
+struct PnScopePlot {
+
+    struct PnPlot plot;
+
+};
+
+// For capture/stored 2D plots
+struct PnStaticPlot {
+
+    struct PnPlot plot;
+
+};
+
+
 // A 2D plotter has a lot of parameters.  This "graph" thingy is just the
 // parameters that we choose to draw the background line grid of a 2D
 // graph (plotter).  It has a "zoom" object in it that is parametrization
@@ -76,10 +114,10 @@ struct PnZoom {
 // Cairo drawing can be about 10 to 1000 times slower than just changing a
 // few individual pixels numbers in the mapped memory.  It's just that we
 // are comparing the speed of doing something (memory copying all the
-// fucking widget pixels for any one frame, after floating point fucking
-// all of them) to the speed of doing next to nothing (like 1 out of a
-// 1000 pixels being changed).  It depends where the bottleneck is.  If
-// you do not need fast pixel changes, Cairo drawing could be fine.  Cairo
+// widget pixels for any one frame, after floating point fucking all of
+// them) to the speed of doing next to nothing (like 1 out of a 1000
+// pixels being changed).  It depends where the bottleneck is.  If you do
+// not need fast pixel changes, Cairo drawing could be fine.  Cairo
 // drawing will likely look better than just simple integer pixel bit
 // diddling.  It's hard to do anti-aliasing without floating point
 // calculations.
@@ -87,14 +125,18 @@ struct PnZoom {
 // We can slowly draw background once (one frame), then quickly draw on
 // top of it, 20 million points over many many frames.
 //
-// We already have a layout widget called PnGrid, we don't can this grid
-// too.
+// We already have a layout widget called PnGrid, we don't call this grid
+// too, though it draws a grid of horizontal and vertical lines.
 //
-// The auto 2D plotter grid (graph) like part of quickplot.
+// The graph contains a automatic 2D plotter grid (graph), "like" part of
+// quickplot (apt install quickplot [is X11/GTK3 based]).  The old program
+// called "quickplot" is not compatible with the Wayland desktop.
 //
 struct PnGraph {
 
     struct PnWidget widget; // inherit first.
+
+    struct PnPlot *plots; // A list of 2D plots: static or scope type.
 
     // This bgSurface uses a alloc(3) allocated memory buffer; and is not
     // the mmap(2) pixel buffer that is created for us by libpanels that
@@ -103,7 +145,8 @@ struct PnGraph {
     // lines that we "paste" to the Cairo object that is tied to in our
     // draw function.  In this sense we are double buffering.  We are
     // assuming there will be many 2D plot points plotted over time as
-    // this "background grid" changes more slowly then we plot points.
+    // this "background grid" changes more slowly then we plot points on
+    // top of it.
     //
     cairo_surface_t *bgSurface;
     uint32_t *bgMemory; // This is the memory for the Cairo surface.

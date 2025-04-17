@@ -419,6 +419,8 @@ PN_EXPORT void pnWidget_setAxis(struct PnWidget *w,
         void *userData);
 
 
+struct PnCallback;
+
 PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
         uint32_t actionIndex,
         bool (*action)(struct PnWidget *widget,
@@ -426,7 +428,12 @@ PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
             // pointer to any kind of function.  We'll pass this pointer
             // to the action function that knows what to do with it.
             void *callback, void *userData, void *actionData),
-        void *actionData);
+        // add(), if set, is called when pnWidget_addCallback() is called.
+        // The passed callback pointer is a unique ID and opaque pointer
+        // to the struct PnCallback.
+        void (*add)(struct PnWidget *w, uint32_t actionIndex,
+                    struct PnCallback *callback, void *actionData),
+        void *actionData, size_t callbackSize);
 
 PN_EXPORT void pnWidget_callAction(struct PnWidget *widget,
         uint32_t index);

@@ -17,6 +17,7 @@
 #include "display.h"
 #include "graph.h"
 
+
 bool StaticDrawAction(struct PnGraph *g,
         bool (*callback)(struct PnWidget *g, cairo_t *cr, void *userData),
         void *userData, void *actionData) {

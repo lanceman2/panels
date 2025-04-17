@@ -185,11 +185,20 @@ struct PnAction {
     // widget's API user set callback(s).
     bool (*action)(struct PnWidget *widget, void *callback,
             void *userData, void *actionData);
-
+    // add() is called when pnWidget_addCallback() is called.
+    void (*add)(struct PnWidget *w, uint32_t actionIndex,
+            struct PnCallback *callback, void *actionData);
     void *actionData;
 
     // Ordered list of callbacks:
     struct PnCallback *first, *last;
+
+    // The widget builder may inherit struct PnCallback and add memory
+    // larger than sizeof(struct PnCallback) for each callback that is
+    // added.
+    size_t callbackSize;
+
+    uint32_t actionIndex;
 };
 
 // surface type PnSurfaceType_widget
@@ -365,6 +374,7 @@ struct PnWidget {
     // This is the shit!  Simple and fast.
     //
     // Allocated actions[] array.  Realloc(3).
+    //
     struct PnAction *actions;
     uint32_t numActions;
 
