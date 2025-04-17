@@ -199,25 +199,27 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
 
 // Press and no release yet.
 //
-static bool pressAction(struct PnWidget *b,
+static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
         // This is the user callback function prototype that we choose for
         // this "press" action.  The underlying API does not give a shit
         // what this (callback) void pointer is, but we do at this
         // point.
-        bool (*callback)(struct PnWidget *b, void *userData),
-        void *userData, void *actionData) {
+        bool (*userCallback)(struct PnWidget *b, void *userData),
+        void *userData, uint32_t actionIndex, void *actionData) {
 
     DASSERT(b);
     DASSERT(actionData == 0);
+    DASSERT(actionIndex == PN_BUTTON_CB_PRESS);
     ASSERT(GET_WIDGET_TYPE(b->type) == W_BUTTON);
     DASSERT(callback);
+    DASSERT(userCallback);
 
     // callback() is the API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
     // this function from going through (calling) all connected
     // callbacks.
-    return callback(b, userData);
+    return userCallback(b, userData);
 }
 // button "click" marshalling function gets the button API users callback
 // to call.  Gets called indirectly from
@@ -238,25 +240,27 @@ static bool pressAction(struct PnWidget *b,
 // GTK and Qt are both: (1) bloated and (2) leak system resources into
 // your process.  Both (1 and 2) are unacceptable for some applications.
 //
-static bool clickAction(struct PnWidget *b,
+static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
         // This is the user callback function prototype that we choose for
         // this "click", PN_BUTTON_CB_CLICK, action.  The underlying API
         // does not give a shit what this (callback) void pointer is, but
         // we do at this point.
-        bool (*callback)(struct PnWidget *b, void *userData),
-        void *userData, void *actionData) {
+        bool (*userCallback)(struct PnWidget *b, void *userData),
+        void *userData, uint32_t actionIndex, void *actionData) {
 
     DASSERT(b);
     DASSERT(actionData == 0);
     ASSERT(GET_WIDGET_TYPE(b->type) == W_BUTTON);
+    DASSERT(actionIndex == PN_BUTTON_CB_CLICK);
     DASSERT(callback);
+    DASSERT(userCallback);
 
     // callback() is the libpanels API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
     // this function from going through (calling) all connected
     // callbacks.
-    return callback(b, userData);
+    return userCallback(b, userData);
 }
 
 

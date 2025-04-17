@@ -59,6 +59,8 @@ enum PnPlotType {
 
 struct PnPlot {
 
+    struct PnCallback callback; // inherit first.
+
     enum PnPlotType type;
 
     // We keep a list of plots in a graph.
@@ -81,7 +83,7 @@ struct PnScopePlot {
 
 };
 
-// For capture/stored 2D plots
+// For captured/stored 2D plots
 struct PnStaticPlot {
 
     struct PnPlot plot;
@@ -269,7 +271,12 @@ extern bool axis(struct PnWidget *w,
             uint32_t time, uint32_t which, double value,
             struct PnGraph *p);
 
+extern void AddStaticPlot(struct PnWidget *w,
+        struct PnCallback *callback, uint32_t actionIndex,
+        void *actionData);
+
 extern bool StaticDrawAction(struct PnGraph *p,
-        bool (*callback)(struct PnWidget *graph,
-                cairo_t *cr, void *userData),
-        void *userData, void *actionData);
+        struct PnCallback *callback,
+        bool (*userCallback)(struct PnWidget *graph,
+                struct PnPlot *plot, void *userData),
+        void *userData, uint32_t actionIndex, void *actionData);

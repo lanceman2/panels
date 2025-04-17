@@ -18,20 +18,48 @@
 #include "graph.h"
 
 
-bool StaticDrawAction(struct PnGraph *g,
-        bool (*callback)(struct PnWidget *g, cairo_t *cr, void *userData),
-        void *userData, void *actionData) {
+void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
+        uint32_t actionIndex, void *actionData) {
+
+    DASSERT(actionIndex == PN_GRAPH_CB_STATIC_DRAW);
+    DASSERT(w);
+
+    // Set the plot default settings:
+    struct PnPlot *p = (void *) callback;
+    //                 A R G B
+    p->lineColor =  0xFFF0F030;
+    p->pointColor = 0xFFFF0000;
+    p->lineWidth = 6.0;
+    p->pointSize = 6.1;
+
+    WARN();
+}
+
+
+static inline void SetColor(cairo_t *cr, uint32_t color) {
+    DASSERT(cr);
+    cairo_set_source_rgba(cr, PN_R_DOUBLE(color),
+            PN_G_DOUBLE(color), PN_B_DOUBLE(color), PN_A_DOUBLE(color));
+}
+
+
+bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
+        bool (*userCallback)(struct PnWidget *g, struct PnPlot *p, void *userData),
+        void *userData, uint32_t actionIndex, void *actionData) {
     DASSERT(g);
     DASSERT(actionData == 0);
+    DASSERT(actionIndex == PN_GRAPH_CB_STATIC_DRAW);
     DASSERT(g->cr);
     DASSERT(g->bgSurface);
     ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GRAPH);
-    DASSERT(callback);
+    DASSERT(userCallback);
+
+    struct PnPlot *p = (void *) callback;
 
     // Initialize the last plotted x value.
     g->x = DBL_MAX;
 
-    // callback() is the libpanels API user set callback.
+    // userCallback() is the libpanels API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
     // this function from going through (calling) all connected
@@ -41,15 +69,15 @@ bool StaticDrawAction(struct PnGraph *g,
     DASSERT(cr);
 
     g->crp = cairo_create(g->bgSurface);
+    cairo_set_operator(g->crp, CAIRO_OPERATOR_OVER);
     DASSERT(g->crp);
-    cairo_set_source_rgba(g->crp, 1, 0.0, 0.0, 1.0);
+    SetColor(g->crp, p->pointColor);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba(cr, 0.9, 0.9, 0.1, 1.0);
+    SetColor(cr, p->lineColor);
+    cairo_set_line_width(cr, p->lineWidth);
 
-    cairo_set_line_width(cr, 6);
-
-    bool ret = callback(&g->widget, g->cr, userData);
+    bool ret = userCallback(&g->widget, p, userData);
 
     const double hw = 6.1;
     const double w = 2.0*hw;

@@ -16,24 +16,28 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-bool Plot(struct PnWidget *graph, cairo_t *cr, void *userData) {
+bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
+
+    ASSERT(userData == (void *) catcher); // testing userData.
 
     const double tMax = 20 * M_PI;
 
     for(double t = 0.0; t <= 2*tMax + 10; t += 0.1) {
         double a = 1.0 - t/tMax;
-        pnGraph_drawPoint(graph, a * cos(t), a * sin(t));
+        pnGraph_drawPoint(g, a * cos(t), a * sin(t));
     }
     return false;
 }
 
-bool Plot2(struct PnWidget *graph, cairo_t *cr, void *userData) {
+bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData) {
+
+    ASSERT(userData == 0); // testing userData.
 
     const double tMax = 20 * M_PI;
 
     for(double t = 0.02; t <= 2*tMax + 10; t += 0.1) {
         double a = 1.0 - t/tMax;
-        pnGraph_drawPoint(graph, a * sin(t), a * cos(t));
+        pnGraph_drawPoint(g, a * sin(t), a * cos(t));
     }
     return false;
 }
@@ -58,7 +62,7 @@ int main(void) {
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, 0xA0101010);
 
-    pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot, 0);
+    pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot, catcher);
     pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot2, 0);
     pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 

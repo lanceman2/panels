@@ -1094,7 +1094,7 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     pnWidget_setAxis(&g->widget,  (void *) axis, g);
 
     pnWidget_addAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW,
-            (void *) StaticDrawAction, 0/*add()*/, 0/*actionData*/,
+            (void *) StaticDrawAction, AddStaticPlot, 0/*actionData*/,
             sizeof(struct PnStaticPlot));
 
     // floating point scaled size exposed pixels without the padX and
