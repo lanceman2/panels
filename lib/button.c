@@ -234,7 +234,7 @@ static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
 // this a good comparison.  Unsafe but much faster than Qt.  I have not
 // been able to unwind (in my head) the gobject CPP Macro madness in GTK,
 // but this is butt head simple compared to connecting widget "signals"
-// in GTK.  Is it faster than GTK?  I don't know, or have a need to
+// in GTK.  Is it faster than GTK?  I don't know, or have, a need to
 // measure it.  I expect they are both fast enough.
 //
 // GTK and Qt are both: (1) bloated and (2) leak system resources into
