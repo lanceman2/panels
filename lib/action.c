@@ -95,7 +95,7 @@ void pnWidget_callAction(struct PnWidget *w, uint32_t index) {
             break;
 }
 
-void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
+void *pnWidget_addCallback(struct PnWidget *w, uint32_t index,
         // The callback function prototype varies with particular widget
         // and index.  The widget maker must publish a list of function
         // prototypes and indexes; example: PN_BUTTON_CB_CLICK.
@@ -129,4 +129,5 @@ void pnWidget_addCallback(struct PnWidget *w, uint32_t index,
         // Tell the particular widget that we are adding a widget user
         // callback for action with index "index".
         a->add(w, c, index, a->actionData);
+    return c;
 }

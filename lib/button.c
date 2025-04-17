@@ -239,6 +239,7 @@ static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
 //
 // GTK and Qt are both: (1) bloated and (2) leak system resources into
 // your process.  Both (1 and 2) are unacceptable for some applications.
+// Bloated and leaky tend to go together.
 //
 static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
         // This is the user callback function prototype that we choose for

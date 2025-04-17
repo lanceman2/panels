@@ -62,8 +62,12 @@ int main(void) {
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, 0xA0101010);
 
-    pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot, catcher);
-    pnWidget_addCallback(w, PN_GRAPH_CB_STATIC_DRAW, Plot2, 0);
+    struct PnPlot *p = pnStaticPlot_create(w, Plot, catcher);
+    ASSERT(p);
+
+    p = pnStaticPlot_create(w, Plot2, 0);
+    ASSERT(p);
+
     pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
     pnWindow_show(win, true);
