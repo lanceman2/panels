@@ -64,6 +64,7 @@ int main(void) {
 
     struct PnPlot *p = pnStaticPlot_create(w, Plot, catcher);
     ASSERT(p);
+    // This plot, p, is owned by the graph, w.
 
     p = pnStaticPlot_create(w, Plot2, 0);
     ASSERT(p);
