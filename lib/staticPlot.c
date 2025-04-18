@@ -82,7 +82,7 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     const double hw = p->pointSize;
     const double w = 2.0*hw;
 
-    if(g->x != DBL_MAX) {
+    if(g->x != DBL_MAX && p->pointSize > 0) {
         // Draw the last x, y point.
         cairo_rectangle(pcr, g->x - hw, g->y - hw, w, w);
         cairo_fill(pcr);
@@ -109,15 +109,21 @@ void pnGraph_drawPoint(struct PnPlot *p,
     y = yToPix(y, z);
 
     if(g->x != DBL_MAX) {
-        cairo_move_to(cr, g->x, g->y);
-        cairo_line_to(cr, x, y);
-        // Calling this often must save having to store all
-        // those points in the cairo_t object.
-        cairo_stroke(cr);
 
-        // Draw the last x, y point.
-        cairo_rectangle(g->pointCr, g->x - hw, g->y - hw, w, w);
-        cairo_fill(g->pointCr);
+        // TODO: maybe remove these ifs by using different functions.
+        if(p->lineWidth > 0) {
+            cairo_move_to(cr, g->x, g->y);
+            cairo_line_to(cr, x, y);
+            // Calling this often must save having to store all
+            // those points in the cairo_t object.
+            cairo_stroke(cr);
+        }
+
+        if(p->pointSize) {
+            // Draw the last x, y point.
+            cairo_rectangle(g->pointCr, g->x - hw, g->y - hw, w, w);
+            cairo_fill(g->pointCr);
+        }
     }
 
     g->x = x;
@@ -157,15 +163,20 @@ void pnGraph_drawPoints(struct PnPlot *p,
         double x = xToPix(*ax++, z);
         double y = yToPix(*ay++, z);
 
-        cairo_move_to(cr, g->x, g->y);
-        cairo_line_to(cr, x, y);
-        // Calling this often must save having to store all
-        // those points in the cairo_t object.
-        cairo_stroke(cr);
+        // TODO: maybe remove these ifs by using different functions.
+        if(p->lineWidth > 0) {
+            cairo_move_to(cr, g->x, g->y);
+            cairo_line_to(cr, x, y);
+            // Calling this often must save having to store all
+            // those points in the cairo_t object.
+            cairo_stroke(cr);
+        }
 
-        // Draw the last x, y point.
-        cairo_rectangle(g->pointCr, g->x - hw, g->y - hw, w, w);
-        cairo_fill(g->pointCr);
+       if(p->pointSize > 0) {
+            // Draw the last x, y point.
+            cairo_rectangle(g->pointCr, g->x - hw, g->y - hw, w, w);
+            cairo_fill(g->pointCr);
+       }
 
         g->x = x;
         g->y = y;

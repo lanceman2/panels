@@ -65,6 +65,10 @@ int main(void) {
     struct PnPlot *p = pnStaticPlot_create(w, Plot, catcher);
     ASSERT(p);
     // This plot, p, is owned by the graph, w.
+    pnPlot_setLineColor(p, 0xFFFF0000);
+    pnPlot_setPointColor(p, 0xFF00FFFF);
+    pnPlot_setLineWidth(p, 3.2);
+    pnPlot_setPointSize(p, 12.5);
 
     p = pnStaticPlot_create(w, Plot2, 0);
     ASSERT(p);

@@ -15,6 +15,10 @@ pnGraph_setSubGridColor
 pnGraph_setGridColor
 pnGraph_setLabelsColor
 pnGraph_setZeroLineColor
+pnPlot_setLineColor
+pnPlot_setPointColor
+pnPlot_setLineWidth
+pnPlot_setPointSize
 pnWidget_addAction
 pnWidget_addCallback
 pnWidget_addChild
