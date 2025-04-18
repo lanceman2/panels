@@ -20,20 +20,20 @@ void catcher(int sig) {
 // pnGraph functions.
 //
 static
-void PlotPoint(struct PnWidget *graph) {
+void PlotPoint(struct PnPlot *p) {
 
     const double tMax = 20 * M_PI;
 
     for(double t = 0.0; t <= 2*tMax + 10; t += 0.1) {
         double a = 1.0 - t/tMax;
-        pnGraph_drawPoint(graph, a * cos(t), a * sin(t));
+        pnGraph_drawPoint(p, a * cos(t), a * sin(t));
     }
 }
 
 // Very stupid, but it's just a test.
 //
 static
-void PlotPoints(struct PnWidget *graph) {
+void PlotPoints(struct PnPlot *p) {
 
     const uint32_t Len = 10;
     double x[Len];
@@ -47,23 +47,23 @@ void PlotPoints(struct PnWidget *graph) {
         x[i] = a * cos(t);
         y[i++] = a * sin(t);
         if(i == Len) {
-            pnGraph_drawPoints(graph, x, y, Len);
+            pnGraph_drawPoints(p, x, y, Len);
             i = 0;
         }
     }
     if(i)
-        pnGraph_drawPoints(graph, x, y, i);
+        pnGraph_drawPoints(p, x, y, i);
 }
 
 static
-bool Plot(struct PnWidget *graph, cairo_t *cr, void *userData) {
+bool Plot(struct PnWidget *graph, struct PnPlot *p, void *userData) {
 
     static uint32_t which = 0;
 
     if(which % 2)
-        PlotPoint(graph);
+        PlotPoint(p);
     else
-        PlotPoints(graph);
+        PlotPoints(p);
 
     ++which;
     return true;

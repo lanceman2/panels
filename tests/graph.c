@@ -24,7 +24,7 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
 
     for(double t = 0.0; t <= 2*tMax + 10; t += 0.1) {
         double a = 1.0 - t/tMax;
-        pnGraph_drawPoint(g, a * cos(t), a * sin(t));
+        pnGraph_drawPoint(p, a * cos(t), a * sin(t));
     }
     return false;
 }
@@ -37,7 +37,7 @@ bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData) {
 
     for(double t = 0.02; t <= 2*tMax + 10; t += 0.1) {
         double a = 1.0 - t/tMax;
-        pnGraph_drawPoint(g, a * sin(t), a * cos(t));
+        pnGraph_drawPoint(p, a * sin(t), a * cos(t));
     }
     return false;
 }

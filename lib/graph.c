@@ -73,7 +73,11 @@ static inline void DestroyBGSurface(struct PnGraph *g) {
         DASSERT(g->height);
         DASSERT(g->bgMemory);
         DASSERT(g->cr);
+        DASSERT(g->pointCr);
+        DASSERT(g->lineCr);
         cairo_destroy(g->cr);
+        cairo_destroy(g->pointCr);
+        cairo_destroy(g->lineCr);
         DZMEM(g->bgMemory, sizeof(*g->bgMemory)*g->width*g->height);
         free(g->bgMemory);
         cairo_surface_destroy(g->bgSurface);
@@ -120,6 +124,12 @@ static inline void CreateBGSurface(struct PnGraph *g,
     DASSERT(g->bgSurface);
     g->cr = cairo_create(g->bgSurface);
     DASSERT(g->cr);
+    g->lineCr = cairo_create(g->bgSurface);
+    DASSERT(g->lineCr);
+    cairo_set_operator(g->lineCr, CAIRO_OPERATOR_OVER);
+    g->pointCr = cairo_create(g->bgSurface);
+    DASSERT(g->pointCr);
+    cairo_set_operator(g->pointCr, CAIRO_OPERATOR_OVER);
 }
 
 

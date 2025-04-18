@@ -512,9 +512,9 @@ PN_EXPORT struct PnWidget *pnGraph_create(struct PnWidget *parent,
         enum PnExpand expand, size_t size);
 PN_EXPORT void pnGraph_setView(struct PnWidget *graph,
         double xMin, double xMax, double yMin, double yMax);
-PN_EXPORT void pnGraph_drawPoint(struct PnWidget *graph,
+PN_EXPORT void pnGraph_drawPoint(struct PnPlot *plot,
         double x, double y);
-PN_EXPORT void pnGraph_drawPoints(struct PnWidget *graph,
+PN_EXPORT void pnGraph_drawPoints(struct PnPlot *plot,
         const double *x, const double *y, uint32_t numPoints);
 // Set colors to 0 to turn off their drawing.
 PN_EXPORT void pnGraph_setSubGridColor(struct PnWidget *graph,

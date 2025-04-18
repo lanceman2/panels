@@ -61,12 +61,13 @@ struct PnPlot {
 
     struct PnCallback callback; // inherit first.
 
+    struct PnGraph *graph;
+
     enum PnPlotType type;
 
     // We keep a list of plots in a graph.
     struct PnPlot *next, *prev;
 
-    cairo_t *lineCr, *pointCr;
 
     uint32_t lineColor, pointColor;
 
@@ -153,7 +154,8 @@ struct PnGraph {
     cairo_surface_t *bgSurface;
     uint32_t *bgMemory; // This is the memory for the Cairo surface.
     cairo_t *cr; // This is used at config() time.
-    cairo_t *crp; // For point drawing.
+    // one to draw points, and one to draw lines.
+    cairo_t *lineCr, *pointCr;
 
     // Pointers to a doubly listed list of Zooms.
     //
