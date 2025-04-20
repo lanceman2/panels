@@ -91,6 +91,20 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     return ret;
 }
 
+// Return true for cull.
+static inline bool CullPoint(struct PnGraph *g, double x, double y) {
+
+    return false;
+}
+
+// Return true for cull.
+static inline bool CullLine(struct PnGraph *g,
+        double x0, double y0, double x1, double y1) {
+    return false;
+}
+
+
+
 void pnGraph_drawPoint(struct PnPlot *p,
         double x, double y) {
 
