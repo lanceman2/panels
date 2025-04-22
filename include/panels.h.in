@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <float.h>
 
 #ifndef PN_EXPORT
 #  define PN_EXPORT extern
@@ -276,6 +277,64 @@ enum PnAlign {
     PnAlign_JJ = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_JUSTIFIED)
 };
 
+enum PnPlotType {
+
+    PnPlotType_static,
+    PnPlotType_dynamic
+};
+
+struct PnZoom {
+
+    struct PnZoom *prev, *next; // To keep a list of zooms in PnGraph
+
+    double xSlope/* = (xMax - xMin)/vbWidth */;
+    double ySlope/* = (yMin - yMax)/vbHeight */;
+    double xShift/* = xMin - padX * xSlope */;
+    double yShift/* = yMax - padY * ySlope */;
+};
+
+
+struct PnGraph;
+
+
+// For each action there may be a list of callbacks:
+//
+struct PnCallback {
+    // The callbacks are called in order until one of them returns true.
+    // The widget object knows that the actual function prototype is.  We
+    // are marshaling (I think that's the correct term) the action
+    // callbacks.
+    //
+    // The particular widget's API user set callback and data.
+    //
+    void *userCallback;
+    void *userData;
+
+    struct PnCallback *prev, *next;
+};
+
+struct PnPlot {
+
+    struct PnCallback callback; // inherit first.
+
+    struct PnGraph *graph;
+    cairo_t *lineCr, *pointCr;
+    struct PnZoom *zoom;
+
+    enum PnPlotType type;
+
+    // We keep a list of plots in a graph.
+    struct PnPlot *next, *prev;
+
+
+    uint32_t lineColor, pointColor;
+
+    double lineWidth, pointSize;
+    // The last point drawn is needed to draw lines when
+    // there is a line being drawn in the future.
+    double x, y; // last point
+};
+
 
 struct PnWidget;
 
@@ -523,10 +582,6 @@ PN_EXPORT void pnGraph_setLabelsColor(struct PnWidget *graph,
 PN_EXPORT void pnGraph_setZeroLineColor(struct PnWidget *graph,
         uint32_t color);
 
-PN_EXPORT void pnGraph_drawPoint(struct PnPlot *plot,
-        double x, double y);
-PN_EXPORT void pnGraph_drawPoints(struct PnPlot *plot,
-        const double *x, const double *y, uint32_t numPoints);
 PN_EXPORT void pnPlot_setLineColor(struct PnPlot *plot,
         uint32_t color);
 PN_EXPORT void pnPlot_setPointColor(struct PnPlot *plot,
@@ -535,6 +590,87 @@ PN_EXPORT void pnPlot_setLineWidth(struct PnPlot *plot,
         double width);
 PN_EXPORT void pnPlot_setPointSize(struct PnPlot *plot,
         double size);
+
+// These are mappings to (and from) pixels on a Cairo surface we are
+// plotting points and/or lines on PnGraph::bgSurface.  Don't forget the
+// padding on the sides, which makes the PnGraph::bgSurface larger than the
+// widget area.  That padding (padX, padY) could be made zero.
+//
+// Note: In Cairo pixel distances tend to be doubles hence
+// all these functions return double.
+//
+static inline double xToPix(double x, const struct PnZoom *z) {
+    return (x - z->xShift)/z->xSlope;
+}
+//
+static inline double pixToX(double p, const struct PnZoom *z) {
+    return p * z->xSlope + z->xShift;
+}
+//
+static inline double yToPix(double y, const struct PnZoom *z) {
+    return (y - z->yShift)/z->ySlope;
+}
+//
+static inline double pixToY(double p, const struct PnZoom *z) {
+    return p * z->ySlope + z->yShift;
+}
+
+
+// Return true for cull.
+static inline int CullPoint(struct PnGraph *g, double x, double y) {
+
+    return false;
+}
+
+// Return true for cull.
+static inline bool CullLine(struct PnGraph *g,
+        double x0, double y0, double x1, double y1) {
+    return false;
+}
+
+
+// TODO: This is likely a (tight loop) bottle-neck in most user code, so
+// we need to make it faster.  In-lining is step one.
+//
+// TODO: Add non-Cairo versions of point and line drawing; just directly
+// writing to the mapped pixels.
+//
+static inline void
+pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
+
+    // TODO: It would be nice to have some assertions here;
+    // maybe with DEBUG mode.
+
+    const double hw = p->pointSize;
+    const double w = 2.0*hw;
+
+    struct PnZoom *z = p->zoom;
+    cairo_t *cr = p->lineCr;
+
+    x = xToPix(x, z);
+    y = yToPix(y, z);
+
+    if(p->x != DBL_MAX) {
+
+        // TODO: maybe remove these ifs by using different functions.
+        if(p->lineWidth > 0) {
+            cairo_move_to(cr, p->x, p->y);
+            cairo_line_to(cr, x, y);
+            // Calling this often must save having to store all
+            // those points in the cairo_t object.
+            cairo_stroke(cr);
+        }
+
+        if(p->pointSize) {
+            // Draw the last x, y point.
+            cairo_rectangle(p->pointCr, p->x - hw, p->y - hw, w, w);
+            cairo_fill(p->pointCr);
+        }
+    }
+
+    p->x = x;
+    p->y = y;
+}
 
 
 // Advanced API:

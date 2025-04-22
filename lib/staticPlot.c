@@ -52,6 +52,7 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(g);
     DASSERT(actionData == 0);
     DASSERT(actionIndex == PN_GRAPH_CB_STATIC_DRAW);
+    DASSERT(g->zoom);
     DASSERT(g->cr);
     DASSERT(g->lineCr);
     DASSERT(g->pointCr);
@@ -62,7 +63,7 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     struct PnPlot *p = (void *) callback;
 
     // Initialize the last plotted x value.
-    g->x = DBL_MAX;
+    p->x = DBL_MAX;
 
     // userCallback() is the libpanels API user set callback.
     //
@@ -73,6 +74,13 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     cairo_t *pcr = g->pointCr;
     cairo_t *lcr = g->lineCr;
 
+    // TODO: This is a little redundant, but we need these pointers in "p"
+    // (too) so we can inline the pnGraph_drawPoint() function.
+    //
+    p->lineCr = g->lineCr;
+    p->pointCr = g->pointCr;
+    p->zoom = g->zoom;
+
     SetColor(pcr, p->pointColor);
     SetColor(lcr, p->lineColor);
     cairo_set_line_width(lcr, p->lineWidth);
@@ -82,117 +90,11 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     const double hw = p->pointSize;
     const double w = 2.0*hw;
 
-    if(g->x != DBL_MAX && p->pointSize > 0) {
+    if(p->x != DBL_MAX && p->pointSize > 0) {
         // Draw the last x, y point.
-        cairo_rectangle(pcr, g->x - hw, g->y - hw, w, w);
+        cairo_rectangle(pcr, p->x - hw, p->y - hw, w, w);
         cairo_fill(pcr);
     }
 
     return ret;
-}
-
-// Return true for cull.
-static inline bool CullPoint(struct PnGraph *g, double x, double y) {
-
-    return false;
-}
-
-// Return true for cull.
-static inline bool CullLine(struct PnGraph *g,
-        double x0, double y0, double x1, double y1) {
-    return false;
-}
-
-
-
-void pnGraph_drawPoint(struct PnPlot *p,
-        double x, double y) {
-
-    DASSERT(p);
-    struct PnGraph *g = p->graph;
-    DASSERT(g);
-    ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GRAPH);
-
-    const double hw = p->pointSize;
-    const double w = 2.0*hw;
-
-    struct PnZoom *z = g->zoom;
-    cairo_t *cr = g->lineCr;
-
-    x = xToPix(x, z);
-    y = yToPix(y, z);
-
-    if(g->x != DBL_MAX) {
-
-        // TODO: maybe remove these ifs by using different functions.
-        if(p->lineWidth > 0) {
-            cairo_move_to(cr, g->x, g->y);
-            cairo_line_to(cr, x, y);
-            // Calling this often must save having to store all
-            // those points in the cairo_t object.
-            cairo_stroke(cr);
-        }
-
-        if(p->pointSize) {
-            // Draw the last x, y point.
-            cairo_rectangle(g->pointCr, g->x - hw, g->y - hw, w, w);
-            cairo_fill(g->pointCr);
-        }
-    }
-
-    g->x = x;
-    g->y = y;
-}
-
-void pnGraph_drawPoints(struct PnPlot *p,
-        const double *ax, const double *ay, uint32_t numPoints) {
-
-    DASSERT(p);
-    struct PnGraph *g = p->graph;
-    DASSERT(g);
-    ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GRAPH);
-
-    if(!numPoints) return;
-
-    DASSERT(ax);
-    DASSERT(ay);
-
-    const double hw = p->pointSize;
-    const double w = 2.0*hw;
-
-    struct PnZoom *z = g->zoom;
-    cairo_t *cr = g->lineCr;
-    uint32_t i = 0;
-
-    // TODO: This is not very optimal.
- 
-    if(g->x == DBL_MAX) {
-        g->x = xToPix(*ax++, z);
-        g->y = yToPix(*ay++, z);
-        ++i;
-    }
-
-    for(; i<numPoints; ++i) {
-
-        double x = xToPix(*ax++, z);
-        double y = yToPix(*ay++, z);
-
-        // TODO: maybe remove these ifs by using different functions.
-        if(p->lineWidth > 0) {
-            cairo_move_to(cr, g->x, g->y);
-            cairo_line_to(cr, x, y);
-            // Calling this often must save having to store all
-            // those points in the cairo_t object.
-            cairo_stroke(cr);
-        }
-
-       if(p->pointSize > 0) {
-            // Draw the last x, y point.
-            cairo_rectangle(g->pointCr, g->x - hw, g->y - hw, w, w);
-            cairo_fill(g->pointCr);
-       }
-
-        g->x = x;
-        g->y = y;
-    }
 }

@@ -39,43 +39,7 @@
 */
 
 
-struct PnZoom {
 
-    struct PnZoom *prev, *next; // To keep a list of zooms in PnGraph
-
-    double xSlope/* = (xMax - xMin)/vbWidth */;
-    double ySlope/* = (yMin - yMax)/vbHeight */;
-    double xShift/* = xMin - padX * xSlope */;
-    double yShift/* = yMax - padY * ySlope */;
-};
-
-
-enum PnPlotType {
-
-    PnPlotType_static,
-    PnPlotType_dynamic
-};
-
-
-struct PnPlot {
-
-    struct PnCallback callback; // inherit first.
-
-    struct PnGraph *graph;
-
-    enum PnPlotType type;
-
-    // We keep a list of plots in a graph.
-    struct PnPlot *next, *prev;
-
-
-    uint32_t lineColor, pointColor;
-
-    double lineWidth, pointSize;
-    // The last point drawn is needed to draw lines when
-    // there is a line being drawn in the future.
-    double x, y; // last point
-};
 
 // For oscilloscope like 2D plots
 struct PnScopePlot {
@@ -170,9 +134,6 @@ struct PnGraph {
     // we keep shift and slope instead.
     double xMin, xMax, yMin, yMax;
 
-    // Last point.
-    double x, y;
-
     // padX, padY is padding size added to cairo drawing surface.  The
     // padding is added to each of the 4 sides of the Cairo surface.
     // See the ASCII art above.
@@ -216,30 +177,6 @@ struct PnGraph {
 //
 #define PIXELS_PER_MAJOR_GRID_LINE   (160)
 
-
-// These are mappings to (and from) pixels on a Cairo surface we are
-// plotting points and/or lines on PnGraph::bgSurface.  Don't forget the
-// padding on the sides, which makes the PnGraph::bgSurface larger than the
-// widget area.  That padding (padX, padY) could be made zero.
-//
-// Note: In Cairo pixel distances tend to be doubles hence
-// all these functions return double.
-//
-static inline double xToPix(double x, const struct PnZoom *z) {
-    return (x - z->xShift)/z->xSlope;
-}
-//
-static inline double pixToX(double p, const struct PnZoom *z) {
-    return p * z->xSlope + z->xShift;
-}
-//
-static inline double yToPix(double y, const struct PnZoom *z) {
-    return (y - z->yShift)/z->ySlope;
-}
-//
-static inline double pixToY(double p, const struct PnZoom *z) {
-    return p * z->ySlope + z->yShift;
-}
 
 
 

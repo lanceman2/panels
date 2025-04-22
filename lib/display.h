@@ -167,22 +167,6 @@ struct PnWidgetDestroy {
 };
 
 
-// For each action there may be a list of callbacks:
-//
-struct PnCallback {
-    // The callbacks are called in order until one of them returns true.
-    // The widget object knows that the actual function prototype is.  We
-    // are marshaling (I think that's the correct term) the action
-    // callbacks.
-    //
-    // The particular widget's API user set callback and data.
-    //
-    void *userCallback;
-    void *userData;
-
-    struct PnCallback *prev, *next;
-};
-
 struct PnAction {
 
     // The action function called to indirectly call the particular
