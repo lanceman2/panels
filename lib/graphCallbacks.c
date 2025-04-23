@@ -49,6 +49,7 @@
 
 
 static uint32_t state = 0;
+static struct PnAllocation a;
 static int32_t x_0, y_0; // press initial pointer position
 static int32_t x_l = INT32_MAX, y_l; // last pointer position
 
@@ -61,8 +62,12 @@ bool enter(struct PnWidget *w,
     DASSERT(g->boxX == INT32_MAX);
     state = ENTERED;
 
-    x_l = x;
-    y_l = y;
+    // We need the position of the widget, "w".
+    pnWidget_getAllocation(w, &a);
+
+    // We need the positions relative to the widget, "w".
+    x_l = x - a.x;
+    y_l = y - a.y;
 
     return true; // take focus
 }
@@ -167,6 +172,10 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
     DASSERT(state & ENTERED);
     uint32_t action = state & ACTIONS;
 
+    // We need the positions relative to the widget, "w".
+    x -= a.x;
+    y -= a.y;
+
     // We need this position for axis zooming (if there is any).  It may
     // be that we could have queried the mouse pointer position at the
     // time of the axis event, but this is not much work and this can even
@@ -235,6 +244,10 @@ bool release(struct PnWidget *w,
         // Reset MOVED state.
         state &= ~MOVED;
 
+    // We need the positions relative to the widget, "w".
+    x -= a.x;
+    y -= a.y;
+
     switch(action) {
         case ACTION_DRAG:
             FinishDragZoom(g, x, y);
@@ -261,6 +274,9 @@ bool press(struct PnWidget *w,
             action == 0);
     // Reset the action state.
     state &= ~ACTIONS;
+
+    x -= a.x;
+    y -= a.y;
 
     // Finish an old action, if there is one.
     switch(action) {
