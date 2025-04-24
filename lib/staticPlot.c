@@ -33,8 +33,6 @@ void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
     p->lineWidth = 6.0;
     p->pointSize = 6.1;
     p->graph = (void *) w;
-
-    WARN();
 }
 
 

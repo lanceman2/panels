@@ -45,9 +45,13 @@ bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData) {
 
 static struct PnWidget *win;
 
+static uint32_t count = 0;
+
 
 static void MakeGraph(bool (*plot)(struct PnWidget *g,
             struct PnPlot *p, void *userData)) {
+
+    ++count;
 
     // The auto 2D plotter grid (graph)
     struct PnWidget *w = pnGraph_create(
@@ -66,6 +70,18 @@ static void MakeGraph(bool (*plot)(struct PnWidget *g,
     pnPlot_setLineWidth(p, Rand(1, 8.2));
     pnPlot_setPointSize(p, Rand(1, 8.2));
 
+    switch(count) {
+        case 1:
+        case 2:
+            break;
+        case 3:
+            // No lines
+            pnPlot_setLineWidth(p, 0);
+            break;
+        case 4:
+            // No points
+            pnPlot_setPointSize(p, 0);
+    }       
 
     pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 }
@@ -78,11 +94,13 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
     win = pnWindow_create(0, 10, 10,
-            0/*x*/, 0/*y*/, PnLayout_TB/*layout*/, 0,
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWindow_setPreferredSize(win, 1100, 1000);
+    pnWindow_setPreferredSize(win, 2000, 800);
     MakeGraph(Plot);
+    MakeGraph(Plot2);
+    MakeGraph(Plot2);
     MakeGraph(Plot2);
 
     pnWindow_show(win, true);

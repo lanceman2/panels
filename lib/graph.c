@@ -1018,25 +1018,15 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
         //cairo_set_operator(cr, CAIRO_OPERATOR_EXCLUSION);
         cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
         cairo_rectangle(cr,
-                    g->boxX,
-                    g->boxY,
+                    g->boxX, g->boxY,
                     g->boxWidth, g->boxHeight);
         cairo_fill(cr);
     }
-
-#if 0 // Screwing around
-cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-cairo_set_source_rgba(cr, 1.0, 1.0, 0.6, 1.0);
-if(g->slideX || g->slideY)
-  cairo_translate(cr, g->slideX, g->slideY);
-cairo_move_to(cr, 10, 10);
-cairo_line_to(cr, 10000, 10000);
-cairo_set_line_width(cr, 20);
-cairo_stroke(cr);
-if(g->slideX || g->slideY)
-  cairo_identity_matrix(cr);
-#endif
-
+    // return 0 -> done; return 1 -> to call again next frame like in (1
+    // second)/60.  Your frame period depends on many things.  This is using
+    // a wayland compositor server which determines the frame rate.
+    //
+    // TODO: We need to look into user egl with wayland.
     return 0;
 }
 
