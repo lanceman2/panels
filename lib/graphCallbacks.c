@@ -65,7 +65,7 @@ bool enter(struct PnWidget *w,
     // We need the position of the widget, "w".
     pnWidget_getAllocation(w, &a);
 
-    // We need the positions relative to the widget, "w".
+    // We get the positions relative to the widget, "w".
     x_l = x - a.x;
     y_l = y - a.y;
 
@@ -172,7 +172,7 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
     DASSERT(state & ENTERED);
     uint32_t action = state & ACTIONS;
 
-    // We need the positions relative to the widget, "w".
+    // We get the positions relative to the widget, "w".
     x -= a.x;
     y -= a.y;
 
@@ -244,7 +244,7 @@ bool release(struct PnWidget *w,
         // Reset MOVED state.
         state &= ~MOVED;
 
-    // We need the positions relative to the widget, "w".
+    // We get the positions relative to the widget, "w".
     x -= a.x;
     y -= a.y;
 
@@ -275,6 +275,7 @@ bool press(struct PnWidget *w,
     // Reset the action state.
     state &= ~ACTIONS;
 
+    // We get the positions relative to the widget, "w".
     x -= a.x;
     y -= a.y;
 
