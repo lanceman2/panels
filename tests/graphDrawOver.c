@@ -63,6 +63,7 @@ int main(void) {
     ASSERT(graph);
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(graph, 0xA0101010);
+    pnGraph_setView(graph, -1.05, 1.05, -1.05, 1.05);
 
     struct PnWidget *over = pnWidget_create(graph/*parent*/,
         0/*width*/, 0/*height*/, PnLayout_Cover,
