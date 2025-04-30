@@ -54,6 +54,7 @@ static void enter(void *data,
  
     DASSERT(!d.pointerWindow);
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
+    d.pointerWindow->lastSerial = serial;
     DASSERT(d.pointerWindow->wl_surface == wl_surface);
     DASSERT(d.pointerWindow->widget.allocation.x == 0);
     DASSERT(d.pointerWindow->widget.allocation.y == 0);
@@ -74,6 +75,7 @@ static void leave(void *data, struct wl_pointer *p,
 
     DASSERT((void *) d.pointerWindow ==
             wl_surface_get_user_data(wl_surface));
+    d.pointerWindow->lastSerial = 0;
 
     if(d.focusWidget && d.focusWidget->leave)
         d.focusWidget->leave((void *) d.focusWidget,
@@ -600,6 +602,8 @@ static int _pnDisplay_create(void) {
     RET_ERROR(d.wl_pointer,   10, "cannot get wl_pointer");
     RET_ERROR(d.wl_keyboard, 11, "cannot get wl_keyboard");
 
+    LoadCursorTheme();
+
     return err; // return 0 => success.
 }
 
@@ -669,7 +673,9 @@ static void _pnDisplay_destroy(void) {
         free(d.outputs);
         d.outputs = 0;
         d.numOutputs = 0;
-    }
+   }
+
+    CleanupCursorTheme();
 
     if(d.wl_shm)
         wl_shm_destroy(d.wl_shm);

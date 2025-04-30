@@ -672,6 +672,8 @@ pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
     p->y = y;
 }
 
+PN_EXPORT bool pnDisplay_setCursor(struct PnWidget *w,
+            const char *cursorName);
 
 // Advanced API:
 ///////////////////////////////////////////////////////////////////

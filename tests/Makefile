@@ -88,6 +88,14 @@ orphans_run_CPPFLAGS := -DRUN
 073_orphansNoWin_SOURCES := orphansNoWin.c
 073_orphansNoWin_LDFLAGS := $(PN_LIB)
 
+cursor_run_SOURCES := cursor.c
+cursor_run_LDFLAGS := $(PN_LIB)
+cursor_run_CPPFLAGS := -DRUN
+
+075_cursor_SOURCES := cursor.c
+075_cursor_LDFLAGS := $(PN_LIB)
+
+
 ifdef WITH_FONTCONFIG
 081_findFont_SOURCES := 081_findFont.c
 081_findFont_LDFLAGS := $(PN_LIB)

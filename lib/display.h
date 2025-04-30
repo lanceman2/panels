@@ -514,6 +514,9 @@ struct PnWindow {
     // wl_callback event.  I don't think that there's a way to really know
     // that the window is showing, but this may be close enough.
     uint32_t haveDrawn;
+
+    // From the last enter event.
+    uint32_t lastSerial;
 };
 
 // Just a dumb wrapper of the wayland wl_output object.  wl_output seems
@@ -575,6 +578,7 @@ struct PnDisplay {
     uint32_t handle_global_error;
 
     // TODO: There may be a more standard way to do this.
+    // Just calling wl_surface_damage() does not work in general.
     //
     // We find this function pointer at runtime, it could be at least one
     // of two different functions.
@@ -727,6 +731,9 @@ extern void GetPointerSurface(const struct PnWindow *win);
 // Calls motion() callback until a widget callback returns true.
 extern void DoMotion(struct PnWidget *s);
 
+
+extern void LoadCursorTheme(void);
+extern void CleanupCursorTheme(void);
 
 static inline void RemoveSurfaceFromDisplay(struct PnWidget *s) {
 

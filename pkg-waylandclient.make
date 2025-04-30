@@ -1,5 +1,5 @@
 
-# Get the wayland client specific compiler options if we can.
+# 1. Get the wayland client specific compiler options if we can.
 
 libdir := $(shell pkg-config --variable=libdir wayland-client)
 
@@ -30,4 +30,25 @@ undefine libdir
 
 # TODO: Bug in wayland-protocols pkgdatadir adds extra "/"
 # like: //usr/share/wayland-protocols  Mar 15 2024
+
+
+
+# 2. Now get the wayland cursor specific compiler options if we can.
+
+culibdir := $(shell pkg-config --variable=libdir wayland-cursor)
+
+WLCU_LDFLAGS := $(shell pkg-config --libs wayland-cursor)\
+ -Wl,--enable-new-dtags,-rpath,$(culibdir)
+WLCU_CFLAGS := $(shell pkg-config --cflags wayland-cursor)
+
+
+ifeq ($(culibdir),)
+# Use of wayland-cursor is required.
+$(error software package wayland-cursor was not found)
+endif
+
+# Spew what wayland cursor compiler options we have found
+#$(info WLCU_CFLAGS="$(WLCU_CFLAGS)" WLCU_LDFLAGS="$(WLCU_LDFLAGS)")
+
+undefine culibdir
 

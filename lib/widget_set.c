@@ -90,7 +90,6 @@ void pnWidget_setLeave(struct PnWidget *w,
         if(w->motion)
             w->leave = MotionLeave;
     }
-
 }
 
 void pnWidget_setPress(struct PnWidget *w,

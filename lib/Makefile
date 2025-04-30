@@ -66,7 +66,8 @@ libpanels.so_SOURCES :=\
  surface_draw.c\
  widget_set.c\
  action.c\
- monitor.c
+ monitor.c\
+ cursor.c
 
 ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\
@@ -90,7 +91,8 @@ endif
 
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\
- $(CAIRO_CFLAGS)\
+ $(WLCU_CFLAGS)\
+  $(CAIRO_CFLAGS)\
  $(FONTCONFIG_CFLAGS)\
  -DPN_LIB_CODE
 
@@ -120,6 +122,7 @@ libpanels.so_CFLAGS :=\
 libpanels.so_LDFLAGS :=\
  $(CAIRO_LDFLAGS)\
  $(WL_LDFLAGS)\
+ $(WLCU_LDFLAGS)\
  $(FONTCONFIG_LDFLAGS)\
  -Wl,--retain-symbols-file=retain-symbols.txt
 libpanels.so: retain-symbols.txt
