@@ -672,7 +672,10 @@ pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
     p->y = y;
 }
 
-PN_EXPORT bool pnDisplay_setCursor(struct PnWidget *w,
+// window can be a widget or a window.  Set the cursor immediately
+// for the window that contains the widget "w".
+//
+PN_EXPORT bool pnWindow_setCursor(struct PnWidget *w,
             const char *cursorName);
 
 // Advanced API:

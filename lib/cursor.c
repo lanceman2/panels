@@ -89,7 +89,7 @@ fail:
 
 // cursorName is for example: "n-resize" "nw-resize" 
 //
-bool pnDisplay_setCursor(struct PnWidget *w, const char *name) {
+bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
 
     DASSERT(w);
     DASSERT(d.wl_pointer);

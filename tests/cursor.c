@@ -22,7 +22,7 @@ static bool enter(struct PnWidget *w,
 
     DSPEW("cursorName=\"%s\"", cursorName);
 
-    pnDisplay_setCursor(w, cursorName);
+    pnWindow_setCursor(w, cursorName);
     return true; // true => take focus
 }
 
