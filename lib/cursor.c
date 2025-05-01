@@ -164,7 +164,8 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
 //
 uint32_t pnWindow_pushCursor(const char *name) {
 
-    pnWindow_setCursor(&d.pointerWindow->widget, name);
+    if(pnWindow_setCursor(&d.pointerWindow->widget, name))
+        return 0; // fail.
 
     return 1;
 }
