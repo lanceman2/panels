@@ -26,6 +26,12 @@ static struct wl_cursor_theme *theme = 0;
 // TODO: Destroy this after use.
 static struct wl_surface *surface = 0;
 
+static struct Stack {
+    const char *name;
+    struct Stack *next;
+} stack = { 0 };
+
+
 void CleanupCursorTheme(void) {
 
     if(surface) {
@@ -36,6 +42,7 @@ void CleanupCursorTheme(void) {
         wl_cursor_theme_destroy(theme);
         theme = 0;
     }
+    stack.next = 0;
 }
 
 
@@ -69,8 +76,6 @@ void LoadCursorTheme(void) {
     }
     DSPEW("CURSOR size=%d and theme name=\"%s\"", cursorSize, themeName);
 
-    //const char *name = "nw-resize";
-
     surface = wl_compositor_create_surface(d.wl_compositor);
     if(!surface) {
         ERROR("wl_compositor_create_surface() failed");
@@ -89,6 +94,7 @@ fail:
 
 // cursorName is for example: "n-resize" "nw-resize" 
 //
+static inline
 bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
 
     DASSERT(w);
@@ -98,6 +104,7 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
     DASSERT(name);
     DASSERT(name[0]);
     DASSERT(surface);
+    DASSERT(d.pointerWindow);
     DASSERT(d.surface_damage_func);
     DASSERT((w->type & TOPLEVEL) ||
             (w->type & POPUP) ||
@@ -120,34 +127,51 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
     if(win != d.pointerWindow) {
         DASSERT(!win->lastSerial);
         ERROR("PnWindow not in focus");
-        goto fail;
+        return true; // fail
     }
 
+    DASSERT(win == d.pointerWindow);
     DASSERT(win->lastSerial);
 
     struct wl_cursor *cursor = wl_cursor_theme_get_cursor(theme, name);
-    DASSERT(cursor);
+    if(!cursor) {
+        ERROR("wl_cursor_theme_get_cursor(theme, \"%s\") failed",
+                name);
+        return true;
+    }
     struct wl_cursor_image *image = cursor->images[0];
-    DASSERT(image);
-
-    wl_pointer_set_cursor(d.wl_pointer, win->lastSerial, surface,
-            image->hotspot_x, image->hotspot_y);
+    ASSERT(image);
 
     struct wl_buffer *buffer = wl_cursor_image_get_buffer(image);
     if(!buffer) {
-        ERROR("wl_cursor_image_get_buffer() for cursor \"%s\"",
+        ERROR("wl_cursor_image_get_buffer() for cursor \"%s\" failed",
                 name);
-        goto fail;
+        return true;
     }
 
+    wl_pointer_set_cursor(d.wl_pointer, win->lastSerial, surface,
+            image->hotspot_x, image->hotspot_y);
     d.surface_damage_func(surface, 0, 0, image->width, image->height);
     wl_surface_attach(surface, buffer, 0, 0);
     wl_surface_commit(surface);
 
     return false;
+}
 
-fail:
 
-    return true;
+// Return 0 on failure.
+// Return stack height on success.
+//
+uint32_t pnWindow_pushCursor(const char *name) {
+
+    pnWindow_setCursor(&d.pointerWindow->widget, name);
+
+    return 1;
+}
+
+// Pared with a successful pnWindow_pushCursor()
+//
+void pnWindow_popCursor(void) {
+
 }
 

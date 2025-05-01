@@ -15,6 +15,9 @@
 extern "C" {
 #endif
 
+// There is a theme from env XCURSOR_THEME
+#define PN_DEFAULT_CURSOR  "left_ptr"
+
 // Number of mouse (pointer) buttons:
 #define PN_NUM_BUTTONS    (3)
 
@@ -672,11 +675,17 @@ pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
     p->y = y;
 }
 
-// window can be a widget or a window.  Set the cursor immediately
-// for the window that contains the widget "w".
+// Set the cursor immediately.  Put this cursor in a stack
+// so we may reset it back with pnWindow_popCursor().
 //
-PN_EXPORT bool pnWindow_setCursor(struct PnWidget *w,
-            const char *cursorName);
+// Returns non-zero on success.
+// Returns the number of cursors in the stack (on success).
+//
+// Returns 0 on failure (which is not the number in the stack).
+//
+PN_EXPORT uint32_t pnWindow_pushCursor(const char *cursorName);
+PN_EXPORT void pnWindow_popCursor(void);
+
 
 // Advanced API:
 ///////////////////////////////////////////////////////////////////

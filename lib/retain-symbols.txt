@@ -35,7 +35,8 @@ pnWidget_queueDraw
 pnWidget_setAxis
 pnWidget_setBackgroundColor
 pnWidget_setCairoDraw
-pnWindow_setCursor
+pnWindow_popCursor
+pnWindow_pushCursor
 pnWidget_setDraw
 pnWidget_setEnter
 pnWidget_setLeave

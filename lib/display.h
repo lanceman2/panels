@@ -597,7 +597,8 @@ struct PnDisplay {
     // events exist separately?  Maybe tab key press to change keyboard
     // focus needs them to be separate.
     //
-    // Set the window with mouse pointer focus (from enter and leave):
+    // Set the window with mouse pointer focus (from wayland's enter and
+    // leave):
     struct PnWindow *pointerWindow;
     // The child most widget that has the pointer in it.
     struct PnWidget *pointerWidget;
