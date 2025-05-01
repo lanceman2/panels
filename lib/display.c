@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <wayland-client.h>
-
+#include <linux/input-event-codes.h>
 #include "xdg-shell-protocol.h"
 #include "xdg-decoration-protocol.h"
 
@@ -150,13 +150,13 @@ static void button(void *, struct wl_pointer *p,
     if(!d.focusWidget) return;
 
     switch(button) {
-        case 272: // left
+        case BTN_LEFT: // left
             button = 0;
             break;
-        case 274: // middle
+        case BTN_MIDDLE: // middle
             button = 1;
             break;
-        case 273: // right
+        case BTN_RIGHT: // right
             button = 2;
             break;
         default:

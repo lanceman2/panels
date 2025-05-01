@@ -99,6 +99,9 @@ bool pnDisplay_setCursor(struct PnWidget *w, const char *name) {
     DASSERT(name[0]);
     DASSERT(surface);
     DASSERT(d.surface_damage_func);
+    DASSERT((w->type & TOPLEVEL) ||
+            (w->type & POPUP) ||
+            (w->type & WIDGET));
 
     struct PnWindow *win;
     switch(w->type & (TOPLEVEL|POPUP|WIDGET)) {
@@ -122,15 +125,13 @@ bool pnDisplay_setCursor(struct PnWidget *w, const char *name) {
 
     DASSERT(win->lastSerial);
 
-    int scale = 1;
-
     struct wl_cursor *cursor = wl_cursor_theme_get_cursor(theme, name);
     DASSERT(cursor);
     struct wl_cursor_image *image = cursor->images[0];
     DASSERT(image);
 
     wl_pointer_set_cursor(d.wl_pointer, win->lastSerial, surface,
-            image->hotspot_x/scale, image->hotspot_y/scale);
+            image->hotspot_x, image->hotspot_y);
 
     struct wl_buffer *buffer = wl_cursor_image_get_buffer(image);
     if(!buffer) {

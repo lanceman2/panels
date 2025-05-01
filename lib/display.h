@@ -515,7 +515,7 @@ struct PnWindow {
     // that the window is showing, but this may be close enough.
     uint32_t haveDrawn;
 
-    // From the last enter event.
+    // From the last wayland enter event.
     uint32_t lastSerial;
 };
 
