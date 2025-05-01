@@ -20,7 +20,7 @@ static bool enter(struct PnWidget *w,
 
     const char *cursorName = (const char *) userData;
 
-    DSPEW("cursorName=\"%s\"", cursorName);
+    //DSPEW("cursorName=\"%s\"", cursorName);
 
     ASSERT(pnWindow_pushCursor(cursorName));
     return true; // true => take focus
@@ -29,9 +29,9 @@ static bool enter(struct PnWidget *w,
 
 void leave(struct PnWidget *widget, void *userData) {
 
-    const char *cursorName = (const char *) userData;
+    //INFO("cursorName=\"%s\"", (const char *) userData);
 
-    INFO("cursorName=\"%s\"", cursorName);
+    pnWindow_popCursor();
 }
 
 
@@ -49,18 +49,14 @@ DSPEW("cursorName=\"%s\"", cursorName);
     pnWidget_setLeave(w, leave, (char *) cursorName);
 }
 
-
-int main(void) {
-
-    ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
-    srand(2);
+void Do(void) {
 
     win = pnWindow_create(0, 20, 20,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
 
-    const char *cursorNames[] = { "left_ptr",
+    const char *cursorNames[] = {
         "n-resize", "nw-resize", "w-resize", "ne-resize",
         "e-resize", "sw-resize", "se-resize", "s-resize",
         0 };
@@ -70,6 +66,16 @@ int main(void) {
         MakeWidget(*curserName++);
 
     pnWindow_show(win, true);
+}
+
+
+int main(void) {
+
+    ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
+    srand(2);
+
+    Do();
+    Do();
 
     Run(win);
 

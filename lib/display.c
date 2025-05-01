@@ -75,7 +75,8 @@ static void leave(void *data, struct wl_pointer *p,
 
     DASSERT((void *) d.pointerWindow ==
             wl_surface_get_user_data(wl_surface));
-    d.pointerWindow->lastSerial = 0;
+    // Resetting this (lastSerial) brakes the cursor.c code:
+    //d.pointerWindow->lastSerial = 0;
 
     if(d.focusWidget && d.focusWidget->leave)
         d.focusWidget->leave((void *) d.focusWidget,
