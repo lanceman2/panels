@@ -27,7 +27,7 @@ static bool enter(struct PnWidget *w,
 }
 
 
-void leave(struct PnWidget *widget, void *userData) {
+static void leave(struct PnWidget *widget, void *userData) {
 
     //INFO("cursorName=\"%s\"", (const char *) userData);
 
@@ -35,7 +35,7 @@ void leave(struct PnWidget *widget, void *userData) {
 }
 
 
-void MakeWidget(const char *cursorName) {
+static void MakeWidget(const char *cursorName) {
 
 DSPEW("cursorName=\"%s\"", cursorName);
 
@@ -49,7 +49,8 @@ DSPEW("cursorName=\"%s\"", cursorName);
     pnWidget_setLeave(w, leave, (char *) cursorName);
 }
 
-void Do(void) {
+
+static void Do(void) {
 
     win = pnWindow_create(0, 20, 20,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
@@ -57,6 +58,7 @@ void Do(void) {
     ASSERT(win);
 
     const char *cursorNames[] = {
+        // TODO: Where can we get these strings?
         "n-resize", "nw-resize", "w-resize", "ne-resize",
         "e-resize", "sw-resize", "se-resize", "s-resize",
         0 };
@@ -74,6 +76,7 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(2);
 
+    // Testing that it worked with more than one window.
     Do();
     Do();
 

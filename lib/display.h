@@ -213,6 +213,10 @@ struct PnWidget {
     // the children are drawn.
     const uint32_t width, height;
 
+    // That which is added to the standard expanding algorithm, due to
+    // paneing.
+    int32_t addWidth, addHeight;
+
     // What they really get for surface size.  Changes when the parent
     // window is resized.
     struct PnAllocation allocation;
@@ -614,6 +618,7 @@ struct PnDisplay {
     int32_t x, y; // pointer position.
 
     struct PnWidget *buttonGrabWidget;
+    // First bit left, second bit middle, third bit right.
     uint32_t buttonGrab;
 
     // Set the window with keyboard focus (from enter and leave):
