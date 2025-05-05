@@ -214,7 +214,17 @@ struct PnWidget {
     const uint32_t reqWidth, reqHeight;
 
     // That which is added to the standard expanding algorithm, due to
-    // paneing.
+    // sliding window panes.  Kind of like GtkPaned or QSplitter (Qt); but
+    // we let all the child widgets resize in the hbox or vbox by sliding
+    // the container borders.  We use INT32_MAX as the value for when
+    // this width and height are not used in allocation the widgets
+    // size.
+    //
+    // The value 0 is used when a child widget has been squished to zero
+    // size by it's parent container via this sliding window pane
+    // mechanism.  If width or height is 0 the widget will be culled due
+    // to sliding window pane; which differs to being culled due to lack
+    // of window size.
     int32_t width, height;
 
     // What they really get for surface size.  Changes when the parent
