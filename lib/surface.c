@@ -490,6 +490,10 @@ void InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
     DASSERT(s);
     DASSERT(s->type);
 
+    // Initialize to unused values.
+    s->width = INT32_MAX;
+    s->height = INT32_MAX;
+
     if(s->layout == PnLayout_Grid) {
         DASSERT(!s->g.numRows);
         DASSERT(!s->g.numColumns);
@@ -508,7 +512,7 @@ void InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
         // this is a window.
         return;
     }
-    // this is a widget
+    // this is a widget and not a window.
     DASSERT(s->type & WIDGET);
 
     // Default widget background color is that of it's
