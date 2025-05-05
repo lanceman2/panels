@@ -24,8 +24,10 @@
 // This cursor stuff is a singleton, one per process;
 // just like the wl_display and et al.
 //
-// TODO: we could make more than one, but that's not how this is
-// written.
+// TODO: We could make more than one, but that's not how this is written.
+// I don't think we can have more than one cursor at a time, so having
+// having one (or none) instance(s) of this cursor_theme seems to make
+// sense.
 
 
 static struct wl_cursor_theme *theme = 0;
