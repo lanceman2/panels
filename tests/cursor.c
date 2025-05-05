@@ -76,7 +76,11 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(2);
 
-    // Testing that it worked with more than one window.
+    // Testing that it worked with more than one window.  There is a thing
+    // in Wayland that sets the cursor that is related to particular
+    // windows for wl_pointer_set_cursor() (It seems wonky to me), so we
+    // need this to have more than one window for testing.
+    Do();
     Do();
     Do();
 

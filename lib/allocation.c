@@ -199,9 +199,9 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
         // the are not covered by the children.
         return 0;
 
-    if(HaveChildren(s) || s->width)
+    if(HaveChildren(s) || s->reqWidth)
         // It can be zero.  It's just a border that's 0.
-        return s->width;
+        return s->reqWidth;
 
     if(s->type & WIDGET)
         return PN_DEFAULT_WIDGET_WIDTH;
@@ -225,9 +225,9 @@ static inline uint32_t GetBHeight(const struct PnWidget *s) {
         // the are not covered by the children.
         return 0;
 
-    if(HaveChildren(s) || s->height)
+    if(HaveChildren(s) || s->reqHeight)
         // It can be zero. It's just a border that's 0.
-        return s->height;
+        return s->reqHeight;
 
     if(s->type & WIDGET)
         return PN_DEFAULT_WIDGET_HEIGHT;
@@ -1935,10 +1935,9 @@ static void ExpandChildren(const struct PnWidget *s,
 // TODO: A better function name may be GetWidgetPositionAndSize().  And
 // the struct PnAllocation should be struct PositionAndSize.
 //
-void GetWidgetAllocations(struct PnWindow *win) {
+void GetWidgetAllocations(struct PnWidget *s) {
 
-    DASSERT(win);
-    struct PnWidget *s = &win->widget;
+    DASSERT(s);
     struct PnAllocation *a = &s->allocation;
     DASSERT(s->type == PnSurfaceType_toplevel ||
             s->type == PnSurfaceType_popup);
@@ -1947,13 +1946,6 @@ void GetWidgetAllocations(struct PnWindow *win) {
     DASSERT(!s->hidden);
     DASSERT(!s->parent);
     DASSERT(!s->culled);
-    DASSERT(win->needAllocate);
-
-    if(win->preferredWidth && win->preferredHeight && !a->width) {
-        DASSERT(!a->height);
-        a->width = win->preferredWidth;
-        a->height = win->preferredHeight;
-    }
 
     if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);

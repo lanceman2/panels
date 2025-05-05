@@ -204,18 +204,18 @@ struct PnWidget {
 
     // API user requested size.  What they get may be different.
     //
-    // width and height are CONSTANT after they are first set!!!
+    // reqWidth and reqHeight are CONSTANT after they are first set!!!
     //
     // For container windows and widgets width is left and right border
     // width, and height is top and bottom border thickness.  A container
     // with no children will have width and height.  In this sense the
     // container owns the pixels of the border, so it draws them before
     // the children are drawn.
-    const uint32_t width, height;
+    const uint32_t reqWidth, reqHeight;
 
     // That which is added to the standard expanding algorithm, due to
     // paneing.
-    int32_t addWidth, addHeight;
+    int32_t width, height;
 
     // What they really get for surface size.  Changes when the parent
     // window is resized.
@@ -708,7 +708,7 @@ extern void RemoveChildSurface(struct PnWidget *parent,
 extern void DestroySurface(struct PnWidget *s);
 extern void DestroySurfaceChildren(struct PnWidget *s);
 
-extern void GetWidgetAllocations(struct PnWindow *win);
+extern void GetWidgetAllocations(struct PnWidget *s);
 
 extern void pnSurface_draw(struct PnWidget *s,
         struct PnBuffer *buffer);

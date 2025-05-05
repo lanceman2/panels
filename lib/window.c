@@ -25,8 +25,16 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(!win->dqRead->first);
     DASSERT(!win->dqRead->last);
 
-    if(win->needAllocate)
-        GetWidgetAllocations(win);
+    if(win->needAllocate) {
+        if(win->preferredWidth && win->preferredHeight &&
+                !win->widget.allocation.width) {
+            struct PnAllocation *a = &win->widget.allocation;
+            DASSERT(!a->height);
+            a->width = win->preferredWidth;
+            a->height = win->preferredHeight;
+         }
+        GetWidgetAllocations(&win->widget);
+    }
 
     // GetNextBuffer() can reallocate the buffer if the width or height
     // passed here is different from the width and height of the buffer it
@@ -204,8 +212,8 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
     // This is how we C casting to change const variables:
-    *((uint32_t *) &win->widget.width) = w;
-    *((uint32_t *) &win->widget.height) = h;
+    *((uint32_t *) &win->widget.reqWidth) = w;
+    *((uint32_t *) &win->widget.reqHeight) = h;
 
     if(parent) {
         // A popup

@@ -92,8 +92,8 @@ struct PnWidget *_pnWidget_createFull(
         widget->window = (void *) parent;
 
     // This is how we C casting to change const variables:
-    *((uint32_t *) &widget->width) = w;
-    *((uint32_t *) &widget->height) = h;
+    *((uint32_t *) &widget->reqWidth) = w;
+    *((uint32_t *) &widget->reqHeight) = h;
 
     InitSurface(widget, column, row, cSpan, rSpan);
 

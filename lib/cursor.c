@@ -43,7 +43,7 @@ static uint32_t count = 0;
 
 // cursorName is for example: "n-resize" "nw-resize" 
 //
-static inline
+static
 bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
 
     DASSERT(w);
@@ -97,6 +97,7 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
                 name);
         return true;
     }
+
 
     // TODO: This is the part that make the cursor dependent on the window
     // with win->lastSerial.  I do not understand this.
