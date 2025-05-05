@@ -479,8 +479,8 @@ void RemoveChildSurface(struct PnWidget *parent, struct PnWidget *s) {
 
 // Return false on success.
 //
-// Both window and widget are a surface.  Some of this surface data
-// structure is already set up.
+// Both window and widget are a surface (widget).  Some of this surface
+// data structure is already set up.
 //
 // column and row are -1 for the unused case.
 //
