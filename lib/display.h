@@ -223,8 +223,8 @@ struct PnWidget {
     // The value 0 is used when a child widget has been squished to zero
     // size by it's parent container via this sliding window pane
     // mechanism.  If width or height is 0 the widget will be culled due
-    // to sliding window pane; which differs to being culled due to lack
-    // of window size.
+    // to sliding window pane; which may differ to being culled due to
+    // lack of window size.
     int32_t width, height;
 
     // What they really get for surface size.  Changes when the parent
