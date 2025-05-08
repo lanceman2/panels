@@ -18,7 +18,7 @@ extern "C" {
 // There is a theme from env XCURSOR_THEME
 #define PN_DEFAULT_CURSOR  "left_ptr"
 
-// Number of mouse (pointer) buttons:
+// Number of mouse (pointer) buttons that can be grabbed.
 #define PN_NUM_BUTTONS    (3)
 
 
