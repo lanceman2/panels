@@ -19,6 +19,7 @@ pnPlot_setLineColor
 pnPlot_setPointColor
 pnPlot_setLineWidth
 pnPlot_setPointSize
+pnSplitter_create
 pnWidget_addAction
 pnWidget_addCallback
 pnWidget_addChild

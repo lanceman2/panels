@@ -67,7 +67,8 @@ libpanels.so_SOURCES :=\
  widget_set.c\
  action.c\
  monitor.c\
- cursor.c
+ cursor.c\
+ splitter.c
 
 ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\

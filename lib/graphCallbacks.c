@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <float.h>
 #include <math.h>
-
+#include <linux/input-event-codes.h>
 #include <cairo/cairo.h>
 
 #include "../include/panels.h"
@@ -27,8 +27,8 @@
 // We have: drag zooming, box zooming, and axis zooming.
 
 // Which mouse button does what:
-#define BUTTON_DRAG     0 // left mouse button = 0
-#define BUTTON_BOX      2 // right mouse button = 2
+#define BUTTON_DRAG     BTN_LEFT // left mouse button
+#define BUTTON_BOX      BTN_RIGHT // right mouse button
 
 
 // State in state flag:

@@ -71,6 +71,7 @@
 #define W_MENUITEM       (5 << 3)
 #define W_IMAGE          (6 << 3)
 #define W_GRAPH          (7 << 3) // graph plotter with grid lines
+#define W_SPLITTER       (8 << 3)
 
 
 
@@ -96,7 +97,8 @@ enum PnSurfaceType {
     PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
     PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
     PnSurfaceType_image      = (WIDGET | W_IMAGE),
-    PnSurfaceType_graph      = (WIDGET | W_GRAPH)
+    PnSurfaceType_graph      = (WIDGET | W_GRAPH),
+    PnSurfaceType_splitter   = (WIDGET | W_SPLITTER)
 };
 
 
@@ -212,20 +214,6 @@ struct PnWidget {
     // container owns the pixels of the border, so it draws them before
     // the children are drawn.
     const uint32_t reqWidth, reqHeight;
-
-    // That which is added to the standard expanding algorithm, due to
-    // sliding window panes.  Kind of like GtkPaned or QSplitter (Qt); but
-    // we let all the child widgets resize in the hbox or vbox by sliding
-    // the container borders.  We use INT32_MAX as the value for when
-    // this width and height are not used in allocation the widgets
-    // size.
-    //
-    // The value 0 is used when a child widget has been squished to zero
-    // size by it's parent container via this sliding window pane
-    // mechanism.  If width or height is 0 the widget will be culled due
-    // to sliding window pane; which may differ to being culled due to
-    // lack of window size.
-    int32_t width, height;
 
     // What they really get for surface size.  Changes when the parent
     // window is resized.

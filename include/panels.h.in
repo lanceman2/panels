@@ -43,8 +43,8 @@ extern "C" {
 #define PN_WINDOW_BGCOLOR (0xFF999900)
 #define PN_DEFAULT_WINDOW_WIDTH  (400)
 #define PN_DEFAULT_WINDOW_HEIGHT (400)
-#define PN_DEFAULT_WIDGET_WIDTH  (40)
-#define PN_DEFAULT_WIDGET_HEIGHT (40)
+#define PN_DEFAULT_WIDGET_WIDTH  (30)
+#define PN_DEFAULT_WIDGET_HEIGHT (30)
 
 
 // We are putting this in libpanels API users C/C++ code.
@@ -545,6 +545,9 @@ PN_EXPORT struct PnWidget *pnButton_create(struct PnWidget *parent,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand,
         const char *label, bool toggle, size_t size);
+
+PN_EXPORT struct PnWidget *pnSplitter_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height, size_t size);
 
 PN_EXPORT struct PnWidget *pnLabel_create(struct PnWidget *parent,
         // width = 0 --> figure out width.

@@ -95,6 +95,12 @@ cursor_run_CPPFLAGS := -DRUN
 075_cursor_SOURCES := cursor.c
 075_cursor_LDFLAGS := $(PN_LIB)
 
+splitter_run_SOURCES := splitter.c
+splitter_run_LDFLAGS := $(PN_LIB)
+splitter_run_CPPFLAGS := -DRUN
+
+077_splitter_SOURCES := splitter.c
+077_splitter_LDFLAGS := $(PN_LIB)
 
 ifdef WITH_FONTCONFIG
 081_findFont_SOURCES := 081_findFont.c

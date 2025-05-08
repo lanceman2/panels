@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <linux/input-event-codes.h>
 #include <cairo/cairo.h>
 
 #include "../include/panels.h"
@@ -132,10 +133,12 @@ static int cairoDraw(struct PnWidget *w,
     return 1;
 }
 
+#define CLICK_BUTTON  (BTN_LEFT)
+
 static bool press(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
             struct PnButton *b) {
-    if(which == 0) {
+    if(which == CLICK_BUTTON) {
         SetState(b, PnButtonState_Pressed);
         pnWidget_callAction(w, PN_BUTTON_CB_PRESS);
         return true;
@@ -149,7 +152,7 @@ static bool release(struct PnWidget *w,
     DASSERT(b == (void *) w);
     DASSERT(b);
 
-    if(which == 0) {
+    if(which == CLICK_BUTTON) {
         if(b->state == PnButtonState_Pressed &&
                 pnWidget_isInSurface(w, x, y)) {
             SetState(b, PnButtonState_Active);
@@ -171,12 +174,11 @@ static bool enter(struct PnWidget *w,
     return true; // take focus
 }
 
-static bool leave(struct PnWidget *w, struct PnButton *b) {
+static void leave(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
     if(b->state == PnButtonState_Hover)
         SetState(b, PnButtonState_Normal);
     b->entered = false;
-    return true; // take focus
 }
 
 static

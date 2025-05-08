@@ -14,6 +14,23 @@
 #include "display.h"
 
 
+
+// Convert the Linux event button values to a number from between
+// 1 and to 3.
+#define GRAB_BUTTON(B)  (01 + (B) - BTN_LEFT)
+//
+#if GRAB_BUTTON(BTN_LEFT) != 01
+#  error "Bad grab button numbers"
+#endif
+#if GRAB_BUTTON(BTN_MIDDLE) != 03
+#  error "Bad grab button numbers"
+#endif
+#if GRAB_BUTTON(BTN_RIGHT) != 02
+#  error "Bad grab button numbers"
+#endif
+
+
+
 // struct PnDisplay encapsulate the wayland per process singleton objects,
 // mostly.
 //
@@ -152,21 +169,19 @@ static void button(void *, struct wl_pointer *p,
 
     switch(button) {
         case BTN_LEFT: // left
-            button = 0;
-            break;
         case BTN_MIDDLE: // middle
-            button = 1;
-            break;
         case BTN_RIGHT: // right
-            button = 2;
             break;
         default:
-            WARN("Got mouse press=%" PRIu32, button);
+            WARN("Got mouse press=%" PRIx32
+                    " that we are not handling", button);
             return;
     }
 
-    // If we add more button in this code, we need to know.
-    DASSERT(button < PN_NUM_BUTTONS);
+    // If we add more grab buttons in this code, we need to know for the
+    // button grab number stays less than 32, so that we can keep the
+    // grabbed buttons in a bit mask.
+    DASSERT(GRAB_BUTTON(button) < PN_NUM_BUTTONS + 1);
 
     switch(state) {
 
@@ -180,7 +195,7 @@ static void button(void *, struct wl_pointer *p,
                 DASSERT(d.buttonGrabWidget->release);
                 DASSERT(d.buttonGrabWidget->press);
                 // Release the button grab:
-                d.buttonGrab &= ~(01 << button);
+                d.buttonGrab &= ~(01 << GRAB_BUTTON(button));
                 if(d.buttonGrabWidget->release)
                     d.buttonGrabWidget->release(
                             (void *) d.buttonGrabWidget, button,
@@ -211,8 +226,8 @@ static void button(void *, struct wl_pointer *p,
                 DASSERT(d.buttonGrabWidget);
                 DASSERT(d.buttonGrabWidget->press);
                 DASSERT(d.buttonGrabWidget->release);
-                DASSERT(!(d.buttonGrab & (01 << button)));
-                d.buttonGrab |= (01 << button);
+                DASSERT(!(d.buttonGrab & (01 << GRAB_BUTTON(button))));
+                d.buttonGrab |= (01 << GRAB_BUTTON(button));
                 if(d.buttonGrabWidget->press)
                     d.buttonGrabWidget->press(
                             (void *) d.buttonGrabWidget, button,
@@ -226,7 +241,7 @@ static void button(void *, struct wl_pointer *p,
                             d.x, d.y, s->pressData)) {
                     if(s->release) {
                         d.buttonGrabWidget = s;
-                        d.buttonGrab |= (01 << button);
+                        d.buttonGrab |= (01 << GRAB_BUTTON(button));
                     }
                     break;
                 }
