@@ -385,11 +385,12 @@ struct PnWidget {
     size_t size;
 #endif
 
-    // 32 color bits in the byte order Alpha Red Green Blue:
+    // 32 color bits, one byte of Alpha Red Green Blue:
     uint32_t backgroundColor;
 
     enum PnLayout layout;
     enum PnAlign align;
+    // API user set expand.
     const enum PnExpand expand;
 
     // "canExpand" is used to mark container widgets as expandable, due to

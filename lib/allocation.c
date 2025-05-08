@@ -192,7 +192,7 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 // border width, else if it's a leaf widget (surface) return the minimum
 // width of the widget (surface).
 //
-static inline uint32_t GetBWidth(const struct PnWidget *s) {
+static inline uint32_t GetWidth(const struct PnWidget *s) {
 
     if(s->layout == PnLayout_Cover && HaveChildren(s))
         // The container with PnLayout_Cover can't have borders
@@ -217,8 +217,8 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
 // If it's a container widget (surface), get this upper and lower widget
 // border width, else if it's a leaf widget (surface) this returns the
 // minimum height of the widget.
-
-static inline uint32_t GetBHeight(const struct PnWidget *s) {
+//
+static inline uint32_t GetHeight(const struct PnWidget *s) {
 
     if(s->layout == PnLayout_Cover && HaveChildren(s))
         // The container with PnLayout_Cover can't have borders
@@ -257,8 +257,8 @@ void TallyRequestedSizes(const struct PnWidget *s,
     a->x = 0;
     a->y = 0;
 
-    uint32_t borderX = GetBWidth(s);
-    uint32_t borderY = GetBHeight(s);
+    uint32_t borderX = GetWidth(s);
+    uint32_t borderY = GetHeight(s);
     bool gotOne = false;
     struct PnWidget *c;
 
@@ -419,8 +419,8 @@ static void GetChildrenXY(const struct PnWidget *s,
     DASSERT(a->width, "s->type=%d", s->type);
     DASSERT(a->height);
 
-    uint32_t borderX = GetBWidth(s);
-    uint32_t borderY = GetBHeight(s);
+    uint32_t borderX = GetWidth(s);
+    uint32_t borderY = GetHeight(s);
     uint32_t x = a->x + borderX;
     uint32_t y = a->y + borderY;
 
@@ -1070,7 +1070,7 @@ static inline void AlignYJustified(struct PnWidget *first,
 // That's why (or consistent with) +x is to the right and +y is in the
 // down direction.
 //
-// This will pad (border) the right edge by GetBWidth(s).  If it can't pad
+// This will pad (border) the right edge by GetWidth(s).  If it can't pad
 // the right edge (put the container full right border in), it will not
 // change anything, except maybe the x positions.
 //
@@ -1100,7 +1100,7 @@ void ExpandHShared(const struct PnWidget *s,
     DASSERT(s);
     DASSERT(a == &s->allocation);
 
-    uint32_t border = GetBWidth(s);
+    uint32_t border = GetWidth(s);
     uint32_t numExpand = 0;
     uint32_t neededWidth = 0;
     struct PnWidget *c;
@@ -1214,7 +1214,7 @@ void ExpandVShared(const struct PnWidget *s,
     DASSERT(s);
     DASSERT(a == &s->allocation);
 
-    uint32_t border = GetBHeight(s);
+    uint32_t border = GetHeight(s);
     uint32_t numExpand = 0;
     uint32_t neededHeight = 0;
     struct PnWidget *c;
@@ -1331,7 +1331,7 @@ void ExpandH(const struct PnWidget *s,
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
 
-    uint32_t border = GetBWidth(s);
+    uint32_t border = GetWidth(s);
     ca->x = a->x + border;
 
     DASSERT(ca->width);
@@ -1396,7 +1396,7 @@ void ExpandV(const struct PnWidget *s,
     DASSERT(&s->allocation == a);
     DASSERT(!c->culled);
 
-    uint32_t border = GetBHeight(s);
+    uint32_t border = GetHeight(s);
     ca->y = a->y + border;
 
     DASSERT(ca->height);
@@ -1449,7 +1449,7 @@ void AlignX(const struct PnWidget *s,
         struct PnAllocation *ca,
         uint32_t endBorder) {
 
-    uint32_t border = GetBWidth(s);
+    uint32_t border = GetWidth(s);
 
     if(endBorder > border)
         endBorder = border;
@@ -1479,7 +1479,7 @@ void AlignY(const struct PnWidget *s,
         struct PnAllocation *ca,
         uint32_t endBorder) {
 
-    uint32_t border = GetBHeight(s);
+    uint32_t border = GetHeight(s);
 
     if(endBorder > border)
         endBorder = border;
@@ -1520,7 +1520,7 @@ static inline void ExpandGrid(const struct PnWidget *s,
     DASSERT(heights);
     struct PnWidget *c;
 
-    uint32_t border = GetBWidth(s);
+    uint32_t border = GetWidth(s);
     uint32_t numExpand = 0;
     uint32_t needed = 0;
     uint32_t sectionCount = 0;
@@ -1659,7 +1659,7 @@ static inline void ExpandGrid(const struct PnWidget *s,
 
     // Now do it for y:
     ////////////////////////////////////////////////////////////////////
-    border = GetBHeight(s);
+    border = GetHeight(s);
     numExpand = 0;
     needed = 0;
     sectionCount = 0;
@@ -1818,7 +1818,7 @@ static void ExpandChildren(const struct PnWidget *s,
     uint32_t endBorder = UINT32_MAX;
 
 #if 0
-    if(GetBWidth(s) || GetBHeight(s))
+    if(GetWidth(s) || GetHeight(s))
         // This container has a top and/or left border showing, so it has
         // non-zero area showing; so it will need some drawing for sure.
         // TODO: This does not work all the time when child widget
@@ -1949,8 +1949,8 @@ void GetWidgetAllocations(struct PnWidget *s) {
 
     if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);
-        a->width = GetBWidth(s);
-        a->height = GetBHeight(s);
+        a->width = GetWidth(s);
+        a->height = GetHeight(s);
     }
 
     // We already handled not letting the window resize if the user set
@@ -2102,7 +2102,8 @@ void GetWidgetAllocations(struct PnWidget *s) {
         // will cull or resize in each loop, if there is any culling.
         //
         // tests/random_widgets.c is a test that should work this loop
-        // through its paces.  Try it with 1000 widgets.
+        // through its paces.  Try (edit and recompile) it with 1000
+        // widgets.
 
         ++loopCount;
 
