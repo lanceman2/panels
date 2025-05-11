@@ -1817,28 +1817,9 @@ static void ExpandChildren(const struct PnWidget *s,
     // size, or the bottom edge border padding size (in pixels).
     uint32_t endBorder = UINT32_MAX;
 
-#if 0
-    if(GetWidth(s) || GetHeight(s))
-        // This container has a top and/or left border showing, so it has
-        // non-zero area showing; so it will need some drawing for sure.
-        // TODO: This does not work all the time when child widget
-        // surfaces do not expand with their parents.  There's more to
-        // it.
-        ((struct PnWidget *)s)->noDrawing = false; // was false
-    else
-        // No showing widget surface yet, but it may get set later in this
-        // function call, in Expand?Shared() or in Expand?() where we
-        // check if any part of this container "s" is showing between its
-        // children.
-        //
-        /// TODO: This does not work all the time when child widget
-        /// surfaces do not expand with their parents.  There's more to
-        /// it.
-        ((struct PnWidget *)s)->noDrawing = false; // was true
-#else
-        // TODO: We need to see if we can apply this noDrawing option.
-        ((struct PnWidget *)s)->noDrawing = false;
-#endif
+
+    // TODO: We need to see if we can apply this noDrawing option.
+    ((struct PnWidget *)s)->noDrawing = false;
 
 
     struct PnWidget *c;

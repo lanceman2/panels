@@ -212,10 +212,10 @@ enum PnExpand {
 //   widgets; the children align with the grid.  The children align inside
 //   their particular grid cells (via 2.)
 //
-// It goes without saying that a widget that can expand, can't align, it
+// It goes without saying that, a widget that can expand, can't align, it
 // just fills the available space in the direction of interest (X or Y).
-// If any of the widgets in the container can expand, than the Align
-// value of the container is not considered.
+// If any of the widgets in the container can expand, than the Align value
+// of the container is not considered.
 //
 // Put another way: the "align" widget attribute does not adjust the child
 // widget sizes, it can just change the child widgets positions; but only

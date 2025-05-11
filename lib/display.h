@@ -204,7 +204,7 @@ struct PnWidget {
     // A link in the draw queue.
     struct PnWidget *dqNext, *dqPrev;
 
-    // API user requested size.  What they get may be different.
+    // API user "requested" size.  What they get may be different.
     //
     // reqWidth and reqHeight are CONSTANT after they are first set!!!
     //
@@ -213,6 +213,10 @@ struct PnWidget {
     // with no children will have width and height.  In this sense the
     // container owns the pixels of the border, so it draws them before
     // the children are drawn.
+    //
+    // We pack (shrink wrap with this size) the widgets with this size,
+    // then we cull or clip those that do not fit, and then we expand (if
+    // they allow it and there is extra space).
     const uint32_t reqWidth, reqHeight;
 
     // What they really get for surface size.  Changes when the parent
