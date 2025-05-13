@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <linux/input-event-codes.h>
 
 #include "../include/panels.h"
 #include "../lib/debug.h"
@@ -68,6 +69,8 @@ static void LeaveW(struct PnWidget *w, void *userData) {
 static bool Press(struct PnWidget *w, uint32_t which,
             int32_t x, int32_t y, void *userData) {
 
+    which -= BTN_LEFT;
+
     ASSERT(which <= 2);
 
     uint32_t color = 0xFF000000 + (0xFF0000 >> (which * 8));
@@ -81,6 +84,8 @@ static bool Press(struct PnWidget *w, uint32_t which,
 
 static bool Release(struct PnWidget *w, uint32_t which,
             int32_t x, int32_t y, void *userData) {
+
+    which -= BTN_LEFT;
 
     ASSERT(which <= 2);
 

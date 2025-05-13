@@ -39,8 +39,14 @@ static inline void DrawBorder(cairo_t *cr) {
     cairo_surface_t *crs = cairo_get_target(cr);
     int w = cairo_image_surface_get_width(crs);
     int h = cairo_image_surface_get_height(crs);
-    DASSERT(w >= MIN_WIDTH);
-    DASSERT(h >= MIN_HEIGHT);
+    if(w < MIN_WIDTH)
+        w = MIN_WIDTH;
+    if(h < MIN_HEIGHT)
+        h = MIN_HEIGHT;
+    // If w or h are small this may try to draw outside of the Cairo
+    // drawing area, but Cairo can handle culling out extra pixels that
+    // are outside the Cairo drawing area.
+
     cairo_set_line_width(cr, LW);
     w -= 2*(R+PAD);
     h -= 2*(R+PAD);

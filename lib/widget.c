@@ -75,6 +75,7 @@ struct PnWidget *_pnWidget_createFull(
     widget->parent = parent;
     widget->layout = layout;
     widget->align = align;
+    widget->clip = true;
     * (enum PnExpand *) &widget->expand = expand;
     widget->type = PnSurfaceType_widget;
     if(widget->layout == PnLayout_Grid) {

@@ -569,14 +569,16 @@ static inline bool RecurseCullX(
     if(ca->x + ca->width > a->x + a->width) {
         // The outer edge does not fit.
 
-        if(!c->l.firstChild) {
+        if(!c->l.firstChild && !c->clip) {
             // This is a leaf that does not fit so we just cull it.
             c->culled = true;
             return true;
         }
-        // We may cull some of this widget.
         // First make c fit.
+        DASSERT(a->x + a->width > ca->x);
         ca->width = a->x + a->width - ca->x;
+
+        if(!c->l.firstChild) return false;
 
         uint32_t ret = ClipOrCullChildren(c, ca);
 
@@ -625,7 +627,7 @@ static inline bool RecurseCullY(
     if(ca->y + ca->height > a->y + a->height) {
         // The outer edge does not fit.
 
-        if(!c->l.firstChild) {
+        if(!c->l.firstChild && !c->clip) {
             // This is a leaf that does not fit so we just cull it.
             c->culled = true;
             return true;
@@ -633,7 +635,10 @@ static inline bool RecurseCullY(
 
         // We may cull some of this widget.
         // First make c fit.
+        DASSERT(a->y + a->height > ca->y);
         ca->height = a->y + a->height - ca->y;
+
+        if(!c->l.firstChild) return false;
 
         uint32_t ret = ClipOrCullChildren(c, ca);
 
@@ -1940,12 +1945,13 @@ void GetWidgetAllocations(struct PnWidget *s) {
     // TODO: Do this for popup windows in popup.c?
     //
 
-    if(!HaveChildren(s))
+    if(!HaveChildren(s)) {
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.
         //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
         return;
+    }
 
     // We do many passes through the widget (surface) tree data structure.
     // Each pass does a different thing, read on.  I think it's impossible
@@ -1963,7 +1969,7 @@ void GetWidgetAllocations(struct PnWidget *s) {
     //
     // Yes. No shit, this is a solved problem, but there is no fucking way
     // anyone can extract someone else's solution into a form that codes
-    // this shit.  Trying to "reform" a proven given solution is a way
+    // this shit.  Trying to "re-form" a proven given solution is a way
     // harder problem than writing this code from scratch.  That is the
     // nature of software... 
     //

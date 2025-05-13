@@ -401,6 +401,13 @@ struct PnWidget {
     // with PnWidget_show().
     bool hidden;
 
+    // If this is a leaf widget and this "clip" is true this leaf is
+    // clipped (instead of culled) to a size smaller than reqWidth (or
+    // reqHeight), if it can, before culling the leaf if it does not fit
+    // in the window.
+    //
+    bool clip; // clip leaf instead of culling
+
     // "culled" is set to true if the top window surface is not large
     // enough (and hence the container is not large enough) to show this
     // widget surface.  It is not showing because we don't have the space
