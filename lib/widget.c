@@ -75,7 +75,10 @@ struct PnWidget *_pnWidget_createFull(
     widget->parent = parent;
     widget->layout = layout;
     widget->align = align;
-    widget->clip = true;
+    // Setting the default leaf widget clip setting here (see comment in
+    // display.c).  If you change this; run tests to see how widget sizing
+    // and culling changes on a window resize.
+    widget->clip = true; // true or false
     * (enum PnExpand *) &widget->expand = expand;
     widget->type = PnSurfaceType_widget;
     if(widget->layout == PnLayout_Grid) {

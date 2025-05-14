@@ -856,10 +856,10 @@ static uint32_t ClipOrCullChildren(const struct PnWidget *s,
             DASSERT(child);
             // At this point "a" is not necessarily consistent with
             // the children.
+            uint32_t xMax = a->x + a->width;
 
             // 1. First cull due to X size.
             ///////////////////////////////////////////////////////////
-            uint32_t xMax = a->x + a->width;
             //
             for(uint32_t xi=s->g.numColumns-1; xi != -1; --xi) {
                 for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
@@ -884,7 +884,8 @@ static uint32_t ClipOrCullChildren(const struct PnWidget *s,
                             haveCull = (haveCullRet |=
                                 ClipOrCullChildren(c, &c->allocation));
                             DASSERT(haveCullRet);
-                        } else {
+                        }  else if(!c->clip) {
+                            // This is a leaf widget.
                             haveCull = c->culled = true;
                             haveCullRet |= GOT_CULL;
                         }
@@ -938,7 +939,7 @@ static uint32_t ClipOrCullChildren(const struct PnWidget *s,
                             haveCull = (haveCullRet |=
                                 ClipOrCullChildren(c, &c->allocation));
                             DASSERT(haveCullRet);
-                        } else {
+                        } else if(!c->clip) {
                             haveCull = c->culled = true;
                             haveCullRet |= GOT_CULL;
                         }
@@ -1525,6 +1526,42 @@ static inline void ExpandGrid(const struct PnWidget *s,
     DASSERT(heights);
     struct PnWidget *c;
 
+    {
+        // Fix the grid widths[] due to the grid container being too small
+        // to hold all the child widgets; or do nothing.
+        uint32_t xMax = a->x + a->width;
+        uint32_t x = 0;
+        uint32_t xi;
+        uint32_t border = GetWidth(s);
+        for(xi=0; xi < s->g.numColumns; ++xi) {
+            if(!widths[xi]) continue;
+            x += border + widths[xi];
+            if(x <= xMax) continue;
+            widths[xi] -= x - xMax;
+            break;
+        }
+        for(++xi; xi < s->g.numColumns; ++xi)
+            widths[xi] = 0;
+    }
+    {
+        // Fix the grid heights[], due to the grid container being too
+        // small to hold all the child widgets; or do nothing.
+        uint32_t yMax = a->y + a->height;
+        uint32_t y = 0;
+        uint32_t yi;
+        uint32_t border = GetHeight(s);
+        for(yi=0; yi < s->g.numRows; ++yi) {
+            if(!heights[yi]) continue;
+            y += border + heights[yi];
+            if(y <= yMax) continue;
+            heights[yi] -= y - yMax;
+            break;
+        }
+        for(++yi; yi < s->g.numRows; ++yi)
+            heights[yi] = 0;
+    }
+
+
     uint32_t border = GetWidth(s);
     uint32_t numExpand = 0;
     uint32_t needed = 0;
@@ -1532,6 +1569,7 @@ static inline void ExpandGrid(const struct PnWidget *s,
 
     for(uint32_t xi=s->g.numColumns-1; xi!=-1; --xi) {
         if(!widths[xi]) continue;
+        // sectionCount is the number of columns that show.
         ++sectionCount;
         // Tally the total width needed.
         needed += border + widths[xi];
@@ -1539,7 +1577,9 @@ static inline void ExpandGrid(const struct PnWidget *s,
             c = child[yi][xi];
             if(!c || c->culled) continue;
             if(!IsUpperLeftCell(c, child, xi, yi))
-                // We have to count each child once.
+                // We have to count each child once.  Elements can span
+                // more than one cell, so an element can be in more than
+                // one cell.
                 continue;
             if(c->canExpand & PnExpand_H) {
                 ++numExpand;
@@ -1609,6 +1649,9 @@ static inline void ExpandGrid(const struct PnWidget *s,
             }
         }
         x += widths[xi] + border;
+        if(x > a->x + a->width)
+            // The cell was clipped.
+            x = a->x + a->width;
     }
     X[numColumns] = x;
     DASSERT(!endPad);
@@ -1671,6 +1714,7 @@ static inline void ExpandGrid(const struct PnWidget *s,
 
     for(uint32_t yi=s->g.numRows-1; yi!=-1; --yi) {
         if(!heights[yi]) continue;
+        // sectionCount is the number of rows that show.
         ++sectionCount;
         // Tally the total width needed.
         needed += border + heights[yi];
@@ -1742,6 +1786,9 @@ static inline void ExpandGrid(const struct PnWidget *s,
             }
         }
         y += heights[yi] + border;
+        if(y > a->y + a->height)
+            // The cell was clipped.
+            y = a->y + a->height;
     }
     Y[numRows] = y;
     DASSERT(!endPad);

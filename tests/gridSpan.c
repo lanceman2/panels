@@ -61,7 +61,7 @@ int main(void) {
     ASSERT(win);
 
     grid = pnWidget_createAsGrid(
-            win/*parent*/, 5/*width*/, 5/*height*/,
+            win/*parent*/, 15/*width*/, 15/*height*/,
             0/*align*/, PnExpand_HV/*expand*/,
             // We'll let the grid grow to in size on its own.  Not as
             // efficient but needs to work, and be tested.
