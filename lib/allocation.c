@@ -204,7 +204,7 @@ static inline uint32_t GetWidth(const struct PnWidget *s) {
         return s->reqWidth;
 
     if(s->type & WIDGET)
-        return PN_DEFAULT_WIDGET_WIDTH;
+        return PN_MIN_WIDGET_WIDTH;
 
     DASSERT(s->type == PnSurfaceType_popup ||
             s->type == PnSurfaceType_toplevel);
@@ -230,7 +230,7 @@ static inline uint32_t GetHeight(const struct PnWidget *s) {
         return s->reqHeight;
 
     if(s->type & WIDGET)
-        return PN_DEFAULT_WIDGET_HEIGHT;
+        return PN_MIN_WIDGET_HEIGHT;
 
     DASSERT(s->type == PnSurfaceType_popup ||
             s->type == PnSurfaceType_toplevel);

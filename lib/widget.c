@@ -58,9 +58,9 @@ struct PnWidget *_pnWidget_createFull(
     // we need width, w, and height, h to be nonzero.
     if(layout == PnLayout_None) {
         if(w == 0)
-            w = PN_DEFAULT_WIDGET_WIDTH;
+            w = PN_MIN_WIDGET_WIDTH;
         if(h == 0)
-            h = PN_DEFAULT_WIDGET_HEIGHT;
+            h = PN_MIN_WIDGET_HEIGHT;
     }
     struct PnWidget *widget;
 
@@ -98,9 +98,8 @@ struct PnWidget *_pnWidget_createFull(
     else
         widget->window = (void *) parent;
 
-    // This is how we C casting to change const variables:
-    *((uint32_t *) &widget->reqWidth) = w;
-    *((uint32_t *) &widget->reqHeight) = h;
+    widget->reqWidth = w;
+    widget->reqHeight = h;
 
     InitSurface(widget, column, row, cSpan, rSpan);
 

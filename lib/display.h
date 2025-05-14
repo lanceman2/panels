@@ -217,7 +217,7 @@ struct PnWidget {
     // We pack (shrink wrap with this size) the widgets with this size,
     // then we cull or clip those that do not fit, and then we expand (if
     // they allow it and there is extra space).
-    const uint32_t reqWidth, reqHeight;
+    uint32_t reqWidth, reqHeight;
 
     // What they really get for surface size.  Changes when the parent
     // window is resized.

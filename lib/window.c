@@ -211,9 +211,8 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
     struct PnWindow *win = calloc(1, sizeof(*win));
     ASSERT(win, "calloc(1,%zu) failed", sizeof(*win));
 
-    // This is how we C casting to change const variables:
-    *((uint32_t *) &win->widget.reqWidth) = w;
-    *((uint32_t *) &win->widget.reqHeight) = h;
+    win->widget.reqWidth = w;
+    win->widget.reqHeight = h;
 
     if(parent) {
         // A popup

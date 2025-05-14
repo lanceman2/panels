@@ -18,7 +18,8 @@ extern "C" {
 // There is a theme from env XCURSOR_THEME
 #define PN_DEFAULT_CURSOR  "left_ptr"
 
-// Number of mouse (pointer) buttons that can be grabbed.
+// Number of mouse (pointer) buttons that can be grabbed; that is
+// grabbed for a panels widget (not just the window).
 #define PN_NUM_BUTTONS    (3)
 
 
@@ -43,8 +44,8 @@ extern "C" {
 #define PN_WINDOW_BGCOLOR (0xFF999900)
 #define PN_DEFAULT_WINDOW_WIDTH  (400)
 #define PN_DEFAULT_WINDOW_HEIGHT (400)
-#define PN_DEFAULT_WIDGET_WIDTH  (30)
-#define PN_DEFAULT_WIDGET_HEIGHT (30)
+#define PN_MIN_WIDGET_WIDTH  (1)
+#define PN_MIN_WIDGET_HEIGHT (1)
 
 
 // We are putting this in libpanels API users C/C++ code.
