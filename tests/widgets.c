@@ -19,11 +19,15 @@ static
 struct PnWidget *W(struct PnWidget *container, enum PnLayout layout) {
 
     struct PnWidget *w = pnWidget_create(container,
-            14/*width*/, 14/*height*/,
+            24/*width*/, 24/*height*/,
             layout, 0/*align*/,
             PnExpand_H | PnExpand_V/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, GetColor());
+#ifdef CULL
+    pnWidget_setClipBeforeCull(w, false);
+#endif
+
     return w;
 }
 

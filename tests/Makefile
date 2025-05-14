@@ -52,12 +52,28 @@ widgets_run_CPPFLAGS := -DRUN
 040_widgets_SOURCES := widgets.c
 040_widgets_LDFLAGS := $(PN_LIB)
 
+widgets_cull_run_SOURCES := widgets.c
+widgets_cull_run_LDFLAGS := $(PN_LIB)
+widgets_cull_run_CPPFLAGS := -DRUN -DCULL
+
+042_widgets_cull_SOURCES := widgets.c
+042_widgets_cull_LDFLAGS := $(PN_LIB)
+042_widgets_cull_CPPFLAGS := -DCULL
+
 rand_widgets_run_SOURCES := rand_widgets.c
 rand_widgets_run_LDFLAGS := $(PN_LIB)
 rand_widgets_run_CPPFLAGS := -DRUN
 
 050_rand_widgets_SOURCES := rand_widgets.c
 050_rand_widgets_LDFLAGS := $(PN_LIB)
+
+rand_widgets_cull_run_SOURCES := rand_widgets.c
+rand_widgets_cull_run_LDFLAGS := $(PN_LIB)
+rand_widgets_cull_run_CPPFLAGS := -DRUN -DCULL
+
+052_rand_widgets_cull_SOURCES := rand_widgets.c
+052_rand_widgets_cull_LDFLAGS := $(PN_LIB)
+052_rand_widgets_cull_CPPFLAGS := -DCULL
 
 rand_SOURCES := rand.c ../lib/debug.c
 

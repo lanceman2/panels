@@ -578,6 +578,16 @@ PN_EXPORT struct PnWidget *pnGraph_create(struct PnWidget *parent,
 PN_EXPORT void pnGraph_setView(struct PnWidget *graph,
         double xMin, double xMax, double yMin, double yMax);
 
+// Set when the size for a leaf widget is smaller than the requested
+// widget size we will clip the widget, and not cull it until the
+// size is zero.  This does not effect container widgets.
+//
+// TODO: The name of this function sucks.
+//
+// By default the clip is set for leaf widgets.
+//
+PN_EXPORT void pnWidget_setClipBeforeCull(struct PnWidget *w, bool clip);
+
 // Set colors to 0 to turn off their drawing.
 PN_EXPORT void pnGraph_setSubGridColor(struct PnWidget *graph,
         uint32_t color);

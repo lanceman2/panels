@@ -160,6 +160,9 @@ static struct PnWidget *Widget() {
     pnWidget_setPress(w, Press, color);
     pnWidget_setRelease(w, Release, color);
     pnWidget_addDestroy(w, Destroy, color);
+#ifdef CULL
+    pnWidget_setClipBeforeCull(w, false);
+#endif
 
     CheckAddContainer(w);
 

@@ -161,8 +161,6 @@ void pnWidget_setAxis(struct PnWidget *w,
     w->axisData = userData;
 }
 
-
-
 #if 0
 void pnWidget_setMinWidth(struct PnWidget *w, uint32_t width) {
     DASSERT(w);
@@ -172,3 +170,13 @@ void pnWidget_setMinWidth(struct PnWidget *w, uint32_t width) {
     // TODO: Let the user queue the draw??
 }
 #endif
+
+
+void pnWidget_setClipBeforeCull(struct PnWidget *w, bool clip) {
+
+    DASSERT(w);
+
+    w->clip = clip;
+
+    // We leave it to other things to cause a redraw.
+}
