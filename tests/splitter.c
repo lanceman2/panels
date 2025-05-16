@@ -32,18 +32,41 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(2);
 
-    win = pnWindow_create(0, 0, 0,
-            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
+    struct PnWidget *w = pnWindow_create(0, 0, 0,
+            20/*x*/, 20/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
+    pnWidget_setBackgroundColor(w, Color());
+    ASSERT(w);
+
+    win = pnWidget_create(w/*parent*/,
+            20/*width*/, 20/*height*/,
+            0/*layout*/, 0/*align*/,
+            PnExpand_HV/*expand*/, 0);
+    pnWidget_setBackgroundColor(win, Color());
     ASSERT(win);
+
+    win = pnWidget_create(win/*parent*/,
+            20/*width*/, 20/*height*/,
+            0/*layout*/, 0/*align*/,
+            PnExpand_HV/*expand*/, 0);
+    pnWidget_setBackgroundColor(win, Color());
+    ASSERT(win);
+
+    win = pnWidget_create(win/*parent*/,
+            20/*width*/, 20/*height*/,
+            0/*layout*/, 0/*align*/,
+            PnExpand_HV/*expand*/, 0);
+    pnWidget_setBackgroundColor(win, Color());
+    ASSERT(win);
+
     MakeWidget();
     pnSplitter_create(win, 15/*width*/, 0/*height*/, 0/*size*/);
     MakeWidget();
     MakeWidget();
 
-    pnWindow_show(win, true);
+    pnWindow_show(w, true);
 
-    Run(win);
+    Run(w);
 
     return 0;
 }

@@ -139,23 +139,50 @@ enum PnLayout {
     // writing test code easier.
     //
     PnLayout_LR = 0, // child widgets assemble from left to right
-    PnLayout_RL = 1, // child widgets assemble from right to left
+    PnLayout_RL, // child widgets assemble from right to left
 
     // Vertically column of child widgets:
     //
-    PnLayout_TB = 2, // child widgets assemble top to bottom
+    PnLayout_TB, // child widgets assemble top to bottom
     //
     // PnLayout_BT is like real world gravity pulling down where the
     // starting widget gets squished on the bottom.
-    PnLayout_BT = 3, // child widgets assemble bottom to top
+    PnLayout_BT, // child widgets assemble bottom to top
 
     // X/Y indexed grid layout container.  Coordinates are (0,0) to
     // (M-1,N-1).
-    PnLayout_Grid = 4
+    PnLayout_Grid,
 
-    // TODO: We could use this layout to make a notebook, or other
-    // container packing method. The widget will define its own packing
-    // via callback function?
+    // Like Qt Splitter or GTK Paned.  Contains two child widgets with a
+    // widget between them that slides to cover either of the two child
+    // widgets.  Horizontal or vertical.
+    PnLayout_Splitter
+
+    // TODO: We could use a set of callback functions to add other
+    // container packing methods. The widget will define its own packing
+    // via callback function.
+    //
+    // It can be argued that this just adds another layer of indirection
+    // and not much more.  A C switch (on all these layout numbers) turns
+    // into a very fast jump table and this would just make it a little
+    // slower and with more code.  The good thing may be that one could
+    // add widget layout types without changing the source code to
+    // libpanels.so using PnLayout_Callback.  The question is: how many
+    // functions does it take to define a panels container widget?
+    //
+    //   % grep switch *.c | grep layout | wc -l
+    //
+    // Looks like about 7 (1 is false) on May 16 2025.
+    //
+    // This command is not necessarily the way to get this number, but
+    // trying different variants of this command gets you there.  If you
+    // don't know how to grep you don't know shit.
+    //
+    // Another plus to this callbacks method is that it may force the code
+    // to get refactored (cleaned up).  The tricky thing may be that
+    // recursion is used in these functions; and so the callbacks may need
+    // many additions to the libpanels API.
+    //
     //PnLayout_Callback
 };
 

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <cairo/cairo.h>
+#include <linux/input-event-codes.h>
 
 #include "../include/panels.h"
 
@@ -33,7 +34,12 @@ struct PnSplitter {
 static bool press(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
             struct PnSplitter *s) {
-    return false;
+    DASSERT(s == (void *) w);
+    DASSERT(s);
+    if(which != BTN_LEFT) return false;
+
+
+    return true;
 }
 
 static bool release(struct PnWidget *w,
@@ -41,8 +47,10 @@ static bool release(struct PnWidget *w,
             struct PnSplitter *s) {
     DASSERT(s == (void *) w);
     DASSERT(s);
+    if(which != BTN_LEFT) return false;
 
-    return false;
+
+    return true;
 }
 
 static bool enter(struct PnWidget *w,
