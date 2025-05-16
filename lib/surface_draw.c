@@ -10,6 +10,7 @@
 
 #include "debug.h"
 #include "display.h"
+#include "splitter.h"
 
 #include "../include/panels_drawingUtils.h"
 
@@ -71,37 +72,49 @@ void pnSurface_draw(struct PnWidget *s, struct PnBuffer *buffer) {
 
 drawChildren:
 
-    // TODO: If we add more widget surface layout types that would make
-    // the below more than two if() options, than make the below ifs into
-    // a switch() statement.  That goes for a lot of widget surface layout
-    // type if switches in many files.
+    switch(s->layout) {
 
-    // Now draw children (widgets).
-    if(s->layout != PnLayout_Grid)
-        // The s container uses some kind of listed list.
-        for(struct PnWidget *c = s->l.firstChild; c; c = c->pl.nextSibling) {
-            if(!c->culled)
-                pnSurface_draw(c, buffer);
-        }
-    else {
-        if(!s->g.grid)
-            // No children yet.
-            return;
-        // s is a grid container.
-        struct PnWidget ***child = s->g.grid->child;
-        DASSERT(child);
-        DASSERT(s->g.numRows);
-        DASSERT(s->g.numColumns);
-        for(uint32_t y=s->g.numRows-1; y != -1; --y)
-            for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
-                struct PnWidget *c = child[y][x];
-                if(!c || c->culled) continue;
-                // rows and columns can share widgets; like for row span N
-                // and/or column span N; that is adjacent cells that share
-                // the same widget.
-                if(IsUpperLeftCell(c, child, x, y))
+        case PnLayout_None:
+        case PnLayout_Cover:
+        case PnLayout_One:
+            break;
+
+        case PnLayout_LR:
+        case PnLayout_RL:
+        case PnLayout_BT:
+        case PnLayout_TB:
+            // The s container uses some kind of listed list.
+            for(struct PnWidget *c = s->l.firstChild; c;
+                    c = c->pl.nextSibling) {
+                if(!c->culled)
                     pnSurface_draw(c, buffer);
             }
+            return;
+
+        case PnLayout_Grid:
+        {
+            if(!s->g.grid)
+                // No children yet.
+                return;
+            // s is a grid container.
+            struct PnWidget ***child = s->g.grid->child;
+            DASSERT(child);
+            DASSERT(s->g.numRows);
+            DASSERT(s->g.numColumns);
+            for(uint32_t y=s->g.numRows-1; y != -1; --y)
+                for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
+                    struct PnWidget *c = child[y][x];
+                    if(!c || c->culled) continue;
+                    // rows and columns can share widgets; like for row
+                    // span N and/or column span N; that is adjacent cells
+                    // that share the same widget.
+                    if(IsUpperLeftCell(c, child, x, y))
+                        pnSurface_draw(c, buffer);
+                }
+            return;
+        }
+
+        case PnLayout_Splitter:
+            PnSplitter_drawChildren(s, buffer);
     }
 }
-

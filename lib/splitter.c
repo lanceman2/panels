@@ -14,21 +14,7 @@
 
 #include "debug.h"
 #include "display.h"
-
-
-#define H_CURSOR_NAME  "e-resize"
-#define V_CURSOR_NAME  "n-resize"
-
-
-struct PnSplitter {
-    struct PnWidget widget; // inherit first
-
-    char *cursorName;
-
-    bool direction; // true ==> horizontal, not true ==> vertical
-
-    bool cursorSet;
-};
+#include "splitter.h"
 
 
 static bool press(struct PnWidget *w,
@@ -73,49 +59,32 @@ void destroy(struct PnWidget *w, struct PnSplitter *s) {
     DASSERT(s == (void *) w);
 }
 
+#define DEFAULT_LEN  (17)
+
 struct PnWidget *pnSplitter_create(struct PnWidget *parent,
-        uint32_t width, uint32_t height, size_t size) {
-
-    ASSERT((width && !height) || (height && !width),
-            "height=0 for a horizontal splitter "
-            "and width=0 for a vertical splitter");
-    if(width) {
-        ASSERT(parent &&
-            (parent->layout == PnLayout_LR ||
-             parent->layout == PnLayout_RL),
-            "the horizontal splitter must be "
-            "a child of horizontal container");
-    } else {
-        ASSERT(parent &&
-            (parent->layout == PnLayout_TB ||
-             parent->layout == PnLayout_BT),
-            "the vertical splitter must be "
-            "a child of vertical container");
-    }
-
-    enum PnExpand expand = PnExpand_V;
-    if(height) expand = PnExpand_H;
-
-    if(!width) width = 1;
-    if(!height) height = 1;
+        struct PnWidget *first, struct PnWidget *second,
+        bool isHorizontal /*or it's vertical*/,
+        size_t size) {
 
     if(size < sizeof(struct PnSplitter))
         size = sizeof(struct PnSplitter);
     //
+    
+    enum PnExpand expand = PnExpand_V;
+
+    if(!isHorizontal)
+        expand = PnExpand_H;
+
     struct PnSplitter *s = (void *) pnWidget_create(parent,
-            width, height,
-            PnLayout_None, PnAlign_CC, expand, size);
+            DEFAULT_LEN/*width*/, DEFAULT_LEN/*height*/,
+            PnLayout_Splitter, PnAlign_CC, expand, size);
     if(!s)
-        // A common error mode is that the parent cannot have children.
-        // pnWidget_create() should spew for us.
         return 0; // Failure.
 
-    if(expand == PnExpand_V) {
-        s->cursorName = H_CURSOR_NAME;
-    } else {
-        DASSERT(expand == PnExpand_H);
-        s->cursorName = V_CURSOR_NAME;
-    }
+    if(isHorizontal)
+        s->cursorName = "e-resize";
+    else
+        s->cursorName = "n-resize";
 
     // Setting the widget surface type.  We decrease the data, but
     // increase the complexity.  See enum PnSurfaceType in display.h.

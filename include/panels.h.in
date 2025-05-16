@@ -172,7 +172,7 @@ enum PnLayout {
     //
     //   % grep switch *.c | grep layout | wc -l
     //
-    // Looks like about 7 (1 is false) on May 16 2025.
+    // Looks like about 8 (1 is false) on May 16 2025.
     //
     // This command is not necessarily the way to get this number, but
     // trying different variants of this command gets you there.  If you
@@ -575,7 +575,9 @@ PN_EXPORT struct PnWidget *pnButton_create(struct PnWidget *parent,
         const char *label, bool toggle, size_t size);
 
 PN_EXPORT struct PnWidget *pnSplitter_create(struct PnWidget *parent,
-        uint32_t width, uint32_t height, size_t size);
+        struct PnWidget *first, struct PnWidget *second,
+        bool isHorizontal /*or it's vertical*/,
+        size_t size);
 
 PN_EXPORT struct PnWidget *pnLabel_create(struct PnWidget *parent,
         // width = 0 --> figure out width.

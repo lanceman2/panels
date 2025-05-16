@@ -16,7 +16,7 @@ static void catcher(int sig) {
 static struct PnWidget *win = 0;
 
 
-static void MakeWidget(void) {
+static struct PnWidget *MakeWidget(void) {
 
     struct PnWidget *w = pnWidget_create(win/*parent*/,
             100/*width*/, 400/*height*/,
@@ -24,6 +24,7 @@ static void MakeWidget(void) {
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color());
+    return w;
 }
 
 
@@ -32,41 +33,19 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(2);
 
-    struct PnWidget *w = pnWindow_create(0, 0, 0,
+    win = pnWindow_create(0, 0, 0,
             20/*x*/, 20/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
-    pnWidget_setBackgroundColor(w, Color());
-    ASSERT(w);
-
-    win = pnWidget_create(w/*parent*/,
-            20/*width*/, 20/*height*/,
-            0/*layout*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0);
     pnWidget_setBackgroundColor(win, Color());
     ASSERT(win);
 
-    win = pnWidget_create(win/*parent*/,
-            20/*width*/, 20/*height*/,
-            0/*layout*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0);
-    pnWidget_setBackgroundColor(win, Color());
-    ASSERT(win);
+    struct PnWidget *w1 = MakeWidget();
+    struct PnWidget *w2 = MakeWidget();
+    fprintf(stderr, "w1=%p w2=%p\n", w1, w2);
 
-    win = pnWidget_create(win/*parent*/,
-            20/*width*/, 20/*height*/,
-            0/*layout*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0);
-    pnWidget_setBackgroundColor(win, Color());
-    ASSERT(win);
+    pnWindow_show(win, true);
 
-    MakeWidget();
-    pnSplitter_create(win, 15/*width*/, 0/*height*/, 0/*size*/);
-    MakeWidget();
-    MakeWidget();
-
-    pnWindow_show(w, true);
-
-    Run(w);
+    Run(win);
 
     return 0;
 }
