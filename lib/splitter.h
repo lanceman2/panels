@@ -4,6 +4,7 @@
 struct PnSplitter {
 
     // We put the separator leaf widget in this widget.
+    // It's type we change to PnSurfaceType_splitter.
     struct PnWidget widget; // inherit first
 
     // Horizontal    left    right
@@ -38,8 +39,18 @@ static inline void PnSplitter_drawChildren(struct PnWidget *w,
 
     struct PnSplitter *s = GetSplitter(w);
 
+    // Note: the widget, s->widget, will be already drawn just before this
+    // is called (in pnSurface_draw()), like it's a regular leaf child
+    // from the parent (s->widget.parent).
+    //
+    // TODO: Could that become a problem?  It is a little miss-leading
+    // given that we are tricking the other code, pnSurface_draw(), into
+    // thinking this widget, s->widget, is a regular leaf widget,  when it
+    // actually is a container widget.
+
     // Note: we must have the widget space (first and second) allocation
     // keep this floating point firstSize variable consistent with this:
+    //
     if(s->firstSize) {
         DASSERT(s->first->allocation.width);
         DASSERT(s->first->allocation.height);

@@ -66,6 +66,10 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
         bool isHorizontal /*or it's vertical*/,
         size_t size) {
 
+    DASSERT(first);
+    DASSERT(second);
+
+
     if(size < sizeof(struct PnSplitter))
         size = sizeof(struct PnSplitter);
     //
@@ -93,6 +97,9 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     DASSERT(s->widget.type == PnSurfaceType_widget);
     s->widget.type = PnSurfaceType_splitter;
     DASSERT(s->widget.type & WIDGET);
+
+    s->first = first;
+    s->second = second;
 
     // Add widget callback functions:
     pnWidget_setEnter(&s->widget, (void *) enter, s);
