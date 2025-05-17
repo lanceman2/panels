@@ -9,7 +9,8 @@
 
 #include "../include/panels.h"
 #include "debug.h"
-#include  "display.h"
+#include "display.h"
+#include "splitter.h"
 
 
 // Find the most childish surface (widget) that has the mouse pointer
@@ -18,12 +19,13 @@
 // TODO: Do we need a faster surface search data structure?  Yes.  We
 // should make the searching of lists converge with O(logN) (base 2),
 // using an interaction that is bisecting the iterator.  Halving the
-// search pool at each iteration step.
+// search pool at each iteration step.  PnLayout_Grid does this, but other
+// layouts do not.  Also, I think there are even faster way than that...
 //
 // TODO: Maybe the widget (surface) order in the searching could be more
 // optimal.
 //
-static struct PnWidget *FindSurface(const struct PnWindow *win,
+struct PnWidget *FindSurface(const struct PnWindow *win,
         struct PnWidget *s, uint32_t x, uint32_t y) {
 
     DASSERT(win);
@@ -227,6 +229,9 @@ static struct PnWidget *FindSurface(const struct PnWindow *win,
             }
             break;
         }
+        case PnLayout_HSplitter:
+        case PnLayout_VSplitter:
+            return PnSplitter_findSurface(win, s, x, y);
 
         default:
             ASSERT(0, "Write more code");

@@ -114,7 +114,8 @@ drawChildren:
             return;
         }
 
-        case PnLayout_Splitter:
+        case PnLayout_HSplitter:
+        case PnLayout_VSplitter:
             PnSplitter_drawChildren(s, buffer);
     }
 }

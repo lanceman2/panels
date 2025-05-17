@@ -18,7 +18,7 @@ static struct PnWidget *win = 0;
 
 static struct PnWidget *MakeWidget(void) {
 
-    struct PnWidget *w = pnWidget_create(win/*parent*/,
+    struct PnWidget *w = pnWidget_create(0/*parent*/,
             100/*width*/, 400/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
@@ -42,6 +42,8 @@ int main(void) {
     struct PnWidget *w1 = MakeWidget();
     struct PnWidget *w2 = MakeWidget();
     fprintf(stderr, "w1=%p w2=%p\n", w1, w2);
+    pnSplitter_create(win/*parent*/, w1, w2,
+        true/*isHorizontal*/, 0/*size*/);
 
     pnWindow_show(win, true);
 

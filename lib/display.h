@@ -679,6 +679,9 @@ bool IsUpperLeftCell(struct PnWidget *c,
             (!y || c != cells[y-1][x]));
 }
 
+extern struct PnWidget *FindSurface(const struct PnWindow *win,
+        struct PnWidget *s, uint32_t x, uint32_t y);
+
 
 static bool inline HaveChildren(const struct PnWidget *s) {
     DASSERT(s);
@@ -777,3 +780,9 @@ static inline void ResetDisplaySurfaces(void) {
     if(d.pointerWidget && d.pointerWidget->culled)
         d.pointerWidget = 0;
 }
+
+
+// Allocate.c functions:
+//////////////////////////////////////////////////////////////////////////
+
+extern bool pnList_ResetChildrenCull(const struct PnWidget *s);

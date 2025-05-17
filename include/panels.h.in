@@ -149,14 +149,16 @@ enum PnLayout {
     // starting widget gets squished on the bottom.
     PnLayout_BT, // child widgets assemble bottom to top
 
-    // X/Y indexed grid layout container.  Coordinates are (0,0) to
-    // (M-1,N-1).
-    PnLayout_Grid,
-
     // Like Qt Splitter or GTK Paned.  Contains two child widgets with a
     // widget between them that slides to cover either of the two child
-    // widgets.  Horizontal or vertical.
-    PnLayout_Splitter
+    // widgets.  Horizontal (H) or vertical (V).
+    PnLayout_HSplitter,
+    PnLayout_VSplitter,
+
+    // X/Y indexed grid layout container.  Coordinates are (0,0) to
+    // (M-1,N-1).
+    PnLayout_Grid
+
 
     // TODO: We could use a set of callback functions to add other
     // container packing methods. The widget will define its own packing

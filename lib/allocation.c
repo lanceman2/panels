@@ -6,18 +6,19 @@
 #include "../include/panels.h"
 
 #include "debug.h"
-#include  "display.h"
+#include "display.h"
+#include "splitter.h"
 
 
 // We use lots of function recursion to get widget positions, sizes, and
 // culling.  This code may hurt your head.
 
-static bool ResetChildrenCull(struct PnWidget *s);
+static bool ResetChildrenCull(const struct PnWidget *s);
 
 
 // Return true if at least one child is not culled.
 //
-static inline bool GridResetChildrenCull(struct PnWidget *s) {
+static inline bool GridResetChildrenCull(const struct PnWidget *s) {
 
     DASSERT(s->layout == PnLayout_Grid);
     DASSERT(s->g.grid->numChildren);
@@ -46,6 +47,25 @@ static inline bool GridResetChildrenCull(struct PnWidget *s) {
 }
 
 
+bool pnList_ResetChildrenCull(const struct PnWidget *s) {
+
+    bool culled = true;
+
+    for(struct PnWidget *c = s->l.firstChild; c;
+            c = c->pl.nextSibling) {
+        c->culled = ResetChildrenCull(c);
+
+        if(!c->culled && culled)
+            // We have at least one child not culled and the
+            // container "s" is not hidden.
+            culled = false;
+            // We will set all children's children.
+    }
+
+    return culled;
+}
+
+
 // This function calls itself.
 //
 // This culling got with this PnWidget::culled flag is just effecting the
@@ -65,7 +85,7 @@ static inline bool GridResetChildrenCull(struct PnWidget *s) {
 // PnWidget::culled is set when we are allocating widget sizes and
 // positions.
 //
-static bool ResetChildrenCull(struct PnWidget *s) {
+static bool ResetChildrenCull(const struct PnWidget *s) {
 
     bool culled = s->hidden;
 
@@ -75,27 +95,19 @@ static bool ResetChildrenCull(struct PnWidget *s) {
     // "s" is not culled yet, but it may get culled if no children
     // are not culled.
 
-    culled = true;
     // It's culled unless a child is not culled.
 
     switch(s->layout) {
 
         case PnLayout_Grid:
-
             return GridResetChildrenCull(s);
 
-        default:
-            for(struct PnWidget *c = s->l.firstChild; c;
-                    c = c->pl.nextSibling) {
-                c->culled = ResetChildrenCull(c);
+        case PnLayout_HSplitter:
+        case PnLayout_VSplitter:
+            return pnSplitter_resetChildrenCull(s);
 
-                if(!c->culled && culled)
-                    // We have at least one child not culled and the
-                    // container "s" is not hidden.
-                    culled = false;
-                // We will set all children's children.
-            }
-            return culled;
+        default:
+            return pnList_ResetChildrenCull(s);
     }
 }
 
@@ -194,6 +206,10 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 //
 static inline uint32_t GetWidth(const struct PnWidget *s) {
 
+    if(s->layout == PnLayout_HSplitter || s->layout == PnLayout_VSplitter)
+        // The splitter container has no child separator borders.
+        return 0;
+
     if(s->layout == PnLayout_Cover && HaveChildren(s))
         // The container with PnLayout_Cover can't have borders
         // the are not covered by the children.
@@ -244,11 +260,16 @@ static inline uint32_t GetHeight(const struct PnWidget *s) {
 // A not showing widget has it's "culling" flag set to true (before this
 // function call), if not it's false (before this function call).
 //
+// This does not get the positions of the widgets.  We must get that
+// after we have the sizes.
+//
 static
 void TallyRequestedSizes(const struct PnWidget *s,
         struct PnAllocation *a) {
 
+    DASSERT(s);
     DASSERT(!s->culled);
+    DASSERT(&s->allocation == a);
 
     // We start at 0 and sum from there.
     //
@@ -395,6 +416,10 @@ void TallyRequestedSizes(const struct PnWidget *s,
             }
             break;
         }
+        case PnLayout_HSplitter:
+        case PnLayout_VSplitter:
+            return pnSplitter_tallyRequestedSizes(s, a);
+
         default:
     }
 
@@ -2143,6 +2168,8 @@ void GetWidgetAllocations(struct PnWidget *s) {
 
         if(loopCount >= 6) {
             // TODO: change this to DSPEW() or remove loopCount.
+            //
+            // If this prints a lot it likely we have a bug in this code.
             INFO("calling ClipOrCullChildren() %" PRIu32 " times",
                     loopCount);
         }
@@ -2152,7 +2179,7 @@ void GetWidgetAllocations(struct PnWidget *s) {
         // fit in it: all the widgets get culled.
         //
         // NOT A FULL PASS through the widget tree.
-        if(s->layout < PnLayout_Grid) {
+        if(s->layout != PnLayout_Grid) {
             for(struct PnWidget *c = s->l.firstChild; c;
                     c = c->pl.nextSibling)
                 if(!c->culled) {
@@ -2160,7 +2187,6 @@ void GetWidgetAllocations(struct PnWidget *s) {
                     break;
                 }
         } else {
-            DASSERT(s->layout == PnLayout_Grid);
             struct PnWidget ***child = s->g.grid->child;
             DASSERT(child);
             for(uint32_t yi=s->g.numRows-1; yi != -1; --yi) {
@@ -2189,9 +2215,10 @@ void GetWidgetAllocations(struct PnWidget *s) {
 
     // Expand widgets that can be expanded.  Note: this only fills in
     // otherwise blank container spaces; but by doing so has to move the
-    // child widgets; they push each other around when they expand.
+    // child widgets; they push each other around when they expand; so
+    // both the positions and sizes of the widgets may change.
     //
-    // Also aligns the widgets.
+    // Also aligns the widgets if they to not fill their container space.
     //
     // PASS 6
     ExpandChildren(s, a);
@@ -2209,8 +2236,8 @@ void GetWidgetAllocations(struct PnWidget *s) {
     // surfaces stay marked; but if there is, for example, a "focused"
     // widget surface that just got culled, we need to make it not
     // "focused" now.  A case may be when the panels API users code uses
-    // code to do a resize of the window.  Very common example may be: the
-    // user clicks a widget that closes it.
+    // code to do a resize of the window.  A very common example may be:
+    // the user clicks a widget that closes it.
     ResetDisplaySurfaces();
 
     //INFO("w,h=%" PRIi32",%" PRIi32, a->width, a->height);
