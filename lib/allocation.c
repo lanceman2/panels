@@ -11,7 +11,6 @@
 #include "splitter.h"
 
 
-
 // We use lots of function recursion to get widget positions, sizes, and
 // culling.  This code may hurt your head.
 
