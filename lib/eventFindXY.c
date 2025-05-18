@@ -10,6 +10,7 @@
 #include "../include/panels.h"
 #include "debug.h"
 #include "display.h"
+#include "allocation.h"
 #include "splitter.h"
 
 

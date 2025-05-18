@@ -7,7 +7,9 @@
 
 #include "debug.h"
 #include "display.h"
+#include "allocation.h"
 #include "splitter.h"
+
 
 
 // We use lots of function recursion to get widget positions, sizes, and
@@ -263,7 +265,6 @@ static inline uint32_t GetHeight(const struct PnWidget *s) {
 // This does not get the positions of the widgets.  We must get that
 // after we have the sizes.
 //
-static
 void TallyRequestedSizes(const struct PnWidget *s,
         struct PnAllocation *a) {
 

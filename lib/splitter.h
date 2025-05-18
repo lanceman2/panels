@@ -29,7 +29,7 @@ struct PnSplitter {
 
     // The relative size of the first widget.  So 1.0 -> means that the
     // first showing (widget.l.firstChild->nextSibling) widget takes all
-    // the space.
+    // the space.  If it's zero it's culled.
     float firstSize;
 };
 
@@ -98,8 +98,11 @@ static inline struct PnWidget *PnSplitter_findSurface(
 //   7  ResetCanExpand()
 //   8  ExpandChildren()
 //
-//   9  There is also a change to GetWidth() in allocation.c.
-//   10 HaveChildren() needed no changes, but in general could have.
+//   9   There is also a change to GetWidth() in allocation.c.
+//   10  HaveChildren() needed no changes, but in general could have.
+//   11  DestroySurfaceChildren() looks at s->layout to destroy all children.
+//       It needed no changes, and used the children list like all but the
+//       grid layout, PnLayout_Grid.
 //
 // All these functions recurse and go through the all the parts of the
 // widget tree that are showing (not culled).  To do that the callback
@@ -112,18 +115,57 @@ static inline struct PnWidget *PnSplitter_findSurface(
 
 // 3
 //
-static inline bool pnSplitter_resetChildrenCull(const struct PnWidget *s) {
+static inline bool pnSplitter_resetChildrenCull(const struct PnWidget *w) {
 
-    GetSplitter(s);
+    GetSplitter(w);
 
     // This will call ResetChildrenCull() in it.
-    return pnList_ResetChildrenCull(s);
+    return pnList_ResetChildrenCull(w);
 }
 
 // 4
 //
-static inline void pnSplitter_tallyRequestedSizes(const struct PnWidget *s,
+static inline void pnSplitter_tallyRequestedSizes(const struct PnWidget *w,
         struct PnAllocation *a) {
 
+    GetSplitter(w);
+    struct PnWidget *c = w->l.firstChild;
+    DASSERT(c);
+    DASSERT(!c->culled);
+    // c is the slider bar leaf widget
+    a->width = c->allocation.width = c->reqWidth;
+    a->height = c->allocation.height = c->reqHeight;
+    DASSERT(c->pl.nextSibling);
 
+    switch(w->layout) {
+
+        case PnLayout_HSplitter:
+            for(c = c->pl.nextSibling; c; c = c->pl.nextSibling) {
+                if(c->culled) {
+                    c->allocation.width = 0;
+                    c->allocation.height = 0;
+                } else
+                    TallyRequestedSizes(c, &c->allocation);
+                if(a->height < c->allocation.height)
+                    a->height = c->allocation.height;
+                a->width += c->allocation.width;
+            }
+            return;
+ 
+        case PnLayout_VSplitter:
+            for(c = c->pl.nextSibling; c; c = c->pl.nextSibling) {
+                if(c->culled) {
+                    c->allocation.width = 0;
+                    c->allocation.height = 0;
+                } else
+                    TallyRequestedSizes(c, &c->allocation);
+                if(a->width < c->allocation.width)
+                    a->width = c->allocation.width;
+                a->height += c->allocation.height;
+            }
+            return;
+
+        default:
+            ASSERT(0);
+    }
 }
