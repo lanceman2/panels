@@ -149,12 +149,6 @@ enum PnLayout {
     // starting widget gets squished on the bottom.
     PnLayout_BT, // child widgets assemble bottom to top
 
-    // Like Qt Splitter or GTK Paned.  Contains two child widgets with a
-    // widget between them that slides to cover either of the two child
-    // widgets.  Horizontal (H) or vertical (V).
-    PnLayout_HSplitter,
-    PnLayout_VSplitter,
-
     // X/Y indexed grid layout container.  Coordinates are (0,0) to
     // (M-1,N-1).
     PnLayout_Grid
@@ -728,8 +722,9 @@ pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
 //
 // Returns 0 on failure (which is not the number in the stack).
 //
-PN_EXPORT uint32_t pnWindow_pushCursor(const char *cursorName);
-PN_EXPORT void pnWindow_popCursor(void);
+PN_EXPORT uint32_t pnWindow_pushCursor(struct PnWidget *w,
+        const char *cursorName);
+PN_EXPORT void pnWindow_popCursor(struct PnWidget *w);
 
 
 // Advanced API:

@@ -19,7 +19,7 @@ static struct PnWidget *win = 0;
 static struct PnWidget *MakeWidget(void) {
 
     struct PnWidget *w = pnWidget_create(0/*parent*/,
-            100/*width*/, 400/*height*/,
+            200/*width*/, 400/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
@@ -31,7 +31,7 @@ static struct PnWidget *MakeWidget(void) {
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
-    srand(2);
+    srand(3);
 
     win = pnWindow_create(0, 0, 0,
             20/*x*/, 20/*y*/, PnLayout_LR/*layout*/, 0,
@@ -41,7 +41,6 @@ int main(void) {
 
     struct PnWidget *w1 = MakeWidget();
     struct PnWidget *w2 = MakeWidget();
-    fprintf(stderr, "w1=%p w2=%p\n", w1, w2);
     pnSplitter_create(win/*parent*/, w1, w2,
         true/*isHorizontal*/, 0/*size*/);
 

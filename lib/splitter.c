@@ -14,7 +14,6 @@
 
 #include "debug.h"
 #include "display.h"
-#include "allocation.h"
 #include "splitter.h"
 
 
@@ -46,7 +45,7 @@ static bool motion(struct PnWidget *w,
 
     if(x_0 == INT32_MAX) return false;
 
-    WARN("x,y=%" PRIu32 ",%" PRIu32, x, y);
+    //WARN("x,y=%" PRIu32 ",%" PRIu32, x, y);
 
     return true;
 }
@@ -61,7 +60,7 @@ static bool release(struct PnWidget *w,
     DASSERT(x_0 != INT32_MAX);
 
     x_0 = INT32_MAX;
-
+INFO();
     return true;
 }
 
@@ -69,27 +68,19 @@ static bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnSplitter *s) {
     DASSERT(s);
     DASSERT(w == s->slider);
-    s->cursorSet = pnWindow_pushCursor(s->cursorName)?true:false;
+
+    s->cursorSet = pnWindow_pushCursor(w, s->cursorName)?true:false;
     return true; // take focus
 }
 
 static void leave(struct PnWidget *w, struct PnSplitter *s) {
     DASSERT(s);
     DASSERT(w == s->slider);
+
     if(s->cursorSet)
-        pnWindow_popCursor();
+        pnWindow_popCursor(w);
 }
 
-static
-void destroy(struct PnWidget *w, struct PnSplitter *s) {
-
-    DASSERT(s);
-    DASSERT(s == (void *) w);
-    DASSERT(s->slider);
-
-    pnWidget_destroy(s->slider);
-    s->slider = 0;
-}
 
 #define DEFAULT_LEN  (17)
 
@@ -104,12 +95,6 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     DASSERT(first);
     DASSERT(second);
 
-    // Disable for now.
-    if(true) {
-        ERROR("REMOVE THIS BLOCK OF CODE");
-        return 0;
-    }
-
     if(size < sizeof(struct PnSplitter))
         size = sizeof(struct PnSplitter);
 
@@ -117,68 +102,58 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     enum PnLayout layout;
 
     if(isHorizontal) {
-        layout = PnLayout_HSplitter;
+        layout = PnLayout_LR;
         expand = PnExpand_V;
     } else {
-        layout = PnLayout_VSplitter;
+        layout = PnLayout_TB;
         expand = PnExpand_H;
     }
-
-    struct PnWidget *slider = pnWidget_create(0/*parent*/,
-            DEFAULT_LEN/*width*/, DEFAULT_LEN/*height*/,
-            PnLayout_None, PnAlign_CC, expand, 0/*size*/);
-    if(!slider)
-        // pnWidget_create() will have spewed.
-        return 0; // Failure.
 
     struct PnSplitter *s = (void *) pnWidget_create(parent,
             0/*width*/, 0/*height*/,
             layout, PnAlign_CC, 0/*expand*/, size);
-    if(!s) {
+    if(!s)
         // pnWidget_create() will have spewed.
-        pnWidget_destroy(slider);
+        return 0; // Failure.
+
+    struct PnWidget *slider = pnWidget_create(0/*parent*/,
+            DEFAULT_LEN/*width*/, DEFAULT_LEN/*height*/,
+            PnLayout_None, PnAlign_CC, expand, 0/*size*/);
+    if(!slider) {
+        // pnWidget_create() will have spewed.
+        pnWidget_destroy(&s->widget);
         return 0; // Failure.
     }
 
-    DASSERT(GET_WIDGET_TYPE(s->widget.type) == W_SPLITTER);
-
-    s->widget.l.firstChild = slider;
-    s->widget.l.lastChild = slider;
-    s->slider = slider;
-    s->firstSize = 0.5;
-
-    DASSERT(!slider->pl.nextSibling);
-    DASSERT(!slider->pl.prevSibling);
-
-    // Child widgets are always added in this order:
+    // Child widgets (when added) are always added in this order:
     //
-    //   slider   first   second
+    //   first  slider  second
     //
 
     if(first) {
         // TODO: re-parenting.
-        DASSERT(!first->parent);
-        DASSERT(!first->pl.prevSibling);
-        DASSERT(!first->pl.nextSibling);
-
-        first->parent = &s->widget;
-        slider->pl.nextSibling = first;
-        first->pl.prevSibling = slider;
-        s->widget.l.lastChild = first;
+        DASSERT(first->parent == &d.widget);
+        pnWidget_addChild(&s->widget, first);
     }
+
+    pnWidget_addChild(&s->widget, slider);
+
     if(second) {
         // TODO: re-parenting.
-        DASSERT(!second->parent);
-        DASSERT(!second->pl.nextSibling);
-        DASSERT(!second->pl.prevSibling);
-
-        second->parent = &s->widget;
-        s->widget.l.lastChild = second;
-        if(first)
-            first->pl.nextSibling = second;
-        else
-            slider->pl.nextSibling = second;
+        DASSERT(second->parent == &d.widget);
+        pnWidget_addChild(&s->widget, second);
     }
+
+    // Setting the widget surface type.
+    DASSERT(s->widget.type == PnSurfaceType_widget);
+    s->widget.type = PnSurfaceType_splitter;
+    DASSERT(s->widget.type & WIDGET);
+    DASSERT(GET_WIDGET_TYPE(s->widget.type) == W_SPLITTER);
+    // Note: the widget type is "splitter" and the widget layout
+    // type is PnLayout_LR or PnLayout_TB.
+
+    s->slider = slider;
+    s->firstSize = 0.5;
 
     if(isHorizontal)
         s->cursorName = "e-resize";
@@ -191,8 +166,6 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     pnWidget_setPress(slider, (void *) press, s);
     pnWidget_setRelease(slider, (void *) release, s);
     pnWidget_setMotion(slider, (void *) motion, s);
-
-    pnWidget_addDestroy(&s->widget, (void *) destroy, s);
 
     pnWidget_setBackgroundColor(&s->widget, 0xFF999999);
     pnWidget_setBackgroundColor(slider,     0xFFFF0000);

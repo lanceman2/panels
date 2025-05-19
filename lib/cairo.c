@@ -74,11 +74,11 @@ void pnWidget_setCairoDraw(struct PnWidget *w,
                 cairo_t *cr, void *userData),
         void *userData) {
     DASSERT(w);
-    DASSERT(w->window);
+    //DASSERT(w->window);
     w->cairoDraw = draw;
     w->cairoDrawData = userData;
 
-    if(draw && !w->cr && w->window->buffer.wl_buffer)
+    if(draw && !w->cr && w->window && w->window->buffer.wl_buffer)
         // This surface, "s", might need a Cairo surface (and Cairo
         // object).
         CreateCairo(&w->window->buffer, w);

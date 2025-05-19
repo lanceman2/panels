@@ -10,8 +10,6 @@
 
 #include "debug.h"
 #include "display.h"
-#include "allocation.h"
-#include "splitter.h"
 
 #include "../include/panels_drawingUtils.h"
 
@@ -19,7 +17,7 @@
 
 // This function calls itself.
 //
-void pnSurface_draw(struct PnWidget *s, struct PnBuffer *buffer) {
+void pnSurface_draw(const struct PnWidget *s, const struct PnBuffer *buffer) {
 
     DASSERT(s);
     DASSERT(!s->culled);
@@ -76,10 +74,10 @@ drawChildren:
     switch(s->layout) {
 
         case PnLayout_None:
-        case PnLayout_Cover:
-        case PnLayout_One:
             break;
 
+        case PnLayout_Cover:
+        case PnLayout_One:
         case PnLayout_LR:
         case PnLayout_RL:
         case PnLayout_BT:
@@ -114,9 +112,5 @@ drawChildren:
                 }
             return;
         }
-
-        case PnLayout_HSplitter:
-        case PnLayout_VSplitter:
-            PnSplitter_drawChildren(s, buffer);
     }
 }

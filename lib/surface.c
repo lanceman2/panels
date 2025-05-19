@@ -386,7 +386,6 @@ void AddChildSurfaceGrid(struct PnWidget *grid, struct PnWidget *s,
 }
 
 // Add the child, s, to the parent.
-static inline
 void AddChildSurface(struct PnWidget *parent, struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan) {
 
@@ -399,6 +398,8 @@ void AddChildSurface(struct PnWidget *parent, struct PnWidget *s,
         AddChildSurfaceList(parent, s);
     else
         AddChildSurfaceGrid(parent, s, column, row, cSpan, rSpan);
+
+    s->window = parent->window;
 }
     
 static inline

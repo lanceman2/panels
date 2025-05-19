@@ -219,6 +219,8 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
     l->xPadding = xPadding;
     l->yPadding = yPadding;
 
+    //ASSERT(l->widget.window);
+
     pnWidget_setConfig(&l->widget, (void *) config, l);
     pnWidget_setCairoDraw(&l->widget, (void *) cairoDraw, l);
     pnWidget_addDestroy(&l->widget, (void *) destroy, l);

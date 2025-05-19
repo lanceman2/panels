@@ -27,7 +27,8 @@
 // TODO: We could make more than one, but that's not how this is written.
 // I don't think we can have more than one cursor at a time, so having
 // having one (or none) instance(s) of this cursor_theme seems to make
-// sense.
+// sense.  It could be that KWin is just buggy, so that code may not
+// work with other wayland compositors.
 
 
 static struct wl_cursor_theme *theme = 0;
@@ -55,7 +56,7 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
     DASSERT(name);
     DASSERT(name[0]);
     DASSERT(surface);
-    DASSERT(d.pointerWindow);
+    //DASSERT(d.pointerWindow);
     DASSERT(d.surface_damage_func);
     DASSERT((w->type & TOPLEVEL) ||
             (w->type & POPUP) ||
@@ -75,13 +76,7 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
             ASSERT(0);
     }
 
-    if(win != d.pointerWindow) {
-        DASSERT(!win->lastSerial);
-        ERROR("PnWindow not in focus");
-        return true; // fail
-    }
-
-    DASSERT(win == d.pointerWindow);
+    DASSERT(win);
     DASSERT(win->lastSerial);
 
     struct wl_cursor *cursor = wl_cursor_theme_get_cursor(theme, name);
@@ -238,21 +233,21 @@ fail:
 // Return 0 on failure.
 // Return stack height on success.
 //
-uint32_t pnWindow_pushCursor(const char *name) {
+uint32_t pnWindow_pushCursor(struct PnWidget *w, const char *name) {
 
-    DASSERT(d.pointerWindow);
+    DASSERT(w);
+    DASSERT(w->window);
 
     if(!stack) {
         DASSERT(!count);
         // We need to initialize this thing.
-        if(pnWindow_setCursor(&d.pointerWindow->widget,
-                    PN_DEFAULT_CURSOR))
+        if(pnWindow_setCursor(w, PN_DEFAULT_CURSOR))
             return 0; // shit.
         Push(PN_DEFAULT_CURSOR);
     }
     DASSERT(count);
 
-    if(pnWindow_setCursor(&d.pointerWindow->widget, name))
+    if(pnWindow_setCursor(w, name))
         return 0; // fail.
 
     Push(name);
@@ -262,12 +257,15 @@ uint32_t pnWindow_pushCursor(const char *name) {
 
 // Pared with a successful pnWindow_pushCursor()
 //
-void pnWindow_popCursor(void) {
+void pnWindow_popCursor(struct PnWidget *w) {
+
+    DASSERT(w);
+    DASSERT(w->window);
+
 
     char *name = Pop();
 
     if(!stack || !name) return;
 
-    pnWindow_setCursor(&d.pointerWindow->widget, name);
+    pnWindow_setCursor(w, name);
 }
-

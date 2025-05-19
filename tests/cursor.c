@@ -22,16 +22,16 @@ static bool enter(struct PnWidget *w,
 
     //DSPEW("cursorName=\"%s\"", cursorName);
 
-    ASSERT(pnWindow_pushCursor(cursorName));
+    ASSERT(pnWindow_pushCursor(w, cursorName));
     return true; // true => take focus
 }
 
 
-static void leave(struct PnWidget *widget, void *userData) {
+static void leave(struct PnWidget *w, void *userData) {
 
     //INFO("cursorName=\"%s\"", (const char *) userData);
 
-    pnWindow_popCursor();
+    pnWindow_popCursor(w);
 }
 
 

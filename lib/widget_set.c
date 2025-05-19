@@ -51,6 +51,7 @@ void pnWidget_getAllocation(const struct PnWidget *w,
 
 void pnWidget_setBackgroundColor(
         struct PnWidget *w, uint32_t argbColor) {
+    DASSERT(w);
     w->backgroundColor = argbColor;
 }
 

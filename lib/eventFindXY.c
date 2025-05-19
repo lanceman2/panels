@@ -10,8 +10,6 @@
 #include "../include/panels.h"
 #include "debug.h"
 #include "display.h"
-#include "allocation.h"
-#include "splitter.h"
 
 
 // Find the most childish surface (widget) that has the mouse pointer
@@ -30,10 +28,6 @@ struct PnWidget *FindSurface(const struct PnWindow *win,
         struct PnWidget *s, uint32_t x, uint32_t y) {
 
     DASSERT(win);
-
-    DASSERT((s->layout < PnLayout_Grid && s->l.firstChild) ||
-            (s->layout == PnLayout_Grid && s->g.grid->child &&
-             s->g.grid->numChildren));
     DASSERT(!s->culled);
 
     // Let's see if the x,y positions always make sense.
@@ -230,9 +224,6 @@ struct PnWidget *FindSurface(const struct PnWindow *win,
             }
             break;
         }
-        case PnLayout_HSplitter:
-        case PnLayout_VSplitter:
-            return PnSplitter_findSurface(win, s, x, y);
 
         default:
             ASSERT(0, "Write more code");
@@ -243,33 +234,45 @@ struct PnWidget *FindSurface(const struct PnWindow *win,
 }
 
 
-void GetPointerSurface(const struct PnWindow *win) {
+void GetPointerSurface(void) {
 
-    // Lets guess that the mouse pointer is at the same widget.
-    // If not then:
-    if(!(d.pointerWidget &&
-                d.pointerWidget->allocation.x <= d.x && 
-                d.x < d.pointerWidget->allocation.x + 
-                        d.pointerWidget->allocation.width &&
-                d.pointerWidget->allocation.y <= d.y && 
-                d.y < d.pointerWidget->allocation.y + 
-                        d.pointerWidget->allocation.height))
-        // Start at the window surface.
-        d.pointerWidget = (void *) d.pointerWindow;
+    DASSERT(d.pointerWindow);
 
-    // The d.x, d.y position can move out from the pointerWidget without
-    // changing the pointerWidget because of a pointer grab.
+    bool inPointerWidget = false;
 
-    if(HaveChildren(d.pointerWidget) &&
-            d.x >= d.pointerWidget->allocation.x &&
-            d.y >= d.pointerWidget->allocation.y &&
-            d.x < d.pointerWidget->allocation.x +
-                d.pointerWidget->allocation.width &&
-            d.y < d.pointerWidget->allocation.y +
-                d.pointerWidget->allocation.height)
-        // See if it's in a deeper child surface.
-        d.pointerWidget = FindSurface(d.pointerWindow, d.pointerWidget,
-                d.x, d.y);
+    if(d.pointerWidget)
+        inPointerWidget =
+            d.pointerWidget->allocation.x >= d.x && 
+            d.x < d.pointerWidget->allocation.x + 
+                    d.pointerWidget->allocation.width &&
+            d.pointerWidget->allocation.y >= d.y && 
+            d.y < d.pointerWidget->allocation.y + 
+                    d.pointerWidget->allocation.height;
+
+    if(inPointerWidget) {
+        // Lets start with the mouse pointer is at the same widget.
+        if(HaveChildren(d.pointerWidget))
+            d.pointerWidget = FindSurface(d.pointerWindow, d.pointerWidget,
+                    d.x, d.y);
+        // else it's already there.
+        return;
+    }
+
+    if(d.x < 0 || d.y < 0 ||
+            d.x > d.pointerWindow->widget.allocation.width ||
+            d.y > d.pointerWindow->widget.allocation.height) {
+        // The pointer is outside the window.
+        //
+        // We likely have a wayland window button grab and the pointer
+        // moved outside the window so we can't pick a new pointerWidget
+        // since we are not pointing to anyplace in the window.
+        d.pointerWindow = 0;
+        return;
+    }
+
+    // In moved out of where it was. Start at the window surface.
+    d.pointerWidget = FindSurface(d.pointerWindow,
+            (void *) d.pointerWindow, d.x, d.y);
 }
 
 
@@ -330,7 +333,7 @@ void GetSurfaceWithXY(const struct PnWindow *win,
                 d.y >= win->widget.allocation.height)
             return;
 
-    GetPointerSurface(win);
+    GetPointerSurface();
 }
 
 // Find the next focused widget (focusWidget), switch between the last

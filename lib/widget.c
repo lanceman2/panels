@@ -247,7 +247,8 @@ void pnWidget_addChild(struct PnWidget *parent,
     if(child->parent)
         RemoveChildSurface(child->parent, child);
     child->parent = parent;
-    InitSurface(child, -1, -1, 0, 0);
+
+    AddChildSurface(parent, child, -1, -1, 0, 0);
 }
 
 void pnWidget_addChildToGrid(struct PnWidget *parent,

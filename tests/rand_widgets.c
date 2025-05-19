@@ -17,7 +17,7 @@
 
 // Make rectangles that are a multiple of this size in pixels:
 //static const uint32_t Unit = 0;
-static const uint32_t Unit = 13;
+static const uint32_t Unit = 9;
 
 
 static
@@ -89,6 +89,8 @@ static bool Release(struct PnWidget *w, uint32_t which,
 
     ASSERT(which <= 2);
 
+    DSPEW("Release button %" PRIu32, which);
+
     uint32_t color = pnWidget_getBackgroundColor(w);
 
     color &= 0xFFFFFFFF & (~(0xFF0000 >> (which * 8)));
@@ -142,8 +144,8 @@ static struct PnWidget *Widget() {
 
     struct PnWidget *w = pnWidget_create(
             parent,
-            Unit * Rand(0,2)/*width*/,
-            Unit * Rand(0,2)/*height*/,
+            Unit * Rand(1,3)/*width*/,
+            Unit * Rand(1,3)/*height*/,
             Rand(0,1) + SkewMinRand(0, 2, 2) /*layout*/,
             // enum PnAlign goes from 0 to 15.
             SkewMinRand(0, 15, 2)/*align*/,

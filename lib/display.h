@@ -484,7 +484,7 @@ struct PnWindow {
         struct {
             struct xdg_toplevel *xdg_toplevel;
             // list of child popups
-            struct PnWindow *popups; // points to newest one
+     struct PnWindow *popups; // points to newest one
         } toplevel;
         // for surface window type popup
         struct {
@@ -687,7 +687,7 @@ static bool inline HaveChildren(const struct PnWidget *s) {
     DASSERT(s);
     ASSERT(s->layout <= PnLayout_Grid, "WRITE MORE CODE");
 
-    if(s->layout < PnLayout_Grid) {
+    if(s->layout != PnLayout_Grid) {
         DASSERT((s->l.firstChild && s->l.lastChild) ||
                 (!s->l.firstChild && !s->l.lastChild));
         return (s->l.firstChild);
@@ -716,6 +716,8 @@ extern bool InitPopup(struct PnWindow *win,
 
 extern void InitSurface(struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan);
+extern void AddChildSurface(struct PnWidget *parent, struct PnWidget *s,
+        uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan);
 extern void RemoveChildSurface(struct PnWidget *parent,
         struct PnWidget *s);
 extern void DestroySurface(struct PnWidget *s);
@@ -723,8 +725,8 @@ extern void DestroySurfaceChildren(struct PnWidget *s);
 
 extern void GetWidgetAllocations(struct PnWidget *s);
 
-extern void pnSurface_draw(struct PnWidget *s,
-        struct PnBuffer *buffer);
+extern void pnSurface_draw(const struct PnWidget *s,
+        const struct PnBuffer *buffer);
 
 extern void FlushDrawQueue(struct PnWindow *win);
 extern bool _pnWindow_addCallback(struct PnWindow *win);
@@ -746,7 +748,7 @@ extern void DestroyCairo(struct PnWidget *s);
 // Sets d.focusWidget
 extern void DoEnterAndLeave(void);
 // Sets d.pointerWidget
-extern void GetPointerSurface(const struct PnWindow *win);
+extern void GetPointerSurface(void);
 // Calls motion() callback until a widget callback returns true.
 extern void DoMotion(struct PnWidget *s);
 
@@ -780,9 +782,3 @@ static inline void ResetDisplaySurfaces(void) {
     if(d.pointerWidget && d.pointerWidget->culled)
         d.pointerWidget = 0;
 }
-
-
-// Allocate.c functions:
-//////////////////////////////////////////////////////////////////////////
-
-extern bool pnList_ResetChildrenCull(const struct PnWidget *s);

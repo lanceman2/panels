@@ -72,6 +72,7 @@ static void enter(void *data,
     DASSERT(!d.pointerWindow);
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
     d.pointerWindow->lastSerial = serial;
+    DASSERT(serial);
     DASSERT(d.pointerWindow->wl_surface == wl_surface);
     DASSERT(d.pointerWindow->widget.allocation.x == 0);
     DASSERT(d.pointerWindow->widget.allocation.y == 0);
@@ -90,8 +91,6 @@ static void leave(void *data, struct wl_pointer *p,
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
 
-    DASSERT((void *) d.pointerWindow ==
-            wl_surface_get_user_data(wl_surface));
     // Resetting this (lastSerial) brakes the cursor.c code:
     //d.pointerWindow->lastSerial = 0;
 
@@ -116,6 +115,11 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     DASSERT(d.pointerWidget);
     DASSERT(d.pointerWindow);
 
+    // Save old pointer widget surface.
+    struct PnWidget *pointerWidget = d.pointerWidget;
+    // We get the widget surface that pointer has the pointer if we can.
+    GetSurfaceWithXY(d.pointerWindow, x, y, false);
+ 
     if(d.buttonGrabWidget) {
         DASSERT(d.buttonGrab);
         struct PnWidget *s = d.buttonGrabWidget;
@@ -126,7 +130,6 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
         // when the button grab is released.
         if(d.pointerWindow == d.buttonGrabWidget->window) {
             // We get the widget that pointer has the pointer if we can.
-            GetSurfaceWithXY(d.pointerWindow, x, y, false);
 //WARN("            %d,%d", d.x, d.y);
             DASSERT(s == d.buttonGrabWidget);
             if(s->motion)
@@ -141,12 +144,7 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
         return;
     }
 
-    // Save old pointer widget surface.
-    struct PnWidget *s = d.pointerWidget;
-    // We get the widget surface that pointer has the pointer if we can.
-    GetSurfaceWithXY(d.pointerWindow, x, y, false);
-
-    if(s != d.pointerWidget)
+    if(pointerWidget != d.pointerWidget)
         // The widget surface we are pointing to changed.
         // The focused widget may be changed.
         DoEnterAndLeave();
@@ -202,12 +200,11 @@ static void button(void *, struct wl_pointer *p,
                             d.x, d.y,
                             d.buttonGrabWidget->pressData);
                 if(!d.buttonGrab) {
-                    GetPointerSurface(d.pointerWindow);
-                    if(d.buttonGrabWidget != d.pointerWidget) {
+                    GetPointerSurface();
+                    if(d.buttonGrabWidget != d.pointerWidget)
                         // The widget surface we are pointing to changed.
                         // The focused widget may be changed.
                         DoEnterAndLeave();
-                    }
                     d.buttonGrabWidget = 0;
                 }
                 return;
