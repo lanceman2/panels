@@ -286,6 +286,14 @@ gridSpan_run_SOURCES := gridSpan.c
 gridSpan_run_LDFLAGS := $(PN_LIB)
 gridSpan_run_CPPFLAGS := -DRUN
 
+135_gridSpan_cull_SOURCES := gridSpan.c
+135_gridSpan_cull_LDFLAGS := $(PN_LIB)
+135_gridSpan_cull_run_CPPFLAGS := -DCULL
+
+gridSpan_cull_run_SOURCES := gridSpan.c
+gridSpan_cull_run_LDFLAGS := $(PN_LIB)
+gridSpan_cull_run_CPPFLAGS := -DRUN -DCULL
+
 136_GridWithNoChildren_SOURCES := GridWithNoChildren.c
 136_GridWithNoChildren_LDFLAGS := $(PN_LIB)
 

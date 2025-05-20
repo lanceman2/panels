@@ -44,6 +44,10 @@ static inline void AddWidget(const char *text,
         pnWidget_addChildToGrid(grid, w,
             column, row, cSpan, rSpan);
 
+#ifdef CULL
+    pnWidget_setClipBeforeCull(w, false);
+#endif
+
     pnWidget_setBackgroundColor(w, Color());
 }
 

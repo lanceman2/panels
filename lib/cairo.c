@@ -23,7 +23,7 @@ static inline void CreateCairo(struct PnBuffer *buffer,
     DASSERT(!s->cairo_surface);
     DASSERT(!s->cr);
 
-    if(s->culled || s->noDrawing ||
+    if(s->culled ||
             // We use cairoDraw if we can we are not using the
             // non-cairo draw function.
             (!s->cairoDraw && s->draw)) return;

@@ -425,7 +425,7 @@ struct PnWidget {
     //
     // The "culled" acts before this, "noDrawing" flag.
     //
-    bool noDrawing; // true if zero size showing.
+    //bool noDrawing; // true if zero size showing.
 
     // Is in the window draw queue.
     bool isQueued;
@@ -678,9 +678,6 @@ bool IsUpperLeftCell(struct PnWidget *c,
     return (c && (!x || c != cells[y][x-1]) &&
             (!y || c != cells[y-1][x]));
 }
-
-extern struct PnWidget *FindSurface(const struct PnWindow *win,
-        struct PnWidget *s, uint32_t x, uint32_t y);
 
 
 static bool inline HaveChildren(const struct PnWidget *s) {

@@ -24,6 +24,7 @@
 // TODO: Maybe the widget (surface) order in the searching could be more
 // optimal.
 //
+static
 struct PnWidget *FindSurface(const struct PnWindow *win,
         struct PnWidget *s, uint32_t x, uint32_t y) {
 
@@ -31,15 +32,8 @@ struct PnWidget *FindSurface(const struct PnWindow *win,
     DASSERT(!s->culled);
 
     // Let's see if the x,y positions always make sense.
-    DASSERT(s->allocation.x <= x);
-    DASSERT(s->allocation.y <= y);
-    if(x >= s->allocation.x + s->allocation.width)
-        --x;
-    if(y >= s->allocation.y + s->allocation.height) {
-        WARN("y=%" PRIu32 "s->allocation.y + s->allocation.height=%" PRIu32,
-                y, s->allocation.y + s->allocation.height);
-    }
-
+    DASSERT(x >= s->allocation.x);
+    DASSERT(y >= s->allocation.y);
     DASSERT(x < s->allocation.x + s->allocation.width);
     DASSERT(y < s->allocation.y + s->allocation.height);
 
@@ -237,6 +231,8 @@ struct PnWidget *FindSurface(const struct PnWindow *win,
 void GetPointerSurface(void) {
 
     DASSERT(d.pointerWindow);
+    DASSERT(d.pointerWindow->widget.allocation.x == 0);
+    DASSERT(d.pointerWindow->widget.allocation.y == 0);
 
     bool inPointerWidget = false;
 
@@ -254,14 +250,18 @@ void GetPointerSurface(void) {
         if(HaveChildren(d.pointerWidget))
             d.pointerWidget = FindSurface(d.pointerWindow, d.pointerWidget,
                     d.x, d.y);
-        // else it's already there.
+        // else it's already at the most childish widget under the
+        // pointer.
         return;
     }
 
     if(d.x < 0 || d.y < 0 ||
-            d.x > d.pointerWindow->widget.allocation.width ||
-            d.y > d.pointerWindow->widget.allocation.height) {
+            d.x >= d.pointerWindow->widget.allocation.width ||
+            d.y >= d.pointerWindow->widget.allocation.height) {
         // The pointer is outside the window.
+        //
+        // The focus widget and the pointer widget are not necessarily the
+        // same, because of "pointer button grab".
         //
         // We likely have a wayland window button grab and the pointer
         // moved outside the window so we can't pick a new pointerWidget
@@ -270,7 +270,7 @@ void GetPointerSurface(void) {
         return;
     }
 
-    // In moved out of where it was. Start at the window surface.
+    // It moved out from where it was. Start at the window surface.
     d.pointerWidget = FindSurface(d.pointerWindow,
             (void *) d.pointerWindow, d.x, d.y);
 }

@@ -13,7 +13,7 @@ static void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-static struct PnWidget *win = 0;
+static struct PnWidget *win;
 
 
 static struct PnWidget *MakeWidget(void) {

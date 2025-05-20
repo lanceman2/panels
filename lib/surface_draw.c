@@ -32,10 +32,6 @@ void pnSurface_draw(const struct PnWidget *s, const struct PnBuffer *buffer) {
                 s->allocation.width, s->allocation.height,
                 buffer->stride, s->configData);
 
-    // All parent surfaces, including the window, could have nothing to draw
-    // if their children widgets completely cover them.
-    if(s->noDrawing) goto drawChildren;
-
 #ifdef WITH_CAIRO
     if(s->cairoDraw) {
         DASSERT(s->cr);
@@ -69,7 +65,6 @@ void pnSurface_draw(const struct PnWidget *s, const struct PnBuffer *buffer) {
                 buffer->stride, s->drawData) == 1)
             pnWidget_queueDraw((void *) s);
 
-drawChildren:
 
     switch(s->layout) {
 

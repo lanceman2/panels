@@ -45,15 +45,15 @@ int main(void) {
             win/*parent*/,
             100/*width*/, 100/*height*/,
             PnLayout_LR/*layout*/, 0/*align*/,
-            EXPAND/*expand*/, 0);
+            PnExpand_HV/*expand*/, 0);
     ASSERT(cw);
-    pnWidget_setBackgroundColor(cw, 0xCC0000CF);
+    pnWidget_setBackgroundColor(cw, 0xFF0000CF);
 
 #if 1
     {
         w = pnWidget_create(cw/*parent*/,
             130/*width*/, 100/*height*/,
-            0/*layout*/, 0/*align*/, PnExpand_V & 0/*expand*/,
+            0/*layout*/, 0/*align*/, PnExpand_V/*expand*/,
             0);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCCCFFF00);
@@ -61,7 +61,7 @@ int main(void) {
 
         w = pnWidget_create(cw/*parent*/,
             100/*width*/, 100/*height*/,
-            0/*layout*/, 0/*align*/, EXPAND & 0/*expand*/,
+            0/*layout*/, PnAlign_CB/*align*/, 0/*expand*/,
             0);
         ASSERT(w);
         pnWidget_setBackgroundColor(w, 0xCC00CFFF);
