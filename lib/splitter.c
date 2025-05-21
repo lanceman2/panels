@@ -133,6 +133,10 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     if(first) {
         // TODO: re-parenting.
         DASSERT(first->parent == &d.widget);
+        if(isHorizontal)
+            first->expand |= PnExpand_H;
+        else
+            first->expand |= PnExpand_V;
         pnWidget_addChild(&s->widget, first);
     }
 
@@ -141,6 +145,10 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     if(second) {
         // TODO: re-parenting.
         DASSERT(second->parent == &d.widget);
+        if(isHorizontal)
+            second->expand |= PnExpand_H;
+        else
+            second->expand |= PnExpand_V;
         pnWidget_addChild(&s->widget, second);
     }
 

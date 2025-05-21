@@ -75,3 +75,147 @@ static inline struct PnSplitter *GetSplitter(const struct PnWidget *w) {
 // ResetChildrenCull() passing the children's child widgets.
 //
 
+static inline void Splipper_preExpandH(const struct PnWidget *w,
+        const struct PnAllocation *a,
+        struct PnSplitter *s) {
+
+    if(a->width <= s->slider->reqWidth) {
+        w->l.firstChild->culled = true;
+        w->l.lastChild->culled = true;
+        s->slider->culled = false;
+        s->slider->allocation.x = a->x;
+        s->slider->allocation.width = a->width;
+        return;
+    }
+
+    DASSERT(a->width > s->slider->reqWidth);
+
+    if(w->l.firstChild->reqWidth >= w->l.lastChild->reqWidth) {
+
+        if(w->l.firstChild->reqWidth + s->slider->reqWidth >= a->width) {
+            w->l.lastChild->culled = true;
+            w->l.lastChild->reqWidth = 1;
+            w->l.firstChild->reqWidth = a->width - s->slider->reqWidth;
+        } else {
+            w->l.lastChild->culled = false;
+            w->l.lastChild->reqWidth = a->width
+                - w->l.firstChild->reqWidth - s->slider->reqWidth;
+        }
+
+        w->l.firstChild->culled = false;
+        s->slider->culled = false;
+        w->l.firstChild->allocation.x = a->x;
+        w->l.firstChild->allocation.width = w->l.firstChild->reqWidth;
+        s->slider->allocation.x = a->x + w->l.firstChild->reqWidth;
+        s->slider->allocation.width = s->slider->reqWidth;
+        w->l.lastChild->allocation.x = s->slider->allocation.x +
+            s->slider->allocation.width;
+        w->l.lastChild->allocation.width = w->l.lastChild->reqWidth;
+        return;
+    }
+    {
+        if(w->l.lastChild->reqWidth + s->slider->reqWidth >= a->width) {
+            w->l.firstChild->culled = true;
+            w->l.firstChild->reqWidth = 1;
+            w->l.lastChild->reqWidth = a->width - s->slider->reqWidth;
+            w->l.firstChild->allocation.x = a->x;
+            w->l.firstChild->allocation.width = 0;
+        } else {
+            w->l.firstChild->culled = false;
+            w->l.firstChild->reqWidth = a->width
+                - w->l.lastChild->reqWidth - s->slider->reqWidth;
+            w->l.firstChild->allocation.x = a->x;
+            w->l.firstChild->allocation.width = w->l.firstChild->reqWidth;
+        }
+
+        w->l.lastChild->culled = false;
+        s->slider->culled = false;
+        s->slider->allocation.x = w->l.firstChild->allocation.x +
+            w->l.firstChild->allocation.width;
+        s->slider->allocation.width = s->slider->reqWidth;
+        w->l.lastChild->allocation.x = s->slider->allocation.x +
+            s->slider->reqWidth;
+        w->l.lastChild->allocation.width = w->l.lastChild->reqWidth;
+    }
+}
+
+static inline void Splipper_preExpandV(const struct PnWidget *w,
+        const struct PnAllocation *a,
+        const struct PnSplitter *s) {
+
+    if(a->height <= s->slider->reqHeight) {
+        w->l.firstChild->culled = true;
+        w->l.lastChild->culled = true;
+        s->slider->culled = false;
+        s->slider->allocation.y = a->y;
+        s->slider->allocation.height = a->height;
+        return;
+    }
+
+    DASSERT(a->height > s->slider->reqHeight);
+
+    if(w->l.firstChild->reqHeight >= w->l.lastChild->reqHeight) {
+
+        if(w->l.firstChild->reqHeight + s->slider->reqHeight >= a->height) {
+            w->l.lastChild->culled = true;
+            w->l.lastChild->reqHeight = 1;
+            w->l.firstChild->reqHeight = a->height - s->slider->reqHeight;
+        } else {
+            w->l.lastChild->culled = false;
+            w->l.lastChild->reqHeight = a->height
+                - w->l.firstChild->reqHeight - s->slider->reqHeight;
+        }
+
+        w->l.firstChild->culled = false;
+        s->slider->culled = false;
+        w->l.firstChild->allocation.y = a->y;
+        w->l.firstChild->allocation.height = w->l.firstChild->reqHeight;
+        s->slider->allocation.y = a->y + w->l.firstChild->reqHeight;
+        s->slider->allocation.height = s->slider->reqHeight;
+        w->l.lastChild->allocation.y = s->slider->allocation.y +
+            s->slider->allocation.height;
+        w->l.lastChild->allocation.height = w->l.lastChild->reqHeight;
+        return;
+    }
+    {
+        if(w->l.lastChild->reqHeight + s->slider->reqHeight >= a->height) {
+            w->l.firstChild->culled = true;
+            w->l.firstChild->reqHeight = 1;
+            w->l.lastChild->reqHeight = a->height - s->slider->reqHeight;
+            w->l.firstChild->allocation.y = a->y;
+            w->l.firstChild->allocation.height = 0;
+        } else {
+            w->l.firstChild->culled = false;
+            w->l.firstChild->reqHeight = a->height
+                - w->l.lastChild->reqHeight - s->slider->reqHeight;
+            w->l.firstChild->allocation.y = a->y;
+            w->l.firstChild->allocation.height = w->l.firstChild->reqHeight;
+        }
+
+        w->l.lastChild->culled = false;
+        s->slider->culled = false;
+        s->slider->allocation.y = w->l.firstChild->allocation.y +
+            w->l.firstChild->allocation.height;
+        s->slider->allocation.height = s->slider->reqHeight;
+        w->l.lastChild->allocation.y = s->slider->allocation.y +
+            s->slider->reqHeight;
+        w->l.lastChild->allocation.height = w->l.lastChild->reqHeight;
+    }
+
+}
+
+
+static inline void Splipper_preExpand(const struct PnWidget *w,
+        const struct PnAllocation *a) {
+
+    DASSERT(GET_WIDGET_TYPE(w->type) == W_SPLITTER);
+    DASSERT(w->layout == PnLayout_LR ||
+            w->layout == PnLayout_TB);
+    struct PnSplitter *s = (void *) w;
+
+    if(w->layout == PnLayout_LR)
+        Splipper_preExpandH(w, a, s);
+    else
+        Splipper_preExpandV(w, a, s);
+}
+

@@ -383,7 +383,7 @@ struct PnWidget {
     enum PnLayout layout;
     enum PnAlign align;
     // API user set expand.
-    const enum PnExpand expand;
+    enum PnExpand expand;
 
     // "canExpand" is used to mark container widgets as expandable, due to
     // leaf widgets being expandable (and not directly the container being

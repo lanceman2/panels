@@ -82,7 +82,7 @@ struct PnWidget *_pnWidget_createFull(
     // TODO: Add an interface to the API for changing this.
     widget->clip = true; // true or false
 
-    * (enum PnExpand *) &widget->expand = expand;
+    widget->expand = expand;
     widget->type = PnSurfaceType_widget;
     if(widget->layout == PnLayout_Grid) {
         //DASSERT(column);

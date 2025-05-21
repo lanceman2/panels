@@ -7,7 +7,7 @@
 
 #include "debug.h"
 #include "display.h"
-
+#include "splitter.h"
 
 // We use lots of function recursion to get widget positions, sizes, and
 // culling.  This code may hurt your head.
@@ -212,7 +212,7 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
         return 0;
 
     if(HaveChildren(s) || s->reqWidth)
-        // It can be zero.  It's just a border that's 0.
+        // It can be zero, a container border that's 0.
         return s->reqWidth;
 
     if(s->type & WIDGET)
@@ -1217,10 +1217,10 @@ void ExpandHShared(const struct PnWidget *s,
         } // else ca->width does not change.
         x += ca->width;
     }
-    DASSERT(x <= a->x + a->width);
-    DASSERT(a->x + a->width >= x);
     // The end piece should be used up.
     DASSERT(!endPiece);
+    DASSERT(x <= a->x + a->width);
+    DASSERT(a->x + a->width >= x);
 
     uint32_t rightBorderWidth = a->x + a->width - x;
 
@@ -1333,10 +1333,10 @@ void ExpandVShared(const struct PnWidget *s,
         } // else ca->height does not change.
         y += ca->height;
     }
-    DASSERT(y <= a->y + a->height);
-    DASSERT(a->y + a->height >= y);
     // The end piece should be used up.
     DASSERT(!endPiece);
+    DASSERT(y <= a->y + a->height);
+    DASSERT(a->y + a->height >= y);
 
     uint32_t bottomBorderHeight = a->y + a->height - y;
 
@@ -1938,12 +1938,18 @@ static void ExpandChildren(const struct PnWidget *s,
     DASSERT(s);
     DASSERT(HaveChildren(s));
     DASSERT(!s->culled);
+    DASSERT(a->width);
+    DASSERT(a->height);
 
     // This will be either the container "s" right edge border padding
     // size, or the bottom edge border padding size (in pixels).
     uint32_t endBorder = UINT32_MAX;
 
     struct PnWidget *c;
+
+    // This is like an if().  I did not know how to break from an if().
+    if(GET_WIDGET_TYPE(s->type) == W_SPLITTER)
+        Splipper_preExpand(s, a);
 
     switch(s->layout) {
 
@@ -2069,16 +2075,13 @@ void GetWidgetAllocations(struct PnWidget *s) {
 
     DASSERT(s);
     struct PnAllocation *a = &s->allocation;
-    DASSERT(s->type == PnSurfaceType_toplevel ||
-            s->type == PnSurfaceType_popup);
-    DASSERT(!a->x);
-    DASSERT(!a->y);
     DASSERT(!s->hidden);
-    DASSERT(!s->parent);
     DASSERT(!s->culled);
 
     if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);
+        DASSERT(s->type == PnSurfaceType_toplevel ||
+                s->type == PnSurfaceType_popup);
         a->width = GetBWidth(s);
         a->height = GetBHeight(s);
     }
@@ -2090,6 +2093,8 @@ void GetWidgetAllocations(struct PnWidget *s) {
     //
 
     if(!HaveChildren(s)) {
+        DASSERT(s->type == PnSurfaceType_toplevel ||
+                s->type == PnSurfaceType_popup);
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.
@@ -2260,11 +2265,13 @@ void GetWidgetAllocations(struct PnWidget *s) {
         ResetCanExpand(s);
 
         // Expand widgets that can be expanded.  Note: this only fills in
-        // otherwise blank container spaces; but by doing so has to move the
-        // child widgets; they push each other around when they expand; so
-        // both the positions and sizes of the widgets may change.
+        // otherwise blank container spaces; but by doing so has to move
+        // the child widgets; they push each other around when they
+        // expand; so both the positions and sizes of the widgets may
+        // change.
         //
-        // Also aligns the widgets if they to not fill their container space.
+        // Also aligns the widgets if they to not fill their container
+        // space.
         //
         // PASS 6
         ExpandChildren(s, a);

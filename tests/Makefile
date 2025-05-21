@@ -111,12 +111,20 @@ cursor_run_CPPFLAGS := -DRUN
 075_cursor_SOURCES := cursor.c
 075_cursor_LDFLAGS := $(PN_LIB)
 
-splitter_run_SOURCES := splitter.c
-splitter_run_LDFLAGS := $(PN_LIB)
-splitter_run_CPPFLAGS := -DRUN
+hsplitter_run_SOURCES := splitter.c
+hsplitter_run_LDFLAGS := $(PN_LIB)
+hsplitter_run_CPPFLAGS := -DRUN
 
-077_splitter_SOURCES := splitter.c
-077_splitter_LDFLAGS := $(PN_LIB)
+077_hsplitter_SOURCES := splitter.c
+077_hsplitter_LDFLAGS := $(PN_LIB)
+
+vsplitter_run_SOURCES := splitter.c
+vsplitter_run_LDFLAGS := $(PN_LIB)
+vsplitter_run_CPPFLAGS := -DRUN -DVERTICAL
+
+078_vsplitter_SOURCES := splitter.c
+078_vsplitter_LDFLAGS := $(PN_LIB)
+078_vsplitter_CPPFLAGS := -DVERTICAL
 
 ifdef WITH_FONTCONFIG
 081_findFont_SOURCES := 081_findFont.c

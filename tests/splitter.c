@@ -39,10 +39,15 @@ int main(void) {
     pnWidget_setBackgroundColor(win, Color());
     ASSERT(win);
 
+    bool isHorizontal = true;
+#ifdef VERTICAL
+    isHorizontal = false;
+#endif
+
     struct PnWidget *w1 = MakeWidget();
     struct PnWidget *w2 = MakeWidget();
     pnSplitter_create(win/*parent*/, w1, w2,
-        true/*isHorizontal*/, 0/*size*/);
+        isHorizontal/*isHorizontal*/, 0/*size*/);
 
     pnWindow_show(win, true);
 
