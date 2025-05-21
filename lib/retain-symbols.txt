@@ -30,6 +30,7 @@ pnWidget_create
 pnWidget_createAsGrid
 pnWidget_createInGrid
 pnWidget_destroy
+pnWidget_getAllocations
 pnWidget_getBackgroundColor
 pnWidget_isInSurface
 pnWidget_queueDraw

@@ -720,7 +720,6 @@ extern void RemoveChildSurface(struct PnWidget *parent,
 extern void DestroySurface(struct PnWidget *s);
 extern void DestroySurfaceChildren(struct PnWidget *s);
 
-extern void GetWidgetAllocations(struct PnWidget *s);
 
 extern void pnSurface_draw(const struct PnWidget *s,
         const struct PnBuffer *buffer);
@@ -729,8 +728,6 @@ extern void FlushDrawQueue(struct PnWindow *win);
 extern bool _pnWindow_addCallback(struct PnWindow *win);
 extern void PostDraw(struct PnWindow *win, struct PnBuffer *buffer);
 extern bool DrawFromQueue(struct PnWindow *win);
-
-extern void DrawAll(struct PnWindow *win, struct PnBuffer *buffer);
 
 extern void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y, bool isEnter);
@@ -768,7 +765,7 @@ static inline void RemoveSurfaceFromDisplay(struct PnWidget *s) {
 static inline void ResetDisplaySurfaces(void) {
 
     // TODO: Do we really want to keep these marked surfaces?  Like after
-    // a call to GetWidgetAllocations().
+    // a call to pnWidget_getAllocations().
 
     if(d.buttonGrabWidget && d.buttonGrabWidget->culled)
         d.buttonGrabWidget = 0;

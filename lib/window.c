@@ -33,7 +33,7 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
             a->width = win->preferredWidth;
             a->height = win->preferredHeight;
          }
-        GetWidgetAllocations(&win->widget);
+        pnWidget_getAllocations(&win->widget);
     }
 
     // GetNextBuffer() can reallocate the buffer if the width or height

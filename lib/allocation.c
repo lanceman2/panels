@@ -2071,7 +2071,7 @@ bool HaveShowingChild(const struct PnWidget *s) {
 // TODO: A better function name may be GetWidgetPositionAndSize().  And
 // the struct PnAllocation should be struct PositionAndSize.
 //
-void GetWidgetAllocations(struct PnWidget *s) {
+void pnWidget_getAllocations(struct PnWidget *s) {
 
     DASSERT(s);
     struct PnAllocation *a = &s->allocation;
@@ -2188,12 +2188,12 @@ void GetWidgetAllocations(struct PnWidget *s) {
         // Still shrink wrapped and the top widget surface width and
         // height are set to the "shrink wrapped" width and height.
         //
-        // If this is the first call to GetWidgetAllocations(), width and
-        // height will be zero.  The shrink wrapped value of a->width and
-        // a->height will always be greater than zero (that's just due to
-        // how we define things).   Widget containers can have no space
-        // showing, but leaf widgets are required to take up space if they
-        // are not culled (for some reason).
+        // If this is the first call to pnWidget_getAllocations(), width
+        // and height will be zero.  The shrink wrapped value of a->width
+        // and a->height will always be greater than zero (that's just due
+        // to how we define things).   Widget containers can have no
+        // space showing, but leaf widgets are required to take up space
+        // if they are not culled (for some reason).
 
         if(width >= a->width && height >= a->height) {
             a->width = width;
@@ -2210,9 +2210,9 @@ void GetWidgetAllocations(struct PnWidget *s) {
             a->width = width;
             a->height = height;
         } else {
-            // This is the first call to GetWidgetAllocations() for this
-            // window and a->width and a->height where both zero at the
-            // start of this "do" loop.
+            // This is the first call to pnWidget_getAllocations() for
+            // this window and a->width and a->height where both zero at
+            // the start of this "do" loop.
             //
             // If one is not set than both are not set.
             DASSERT(!width && !height);

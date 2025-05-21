@@ -402,6 +402,8 @@ PN_EXPORT void pnWindow_setDestroy(struct PnWidget *window,
         void (*destroy)(struct PnWidget *window, void *userData),
         void *userData);
 
+PN_EXPORT void pnWidget_getAllocations(struct PnWidget *s);
+
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnWidget *parent,
         uint32_t width, uint32_t height,
