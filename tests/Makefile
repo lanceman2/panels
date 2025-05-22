@@ -233,6 +233,15 @@ graph4_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 222_graph4_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 222_graph4_CPPFLAGS := $(CAIRO_CFLAGS)
 
+graph2_hsplitter_run_SOURCES := graph2_hsplitter.c
+graph2_hsplitter_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+graph2_hsplitter_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+223_graph2_hsplitter_SOURCES := graph2_hsplitter.c
+223_graph2_hsplitter_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+223_graph2_hsplitter_CPPFLAGS := $(CAIRO_CFLAGS)
+
+
 graphCairoDrawOver_run_SOURCES := graphCairoDrawOver.c
 graphCairoDrawOver_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 graphCairoDrawOver_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)

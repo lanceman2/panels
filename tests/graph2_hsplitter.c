@@ -56,8 +56,8 @@ static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
 
     // The auto 2D plotter grid (graph)
     struct PnWidget *w = pnGraph_create(
-            win/*parent*/,
-            400/*width*/, 400/*height*/, 0/*align*/,
+            0/*parent*/,
+            800/*width*/, 800/*height*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
     //                  Color Bytes:  A R G B
@@ -96,16 +96,17 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    win = pnWindow_create(0, 10, 10,
+    win = pnWindow_create(0, 20, 20,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWindow_setPreferredSize(win, 1650, 450);
+    pnWindow_setPreferredSize(win, 1656, 840);
+    
+    struct PnWidget *w1 = MakeGraph(Plot);
+    struct PnWidget *w2 = MakeGraph(Plot2);
 
-    MakeGraph(Plot);
-    MakeGraph(Plot2);
-    MakeGraph(Plot2);
-    MakeGraph(Plot2);
+    pnSplitter_create(win/*parent*/, w1, w2,
+            true/*isHorizontal*/, 0/*size*/);
 
     pnWindow_show(win, true);
 

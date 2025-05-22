@@ -2101,7 +2101,7 @@ bool HaveShowingChild(const struct PnWidget *s) {
 // TODO: A better function name may be GetWidgetPositionAndSize().  And
 // the struct PnAllocation should be struct PositionAndSize.
 //
-void pnWidget_getAllocations(struct PnWidget *s) {
+void _pnWidget_getAllocations(struct PnWidget *s) {
 
     DASSERT(s);
     struct PnAllocation *a = &s->allocation;
@@ -2218,7 +2218,7 @@ void pnWidget_getAllocations(struct PnWidget *s) {
         // Still shrink wrapped and the top widget surface width and
         // height are set to the "shrink wrapped" width and height.
         //
-        // If this is the first call to pnWidget_getAllocations(), width
+        // If this is the first call to _pnWidget_getAllocations(), width
         // and height will be zero.  The shrink wrapped value of a->width
         // and a->height will always be greater than zero (that's just due
         // to how we define things).   Widget containers can have no
@@ -2240,7 +2240,7 @@ void pnWidget_getAllocations(struct PnWidget *s) {
             a->width = width;
             a->height = height;
         } else {
-            // This is the first call to pnWidget_getAllocations() for
+            // This is the first call to _pnWidget_getAllocations() for
             // this window and a->width and a->height where both zero at
             // the start of this "do" loop.
             //

@@ -34,7 +34,7 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
             a->width = win->preferredWidth;
             a->height = win->preferredHeight;
          }
-        pnWidget_getAllocations(&win->widget);
+        _pnWidget_getAllocations(&win->widget);
     }
 
     // GetNextBuffer() can reallocate the buffer if the width or height
@@ -71,7 +71,7 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(win->widget.allocation.width == buffer->width);
     DASSERT(win->widget.allocation.height == buffer->height);
 
-    pnSurface_draw(&win->widget, buffer);
+    pnSurface_draw(&win->widget, buffer, win->widget.needAllocate);
 
     if(win->widget.needAllocate)
         win->widget.needAllocate = false;

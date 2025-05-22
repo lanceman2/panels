@@ -33,19 +33,21 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(3);
 
-    win = pnWindow_create(0, 0, 0,
-            20/*x*/, 20/*y*/, PnLayout_LR/*layout*/, 0,
+    win = pnWindow_create(0, 20/*width*/, 20/*height*/,
+            0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     pnWidget_setBackgroundColor(win, Color());
     ASSERT(win);
+
+    struct PnWidget *w1 = MakeWidget();
+    struct PnWidget *w2 = MakeWidget();
+WARN("w1=%p  w2=%p", w1, w2);
 
     bool isHorizontal = true;
 #ifdef VERTICAL
     isHorizontal = false;
 #endif
 
-    struct PnWidget *w1 = MakeWidget();
-    struct PnWidget *w2 = MakeWidget();
     pnSplitter_create(win/*parent*/, w1, w2,
         isHorizontal/*isHorizontal*/, 0/*size*/);
 

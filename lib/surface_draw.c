@@ -17,15 +17,13 @@
 // This function calls itself.
 //
 void pnSurface_draw(const struct PnWidget *s,
-        const struct PnBuffer *buffer) {
+        const struct PnBuffer *buffer, bool config) {
 
     DASSERT(s);
     DASSERT(!s->culled);
     DASSERT(s->window);
 
-    // TODO: THIS IS WRONG ---------------------------------
-    // We need to determine when to call config().
-    if(s->window->widget.needAllocate && s->config)
+    if(config && s->config)
         s->config((void *) s,
                 buffer->pixels +
                 s->allocation.y * buffer->stride +
@@ -83,7 +81,7 @@ void pnSurface_draw(const struct PnWidget *s,
             for(struct PnWidget *c = s->l.firstChild; c;
                     c = c->pl.nextSibling) {
                 if(!c->culled)
-                    pnSurface_draw(c, buffer);
+                    pnSurface_draw(c, buffer, config);
             }
             return;
 
@@ -105,7 +103,7 @@ void pnSurface_draw(const struct PnWidget *s,
                     // span N and/or column span N; that is adjacent cells
                     // that share the same widget.
                     if(IsUpperLeftCell(c, child, x, y))
-                        pnSurface_draw(c, buffer);
+                        pnSurface_draw(c, buffer, config);
                 }
             return;
         }
