@@ -38,12 +38,11 @@ static void catcher(int sig) {
 }
 
 
-
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    srand(89);
+    srand(90);
 
     struct PnWidget *win = pnWindow_create(0, 10, 10,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,

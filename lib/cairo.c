@@ -92,7 +92,7 @@ void pnWidget_setCairoDraw(struct PnWidget *w,
 }
 
 
-void RecreateCairos(struct PnWindow *win) {
+void RecreateCairos(struct PnWindow *win, struct PnWidget *w) {
 
     DASSERT(win);
     struct PnBuffer *buffer = &win->buffer;
@@ -102,8 +102,14 @@ void RecreateCairos(struct PnWindow *win) {
     DASSERT(buffer->stride);
     DASSERT(buffer->wl_buffer);
 
-    DestroyCairos(&win->widget);
-    CreateCairos(buffer, &win->widget);
+    if(!w) {
+        w = &win->widget;
+    } else {
+        DASSERT(w->window == win);
+    }
+
+    DestroyCairos(w);
+    CreateCairos(buffer, w);
 }
 
 void DestroyCairo(struct PnWidget *s) {
@@ -144,7 +150,7 @@ void DestroyCairos(struct PnWidget *s) {
     for(uint32_t y=s->g.numRows-1; y != -1; --y)
         for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
             struct PnWidget *c = child[y][x];
-            if(!c || c->culled) continue;
+            if(!c) continue;
             if(IsUpperLeftCell(c, child, x, y))
                 DestroyCairos(c);
         }

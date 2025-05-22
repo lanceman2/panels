@@ -87,7 +87,7 @@ static void DequeueChildren(struct PnDrawQueue *q, struct PnWidget *s) {
     }
 }
 
-void pnWidget_queueDraw(struct PnWidget *s) {
+void pnWidget_queueDraw(struct PnWidget *s, bool allocate) {
 
     DASSERT(s);
     struct PnWindow *win = s->window;
@@ -141,6 +141,11 @@ void pnWidget_queueDraw(struct PnWidget *s) {
     DASSERT(!q->first->dqPrev);
     q->last = s;
     s->isQueued = true;
+    // TODO: It may be more performant to call pnWidget_getAllocations(s)
+    // now; but we still need to wait for the compositor to tell us when
+    // the wl_buffer is ready so we can re-setup the Cairo surfaces on the
+    // wl_buffer (for the case when allocate == true).
+    s->needAllocate = allocate;
 }
 
 // Return false if the queue was drawn.
@@ -153,7 +158,7 @@ bool DrawFromQueue(struct PnWindow *win) {
     DASSERT(win->dqWrite);
     DASSERT(win->dqWrite->first);
     DASSERT(win->dqWrite->last);
-    DASSERT(!win->needAllocate);
+    DASSERT(!win->widget.needAllocate);
     DASSERT(!win->needDraw);
 
     struct PnBuffer *buffer = GetNextBuffer(win,
@@ -179,6 +184,20 @@ bool DrawFromQueue(struct PnWindow *win) {
     struct PnWidget *s;
 
     while((s = PopQueue(q))) {
+
+        if(s->needAllocate) {
+            // TODO: maybe call pnWidget_getAllocations()
+            // in pnWidget_queueDraw()?
+            //
+            // TODO: add config() callbacks....
+            //
+            pnWidget_getAllocations(s);
+#ifdef WITH_CAIRO
+            RecreateCairos(win, s);
+#endif
+            s->needAllocate = false;
+        }
+
         pnSurface_draw(s, buffer);
         // The draw() function may have queued that surface again
         // but in the write (other) queue now.

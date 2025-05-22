@@ -78,7 +78,7 @@ static bool ResizeBuffer(struct PnWindow *win, struct PnBuffer *buffer,
     }
 
 #ifdef WITH_CAIRO
-    RecreateCairos(win);
+    RecreateCairos(win, 0);
 #endif
 
     return false;
@@ -127,7 +127,7 @@ static bool CreateBuffer(struct PnWindow *win, struct PnBuffer *buffer,
         goto fail;
     }
 #ifdef WITH_CAIRO
-    RecreateCairos(win);
+    RecreateCairos(win, 0);
 #endif
     return false;
 

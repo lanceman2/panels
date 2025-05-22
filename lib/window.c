@@ -13,6 +13,7 @@
 
 
 
+static
 void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
 
     DASSERT(win);
@@ -25,7 +26,7 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(!win->dqRead->first);
     DASSERT(!win->dqRead->last);
 
-    if(win->needAllocate) {
+    if(win->widget.needAllocate) {
         if(win->preferredWidth && win->preferredHeight &&
                 !win->widget.allocation.width) {
             struct PnAllocation *a = &win->widget.allocation;
@@ -47,8 +48,8 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
         // I think this is okay.  The wayland compositor is just a little
         // busy now.  I think we will get this done later from a wl_buffer
         // release event callback; see buffer.c.
-        if(win->needAllocate)
-            win->needAllocate = false;
+        if(win->widget.needAllocate)
+            win->widget.needAllocate = false;
         return;
     }
 
@@ -72,8 +73,8 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
 
     pnSurface_draw(&win->widget, buffer);
 
-    if(win->needAllocate)
-        win->needAllocate = false;
+    if(win->widget.needAllocate)
+        win->widget.needAllocate = false;
 
     d.surface_damage_func(win->wl_surface, 0, 0,
             buffer->width, buffer->height);
@@ -101,7 +102,7 @@ static void configure(struct PnWindow *win,
     if(!win->widget.allocation.width ||
             !win->widget.allocation.height) {
         // This is the first call to draw real pixels.
-        win->needAllocate = true;
+        win->widget.needAllocate = true;
         DrawAll(win, 0);
     }
 
@@ -346,7 +347,7 @@ void pnWindow_show(struct PnWidget *w, bool show) {
         // This has no error return.
         wl_surface_commit(win->wl_surface);
     else
-        pnWidget_queueDraw(w);
+        pnWidget_queueDraw(w, true/*allocate*/);
 }
 
 void pnWindow_destroy(struct PnWidget *w) {

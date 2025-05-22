@@ -127,7 +127,7 @@ finish:
     cairo_t *cr = cairo_create(g->bgSurface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
-    pnWidget_queueDraw(&g->widget);
+    pnWidget_queueDraw(&g->widget, 0);
 }
 
 static inline void FinishDragZoom(
@@ -163,7 +163,7 @@ static inline void FinishDragZoom(
     cairo_t *cr = cairo_create(g->bgSurface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
-    pnWidget_queueDraw(&g->widget);
+    pnWidget_queueDraw(&g->widget, 0);
 }
 
 bool motion(struct PnWidget *w, int32_t x, int32_t y,
@@ -210,7 +210,7 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
                 g->slideY = padY;
             else if(g->slideY < - padY)
                 g->slideY = - padY;
-            pnWidget_queueDraw(&g->widget);
+            pnWidget_queueDraw(&g->widget, 0);
             return true;
         }
         case ACTION_BOX: {
@@ -220,7 +220,7 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
             g->boxY = y_0;
             g->boxWidth = x - x_0;
             g->boxHeight = y - y_0;
-            pnWidget_queueDraw(&g->widget);
+            pnWidget_queueDraw(&g->widget, 0);
             return true;
         }
     }
@@ -421,6 +421,6 @@ bool axis(struct PnWidget *w,
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
 
-    pnWidget_queueDraw(&g->widget);
+    pnWidget_queueDraw(&g->widget, 0);
     return true;
 }

@@ -103,7 +103,7 @@ static void leave(void *data, struct wl_pointer *p,
     d.focusWidget = 0;
 }
 
-// Window motion.
+// Window motion.  Wayland compositor mouse pointer motion event.
 //
 static void motion(void *, struct wl_pointer *p, uint32_t,
         wl_fixed_t x,  wl_fixed_t y) {
@@ -112,8 +112,8 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
-    DASSERT(d.pointerWidget);
-    DASSERT(d.pointerWindow);
+    //DASSERT(d.pointerWidget);
+    //DASSERT(d.pointerWindow);
 
     // Save old pointer widget surface.
     struct PnWidget *pointerWidget = d.pointerWidget;
@@ -122,27 +122,31 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
  
     if(d.buttonGrabWidget) {
         DASSERT(d.buttonGrab);
-        struct PnWidget *s = d.buttonGrabWidget;
-        DASSERT(s->press);
-        DASSERT(s->release);
+        struct PnWidget *w = d.buttonGrabWidget;
+        DASSERT(w);
+        DASSERT(w->press);
+        DASSERT(w->release);
         // We need the to know where the pointerWidget is so we can do an
         // "enter" event if the pointer is on a different widget surface
         // when the button grab is released.
         if(d.pointerWindow == d.buttonGrabWidget->window) {
             // We get the widget that pointer has the pointer if we can.
 //WARN("            %d,%d", d.x, d.y);
-            DASSERT(s == d.buttonGrabWidget);
-            if(s->motion)
+            DASSERT(w == d.buttonGrabWidget);
+            if(w->motion)
                 // We will let only the grab widget (or window) see this
                 // motion.  Later at the release (release of this mouse
                 // pointer grab) event we will let another widget surface
                 // get a motion event (even when there is no motion from
                 // the wayland compositor at that time).
-                s->motion((void *) s, d.x, d.y, s->motionData);
+                w->motion(w, d.x, d.y, w->motionData);
         }
 
         return;
     }
+
+    DASSERT(d.pointerWidget);
+    DASSERT(d.pointerWindow);
 
     if(pointerWidget != d.pointerWidget)
         // The widget surface we are pointing to changed.

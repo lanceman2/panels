@@ -429,6 +429,14 @@ struct PnWidget {
 
     // Is in the window draw queue.
     bool isQueued;
+
+    // "needAllocate" is a flag to said that we need to recompute all
+    // widget allocations for this widget and children below, that is
+    // widget sizes and positions.  And the Cairo objects, PnWidget::cr
+    // and PnWidget::cairo_surface need to be rebuilt with
+    // RecreateCairos().
+    //
+    bool needAllocate;
 };
 
 struct PnBuffer {
@@ -506,11 +514,6 @@ struct PnWindow {
     // preferedWidth, preferedHeight are used as the window size at the
     // first showing, and maybe the saved size.
     uint32_t preferredWidth, preferredHeight;
-
-    // "needAllocate" is a flag to said that we need to recompute all
-    // widget allocations, that is widget (and window) sizes and
-    // positions.
-    bool needAllocate;
 
     // It was (on KDE plasma 5.27.5 Wayland, 2025 Jan 30) found that the
     // xdg_surface_listener::configure gets called a lot, even when there
@@ -657,6 +660,7 @@ extern struct PnDisplay d;
 
 extern int pnDisplay_create(void);
 extern void pnDisplay_destroy(void);
+extern void pnWidget_getAllocations(struct PnWidget *w);
 
 // Returns false on success
 static inline bool CheckDisplay(void) {
@@ -733,7 +737,7 @@ extern void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y, bool isEnter);
 
 #ifdef WITH_CAIRO
-extern void RecreateCairos(struct PnWindow *win);
+extern void RecreateCairos(struct PnWindow *win, struct PnWidget *w);
 extern void DestroyCairos(struct PnWidget *win);
 extern void DestroyCairo(struct PnWidget *s);
 #endif

@@ -215,6 +215,7 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
 
     DASSERT(widget);
     ASSERT(widget->type & WIDGET);
+    DASSERT(widget->window);
 
     // Make it be one of two values.  Because we can have things like (3)
     // == true
@@ -235,7 +236,7 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     // This change may change the size of the window and many of the
     // widgets in the window.
 
-    widget->window->needAllocate = true; 
+    widget->window->widget.needAllocate = true; 
 }
 
 void pnWidget_addChild(struct PnWidget *parent,

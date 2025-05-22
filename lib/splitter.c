@@ -17,6 +17,8 @@
 #include "splitter.h"
 
 
+// Where on the slider (relative to the slider widget) did
+// the button press happen.
 static int32_t x_0 = INT32_MAX, y_0;
 
 
@@ -164,30 +166,224 @@ void Splipper_preExpand(const struct PnWidget *w,
 }
 
 
-static bool press(struct PnWidget *w,
+static bool press(struct PnWidget *slider,
             uint32_t which, int32_t x, int32_t y,
             struct PnSplitter *s) {
     DASSERT(s);
-    DASSERT(w == s->slider);
+    DASSERT(slider);
+    DASSERT(slider == s->slider);
+    DASSERT(slider->parent);
+    DASSERT(!slider->culled);
+
     if(which != BTN_LEFT) return false;
 
     DASSERT(x_0 == INT32_MAX);
     DASSERT(x != INT32_MAX);
 
-    x_0 = x;
-    y_0 = y;
+    struct PnAllocation sa;
+    pnWidget_getAllocation(s->slider, &sa);
+
+    struct PnAllocation pa;
+    pnWidget_getAllocation(slider->parent, &pa);
+
+
+#ifdef DEBUG
+    if(slider->parent->layout == PnLayout_LR) {
+        DASSERT(pa.width > sa.width);
+        DASSERT(pa.x <= sa.x && pa.x + pa.width >= sa.x + sa.width);
+    } else {
+        DASSERT(slider->parent->layout == PnLayout_TB);
+        DASSERT(pa.height > sa.height);
+        DASSERT(pa.y <= sa.y && pa.y + pa.height >= sa.y + sa.height);
+    }
+#endif
+
+    // We cannot use the slider (and splitter) if the splitter widget
+    // container surface is too small.  From above if only one of the
+    // splitter child widgets is showing (because the splitter container
+    // is small), that widget will be the slider.
+    if(s->widget.layout == PnLayout_LR) {
+        if(pa.width == sa.width)
+            return false;
+        DASSERT(pa.width > sa.width);
+    } else {
+        DASSERT(s->widget.layout == PnLayout_TB);
+        if(pa.height == sa.height)
+            return false;
+        DASSERT(pa.height > sa.height);
+    }
+
+    x_0 = x - sa.x;
+    y_0 = y - sa.y;
+
+    // We got a pointer press; it must be in the slider:
+    DASSERT(x_0 >= 0 && x_0 < sa.width);
+    DASSERT(y_0 >= 0 && y_0 < sa.height);
 
     return true;
 }
 
+// For horizontal splitter.
+//
+// Returns true to change the positions.
+//
+static inline bool MoveSliderH(struct PnSplitter *s,
+        struct PnWidget *slider, int32_t x) {
+
+    DASSERT(slider->parent);
+    DASSERT(s->widget.l.firstChild);
+    DASSERT(s->widget.l.lastChild);
+
+    int32_t x_to = x - x_0;
+
+    if(x_to < 0)
+        x_to = 0;
+
+    struct PnAllocation sa;
+    pnWidget_getAllocation(slider, &sa);
+
+    struct PnAllocation pa;
+    pnWidget_getAllocation(slider->parent, &pa);
+
+    DASSERT(pa.width > sa.width);
+    DASSERT(pa.x <= sa.x && pa.x + pa.width >= sa.x + sa.width);
+
+    if(x_to < pa.x)
+        x_to = pa.x;
+    else if(x_to + sa.width > pa.x + pa.width)
+        x_to = pa.x + pa.width - sa.width;
+
+    if(x_to == sa.x)
+        // We are already there.
+        return false;
+
+    //WARN("moving slider to x=%" PRIi32 " from x=%" PRIu32, x_to, sa.x);
+
+    // Note: the parent allocation width is larger than the slider
+    // allocation (by at least 1).
+    //
+    // Set x_to to the position of the slider.  The reqWidth of the slider
+    // does not change.
+
+    if(x_to > pa.x) {
+        // We have room for the firstChild.
+        s->widget.l.firstChild->reqWidth = x_to - pa.x;
+        s->widget.l.firstChild->hidden = false;
+    } else {
+        // No room for firstChild.
+        s->widget.l.firstChild->reqWidth = 1;
+        s->widget.l.firstChild->hidden = true;
+        // Moving the slider can bring it back.
+    }
+
+    if(x_to + slider->reqWidth < pa.x + pa.width) {
+        // We have room for the lastChild.
+        s->widget.l.lastChild->reqWidth =
+            pa.x + pa.width - x_to - slider->reqWidth;
+        s->widget.l.lastChild->hidden = false;
+    } else {
+        // No room for lastChild.
+        s->widget.l.lastChild->reqWidth = 1;
+        s->widget.l.lastChild->hidden = true;
+        // Moving the slider can bring it back.
+    }
+
+    // We cannot hide both firstChild and lastChild.
+    if(s->widget.l.firstChild->hidden &&
+            s->widget.l.lastChild->hidden)
+        s->widget.l.firstChild->hidden = false;
+
+    return true;
+}
+
+// For vertical splitter.
+//
+// Returns true to change the positions.
+//
+static inline bool MoveSliderV(struct PnSplitter *s,
+        struct PnWidget *slider, int32_t y) {
+
+    DASSERT(slider->parent);
+    DASSERT(s->widget.l.firstChild);
+    DASSERT(s->widget.l.lastChild);
+
+    int32_t y_to = y - y_0;
+
+    if(y_to < 0)
+        y_to = 0;
+
+    struct PnAllocation sa;
+    pnWidget_getAllocation(slider, &sa);
+
+    struct PnAllocation pa;
+    pnWidget_getAllocation(slider->parent, &pa);
+
+    DASSERT(pa.height > sa.height);
+    DASSERT(pa.y <= sa.y && pa.y + pa.height >= sa.y + sa.height);
+
+    if(y_to < pa.y)
+        y_to = pa.y;
+    else if(y_to + sa.height > pa.y + pa.height)
+        y_to = pa.y + pa.height - sa.height;
+
+    if(y_to == sa.y)
+        // We are already there.
+        return false;
+
+    //WARN("moving slider to y=%" PRIi32 " from y=%" PRIu32, y_to, sa.y);
+
+    // Note: the parent allocation height is larger than the slider
+    // allocation (by at least 1).
+    //
+    // Set y_to to the position of the slider.  The reqHeight of the slider
+    // does not change.
+
+    if(y_to > pa.y) {
+        // We have room for the firstChild.
+        s->widget.l.firstChild->reqHeight = y_to - pa.y;
+        s->widget.l.firstChild->hidden = false;
+    } else {
+        // No room for firstChild.
+        s->widget.l.firstChild->reqHeight = 1;
+        s->widget.l.firstChild->hidden = true;
+        // Moving the slider can bring it back.
+    }
+
+    if(y_to + slider->reqHeight < pa.y + pa.height) {
+        // We have room for the lastChild.
+        s->widget.l.lastChild->reqHeight =
+            pa.y + pa.height - y_to - slider->reqHeight;
+        s->widget.l.lastChild->hidden = false;
+    } else {
+        // No room for lastChild.
+        s->widget.l.lastChild->reqHeight = 1;
+        s->widget.l.lastChild->hidden = true;
+        // Moving the slider can bring it back.
+    }
+
+    // We cannot hide both firstChild and lastChild.
+    if(s->widget.l.firstChild->hidden &&
+            s->widget.l.lastChild->hidden)
+        s->widget.l.firstChild->hidden = false;
+
+    return true;
+}
+
+
+// This does the "action" of the splitter.
+//
 static inline bool MoveSlider(struct PnSplitter *s,
-        struct PnWidget *slider) {
+        struct PnWidget *slider, int32_t x, int32_t y) {
     DASSERT(slider);
     DASSERT(s);
     DASSERT(s->slider == slider);
+    DASSERT(s->widget.layout == PnLayout_LR ||
+            s->widget.layout == PnLayout_TB);
 
-
-    return true; // need allocation and redraw
+    if(s->widget.layout == PnLayout_LR)
+        return MoveSliderH(s, slider, x);
+    else
+        return MoveSliderV(s, slider, y);
 }
 
 static bool motion(struct PnWidget *slider,
@@ -199,12 +395,13 @@ static bool motion(struct PnWidget *slider,
 
     if(x_0 == INT32_MAX) return false;
 
-    WARN("x,y=%" PRIi32 ",%" PRIi32, x, y);
+    // We have the press too:
 
-    if(MoveSlider(s, slider)) {
-        pnWidget_getAllocations(&s->widget);
-        pnWidget_queueDraw(&s->widget);
-    }
+    //WARN("x,y=%" PRIi32 ",%" PRIi32, x, y);
+
+    if(MoveSlider(s, slider, x, y))
+        // TODO: Add config() callbacks some how.
+        pnWidget_queueDraw(&s->widget, true/*allocate*/);
 
     return true;
 }
@@ -219,7 +416,7 @@ static bool release(struct PnWidget *w,
     DASSERT(x_0 != INT32_MAX);
 
     x_0 = INT32_MAX;
-INFO();
+
     return true;
 }
 
@@ -320,7 +517,6 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     // type is PnLayout_LR or PnLayout_TB.
 
     s->slider = slider;
-    s->firstSize = 0.5;
 
     if(isHorizontal)
         s->cursorName = "e-resize";

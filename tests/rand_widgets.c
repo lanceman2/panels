@@ -55,7 +55,7 @@ static bool EnterW(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
 
     pnWidget_setBackgroundColor(w, 0xFFFF0000);
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
 
     return true; // take focus.
 }
@@ -63,7 +63,7 @@ static bool EnterW(struct PnWidget *w,
 static void LeaveW(struct PnWidget *w, void *userData) {
 
     pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
 }
 
 static bool Press(struct PnWidget *w, uint32_t which,
@@ -76,7 +76,7 @@ static bool Press(struct PnWidget *w, uint32_t which,
     uint32_t color = 0xFF000000 + (0xFF0000 >> (which * 8));
 
     pnWidget_setBackgroundColor(w, color);
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
 
     // taking focus lets us get the leave event handler called.
     return true; // true => eat it
@@ -96,7 +96,7 @@ static bool Release(struct PnWidget *w, uint32_t which,
     color &= 0xFFFFFFFF & (~(0xFF0000 >> (which * 8)));
 
     pnWidget_setBackgroundColor(w, color);
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
     return true;
 }
 
@@ -111,7 +111,7 @@ static bool Enter(struct PnWidget *w,
 
     ASSERT(count == 1, "Number of Enter() and Leave() is wrong");
     pnWidget_setBackgroundColor(w, 0xFF642400);
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
     // taking focus lets us get the leave event handler called.
     return true; // true => take focus.
 }
@@ -123,7 +123,7 @@ static void Leave(struct PnWidget *w, void *userData) {
     ASSERT(count == 0, "Leave() missing Enter() before");
     ASSERT(userData);
     pnWidget_setBackgroundColor(w, *(uint32_t *) userData);
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
 }
 
 static void Destroy(struct PnWidget *w, void *data) {

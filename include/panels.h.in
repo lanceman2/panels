@@ -402,8 +402,6 @@ PN_EXPORT void pnWindow_setDestroy(struct PnWidget *window,
         void (*destroy)(struct PnWidget *window, void *userData),
         void *userData);
 
-PN_EXPORT void pnWidget_getAllocations(struct PnWidget *s);
-
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnWidget *parent,
         uint32_t width, uint32_t height,
@@ -464,7 +462,7 @@ PN_EXPORT void pnWidget_setConfig(struct PnWidget *w,
             uint32_t w, uint32_t h, uint32_t stride/*4 byte chunks*/,
             void *userData), void *userData);
 
-PN_EXPORT void pnWidget_queueDraw(struct PnWidget *w);
+PN_EXPORT void pnWidget_queueDraw(struct PnWidget *w, bool allocate);
 
 #if 0
 PN_EXPORT void pnWidget_setMinWidth(struct PnWdiget *w, uint32_t width);

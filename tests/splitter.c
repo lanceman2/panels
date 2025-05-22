@@ -19,7 +19,7 @@ static struct PnWidget *win;
 static struct PnWidget *MakeWidget(void) {
 
     struct PnWidget *w = pnWidget_create(0/*parent*/,
-            200/*width*/, 400/*height*/,
+            300/*width*/, 300/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);

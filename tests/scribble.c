@@ -44,7 +44,7 @@ static bool motion(struct PnWidget *widget,
             WARN("Got %" PRIu32 " positions", num);
     }
 
-    pnWidget_queueDraw(w);
+    pnWidget_queueDraw(w, 0);
 
     return true;
 }

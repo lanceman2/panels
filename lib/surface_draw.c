@@ -14,16 +14,18 @@
 #include "../include/panels_drawingUtils.h"
 
 
-
 // This function calls itself.
 //
-void pnSurface_draw(const struct PnWidget *s, const struct PnBuffer *buffer) {
+void pnSurface_draw(const struct PnWidget *s,
+        const struct PnBuffer *buffer) {
 
     DASSERT(s);
     DASSERT(!s->culled);
     DASSERT(s->window);
- 
-    if(s->window->needAllocate && s->config)
+
+    // TODO: THIS IS WRONG ---------------------------------
+    // We need to determine when to call config().
+    if(s->window->widget.needAllocate && s->config)
         s->config((void *) s,
                 buffer->pixels +
                 s->allocation.y * buffer->stride +
@@ -36,7 +38,7 @@ void pnSurface_draw(const struct PnWidget *s, const struct PnBuffer *buffer) {
     if(s->cairoDraw) {
         DASSERT(s->cr);
         if(s->cairoDraw((void *) s, s->cr, s->cairoDrawData) == 1)
-            pnWidget_queueDraw((void *) s);
+            pnWidget_queueDraw((void *) s, false/*allocate*/);
     } else if(!s->draw) {
         DASSERT(s->cr);
         uint32_t c = s->backgroundColor;
@@ -63,7 +65,7 @@ void pnSurface_draw(const struct PnWidget *s, const struct PnBuffer *buffer) {
                 s->allocation.x,
                 s->allocation.width, s->allocation.height,
                 buffer->stride, s->drawData) == 1)
-            pnWidget_queueDraw((void *) s);
+            pnWidget_queueDraw((void *) s, false/*allocate*/);
 
 
     switch(s->layout) {

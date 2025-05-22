@@ -31,7 +31,7 @@ SetState(struct PnButton *b, enum PnButtonState state) {
     if(b->frames) b->frames = 0;
 
     b->state = state;
-    pnWidget_queueDraw(&b->widget);
+    pnWidget_queueDraw(&b->widget, false/*allocate*/);
 }
 
 static inline void DrawBorder(cairo_t *cr) {

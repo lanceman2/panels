@@ -29,6 +29,7 @@ struct PnWidget *FindSurface(const struct PnWindow *win,
         struct PnWidget *s, uint32_t x, uint32_t y) {
 
     DASSERT(win);
+    DASSERT(s);
     DASSERT(!s->culled);
 
     // Let's see if the x,y positions always make sense.
@@ -236,7 +237,7 @@ void GetPointerSurface(void) {
 
     bool inPointerWidget = false;
 
-    if(d.pointerWidget)
+    if(d.pointerWidget) {
         inPointerWidget =
             d.pointerWidget->allocation.x >= d.x && 
             d.x < d.pointerWidget->allocation.x + 
@@ -244,6 +245,7 @@ void GetPointerSurface(void) {
             d.pointerWidget->allocation.y >= d.y && 
             d.y < d.pointerWidget->allocation.y + 
                     d.pointerWidget->allocation.height;
+    }
 
     if(inPointerWidget) {
         // Lets start with the mouse pointer is at the same widget.
@@ -263,7 +265,7 @@ void GetPointerSurface(void) {
         // The focus widget and the pointer widget are not necessarily the
         // same, because of "pointer button grab".
         //
-        // We likely have a wayland window button grab and the pointer
+        // We likely have a Wayland window button grab and the pointer
         // moved outside the window so we can't pick a new pointerWidget
         // since we are not pointing to anyplace in the window.
         d.pointerWindow = 0;
@@ -342,8 +344,11 @@ void GetSurfaceWithXY(const struct PnWindow *win,
 //
 void DoEnterAndLeave(void) {
 
-    DASSERT(d.pointerWidget);
+    //DASSERT(d.pointerWidget); // NOT
     // d.pointerWidget is the surface with the mouse pointer in it.
+    //
+    // pointerWidget can be 0 if there was a pointer grab and we just got
+    // a button release event.
 
     struct PnWidget *oldFocus = d.focusWidget;
     d.focusWidget = 0;   

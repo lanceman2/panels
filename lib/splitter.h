@@ -24,11 +24,6 @@ struct PnSplitter {
     struct PnWidget *slider;
 
     bool cursorSet; // The special pointer cursor is set or not.
-
-    // The relative size of the first widget.  So 1.0 -> means that the
-    // first showing (widget.l.firstChild) widget takes all the space.  If
-    // it's zero it's culled.
-    float firstSize;
 };
 
 
@@ -65,6 +60,7 @@ static inline struct PnSplitter *GetSplitter(const struct PnWidget *w) {
 //   12  Any "add child" widget functions we need to treat the splitter
 //       container widget as a special case (number of children == 3) of
 //       PnLayout_LR or PnLayout_TB widget layout type.
+//   13  CreateCairos()
 //
 // All these functions recurse and go through the all the parts of the
 // widget tree that are showing (not culled).  To do that the callback

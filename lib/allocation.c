@@ -1401,12 +1401,20 @@ void ExpandH(const struct PnWidget *s,
     ca->x = a->x + border;
 
     DASSERT(ca->width);
-    DASSERT(a->width >= border + rightBorderWidth + ca->width);
+    DASSERT(a->width > border + rightBorderWidth);
 
-    if(!(c->canExpand & PnExpand_H))
+    if(!(c->canExpand & PnExpand_H)) {
+        if(ca->width > a->width - border && c->clip)
+            // Clip it
+            ca->width = a->width - border;
+        DASSERT(ca->width <= a->width - border);
         return;
+    }
 
     // Set the width.
+    DASSERT(c->clip ||
+            ca->width <= a->width - border - rightBorderWidth);
+
     ca->width = a->width - border - rightBorderWidth;
 }
 
@@ -1414,7 +1422,7 @@ void ExpandH(const struct PnWidget *s,
 // "a" is correct.
 //
 // Fix the y and height of "ca" which is the allocation of "c".
-// "c" fills all the space of "s" in this y direction.
+// "c" fills the space of "s" in this y direction.
 //
 static inline
 void ExpandV(const struct PnWidget *s,
@@ -1436,12 +1444,20 @@ void ExpandV(const struct PnWidget *s,
     ca->y = a->y + border;
 
     DASSERT(ca->height);
-    DASSERT(a->height >= border + bottomBorderHeight + ca->height);
+    DASSERT(a->height > border + bottomBorderHeight);
 
-    if(!(c->canExpand & PnExpand_V))
+    if(!(c->canExpand & PnExpand_V)) {
+        if(ca->height > a->height - border && c->clip)
+            // Clip it
+            ca->height = a->height - border;
+        DASSERT(ca->height <= a->height - border);
         return;
+    }
 
     // Set the height.
+    DASSERT(c->clip ||
+            ca->height <= a->height - border - bottomBorderHeight);
+
     ca->height = a->height - border - bottomBorderHeight;
 }
 
@@ -1842,7 +1858,10 @@ static inline void ExpandGrid(const struct PnWidget *s,
 }
 
 
-// Get bottom border width of a horizontal layout.
+// Get bottom border size of a horizontal layout.
+//
+// The bottom border could be clipped (less than reqHeight).
+// The children heights are not correct yet, and they may get clipped.
 //
 static inline uint32_t GetHBottomBorder(const struct PnWidget *s,
         const struct PnAllocation *a) {
@@ -1856,6 +1875,7 @@ static inline uint32_t GetHBottomBorder(const struct PnWidget *s,
         s->layout == PnLayout_Cover ||
         s->layout == PnLayout_One);
 
+    // Start by calculating the maximum height of a child of "s".
     uint32_t maxHeight = 0;
     struct PnWidget *c;
 
@@ -1867,31 +1887,39 @@ static inline uint32_t GetHBottomBorder(const struct PnWidget *s,
     }
     // There had to be at least one child widget not culled.
     DASSERT(maxHeight);
-    DASSERT(a->height >= maxHeight);
 
     uint32_t border = GetBHeight(s);
     DASSERT(a->height > border);
-    DASSERT(maxHeight + border <= a->height);
+    maxHeight += border;
 
-    if(maxHeight + border > a->height - border)
-        // This contain widget "s" was clipped.
-        return a->height - maxHeight - border;
-    return border;
+    if(a->height < maxHeight)
+        // "s" was clipped to being smaller than a child.
+        // The children will be clipper too, after this.
+        return 0;
+    if(a->height - maxHeight > border)
+        // We can't have a bottom border larger than "border".
+        return border;
+    return a->height - maxHeight;
 }
 
 // Get right border width of a vertical layout.
+//
+// The right border could be clipped (less than reqWidth).
+// The children widths are not correct yet, and they may get clipped.
 //
 static inline uint32_t GetVRightBorder(const struct PnWidget *s,
         const struct PnAllocation *a) {
 
     DASSERT(s);
     DASSERT(s->l.firstChild);
-    // a horizontal layout
+    DASSERT(a->width);
+    // a vertical layout
     DASSERT(s->layout == PnLayout_TB ||
         s->layout == PnLayout_BT ||
         s->layout == PnLayout_Cover ||
         s->layout == PnLayout_One);
 
+    // Start by calculating the maximum height of a child of "s".
     uint32_t maxWidth = 0;
     struct PnWidget *c;
 
@@ -1903,18 +1931,20 @@ static inline uint32_t GetVRightBorder(const struct PnWidget *s,
     }
     // There had to be at least one child widget not culled.
     DASSERT(maxWidth);
-    DASSERT(a->width >= maxWidth);
 
     uint32_t border = GetBWidth(s);
     DASSERT(a->width > border);
-    DASSERT(maxWidth + border <= a->width);
+    maxWidth += border;
 
-    if(maxWidth + border > a->width - border)
-        // This contain widget "s" was clipped.
-        return a->width - maxWidth - border;
-    return border;
+    if(a->width < maxWidth)
+        // "s" was clipped to being smaller than a child.
+        // The children will be clipper too, after this.
+        return 0;
+    if(a->width - maxWidth > border)
+        // We can't have a right border larger than "border".
+        return border;
+    return a->width - maxWidth;
 }
-
 
 // This function calls itself.
 //

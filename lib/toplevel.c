@@ -41,8 +41,8 @@ static void configure(struct PnWindow *win,
         win->needDraw = true;
 
 //WARN("w,h=%" PRIi32",%" PRIi32, w, h);
-        if(!win->needAllocate)
-            win->needAllocate = true;
+        if(!win->widget.needAllocate)
+            win->widget.needAllocate = true;
     }
 }
 
