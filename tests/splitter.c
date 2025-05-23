@@ -38,10 +38,10 @@ int main(void) {
             PnExpand_HV);
     pnWidget_setBackgroundColor(win, Color());
     ASSERT(win);
+    pnWindow_setPreferredSize(win, 1656, 840);
 
     struct PnWidget *w1 = MakeWidget();
     struct PnWidget *w2 = MakeWidget();
-WARN("w1=%p  w2=%p", w1, w2);
 
     bool isHorizontal = true;
 #ifdef VERTICAL

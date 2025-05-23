@@ -26,15 +26,17 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     DASSERT(!win->dqRead->first);
     DASSERT(!win->dqRead->last);
 
-    if(win->widget.needAllocate) {
+    struct PnWidget *w = &win->widget;
+
+    if(w->needAllocate) {
         if(win->preferredWidth && win->preferredHeight &&
-                !win->widget.allocation.width) {
-            struct PnAllocation *a = &win->widget.allocation;
+                !w->allocation.width) {
+            struct PnAllocation *a = &w->allocation;
             DASSERT(!a->height);
             a->width = win->preferredWidth;
             a->height = win->preferredHeight;
          }
-        _pnWidget_getAllocations(&win->widget);
+        _pnWidget_getAllocations(w);
     }
 
     // GetNextBuffer() can reallocate the buffer if the width or height
@@ -42,14 +44,14 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     // is getting.
     if(!buffer)
         buffer = GetNextBuffer(win,
-                win->widget.allocation.width,
-                win->widget.allocation.height);
+                w->allocation.width,
+                w->allocation.height);
     if(!buffer) {
         // I think this is okay.  The wayland compositor is just a little
         // busy now.  I think we will get this done later from a wl_buffer
         // release event callback; see buffer.c.
-        if(win->widget.needAllocate)
-            win->widget.needAllocate = false;
+        if(w->needAllocate)
+            w->needAllocate = false;
         return;
     }
 
@@ -68,13 +70,13 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
         DASSERT(!win->dqWrite->last);
     }
 
-    DASSERT(win->widget.allocation.width == buffer->width);
-    DASSERT(win->widget.allocation.height == buffer->height);
+    DASSERT(w->allocation.width == buffer->width);
+    DASSERT(w->allocation.height == buffer->height);
 
-    pnSurface_draw(&win->widget, buffer, win->widget.needAllocate);
+    pnSurface_draw(w, buffer, w->needAllocate);
 
-    if(win->widget.needAllocate)
-        win->widget.needAllocate = false;
+    if(w->needAllocate)
+        w->needAllocate = false;
 
     d.surface_damage_func(win->wl_surface, 0, 0,
             buffer->width, buffer->height);

@@ -24,9 +24,17 @@ static inline void CreateCairo(struct PnBuffer *buffer,
     DASSERT(!s->cr);
 
     if(s->culled ||
-            // We use cairoDraw if we can we are not using the
-            // non-cairo draw function.
+        // We use cairoDraw if we can we are not using the
+        // non-cairo draw function.
             (!s->cairoDraw && s->draw)) return;
+
+    DASSERT(s->allocation.x < (uint32_t) -50);
+    DASSERT(s->allocation.y < (uint32_t) -50);
+    DASSERT(s->allocation.width > 0);
+    DASSERT(s->allocation.width < (uint32_t) -50);
+    DASSERT(s->allocation.height > 0);
+    DASSERT(s->allocation.height < (uint32_t) -50);
+
 
     s->cairo_surface = cairo_image_surface_create_for_data(
         (void *) (buffer->pixels +
@@ -46,11 +54,19 @@ static void CreateCairos(struct PnBuffer *buffer,
 
     DASSERT(s);
 
+    // If the widget surface is culled then the s->allocation
+    // will not be usable.  If it gets un-culled then maybe
+    // we'll do this later.  Anytime the allocation changes
+    // we need to remake the Cairo stuff.
+
+    if(s->culled) return;
+
     CreateCairo(buffer, s);
 
     if(s->layout != PnLayout_Grid) {
         for(s = s->l.firstChild; s; s = s->pl.nextSibling)
-            CreateCairos(buffer, s);
+            if(!s->culled)
+                CreateCairos(buffer, s);
         return;
     }
     if(!s->g.grid)
@@ -78,7 +94,8 @@ void pnWidget_setCairoDraw(struct PnWidget *w,
     w->cairoDraw = draw;
     w->cairoDrawData = userData;
 
-    if(draw && !w->cr && w->window && w->window->buffer.wl_buffer)
+    if(draw && !w->cr && w->window &&
+            w->window->buffer.wl_buffer && !w->culled)
         // This surface, "s", might need a Cairo surface (and Cairo
         // object).
         CreateCairo(&w->window->buffer, w);

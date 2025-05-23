@@ -26,128 +26,121 @@ static inline void Splipper_preExpandH(const struct PnWidget *w,
         const struct PnAllocation *a,
         struct PnSplitter *s) {
 
+    struct PnWidget *slider = s->slider;
+    struct PnWidget *first = w->l.firstChild;
+    struct PnWidget *last = w->l.lastChild;
+
     if(a->width <= s->slider->reqWidth) {
-        w->l.firstChild->culled = true;
-        w->l.lastChild->culled = true;
-        s->slider->culled = false;
-        s->slider->allocation.x = a->x;
-        s->slider->allocation.width = a->width;
+        first->culled = true;
+        last->culled = true;
+        slider->culled = false;
+        slider->allocation.x = a->x;
+        slider->allocation.width = a->width;
         return;
     }
 
-    DASSERT(a->width > s->slider->reqWidth);
+    slider->culled = false;
 
-    if(w->l.firstChild->reqWidth >= w->l.lastChild->reqWidth) {
+    DASSERT(a->width > slider->reqWidth);
 
-        if(w->l.firstChild->reqWidth + s->slider->reqWidth >= a->width) {
-            w->l.lastChild->culled = true;
-            w->l.lastChild->reqWidth = 1;
-            w->l.firstChild->reqWidth = a->width - s->slider->reqWidth;
+    if(s->firstHidden)
+        goto firstHidden;
+
+    if(s->lastHidden)
+        goto lastHidden;
+
+    DASSERT(first->reqWidth > 0);
+    DASSERT(last->reqWidth > 0);
+    DASSERT(first->reqWidth < -50);
+    DASSERT(last->reqWidth < -50);
+
+
+    if(first->reqWidth + slider->reqWidth +
+            last->reqWidth > a->width) {
+        // The 3 widgets are too large.
+        uint32_t extra = first->reqWidth + slider->reqWidth +
+            last->reqWidth - a->width;
+
+        if(first->reqWidth >= last->reqWidth) {
+            first->culled = false;
+            if(first->reqWidth > extra) {
+                last->culled = false;
+                first->reqWidth -= extra;
+                last->reqWidth = a->width -
+                    first->reqWidth - slider->reqWidth;
+                goto finish;
+            } else {
+                s->lastHidden = true;
+                goto lastHidden;
+            }
         } else {
-            w->l.lastChild->culled = false;
-            w->l.lastChild->reqWidth = a->width
-                - w->l.firstChild->reqWidth - s->slider->reqWidth;
+            // last->reqWidth > first->reqWidth
+            last->culled = false;
+            if(last->reqWidth > extra) {
+                first->culled = false;
+                last->reqWidth -= extra;
+                first->reqWidth = a->width -
+                    last->reqWidth - slider->reqWidth;
+                goto finish;
+            } else {
+                s->firstHidden = true;
+                goto firstHidden;
+            }
         }
-
-        w->l.firstChild->culled = false;
-        s->slider->culled = false;
-        w->l.firstChild->allocation.x = a->x;
-        w->l.firstChild->allocation.width = w->l.firstChild->reqWidth;
-        s->slider->allocation.x = a->x + w->l.firstChild->reqWidth;
-        s->slider->allocation.width = s->slider->reqWidth;
-        w->l.lastChild->allocation.x = s->slider->allocation.x +
-            s->slider->allocation.width;
-        w->l.lastChild->allocation.width = w->l.lastChild->reqWidth;
-        return;
+    } else {
+        // first->reqWidth + slider->reqWidth + last->reqWidth <= a->width
+        uint32_t extra = a->width - first->reqWidth -
+            slider->reqWidth - last->reqWidth;
+        first->reqWidth += extra/2;
+        last->reqWidth = a->width -
+            first->reqWidth - slider->reqWidth;
+        goto finish;
     }
-    {
-        if(w->l.lastChild->reqWidth + s->slider->reqWidth >= a->width) {
-            w->l.firstChild->culled = true;
-            w->l.firstChild->reqWidth = 1;
-            w->l.lastChild->reqWidth = a->width - s->slider->reqWidth;
-            w->l.firstChild->allocation.x = a->x;
-            w->l.firstChild->allocation.width = 0;
-        } else {
-            w->l.firstChild->culled = false;
-            w->l.firstChild->reqWidth = a->width
-                - w->l.lastChild->reqWidth - s->slider->reqWidth;
-            w->l.firstChild->allocation.x = a->x;
-            w->l.firstChild->allocation.width = w->l.firstChild->reqWidth;
-        }
+ 
+firstHidden:
+        DASSERT(s->firstHidden);
+        DASSERT(!s->lastHidden);
+        first->reqWidth = 1;
+        first->culled = true;
+        last->reqWidth = a->width - slider->reqWidth;
+        goto finish;
 
-        w->l.lastChild->culled = false;
-        s->slider->culled = false;
-        s->slider->allocation.x = w->l.firstChild->allocation.x +
-            w->l.firstChild->allocation.width;
-        s->slider->allocation.width = s->slider->reqWidth;
-        w->l.lastChild->allocation.x = s->slider->allocation.x +
-            s->slider->reqWidth;
-        w->l.lastChild->allocation.width = w->l.lastChild->reqWidth;
+lastHidden:
+        DASSERT(s->lastHidden);
+        DASSERT(!s->firstHidden);
+        last->reqWidth = 1;
+        last->culled = true;
+        first->reqWidth = a->width - slider->reqWidth;
+
+finish:
+    DASSERT(first->reqWidth != 0);
+    DASSERT(last->reqWidth != 0);
+
+    // Now compute position and sizes in the widget allocation.
+    uint32_t x = a->x;
+    if(!first->culled) {
+        first->allocation.x = x;
+        first->allocation.width = first->reqWidth;
+        x += first->allocation.width;
     }
+    slider->allocation.x = x;
+    slider->allocation.width = slider->reqWidth;
+    x += slider->allocation.width;
+    if(!last->culled) {
+        last->allocation.x = x;
+        last->allocation.width = last->reqWidth;
+        x += last->allocation.width;
+    }
+
+    DASSERT(x == a->x + a->width,
+            "x=%" PRIu32 " a->x=%" PRIu32 " a->width=%" PRIu32,
+            x, a->x, a->width);
 }
 
 static inline void Splipper_preExpandV(const struct PnWidget *w,
         const struct PnAllocation *a,
         const struct PnSplitter *s) {
 
-    if(a->height <= s->slider->reqHeight) {
-        w->l.firstChild->culled = true;
-        w->l.lastChild->culled = true;
-        s->slider->culled = false;
-        s->slider->allocation.y = a->y;
-        s->slider->allocation.height = a->height;
-        return;
-    }
-
-    DASSERT(a->height > s->slider->reqHeight);
-
-    if(w->l.firstChild->reqHeight >= w->l.lastChild->reqHeight) {
-
-        if(w->l.firstChild->reqHeight + s->slider->reqHeight >= a->height) {
-            w->l.lastChild->culled = true;
-            w->l.lastChild->reqHeight = 1;
-            w->l.firstChild->reqHeight = a->height - s->slider->reqHeight;
-        } else {
-            w->l.lastChild->culled = false;
-            w->l.lastChild->reqHeight = a->height
-                - w->l.firstChild->reqHeight - s->slider->reqHeight;
-        }
-
-        w->l.firstChild->culled = false;
-        s->slider->culled = false;
-        w->l.firstChild->allocation.y = a->y;
-        w->l.firstChild->allocation.height = w->l.firstChild->reqHeight;
-        s->slider->allocation.y = a->y + w->l.firstChild->reqHeight;
-        s->slider->allocation.height = s->slider->reqHeight;
-        w->l.lastChild->allocation.y = s->slider->allocation.y +
-            s->slider->allocation.height;
-        w->l.lastChild->allocation.height = w->l.lastChild->reqHeight;
-        return;
-    }
-    {
-        if(w->l.lastChild->reqHeight + s->slider->reqHeight >= a->height) {
-            w->l.firstChild->culled = true;
-            w->l.firstChild->reqHeight = 1;
-            w->l.lastChild->reqHeight = a->height - s->slider->reqHeight;
-            w->l.firstChild->allocation.y = a->y;
-            w->l.firstChild->allocation.height = 0;
-        } else {
-            w->l.firstChild->culled = false;
-            w->l.firstChild->reqHeight = a->height
-                - w->l.lastChild->reqHeight - s->slider->reqHeight;
-            w->l.firstChild->allocation.y = a->y;
-            w->l.firstChild->allocation.height = w->l.firstChild->reqHeight;
-        }
-
-        w->l.lastChild->culled = false;
-        s->slider->culled = false;
-        s->slider->allocation.y = w->l.firstChild->allocation.y +
-            w->l.firstChild->allocation.height;
-        s->slider->allocation.height = s->slider->reqHeight;
-        w->l.lastChild->allocation.y = s->slider->allocation.y +
-            s->slider->reqHeight;
-        w->l.lastChild->allocation.height = w->l.lastChild->reqHeight;
-    }
 
 }
 
@@ -268,11 +261,11 @@ static inline bool MoveSliderH(struct PnSplitter *s,
     if(x_to > pa.x) {
         // We have room for the firstChild.
         s->widget.l.firstChild->reqWidth = x_to - pa.x;
-        s->widget.l.firstChild->hidden = false;
+        s->firstHidden = false;
     } else {
         // No room for firstChild.
         s->widget.l.firstChild->reqWidth = 1;
-        s->widget.l.firstChild->hidden = true;
+        s->firstHidden = true;
         // Moving the slider can bring it back.
     }
 
@@ -280,18 +273,17 @@ static inline bool MoveSliderH(struct PnSplitter *s,
         // We have room for the lastChild.
         s->widget.l.lastChild->reqWidth =
             pa.x + pa.width - x_to - slider->reqWidth;
-        s->widget.l.lastChild->hidden = false;
+        s->lastHidden = false;
     } else {
         // No room for lastChild.
         s->widget.l.lastChild->reqWidth = 1;
-        s->widget.l.lastChild->hidden = true;
+        s->lastHidden = true;
         // Moving the slider can bring it back.
     }
 
     // We cannot hide both firstChild and lastChild.
-    if(s->widget.l.firstChild->hidden &&
-            s->widget.l.lastChild->hidden)
-        s->widget.l.firstChild->hidden = false;
+    if(s->firstHidden && s->lastHidden)
+        s->firstHidden = false;
 
     return true;
 }
@@ -302,69 +294,6 @@ static inline bool MoveSliderH(struct PnSplitter *s,
 //
 static inline bool MoveSliderV(struct PnSplitter *s,
         struct PnWidget *slider, int32_t y) {
-
-    DASSERT(slider->parent);
-    DASSERT(s->widget.l.firstChild);
-    DASSERT(s->widget.l.lastChild);
-
-    int32_t y_to = y - y_0;
-
-    if(y_to < 0)
-        y_to = 0;
-
-    struct PnAllocation sa;
-    pnWidget_getAllocation(slider, &sa);
-
-    struct PnAllocation pa;
-    pnWidget_getAllocation(slider->parent, &pa);
-
-    DASSERT(pa.height > sa.height);
-    DASSERT(pa.y <= sa.y && pa.y + pa.height >= sa.y + sa.height);
-
-    if(y_to < pa.y)
-        y_to = pa.y;
-    else if(y_to + sa.height > pa.y + pa.height)
-        y_to = pa.y + pa.height - sa.height;
-
-    if(y_to == sa.y)
-        // We are already there.
-        return false;
-
-    //WARN("moving slider to y=%" PRIi32 " from y=%" PRIu32, y_to, sa.y);
-
-    // Note: the parent allocation height is larger than the slider
-    // allocation (by at least 1).
-    //
-    // Set y_to to the position of the slider.  The reqHeight of the slider
-    // does not change.
-
-    if(y_to > pa.y) {
-        // We have room for the firstChild.
-        s->widget.l.firstChild->reqHeight = y_to - pa.y;
-        s->widget.l.firstChild->hidden = false;
-    } else {
-        // No room for firstChild.
-        s->widget.l.firstChild->reqHeight = 1;
-        s->widget.l.firstChild->hidden = true;
-        // Moving the slider can bring it back.
-    }
-
-    if(y_to + slider->reqHeight < pa.y + pa.height) {
-        // We have room for the lastChild.
-        s->widget.l.lastChild->reqHeight =
-            pa.y + pa.height - y_to - slider->reqHeight;
-        s->widget.l.lastChild->hidden = false;
-    } else {
-        // No room for lastChild.
-        s->widget.l.lastChild->reqHeight = 1;
-        s->widget.l.lastChild->hidden = true;
-        // Moving the slider can bring it back.
-    }
-
-    // We cannot hide both firstChild and lastChild.
-    if(s->widget.l.firstChild->hidden &&
-            s->widget.l.lastChild->hidden)
-        s->widget.l.firstChild->hidden = false;
 
     return true;
 }

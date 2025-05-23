@@ -23,6 +23,16 @@ struct PnSplitter {
     // present.
     struct PnWidget *slider;
 
+    // These are just flags to say that the first widget is hidden
+    // (firstHidden) or the last widget is hidden (lastHidden).
+    //
+    // It has to be a separate flag from the PnWidget::hidden flag,
+    // because it's hidden for a different reason, due to the slider
+    // hiding it; not the API user calling pnWidget_hide() or whatever
+    // it's called (pnWidget_show() ???).
+    //
+    bool firstHidden, lastHidden;
+
     bool cursorSet; // The special pointer cursor is set or not.
 };
 
