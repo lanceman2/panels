@@ -38,7 +38,7 @@ int main(void) {
             PnExpand_HV);
     pnWidget_setBackgroundColor(win, Color());
     ASSERT(win);
-    pnWindow_setPreferredSize(win, 1656, 840);
+    pnWindow_setPreferredSize(win, 900, 640);
 
     struct PnWidget *w1 = MakeWidget();
     struct PnWidget *w2 = MakeWidget();
