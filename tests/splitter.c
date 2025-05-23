@@ -33,7 +33,7 @@ int main(void) {
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
     srand(3);
 
-    win = pnWindow_create(0, 20/*width*/, 20/*height*/,
+    win = pnWindow_create(0, 110/*width*/, 110/*height*/,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     pnWidget_setBackgroundColor(win, Color());

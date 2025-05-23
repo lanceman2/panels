@@ -26,19 +26,27 @@ static inline void Splipper_preExpandH(const struct PnWidget *w,
         const struct PnAllocation *a,
         struct PnSplitter *s) {
 
+    DASSERT(a->width);
+    DASSERT(a->height);
+ 
     struct PnWidget *slider = s->slider;
     struct PnWidget *first = w->l.firstChild;
     struct PnWidget *last = w->l.lastChild;
 
     if(a->width <= s->slider->reqWidth) {
-        first->culled = true;
-        last->culled = true;
         slider->culled = false;
-        slider->allocation.x = a->x;
-        slider->allocation.width = a->width;
-        return;
+        // We use the two flags s->firstHidden and s->lastHidden to mark
+        // which one is hidden, so that it stay hidden until the user
+        // slides the slider to show it.
+        if(s->firstHidden)
+            goto firstHidden;
+        if(s->lastHidden)
+            goto lastHidden;
+        s->lastHidden = true;
+        goto lastHidden;
     }
 
+    // The slider will be shown.
     slider->culled = false;
 
     DASSERT(a->width > slider->reqWidth);
@@ -96,13 +104,19 @@ static inline void Splipper_preExpandH(const struct PnWidget *w,
             first->reqWidth - slider->reqWidth;
         goto finish;
     }
- 
+
 firstHidden:
         DASSERT(s->firstHidden);
         DASSERT(!s->lastHidden);
         first->reqWidth = 1;
         first->culled = true;
-        last->reqWidth = a->width - slider->reqWidth;
+        if(a->width > slider->reqWidth) {
+            last->reqWidth = a->width - slider->reqWidth;
+            last->culled = false;
+        } else {
+            last->reqWidth = 1;
+            last->culled = true;
+        }
         goto finish;
 
 lastHidden:
@@ -110,7 +124,13 @@ lastHidden:
         DASSERT(!s->firstHidden);
         last->reqWidth = 1;
         last->culled = true;
-        first->reqWidth = a->width - slider->reqWidth;
+        if(a->width > slider->reqWidth) {
+            first->reqWidth = a->width - slider->reqWidth;
+            first->culled = false;
+        } else {
+            first->reqWidth = 1;
+            first->culled = true;
+        }
 
 finish:
     DASSERT(first->reqWidth != 0);
@@ -123,9 +143,14 @@ finish:
         first->allocation.width = first->reqWidth;
         x += first->allocation.width;
     }
-    slider->allocation.x = x;
-    slider->allocation.width = slider->reqWidth;
-    x += slider->allocation.width;
+    if(!slider->culled) {
+        slider->allocation.x = x;
+        if(first->culled && last->culled)
+            slider->allocation.width = a->width;
+        else
+            slider->allocation.width = slider->reqWidth;
+        x += slider->allocation.width;
+    }
     if(!last->culled) {
         last->allocation.x = x;
         last->allocation.width = last->reqWidth;
@@ -139,19 +164,27 @@ static inline void Splipper_preExpandV(const struct PnWidget *w,
         const struct PnAllocation *a,
         struct PnSplitter *s) {
 
+    DASSERT(a->width);
+    DASSERT(a->height);
+ 
     struct PnWidget *slider = s->slider;
     struct PnWidget *first = w->l.firstChild;
     struct PnWidget *last = w->l.lastChild;
 
     if(a->height <= s->slider->reqHeight) {
-        first->culled = true;
-        last->culled = true;
         slider->culled = false;
-        slider->allocation.y = a->y;
-        slider->allocation.height = a->height;
-        return;
+        // We use the two flags s->firstHidden and s->lastHidden to mark
+        // which one is hidden, so that it stay hidden until the user
+        // slides the slider to show it.
+        if(s->firstHidden)
+            goto firstHidden;
+        if(s->lastHidden)
+            goto lastHidden;
+        s->lastHidden = true;
+        goto lastHidden;
     }
 
+    // The slider will be shown.
     slider->culled = false;
 
     DASSERT(a->height > slider->reqHeight);
@@ -166,7 +199,6 @@ static inline void Splipper_preExpandV(const struct PnWidget *w,
     DASSERT(last->reqHeight > 0);
     DASSERT(first->reqHeight < -50);
     DASSERT(last->reqHeight < -50);
-
 
     if(first->reqHeight + slider->reqHeight +
             last->reqHeight > a->height) {
@@ -209,13 +241,19 @@ static inline void Splipper_preExpandV(const struct PnWidget *w,
             first->reqHeight - slider->reqHeight;
         goto finish;
     }
- 
+
 firstHidden:
         DASSERT(s->firstHidden);
         DASSERT(!s->lastHidden);
         first->reqHeight = 1;
         first->culled = true;
-        last->reqHeight = a->height - slider->reqHeight;
+        if(a->height > slider->reqHeight) {
+            last->reqHeight = a->height - slider->reqHeight;
+            last->culled = false;
+        } else {
+            last->reqHeight = 1;
+            last->culled = true;
+        }
         goto finish;
 
 lastHidden:
@@ -223,7 +261,13 @@ lastHidden:
         DASSERT(!s->firstHidden);
         last->reqHeight = 1;
         last->culled = true;
-        first->reqHeight = a->height - slider->reqHeight;
+        if(a->height > slider->reqHeight) {
+            first->reqHeight = a->height - slider->reqHeight;
+            first->culled = false;
+        } else {
+            first->reqHeight = 1;
+            first->culled = true;
+        }
 
 finish:
     DASSERT(first->reqHeight != 0);
@@ -236,9 +280,14 @@ finish:
         first->allocation.height = first->reqHeight;
         y += first->allocation.height;
     }
-    slider->allocation.y = y;
-    slider->allocation.height = slider->reqHeight;
-    y += slider->allocation.height;
+    if(!slider->culled) {
+        slider->allocation.y = y;
+        if(first->culled && last->culled)
+            slider->allocation.height = a->height;
+        else
+            slider->allocation.height = slider->reqHeight;
+        y += slider->allocation.height;
+    }
     if(!last->culled) {
         last->allocation.y = y;
         last->allocation.height = last->reqHeight;
@@ -262,6 +311,7 @@ void Splipper_preExpand(const struct PnWidget *w,
         Splipper_preExpandV(w, a, s);
 }
 
+#define ACTION_BUTTON  (BTN_LEFT)
 
 static bool press(struct PnWidget *slider,
             uint32_t which, int32_t x, int32_t y,
@@ -271,18 +321,36 @@ static bool press(struct PnWidget *slider,
     DASSERT(slider == s->slider);
     DASSERT(slider->parent);
     DASSERT(!slider->culled);
+    DASSERT(slider->parent->layout == PnLayout_LR ||
+            slider->parent->layout == PnLayout_TB);
 
-    if(which != BTN_LEFT) return false;
+    if(which != ACTION_BUTTON) return false;
 
     DASSERT(x_0 == INT32_MAX);
-    DASSERT(x != INT32_MAX);
+    DASSERT(x < INT32_MAX - 50);
+    DASSERT(y < INT32_MAX - 50);
 
-    struct PnAllocation sa;
+    struct PnAllocation sa; // slider allocation
     pnWidget_getAllocation(s->slider, &sa);
+    DASSERT(sa.x >= 0);
+    DASSERT(sa.y >= 0);
 
-    struct PnAllocation pa;
+    struct PnAllocation pa; // parent allocation
     pnWidget_getAllocation(slider->parent, &pa);
+    DASSERT(pa.x >= 0);
+    DASSERT(pa.y >= 0);
 
+    if(slider->parent->layout == PnLayout_LR) {
+        if(x < pa.x || x >= pa.x + pa.width ||
+                pa.width == sa.width /*parent too small*/)
+            return false;
+        DASSERT(pa.width > sa.width);
+    } else { // slider->parent->layout == PnLayout_TB
+        if(y < pa.y || y >= pa.y + pa.height ||
+                pa.height == sa.height /*parent too small*/)
+            return false;
+        DASSERT(pa.height > sa.height);
+    }
 
 #ifdef DEBUG
     if(slider->parent->layout == PnLayout_LR) {
@@ -295,21 +363,7 @@ static bool press(struct PnWidget *slider,
     }
 #endif
 
-    // We cannot use the slider (and splitter) if the splitter widget
-    // container surface is too small.  From above if only one of the
-    // splitter child widgets is showing (because the splitter container
-    // is small), that widget will be the slider.
-    if(s->widget.layout == PnLayout_LR) {
-        if(pa.width == sa.width)
-            return false;
-        DASSERT(pa.width > sa.width);
-    } else {
-        DASSERT(s->widget.layout == PnLayout_TB);
-        if(pa.height == sa.height)
-            return false;
-        DASSERT(pa.height > sa.height);
-    }
-
+    // We have a press for this slider.
     x_0 = x - sa.x;
     y_0 = y - sa.y;
 
@@ -322,7 +376,7 @@ static bool press(struct PnWidget *slider,
 
 // For horizontal splitter.
 //
-// Returns true to change the positions.
+// Returns false to change the positions.
 //
 static inline bool MoveSliderH(struct PnSplitter *s,
         struct PnWidget *slider, int32_t x) {
@@ -342,9 +396,16 @@ static inline bool MoveSliderH(struct PnSplitter *s,
     struct PnAllocation pa;
     pnWidget_getAllocation(slider->parent, &pa);
 
-    DASSERT(pa.width > sa.width);
+    DASSERT(pa.width >= sa.width);
     DASSERT(pa.x <= sa.x && pa.x + pa.width >= sa.x + sa.width);
 
+    if(sa.x == pa.x && slider->reqWidth >= pa.width) {
+        // There is not enough room to move the slider.
+        x_0 = INT32_MAX;
+        return true;
+    }
+
+    // Constrain the motion.
     if(x_to < pa.x)
         x_to = pa.x;
     else if(x_to + sa.width > pa.x + pa.width)
@@ -352,7 +413,7 @@ static inline bool MoveSliderH(struct PnSplitter *s,
 
     if(x_to == sa.x)
         // We are already there.
-        return false;
+        return true;
 
     //WARN("moving slider to x=%" PRIi32 " from x=%" PRIu32, x_to, sa.x);
 
@@ -389,12 +450,12 @@ static inline bool MoveSliderH(struct PnSplitter *s,
     if(s->firstHidden && s->lastHidden)
         s->firstHidden = false;
 
-    return true;
+    return false;
 }
 
 // For vertical splitter.
 //
-// Returns true to change the positions.
+// Returns false to change the positions.
 //
 static inline bool MoveSliderV(struct PnSplitter *s,
         struct PnWidget *slider, int32_t y) {
@@ -414,9 +475,16 @@ static inline bool MoveSliderV(struct PnSplitter *s,
     struct PnAllocation pa;
     pnWidget_getAllocation(slider->parent, &pa);
 
-    DASSERT(pa.height > sa.height);
+    DASSERT(pa.height >= sa.height);
     DASSERT(pa.y <= sa.y && pa.y + pa.height >= sa.y + sa.height);
 
+    if(sa.y == pa.y && slider->reqHeight >= pa.height) {
+        // There is not enough room to move the slider.
+        x_0 = INT32_MAX;
+        return true;
+    }
+
+    // Constrain the motion.
     if(y_to < pa.y)
         y_to = pa.y;
     else if(y_to + sa.height > pa.y + pa.height)
@@ -424,7 +492,7 @@ static inline bool MoveSliderV(struct PnSplitter *s,
 
     if(y_to == sa.y)
         // We are already there.
-        return false;
+        return true;
 
     //WARN("moving slider to y=%" PRIi32 " from y=%" PRIu32, y_to, sa.y);
 
@@ -461,24 +529,7 @@ static inline bool MoveSliderV(struct PnSplitter *s,
     if(s->firstHidden && s->lastHidden)
         s->firstHidden = false;
 
-    return true;
-}
-
-
-// This does the "action" of the splitter.
-//
-static inline bool MoveSlider(struct PnSplitter *s,
-        struct PnWidget *slider, int32_t x, int32_t y) {
-    DASSERT(slider);
-    DASSERT(s);
-    DASSERT(s->slider == slider);
-    DASSERT(s->widget.layout == PnLayout_LR ||
-            s->widget.layout == PnLayout_TB);
-
-    if(s->widget.layout == PnLayout_LR)
-        return MoveSliderH(s, slider, x);
-    else
-        return MoveSliderV(s, slider, y);
+    return false;
 }
 
 static bool motion(struct PnWidget *slider,
@@ -487,16 +538,28 @@ static bool motion(struct PnWidget *slider,
     DASSERT(slider);
     DASSERT(s);
     DASSERT(slider == s->slider);
+    DASSERT(s->widget.layout == PnLayout_LR ||
+            s->widget.layout == PnLayout_TB);
 
-    if(x_0 == INT32_MAX) return false;
+    if(x_0 == INT32_MAX)
+        // The correct mouse button was not pressed now or
+        // there is not enough room to move the mouse.  Either
+        // way we can't change anything.
+        return false;
 
-    // We have the press too:
+    // We have the press:
 
     //WARN("x,y=%" PRIi32 ",%" PRIi32, x, y);
 
-    if(MoveSlider(s, slider, x, y))
-        // TODO: Add config() callbacks some how.
-        pnWidget_queueDraw(&s->widget, true/*allocate*/);
+    if(s->widget.layout == PnLayout_LR) {
+        if(MoveSliderH(s, slider, x))
+            return true; // no change
+    } else if(MoveSliderV(s, slider, y))
+        return true; // no change
+
+    // We have slider motion, so re-allocate and redraw the widgets
+    // involved.
+    pnWidget_queueDraw(&s->widget, true/*allocate*/);
 
     return true;
 }
@@ -506,10 +569,12 @@ static bool release(struct PnWidget *w,
             struct PnSplitter *s) {
     DASSERT(s);
     DASSERT(w == s->slider);
-    if(which != BTN_LEFT) return false;
 
-    DASSERT(x_0 != INT32_MAX);
+    if(x_0 == INT32_MAX || which != ACTION_BUTTON)
+        return false;
 
+    // This is the flag state for being not pressed or the parent widget
+    // is too small for the slider to move.
     x_0 = INT32_MAX;
 
     return true;
