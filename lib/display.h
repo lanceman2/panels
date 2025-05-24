@@ -397,8 +397,16 @@ struct PnWidget {
 
     // Windows are NOT showing after pnWindow_create().
     //
-    // Widgets are showing after pnWidget_create().  The user sets this
-    // with PnWidget_show().
+    // Widgets are showing after pnWidget_create().  The API user sets
+    // this with PnWidget_show().
+    //
+    // TODO: BUG: We use this flag with the child widgets of the splitter
+    // widget container.  If the API user uses this with a child widgets
+    // of the splitter widget container the splitter widget container will
+    // be a little fucked up.  But, I don't think it will crash the program
+    // but the behavior of the splitter widget and it's children will be a
+    // little wonky.
+    //
     bool hidden;
 
     // If this is a leaf widget and this "clip" is true this leaf is
