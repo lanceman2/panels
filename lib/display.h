@@ -226,7 +226,7 @@ struct PnWidget {
     // user set event callbacks
     //
     // TODO: Is this too many pointers; should we allocate memory for it
-    // so that it this memory is not used unless the widget sets these
+    // so that this memory is not used unless the widget sets these
     // callbacks?
     //
     // API user passed in draw function:
@@ -244,7 +244,7 @@ struct PnWidget {
     //
     // The enter callback is special, as it sets the widget to "focus",
     // which we define as to receive the other events.  The "focused"
-    // widget can press up the "focused" events to it's parent by
+    // widget can pass up the "focused" events to it's parent by
     // returning false.
     //
     bool (*enter)(struct PnWidget *w,
@@ -349,7 +349,8 @@ struct PnWidget {
     // fixed values (a compile time change).  It appears that the setup of
     // signals/slots is a compile time thing in Qt, so I think it's very
     // hard to justify all that added complexity.  In GTK it looks like it
-    // could be done at run-time, but I never see it used that way.
+    // could be done at run-time (name string lookup), but I never see it
+    // used that way.
     //
     // So: the particular indexes (example PN_BUTTON_CB_CLICK) into this
     // array are set at compile time.
@@ -360,11 +361,12 @@ struct PnWidget {
     // pointer prototypes.  If custom widget function prototypes change
     // with panel callbacks you're screwed, i.e. you must be careful. The
     // compiler will check the function types for you.  If the ABI
-    // (applcation binary interface) changes, ya no fucking shit, it will
+    // (applcation binary interface) changes, ya no-fucking-shit, it will
     // crash.  GTK uses CPP MACRO madness to check types.  I find that GTK
     // CPP macro gobject code is impossible to follow, code scoping CPP
-    // macros is a pain.  Keep the power of C and: don't read a double as
-    // an int; unless you know you are decoding it.
+    // macros is at least a pain in the ass.  Keep the power of C and:
+    // don't read a double as an int; unless you know you are decoding
+    // it.
     //
     // This is the shit!  Simple and fast.
     //
@@ -398,7 +400,7 @@ struct PnWidget {
     // Windows are NOT showing after pnWindow_create().
     //
     // Widgets are showing after pnWidget_create().  The API user sets
-    // this with PnWidget_show().
+    // this with pnWidget_show().
     //
     // TODO: BUG: We use this flag with the child widgets of the splitter
     // widget container.  If the API user uses this with a child widgets

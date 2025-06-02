@@ -89,6 +89,31 @@ static bool ResetChildrenCull(const struct PnWidget *s) {
 
     bool culled = s->hidden;
 
+    // TODO: This if() block is a little fucked up.  Some sort of emerging
+    // abstraction is needed.  This looks a little too special now.  Maybe
+    // a AmICulled() widget allocation callback is needed.
+    //
+    // This is for the child of a panel splitter container widget.
+    // The panel splitter container widget can hide one of it's two
+    // children due to the splitter slider be pushed all the way to one
+    // side or the other.  That's independent of being hidden by the
+    // panels user API function pnWidget_show().  pnWidget_show() can
+    // hide the child of a splitter container widget, but we cannot let
+    // it show the child of a splitter container widget if it is being
+    // controlled by the splitter container widget to be squished to the
+    // side.
+    //
+    if(s->parent && GET_WIDGET_TYPE(s->parent->type) == W_SPLITTER)
+        if( (s->parent->l.firstChild && s->parent->l.firstChild == s
+                && ((struct PnSplitter *)s->parent)->firstHidden)
+                    ||
+                (s->parent->l.lastChild && s->parent->l.lastChild == s
+                    && ((struct PnSplitter *)s->parent)->lastHidden))
+            // This widget, "s", will be forced to be culled by the
+            // splitter container widget user interaction.
+            culled = true;
+
+
     if(culled || !HaveChildren(s))
         return culled;
 
