@@ -237,15 +237,14 @@ void GetPointerSurface(void) {
 
     bool inPointerWidget = false;
 
-    if(d.pointerWidget) {
+    if(d.pointerWidget)
         inPointerWidget =
-            d.pointerWidget->allocation.x >= d.x && 
+            d.x >= d.pointerWidget->allocation.x && 
             d.x < d.pointerWidget->allocation.x + 
                     d.pointerWidget->allocation.width &&
-            d.pointerWidget->allocation.y >= d.y && 
+            d.y >= d.pointerWidget->allocation.y && 
             d.y < d.pointerWidget->allocation.y + 
                     d.pointerWidget->allocation.height;
-    }
 
     if(inPointerWidget) {
         // Lets start with the mouse pointer is at the same widget.
