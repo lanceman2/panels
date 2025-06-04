@@ -279,7 +279,21 @@ image_run_CPPFLAGS := -DRUN
 133_image_SOURCES := image.c
 133_image_LDFLAGS := $(PN_LIB)
 
-endif
+155_generic_SOURCES := generic.c
+155_generic_LDFLAGS := $(PN_LIB)
+
+generic_run_SOURCES := generic.c
+generic_run_LDFLAGS := $(PN_LIB)
+generic_run_CPPFLAGS := -DRUN
+
+145_menuItem_SOURCES := menuItem.c
+145_menuItem_LDFLAGS := $(PN_LIB)
+
+menuItem_run_SOURCES := menuItem.c
+menuItem_run_LDFLAGS := $(PN_LIB)
+menuItem_run_CPPFLAGS := -DRUN
+
+endif # ifdef WITH_CAIRO
 
 
 scribble_run_SOURCES := scribble.c
@@ -317,7 +331,6 @@ gridSpan_cull_run_CPPFLAGS := -DRUN -DCULL
 GridWithNoChildren_run_SOURCES := GridWithNoChildren.c
 GridWithNoChildren_run_LDFLAGS := $(PN_LIB)
 GridWithNoChildren_run_CPPFLAGS := -DRUN
-
 
 
 CLEANFILES := $(wildcard tmp_*)

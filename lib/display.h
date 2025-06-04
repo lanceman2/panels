@@ -4,7 +4,7 @@
 #endif
 
 // It looks like most GUI (graphical user interface) based programs
-// (wayland compositor included), as we shrink a window, cull out the
+// (Wayland compositor included), as we shrink a window, cull out the
 // parts of the window to the right and bottom, keeping the left and top
 // most part of the window.  This is just convention, and "panels" follows
 // this convention.  Hence, we cull out widgets to the right and bottom
@@ -31,8 +31,8 @@
 // object; but in libX11 the display was not necessarily a singleton
 // object: you could make as many X11 client display connections in a
 // given process as you wanted (or so it appeared given the interface).
-// This wayland limitation seems short sighted to me.  On the brighter
-// side, wayland is much less complex than X11, and could in many cases
+// This Wayland limitation seems short sighted to me.  On the brighter
+// side, Wayland is much less complex than X11, and could in many cases
 // have better performance (depends on a lot of shit, I suppose).
 //
 // When comparing the X11 client and the Wayland client: X11 is a huge
@@ -64,20 +64,23 @@
 #define WIDGET           (04) // third bit set
 #define GET_WIDGET_TYPE(x)  (~(TOPLEVEL|POPUP|WIDGET) & (x))
 // WIDGET TYPES: are a number in the (skip first 3 bits) higher bits.
-#define W_LABEL          (1 << 3)
-#define W_BUTTON         (2 << 3)
-#define W_TOGGLE_BUTTON  (3 << 3)
-#define W_MENU           (4 << 3)
-#define W_MENUITEM       (5 << 3)
-#define W_IMAGE          (6 << 3)
-#define W_GRAPH          (7 << 3) // graph plotter with grid lines
-#define W_SPLITTER       (8 << 3)
+#define W_GENERIC        (1 << 3)
+#define W_LABEL          (2 << 3)
+#define W_BUTTON         (3 << 3)
+#define W_TOGGLE_BUTTON  (4 << 3)
+#define W_MENU           (5 << 3)
+#define W_MENUITEM       (6 << 3)
+#define W_MENUBAR        (7 << 3)
+#define W_IMAGE          (8 << 3)
+#define W_GRAPH          (9 << 3) // 2D graph plotter with grid lines
+#define W_SPLITTER      (10 << 3)
 
 
 
-// If we add more surface types we'll need to check all the code.
+// If we add more (Wayland client) surface types we'll need to check all
+// the code.
 //
-// TODO: Add a wayland subsurface to this type thingy?
+// TODO: Add a Wayland subsurface to this type thingy?
 //
 // TODO: Rename SurfaceType to WidgetType?
 //
@@ -86,16 +89,18 @@ enum PnSurfaceType {
     // Yes, a popup window is in a sense a toplevel window; but we call it
     // a popup, and not a toplevel, and so does wayland-client.
 
-    // 2 Window Surface types:
+    // 2 Window Surface types (Wayland client things):
     PnSurfaceType_toplevel   = TOPLEVEL, // From xdg_surface_get_toplevel()
     PnSurfaceType_popup      = POPUP,    // From wl_shell_surface_set_popup()
 
-    // Widget Surface types:  Not a wayland client thing.
+    // Widget Surface types:  Not a Wayland client thing.
     PnSurfaceType_widget     = WIDGET, // a rectangular piece of a surface
+    PnSurfaceType_generic    = (WIDGET | W_GENERIC), // a generic example widget
     PnSurfaceType_label      = (WIDGET | W_LABEL), // a label widget
     PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget
     PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
     PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
+    PnSurfaceType_menubar    = (WIDGET | W_MENUBAR),
     PnSurfaceType_image      = (WIDGET | W_IMAGE),
     PnSurfaceType_graph      = (WIDGET | W_GRAPH),
     PnSurfaceType_splitter   = (WIDGET | W_SPLITTER)
@@ -542,11 +547,11 @@ struct PnWindow {
     // that the window is showing, but this may be close enough.
     uint32_t haveDrawn;
 
-    // From the last wayland enter event.
+    // From the last Wayland enter event.
     uint32_t lastSerial;
 };
 
-// Just a dumb wrapper of the wayland wl_output object.  wl_output seems
+// Just a dumb wrapper of the Wayland wl_output object.  wl_output seems
 // to be the computer monitor class.  If we find more monitors we add more
 // PnOutput objects to the PnDisplay (below).
 struct PnOutput {
@@ -563,7 +568,7 @@ struct PnOutput {
 };
 
 
-// Making wayland client objects into one big ass display thing, like
+// Making Wayland client objects into one big ass display thing, like
 // a X11 display.
 //
 struct PnDisplay {
@@ -583,7 +588,7 @@ struct PnDisplay {
 
     char *theme;
 
-    // 10 singleton wayland client objects:
+    // 10 singleton Wayland client objects:
     //
     // We have not confirmed that there can only be one of the following
     // objects (some we have), but there may be no point in making more
@@ -624,7 +629,7 @@ struct PnDisplay {
     // events exist separately?  Maybe tab key press to change keyboard
     // focus needs them to be separate.
     //
-    // Set the window with mouse pointer focus (from wayland's enter and
+    // Set the window with mouse pointer focus (from Wayland's enter and
     // leave):
     struct PnWindow *pointerWindow;
     // The child most widget that has the pointer in it.
@@ -636,7 +641,7 @@ struct PnDisplay {
     // In panels all x,y coordinates are given relative to the window's
     // widget (Not like GTK's widget relative coordinates).
     //
-    // We set this x,y with wayland mouse pointer enter and mouse pointer
+    // We set this x,y with Wayland mouse pointer enter and mouse pointer
     // motion events.
     int32_t x, y; // pointer position.
 

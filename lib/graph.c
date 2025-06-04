@@ -16,19 +16,13 @@
 #include "debug.h"
 #include "display.h"
 #include "graph.h"
+#include "SetColor.h"
 
 
 
 // TODO: Should this be in a header file?
 // It's set in constructor() in constructor.c.
 extern char decimal_point;
-
-
-static inline void SetColor(cairo_t *cr, uint32_t color) {
-    DASSERT(cr);
-    cairo_set_source_rgba(cr, PN_R_DOUBLE(color),
-                PN_G_DOUBLE(color), PN_B_DOUBLE(color), PN_A_DOUBLE(color));
-}
 
 
 // Return true if there are still zooms to pop.

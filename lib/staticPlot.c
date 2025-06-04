@@ -16,6 +16,7 @@
 #include "debug.h"
 #include "display.h"
 #include "graph.h"
+#include "SetColor.h"
 
 
 void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
@@ -33,13 +34,6 @@ void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
     p->lineWidth = 6.0;
     p->pointSize = 6.1;
     p->graph = (void *) w;
-}
-
-
-static inline void SetColor(cairo_t *cr, uint32_t color) {
-    DASSERT(cr);
-    cairo_set_source_rgba(cr, PN_R_DOUBLE(color),
-            PN_G_DOUBLE(color), PN_B_DOUBLE(color), PN_A_DOUBLE(color));
 }
 
 

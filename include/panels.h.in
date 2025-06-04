@@ -23,7 +23,7 @@ extern "C" {
 #define PN_NUM_BUTTONS    (3)
 
 
-// List of action callback types
+// List of action callback types:
 //
 // These numbers are indexes into arrays, and have values that are
 // dependent on the order of widget inheritance.  It takes a test run to
@@ -32,8 +32,34 @@ extern "C" {
 // to verify all these values.  If any of these numbers are wrong
 // pnWidget_addAction() will throw an assertion.
 //
-#define PN_BUTTON_CB_CLICK      0 // after release
-#define PN_BUTTON_CB_PRESS      1 // after press
+// You see, in libpanels.so each widget type has an array of actions (or
+// none) in addition to an array of actions in the widgets inherited
+// actions.  If you do not inherit a widget type other than Pnwidget, just
+// start at 0 and add one for each additional action.  If you inherit a
+// widget like say "button", your first added action should be the largest
+// action index from "button" plus one.  If you pick the wrong index
+// number, you'll get a run-time error the first time you create your
+// widget.  The user of your widget needs these numbers at compile time,
+// but we can only prove them at run-time.
+//
+// TODO: Bootstrap: Generate these numbers by running a compiled code, put
+// the generated numbers in this header file, and then compile
+// libpanels.so.  Con: adds complexity (more files) to the libpanels.so
+// build system scripts.  This seems kind-of like what the Wayland-client
+// build scripts do (wayland_scanner).  That Wayland guy is fucking
+// smart.
+//
+// This shit (little complexity) is because we don't have a Qt's signals
+// and slots, or GTK's signals.  What we do is (I think) much simpler and
+// faster, just arrays of action callback functions with very simple
+// marshalling, which may be somewhat like the event marshalling in
+// Wayland client, but much simpler (so I think).  It does not matter,
+// this is not even close to being a performance bottle-neck.
+//
+#define PN_GENERIC_CB_PRESS      0
+#define PN_GENERIC_CB_RELEASE    1
+#define PN_BUTTON_CB_CLICK       0 // after release
+#define PN_BUTTON_CB_PRESS       1 // after press
 #define PN_GRAPH_CB_STATIC_DRAW  0 // For static plots
 
 
@@ -386,6 +412,21 @@ PN_EXPORT struct PnWidget *pnWindow_createAsGrid(
         uint32_t width, uint32_t height, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows);
+
+PN_EXPORT struct PnWidget *pnGeneric_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height,
+        enum PnLayout layout,
+        enum PnAlign align,
+        enum PnExpand expand,
+        size_t size);
+
+PN_EXPORT struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height,
+        enum PnLayout layout,
+        enum PnAlign align,
+        enum PnExpand expand,
+        size_t size);
+
 // We have one theme per app process.
 //
 // TODO: Have many themes per process?

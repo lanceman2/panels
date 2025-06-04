@@ -102,3 +102,5 @@ struct PnImage {
     // the width and height allocated for the mapped widget pixels.
     int width, height;
 };
+
+

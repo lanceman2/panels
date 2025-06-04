@@ -4,6 +4,7 @@ pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
 pnDisplay_setTheme
 pnFindFont
+pnGeneric_create
 pnImage_create
 pnLabel_create
 pnLabel_setFontColor
@@ -15,6 +16,7 @@ pnGraph_setSubGridColor
 pnGraph_setGridColor
 pnGraph_setLabelsColor
 pnGraph_setZeroLineColor
+pnMenuItem_create
 pnPlot_setLineColor
 pnPlot_setPointColor
 pnPlot_setLineWidth
