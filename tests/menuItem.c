@@ -27,12 +27,21 @@ void pressAction(struct PnWidget *w, int32_t x, int32_t y,
     ASSERT(w);
     ASSERT(userData == myUserData);
 
-    INFO("widget=%p x,y=%" PRIi32 ",%" PRIi32, w, x, y);
-
     pnWidget_setBackgroundColor(w, Color());
     pnWidget_queueDraw(w, false/*allocate*/);
 }
 
+static
+bool releaseAction(struct PnWidget *w, void *userData) {
+
+    ASSERT(w);
+    ASSERT(userData == myUserData);
+
+    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_queueDraw(w, false/*allocate*/);
+
+    return false;
+}
 
 static void MenuItem(void) {
 
@@ -48,6 +57,8 @@ static void MenuItem(void) {
     pnWidget_setBackgroundColor(w, Color());
     pnWidget_addCallback(w, PN_GENERIC_CB_PRESS,
             pressAction, myUserData);
+    pnWidget_addCallback(w, PN_GENERIC_CB_RELEASE,
+            releaseAction, myUserData);
 }
 
 
@@ -55,13 +66,15 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
+    srand(6);
+
     win = pnWindow_create(0, 0, 0,
             0/*x*/, 0/*y*/, PnLayout_LR, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWidget_setBackgroundColor(win, 0xAA010101);
 
-    for(int i=0; i<8; ++i)
+    for(int i=0; i<6; ++i)
         MenuItem();
 
     pnWindow_show(win, true);

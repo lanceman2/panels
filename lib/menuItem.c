@@ -52,11 +52,9 @@ static int cairoDraw(struct PnWidget *w,
     DASSERT(cr);
 
     // This color may have been set by the API user with
-    // pnWidget_setBackgroundColor(w, color),
-    //
-    // if not and if this widget was create with a parent widget, we get
-    // the default color here which is the parent widgets color when this
-    // widget was created.
+    // pnWidget_setBackgroundColor(w, color), if not and if this widget
+    // was created with a parent widget, we get the default color here
+    // which is the parent widgets color when this widget was created.
     //
     uint32_t color = pnWidget_getBackgroundColor(w);
 
@@ -97,6 +95,8 @@ static bool release(struct PnWidget *w,
 
     fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
+
+    pnWidget_callAction(w, PN_GENERIC_CB_RELEASE);
 
     return true;
 }
