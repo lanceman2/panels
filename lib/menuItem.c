@@ -15,98 +15,48 @@
 #include "SetColor.h"
 
 
-// Our "generic" widget data structure:
-//
-struct PnGeneric {
+struct PnMenuItem {
 
     struct PnWidget widget; // inherit first
-
-    // The x and y position of the mouse pointer when we record it.
-    int32_t x, y;
-
-    // Add more data types here...
 };
-
-
-// All these are optional common widget callbacks:
-// config(), cairoDraw(), press(), release(), enter(), leave(), motion(),
-// and destroy().
-
-static void config(struct PnWidget *widget, uint32_t *pixels,
-            uint32_t x, uint32_t y,
-            uint32_t w, uint32_t h,
-            uint32_t stride/*4 byte chunks*/,
-            struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) widget);
-    DASSERT(GET_WIDGET_TYPE(widget->type) == W_GENERIC);
-
-    DSPEW();
-}
-
-static int cairoDraw(struct PnWidget *w,
-            cairo_t *cr, struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
-    DASSERT(cr);
-
-    // This color may have been set by the API user with
-    // pnWidget_setBackgroundColor(w, color), if not and if this widget
-    // was created with a parent widget, we get the default color here
-    // which is the parent widgets color when this widget was created.
-    //
-    uint32_t color = pnWidget_getBackgroundColor(w);
-
-    // A massive Cairo drawing routine.
-    SetColor(cr, color);
-    cairo_paint(cr);
-
-    return 0;
-}
 
 
 static bool press(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
-            struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+            struct PnMenuItem *m) {
+    DASSERT(m);
+    DASSERT(m == (void *) w);
+    DASSERT(w->type == PnSurfaceType_menuitem);
+    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
 
     fprintf(stderr, "\n    press(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
-
-    g->x = x;
-    g->y = y;
-
-    pnWidget_callAction(w, PN_GENERIC_CB_PRESS);
 
     return true; // true to grab
 }
 
 static bool release(struct PnWidget *w,
             uint32_t which, int32_t x, int32_t y,
-            struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+            struct PnMenuItem *m) {
+    DASSERT(m);
+    DASSERT(m == (void *) w);
+    DASSERT(w->type == PnSurfaceType_menuitem);
+    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
 
     fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
 
-    pnWidget_callAction(w, PN_GENERIC_CB_RELEASE);
+    pnWidget_callAction(w, PN_MENUITEM_CB_CLICK);
 
     return true;
 }
 
 static bool enter(struct PnWidget *w,
-            uint32_t x, uint32_t y, struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+            uint32_t x, uint32_t y, struct PnMenuItem *m) {
+    DASSERT(m);
+    DASSERT(m == (void *) w);
+    DASSERT(w->type == PnSurfaceType_menuitem);
+    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
 
     fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -114,96 +64,36 @@ static bool enter(struct PnWidget *w,
     return true; // take focus
 }
 
-static void leave(struct PnWidget *w, struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+static void leave(struct PnWidget *w, struct PnMenuItem *m) {
+    DASSERT(m);
+    DASSERT(m == (void *) w);
+    DASSERT(w->type == PnSurfaceType_menuitem);
+    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
 
     fprintf(stderr, "\n    leave(%p)[]\n", w);
 }
 
-static bool motion(struct PnWidget *w,
-            int32_t x, int32_t y, struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
 
-    fprintf(stderr, "\r   motion(%p)[%" PRIi32 ",%" PRIi32 "]    ",
-            w, x, y);
-
-    return true;
-}
-
-static void destroy(struct PnWidget *w, struct PnGeneric *g) {
-    DASSERT(g);
-    DASSERT(g == (void *) w);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
-
-    DSPEW();
-}
-
-
-// pressAction() and releaseAction() are two different widget type
-// specific marshalling functions that setup a user callback interface API
-// that a user can use with a given PnGeneric (type) widget.
-//
-//   pnWidget_addCallback(widget, index, userCallback, userdata)
-//
-// where index is PN_GENERIC_CB_PRESS and PN_GENERIC_CB_RELEASE
-// respectively.  See test example ../tests/generic.c.
-//
-// The userCallback() user function prototype can be arbitrarily chosen to
-// be whatever the widget creator chooses it to be.  Here we picked
-//  void (*userCallback)(struct PnWidget *w, int32_t x, int32_t y)
-//    and
-//  bool (*userCallback)(struct PnGeneric *g, void *userData)
-//    for
-//  pressAction and releaseAction respectively.
-//
-static bool pressAction(struct PnGeneric *g, struct PnCallback *callback,
+static bool clickAction(struct PnMenuItem *m, struct PnCallback *callback,
         // This is the user callback function prototype that we choose for
         // this "press" action.  The underlying API does not give a shit
         // what this (callback) void pointer is, but we do at this
         // point.
-        void (*userCallback)(struct PnWidget *w, int32_t x,
-            int32_t y, void *userData),
+        void (*userCallback)(struct PnWidget *w, void *userData),
         void *userData, uint32_t actionIndex, void *actionData) {
 
-    DASSERT(g);
+    DASSERT(m);
     DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GENERIC);
-    DASSERT(actionIndex == PN_GENERIC_CB_PRESS);
-    // We use GET_WIDGET_TYPE() in case a user inherits W_GENERIC
-    // and adds bits to the type thingy.
+    ASSERT(GET_WIDGET_TYPE(m->widget.type) == W_MENUITEM);
+    DASSERT(actionIndex == PN_MENUITEM_CB_CLICK);
     DASSERT(callback);
     DASSERT(userCallback);
 
-    // userCallback() is the API user set callback.
-    userCallback(&g->widget, g->x, g->y, userData);
+    userCallback(&m->widget, userData);
 
     // return true will eat the event and stop this function from going
     // through (calling) all connected callbacks.
     return false;
-}
-//
-static bool releaseAction(struct PnGeneric *g, struct PnCallback *callback,
-        bool (*userCallback)(struct PnGeneric *g, void *userData),
-        void *userData, uint32_t actionIndex, void *actionData) {
-
-    DASSERT(g);
-    DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GENERIC);
-    DASSERT(actionIndex == PN_GENERIC_CB_RELEASE);
-    DASSERT(callback);
-    DASSERT(userCallback);
-
-    // userCallback() is the API user set callback.
-    bool ret = userCallback(g, userData);
-
-    // return true will eat the event and stop this function from going
-    // through (calling) all connected callbacks.
-    return  ret;
 }
 
 
@@ -214,48 +104,29 @@ struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
         enum PnExpand expand,
         size_t size) {
 
-    if(size < sizeof(struct PnGeneric))
-        size = sizeof(struct PnGeneric);
+    if(size < sizeof(struct PnMenuItem))
+        size = sizeof(struct PnMenuItem);
     //
-    struct PnGeneric *g = (void *) pnWidget_create(parent,
+    struct PnMenuItem *m = (void *) pnWidget_create(parent,
             width, height,
             layout, align, expand, size);
-    if(!g)
-        // A common error mode is that the parent cannot have children.
-        // pnWidget_create() should spew for us.
+    if(!m)
         return 0; // Failure.
 
-    // Setting the widget surface type.  We decrease the data, but
-    // increase the complexity.  See enum PnSurfaceType in display.h.
-    // It's so easy to forget about all these bits, but DASSERT() is my
-    // hero.
-    DASSERT(g->widget.type == PnSurfaceType_widget);
-    g->widget.type = PnSurfaceType_generic;
-    DASSERT(g->widget.type & WIDGET);
+    DASSERT(m->widget.type == PnSurfaceType_widget);
+    m->widget.type = PnSurfaceType_menuitem;
+    DASSERT(m->widget.type & WIDGET);
 
-    // Add common widget callback functions:
-    //
-    pnWidget_setEnter(&g->widget, (void *) enter, g);
-    pnWidget_setLeave(&g->widget, (void *) leave, g);
-    pnWidget_setMotion(&g->widget, (void *) motion, g);
-    pnWidget_setPress(&g->widget, (void *) press, g);
-    pnWidget_setRelease(&g->widget, (void *) release, g);
-    pnWidget_setConfig(&g->widget, (void *) config, g);
-    pnWidget_setCairoDraw(&g->widget, (void *) cairoDraw, g);
-    pnWidget_addDestroy(&g->widget, (void *) destroy, g);
+    pnWidget_setEnter(&m->widget, (void *) enter, m);
+    pnWidget_setLeave(&m->widget, (void *) leave, m);
+    pnWidget_setPress(&m->widget, (void *) press, m);
+    pnWidget_setRelease(&m->widget, (void *) release, m);
 
-    // Add PnGeneric specific user callback interfaces for use with
-    // pnWidget_addCallback().  We call them action callbacks.
-    //
-    pnWidget_addAction(&g->widget, PN_GENERIC_CB_PRESS,
-            (void *) pressAction, 0/*add()*/, 0/*actionData*/,
-            0/*callbackSize*/);
-    pnWidget_addAction(&g->widget, PN_GENERIC_CB_RELEASE,
-            (void *) releaseAction, 0/*add()*/, 0/*actionData*/,
+    pnWidget_addAction(&m->widget, PN_MENUITEM_CB_CLICK,
+            (void *) clickAction, 0/*add()*/, 0/*actionData*/,
             0/*callbackSize*/);
 
+    pnWidget_setBackgroundColor(&m->widget, 0xFFCD55CD);
 
-    pnWidget_setBackgroundColor(&g->widget, 0xFFCDCDCD);
-
-    return &g->widget;
+    return &m->widget;
 }

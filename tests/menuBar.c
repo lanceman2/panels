@@ -15,50 +15,37 @@ static void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-static struct PnWidget *win;
 
-static void *myUserData = (void *) 0x00FF4FFF;
+static void AddMenu(struct PnWidget *parent) {
 
+    ASSERT(parent);
 
-static
-void pressAction(struct PnWidget *w, int32_t x, int32_t y,
-        void *userData) {
+    struct PnWidget *menu = pnMenu_create(
+            parent,
+            60/*width*/, 20/*height*/,
+            0/*layout*/, 0/*align*/,
+            PnExpand_HV/*expand*/, 0/*size*/);
+    ASSERT(menu);
 
-    ASSERT(w);
-    ASSERT(userData == myUserData);
-
-    pnWidget_setBackgroundColor(w, Color());
-    pnWidget_queueDraw(w, false/*allocate*/);
+    pnWidget_setBackgroundColor(menu, Color());
 }
 
-static
-bool releaseAction(struct PnWidget *w, void *userData) {
 
-    ASSERT(w);
-    ASSERT(userData == myUserData);
+static void MenuBar(struct PnWidget *parent) {
 
-    pnWidget_setBackgroundColor(w, Color());
-    pnWidget_queueDraw(w, false/*allocate*/);
+    ASSERT(parent);
 
-    return false;
-}
-
-static void MenuBar(void) {
-
-    ASSERT(win);
-
-    struct PnWidget *w = pnMenuItem_create(
-            win/*parent*/,
-            100/*width*/, 200/*height*/,
+    struct PnWidget *w = pnMenuBar_create(
+            parent,
+            0/*width*/, 0/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0/*size*/);
     ASSERT(w);
 
+    for(uint32_t i=Rand(3,10); i != -1; --i)
+        AddMenu(w);
+
     pnWidget_setBackgroundColor(w, Color());
-    pnWidget_addCallback(w, PN_GENERIC_CB_PRESS,
-            pressAction, myUserData);
-    pnWidget_addCallback(w, PN_GENERIC_CB_RELEASE,
-            releaseAction, myUserData);
 }
 
 
@@ -66,16 +53,18 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    srand(6);
+    srand(1);
 
-    win = pnWindow_create(0, 0, 0,
-            0/*x*/, 0/*y*/, PnLayout_LR, 0,
+    struct PnWidget *win = pnWindow_create(0,
+            10/*width*/, 10/*height*/,
+            0/*x*/, 0/*y*/, PnLayout_TB, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWidget_setBackgroundColor(win, 0xAA010101);
 
-    for(int i=0; i<6; ++i)
-        MenuBar();
+    MenuBar(win);
+    MenuBar(win);
+    MenuBar(win);
 
     pnWindow_show(win, true);
 
