@@ -286,12 +286,12 @@ generic_run_SOURCES := generic.c
 generic_run_LDFLAGS := $(PN_LIB)
 generic_run_CPPFLAGS := -DRUN
 
-145_menuItem_SOURCES := menuItem.c
-145_menuItem_LDFLAGS := $(PN_LIB)
+145_menuBar_SOURCES := menuBar.c
+145_menuBar_LDFLAGS := $(PN_LIB)
 
-menuItem_run_SOURCES := menuItem.c
-menuItem_run_LDFLAGS := $(PN_LIB)
-menuItem_run_CPPFLAGS := -DRUN
+menuBar_run_SOURCES := menuBar.c
+menuBar_run_LDFLAGS := $(PN_LIB)
+menuBar_run_CPPFLAGS := -DRUN
 
 endif # ifdef WITH_CAIRO
 

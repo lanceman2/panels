@@ -70,7 +70,9 @@ libpanels.so_SOURCES :=\
  cursor.c\
  splitter.c\
  generic.c\
- menuItem.c
+ menuItem.c\
+ menu.c\
+ menuBar.c
 
 ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\

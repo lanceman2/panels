@@ -43,7 +43,7 @@ bool releaseAction(struct PnWidget *w, void *userData) {
     return false;
 }
 
-static void MenuItem(void) {
+static void MenuBar(void) {
 
     ASSERT(win);
 
@@ -75,7 +75,7 @@ int main(void) {
     pnWidget_setBackgroundColor(win, 0xAA010101);
 
     for(int i=0; i<6; ++i)
-        MenuItem();
+        MenuBar();
 
     pnWindow_show(win, true);
 

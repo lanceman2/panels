@@ -16,6 +16,8 @@ pnGraph_setSubGridColor
 pnGraph_setGridColor
 pnGraph_setLabelsColor
 pnGraph_setZeroLineColor
+pnMenu_create
+pnMenuBar_create
 pnMenuItem_create
 pnPlot_setLineColor
 pnPlot_setPointColor
