@@ -94,7 +94,14 @@ enum PnSurfaceType {
     PnSurfaceType_popup      = POPUP,    // From wl_shell_surface_set_popup()
 
     // Widget Surface types:  Not a Wayland client thing.
-    PnSurfaceType_widget     = WIDGET, // a rectangular piece of a surface
+    PnSurfaceType_widget     = WIDGET, // a rectangular piece of a mmap()
+                                       // surface
+    // ####################################################################
+    // TODO: This is a broken IDEA.  Remove or fix all below:
+    // ####################################################################
+    // There is no way to inherit from from base widget type.
+    // Example: menu inherits button; what the fuck is the type number of
+    // menu so that it is still a button.
     PnSurfaceType_generic    = (WIDGET | W_GENERIC), // a generic example widget
     PnSurfaceType_label      = (WIDGET | W_LABEL), // a label widget
     PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget

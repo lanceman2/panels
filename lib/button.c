@@ -14,6 +14,8 @@
 
 #include "debug.h"
 #include "display.h"
+#include "SetColor.h"
+#include "DrawHalo.h"
 
 
 // button States
@@ -42,7 +44,7 @@
 // electronic device is a good example of a toggle, but if the LED light
 // is changed just a little it can look like a check on top of a larger
 // toggle.  There are two dynamical elements to this button, the LED
-// light (or check) and the larger toggle button this it sits on.
+// light (or check) and the larger toggle button that it sits on.
 //
 #define NORMAL     (0)
 #define HOVER      (1)
@@ -112,58 +114,12 @@ SetState(struct PnButton *b, enum PnButtonState state) {
 }
 
 
-#define MIN_WIDTH   (9)
-#define MIN_HEIGHT  (9)
-#define LW          (2) // Line Width
-#define R           (6) // Radius
-#define PAD         (2)
-
-static inline void DrawBorder(cairo_t *cr) {
-
-    cairo_surface_t *crs = cairo_get_target(cr);
-    int w = cairo_image_surface_get_width(crs);
-    int h = cairo_image_surface_get_height(crs);
-    if(w < MIN_WIDTH)
-        w = MIN_WIDTH;
-    if(h < MIN_HEIGHT)
-        h = MIN_HEIGHT;
-    // If w or h are small this may try to draw outside of the Cairo
-    // drawing area, but Cairo can handle culling out extra pixels that
-    // are outside the Cairo drawing area.
-
-    cairo_set_line_width(cr, LW);
-    w -= 2*(R+PAD);
-    h -= 2*(R+PAD);
-    double x = PAD + R + w, y = PAD;
-
-    cairo_move_to(cr, x, y);
-    cairo_arc(cr, x, y += R, R, -0.5*M_PI, 0);
-    cairo_line_to(cr, x += R, y += h);
-    cairo_arc(cr, x -= R, y, R, 0, 0.5*M_PI);
-    cairo_line_to(cr, x -= w, y += R);
-    cairo_arc(cr, x, y -= R, R, 0.5*M_PI, M_PI);
-    cairo_line_to(cr, x -= R, y -= h);
-    cairo_arc(cr, x += R, y, R, M_PI, 1.5*M_PI);
-    cairo_close_path(cr);
-}
-
-
 static inline void Draw(cairo_t *cr, struct PnButton *b) {
 
-    uint32_t color;
-
-    color = b->widget.backgroundColor;
-    cairo_set_source_rgba(cr,
-            PN_R_DOUBLE(color), PN_G_DOUBLE(color),
-            PN_B_DOUBLE(color), PN_A_DOUBLE(color));
+    SetColor(cr, b->widget.backgroundColor);
     cairo_paint(cr);
 
-    color = b->colors[b->state];
-    cairo_set_source_rgba(cr,
-            PN_R_DOUBLE(color), PN_G_DOUBLE(color),
-            PN_B_DOUBLE(color), PN_A_DOUBLE(color));
-    DrawBorder(cr);
-    cairo_stroke(cr);
+    DrawHalo(cr, MIN_WIDTH, MIN_HEIGHT, b->colors[b->state]);
 }
 
 static void config(struct PnWidget *widget, uint32_t *pixels,

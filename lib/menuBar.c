@@ -1,3 +1,6 @@
+// This file is linked into libpanels.so if WITH_CAIRO is defined
+// in ../config.make, otherwise it's not.
+//
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
