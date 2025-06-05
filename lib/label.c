@@ -13,12 +13,21 @@
 
 #include "debug.h"
 #include "display.h"
-#include "cairoWidget.h"
 
 
 #define MIN_WIDTH   (10)
 #define MIN_HEIGHT  (10)
 #define PAD         (2)
+
+
+struct PnLabel {
+
+    struct PnWidget widget; // inherit first
+    char *text;
+    double fontSize;
+    uint32_t fontColor; // text color
+    uint32_t xPadding, yPadding;
+};
 
 
 static inline void Draw(struct PnLabel *l, cairo_t *cr) {

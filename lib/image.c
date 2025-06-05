@@ -26,7 +26,16 @@
 
 #include "debug.h"
 #include "display.h"
-#include "cairoWidget.h"
+
+
+struct PnImage {
+
+    struct PnWidget widget; // inherit first
+    cairo_surface_t *surface;
+    // The surface width and height in Cairo int type.  Not necessarily
+    // the width and height allocated for the mapped widget pixels.
+    int width, height;
+};
 
 
 static

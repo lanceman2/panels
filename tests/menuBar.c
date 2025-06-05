@@ -72,7 +72,6 @@ static void SubWindow(struct PnWidget *parent) {
 }
 
 
-
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));

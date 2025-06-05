@@ -11,7 +11,6 @@
 
 #include "debug.h"
 #include "display.h"
-#include "cairoWidget.h"
 #include "SetColor.h"
 
 

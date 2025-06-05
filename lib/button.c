@@ -14,14 +14,91 @@
 
 #include "debug.h"
 #include "display.h"
-#include "cairoWidget.h"
 
 
-#define MIN_WIDTH   (9)
-#define MIN_HEIGHT  (9)
-#define LW          (2) // Line Width
-#define R           (6) // Radius
-#define PAD         (2)
+// button States
+//
+// Note: if it's not a toggle button it only has 4 usable states.  The
+// toggle button adds another dimension, so it has 2 x 4 = 8 states.  At
+// what point is a button a selector that has N * 4 states?  We know that
+// you can say that button has 2 (remove the active state and just call it
+// a transition, and remove the hover state), 3, (remove the active state
+// and just call it a transition) or 5 (add an additional active state)
+// states, but we had to start somewhere.
+//
+// The different between a toggle button and a check button:  In the
+// implementation/code there is no difference except in the visuals or
+// action animation.  In use the check button tends to change some future
+// state that is (implied or explicit) to happen at a later event that
+// will poll the state of the check button. Were as, a toggle button tends
+// to make changes immediately when the toggle button is toggled.  Check
+// button states tend to be batch processed in groups.  Toggle buttons
+// event tend to cause immediate actions.
+//
+// There are also buttons that are in between toggle and check, like a
+// toggle button with a LED (light emitting diode) light on it.  The LED
+// light looks somewhat like a check, but it's just an indicator of
+// whether the button is de-pressed or not.  The power button on an
+// electronic device is a good example of a toggle, but if the LED light
+// is changed just a little it can look like a check on top of a larger
+// toggle.  There are two dynamical elements to this button, the LED
+// light (or check) and the larger toggle button this it sits on.
+//
+#define NORMAL     (0)
+#define HOVER      (1)
+#define PRESSED    (2)
+#define ACTIVE     (3) // animation, released
+// TOGGLED is higher bits than the above.
+#define TOGGLED    (1 << 2) // 4
+
+// This must be true.  We cannot share bits between the first 4 state
+// flags and TOGGLED.  In code we say:
+//ASSERT( !( (NORMAL|HOVER|PRESSED|ACTIVE) & TOGGLED))
+
+enum PnButtonState {
+
+    PnButtonState_Normal   = NORMAL,
+    PnButtonState_Hover    = HOVER,
+    PnButtonState_Pressed  = PRESSED,
+    PnButtonState_Active   = ACTIVE,
+    PnButtonState_NumRegularStates,
+    PnButtonState_ToggledNormal  = NORMAL  | TOGGLED,
+    PnButtonState_ToggledHover   = HOVER   | TOGGLED,
+    PnButtonState_ToggledPressed = PRESSED | TOGGLED,
+    PnButtonState_ToggledActive  = ACTIVE  | TOGGLED,
+    PnButtonState_NumToggleStates
+};
+
+
+// Number of drawing cycles for a button "click" animation.
+//
+// TODO: Instead of using the drawing cycle period we could set an
+// interval timer to trigger that the animation is done.  That may use
+// much less system resources, especially for the case that the animation
+// does not change the pixels drawn every draw cycle.
+//
+#define NUM_FRAMES 11
+
+struct PnButton {
+
+    struct PnWidget widget; // inherit first
+
+    enum PnButtonState state;
+    uint32_t *colors;
+
+    uint32_t width, height;
+
+    uint32_t frames; // an animation frame counter
+
+    bool entered; // is it focused from mouse enter?
+};
+
+
+struct PnToggleButton {
+
+    struct PnButton button; // inherit first
+};
+
 
 static inline void
 SetState(struct PnButton *b, enum PnButtonState state) {
@@ -33,6 +110,13 @@ SetState(struct PnButton *b, enum PnButtonState state) {
     b->state = state;
     pnWidget_queueDraw(&b->widget, false/*allocate*/);
 }
+
+
+#define MIN_WIDTH   (9)
+#define MIN_HEIGHT  (9)
+#define LW          (2) // Line Width
+#define R           (6) // Radius
+#define PAD         (2)
 
 static inline void DrawBorder(cairo_t *cr) {
 
@@ -210,7 +294,7 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
 static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
         // This is the user callback function prototype that we choose for
         // this "press" action.  The underlying API does not give a shit
-        // what this (callback) void pointer is, but we do at this
+        // what this (userCallback) void pointer is, but we do at this
         // point.
         bool (*userCallback)(struct PnWidget *b, void *userData),
         void *userData, uint32_t actionIndex, void *actionData) {
@@ -242,12 +326,20 @@ static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
 // this a good comparison.  Unsafe but much faster than Qt.  I have not
 // been able to unwind (in my head) the gobject CPP Macro madness in GTK,
 // but this is butt head simple compared to connecting widget "signals"
-// in GTK.  Is it faster than GTK?  I don't know, or have, a need to
+// in GTK.  Is it faster than GTK?  I don't know, or have a need to
 // measure it.  I expect they are both fast enough.
 //
 // GTK and Qt are both: (1) bloated and (2) leak system resources into
 // your process.  Both (1 and 2) are unacceptable for some applications.
-// Bloated and leaky tend to go together.
+// In the world of software, bloated and leaky tend to go together.  When
+// things get bloated (large) one can lose track of all the stuff that it
+// is, and so it leaks the stuff you lose track of.  In both Qt and GTK
+// they didn't bother keeping "track" of their main loop class singleton
+// object (and many other like things); I'd guess that they let that go
+// and then piled more shit on it, and so, who knows how big that leaky
+// (system resource) pile is.  I call it being lazy to an extreme.  Lazy
+// cleanup can be good some times, but they have the extreme case of no
+// cleanup at all.  That works great until it does not.
 //
 static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
         // This is the user callback function prototype that we choose for
