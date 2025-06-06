@@ -43,18 +43,16 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
-        enum PnExpand expand, const char *label,
-        size_t size) {
+        enum PnExpand expand, const char *label) {
 
-    if(size < sizeof(struct PnMenu))
-        size = sizeof(struct PnMenu);
+    ASSERT(!label, "WRITE MORE CODE");
 
     struct PnMenu *m = calloc(1, sizeof(*m));
     ASSERT(m, "calloc(1,%zu) failed", sizeof(*m));
 
     m->button = pnButton_create(parent, width, height,
             layout, align, expand, label, false/*toggle*/,
-            size);
+            0/*size*/);
     if(!m->button) {
         DZMEM(m, sizeof(*m));
         free(m);
@@ -63,6 +61,7 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
 
     DASSERT(m->button->type == PnSurfaceType_button);
     DASSERT(m->button->type & WIDGET);
+    // TODO: We need to figure out this widget typing shit.
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);
     pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD);

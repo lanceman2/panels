@@ -25,8 +25,7 @@ static void AddMenu(struct PnWidget *parent) {
             30 + 24 * Rand(1,4)/*width*/, 50/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_None/*expand*/,
-            0/*text label*/,
-            0/*size*/);
+            0/*text label*/);
     ASSERT(menu);
 
     pnWidget_setBackgroundColor(menu, Color());

@@ -430,8 +430,7 @@ PN_EXPORT struct PnWidget *pnMenu_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
-        enum PnExpand expand, const char *label,
-        size_t size);
+        enum PnExpand expand, const char *label);
 PN_EXPORT struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
