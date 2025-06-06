@@ -7,7 +7,7 @@ If your not a C developer, go away.  This project is just starting.
 This is the story of an inquisitive C computer programmer.  This
 programmer did not like programming on computers with "black box"
 operating systems, for all the interesting details were kept secret.
-Hence "panels" is free (and open source) as in speech.
+Hence "panels" is free as in speech (and open source).
 
 This programmer got the rug pulled out from beneath his feet when X11 was
 no longer the underlying (API) standard for the free desktop, and is now
@@ -24,11 +24,11 @@ Wayland client is not quite at the C library layer that can do that.
 
 It would appear that Wayland is the only free desktop standard that
 "panels" needs to use.  We don't see the need to port develop to
-"black box" operating systems.
+"black box" operating systems.  Unless you pay me a lot.
 
 This programmer sees that there are some simple and basic libraries that
 form the basis for free desktops.  Hence "panels" depends on a small
-number of fairly popular and robust libraries.
+number of popular and robust libraries.
 
 
 ## What is Panels?
@@ -68,9 +68,9 @@ Mostly "panels" is minimalistic.  We wanted to:
 We also wanted to be able to create simple windows and draw to "raw"
 pixels, without a ton of dependencies.  Of course this screams of
 needing/wanting/having OpenGL/Wayland (EGL or whatever it's called) pixel
-rendering stuff, but currently it's just using xdg_wm_base to making
+rendering stuff, but currently it's just using xdg_wm_base for making
 usable window pixel surfaces.  I currently don't know why we need
-XDG when we have EGL.  Isn't EGL more performant.  Why not make that
+XDG when we have EGL.  Isn't EGL more performant.  Why not make EGL
 the default Wayland-client window pixel thingy?
 
 
@@ -92,7 +92,7 @@ Panels only depends on libraries which we have found to be robust
 
 We have made the cairo and fontconfig dependencies optional.  But we're
 not likely to be testing developing without the cairo and fontconfig
-dependencies until we make releases.
+dependencies until we make releases (so be warned).
 
 The use of cairo and fontconfig provide very basic 2D drawing, but we also
 keep the "panels" users ability to draw without using cairo (and
@@ -139,30 +139,41 @@ hurdlers seem higher than the coding challenge.  Most people do not feel
 that the dynamic linker is a tool that should be made useful by users of
 shared libraries. Too me it's obvious, let all things do their thing.  The
 cost of making libraries unload-able is just cleaning up all the library's
-objects, for all constructors, there are destructors; all they have to do
+objects; for all constructors, there are destructors; all they have to do
 is clean house.
 
-As seen from above, Qt and GTK are not modules.  They are designed to take
-over and be central to your development.  They are that way by design.
-There may be modular aspects to Qt and GTK, but it is constrained to be
-internal to their respective libraries and frameworks.  Once you use a
-part of them you'll likely be stuck with innate incompatibilities when
-trying to use them with other code outside those frameworks.  As a very
-common example, if you wish to code with pthreads (NPTL) and GTK you'll
-need to understand the internal workings of the GTK main loop code.  I
-wrote a hack to do it (in the same process without changing GTK codes),
-but if GTK was not designed to be the main loop controller of your code
-it would have been trivial to do; taking hours instead of weeks to code;
-and it would have been much more efficient had they not required using
-their main loop code in order to use GTK GUIs (also I was told it could
-not be done, so I did it).  gthreads may wrap all of pthreads (and I don't
-think it does) but it's not near as standard and robust as pthreads, and
-it can't be, it's built on pthreads.  Qt is much worse, if you develop
-with Qt you are married to the Qt development framework.  Qt even has it's
-own, unique, develop language called MOC which compiles into C++.  It's
-been said that C++ will likely get enough functionality to replace MOC in
-the future.
+As seen from above, Qt and GTK are not modules.  They take over and become
+central to your development.  They are that way by design.  There may be
+modular aspects to Qt and GTK, but it is constrained to be internal to
+their respective libraries and frameworks.  Once you use a part of them
+you'll likely be stuck with innate incompatibilities when trying to use
+them with other code outside those frameworks.  As a very common example,
+if you wish to code with pthreads (NPTL) and GTK you'll need to understand
+the internal workings of the GTK main loop code.  I wrote a hack to do it
+(in the same process without changing GTK codes), but if GTK was not
+designed to be the main loop controller of your code it would have been
+trivial to do; taking hours instead of weeks to code; and it would have
+been much more efficient had they not required using their main loop code
+in order to use GTK GUIs (also I was told it could not be done, so I did
+it).  gthreads may wrap all of pthreads (and I don't think it does) but
+it's not as standard and robust as pthreads, and it can't be, it's built
+on pthreads.  Qt is much worse, if you develop with Qt you are married to
+the Qt development framework.  Qt even has it's own, unique, develop
+language called MOC which compiles into C++.  It's been said that C++ will
+likely get enough functionality to replace MOC in the future.
 
 Don't get me wrong.  GTK and Qt are great things.  But, they are what they
 are, large and dominate.  You can't develop with either one of them
-without it dominating all aspects of your projects coding design.
+without it dominating most aspects of your projects coding design.
+
+
+## Development notes:
+
+### TODO
+
+There is a hidden wish list in the C (and header) source files.  Just
+"grep" for "TODO" in the source files to see this wish list.  An example
+could be like wanting a particular implemented algorithm to be more
+performant; the code will have a C comment at or in that implemented
+algorithm that starts with the word TODO.
+

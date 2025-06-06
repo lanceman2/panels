@@ -38,7 +38,7 @@
 // When comparing the X11 client and the Wayland client: X11 is a huge
 // beast of complexity, Wayland is simple with more of its guts hanging
 // out.  Wayland broke up all the opaque X11 like display object into many
-// opaque Wayland objects.  Wayland seems to providing more
+// opaque Wayland objects.  Wayland seems to be providing more
 // compartmentalization (more parts) then X11.  Wayland in effect exposes
 // more of what would be internal (X11) components.  The Wayland client
 // way have more control, but at a cost of having to write more code in
@@ -64,6 +64,10 @@
 #define WIDGET           (04) // third bit set
 #define GET_WIDGET_TYPE(x)  (~(TOPLEVEL|POPUP|WIDGET) & (x))
 // WIDGET TYPES: are a number in the (skip first 3 bits) higher bits.
+// ####################################################################
+// TODO: This is a broken IDEA.  Remove or fix all below:
+// Of course that means changing lots of other code.
+// ####################################################################
 #define W_GENERIC        (1 << 3)
 #define W_LABEL          (2 << 3)
 #define W_BUTTON         (3 << 3)
@@ -595,7 +599,7 @@ struct PnDisplay {
 
     char *theme;
 
-    // 10 singleton Wayland client objects:
+    // 10 plus singleton Wayland client objects:
     //
     // We have not confirmed that there can only be one of the following
     // objects (some we have), but there may be no point in making more
@@ -682,6 +686,7 @@ extern struct PnDisplay d;
 
 extern int pnDisplay_create(void);
 extern void pnDisplay_destroy(void);
+
 extern void _pnWidget_getAllocations(struct PnWidget *w);
 
 // Returns false on success
