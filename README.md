@@ -34,16 +34,16 @@ number of fairly popular and robust libraries.
 ## What is Panels?
 
 This software project is strictly for a Wayland compositor based windowing
-desktop systems, like on a GNU/Linux computer system; Wayland being the
-new replacement to the X11 window desktop system on UNIX like operating
-systems.  Panels is currently being developed on Debian GNU/Linux 12 with
-KDE Plasma Wayland.  Currently KDE Plasma KWin compositor is popular and a
-little buggy (random stray 1 pixel wide border lines between user
-windows), but provides the built-in compositor side window borders.
-On Gnome the mutter Wayland compositor suffers from what can described
-as dynamic linker loader diarrhea; it forces windows to use lots of
-leaky libraries.  In the end we wish to make libpanels unload-able
-and that is not easy with leaky libraries.
+desktop systems, like on a GNU/Linux computer system; the Wayland
+protocols being the new replacement to the X11 window desktop system on
+UNIX like operating systems.  Panels is currently being developed on
+Debian GNU/Linux 12 with KDE Plasma Wayland.  Currently KDE Plasma KWin
+compositor is popular and a little buggy (random stray 1 pixel wide border
+lines between user windows), but provides the built-in compositor side
+window borders.  On Gnome the mutter Wayland compositor suffers from what
+can described as dynamic linker loader diarrhea; it forces windows to use
+lots of leaky libraries.  In the end we wish to make libpanels unload-able
+and that is not easy (practically impossible) with leaky libraries.
 
 Panels provides a C API (application programming interface) library
 and utility programs.  It can be used with C++.
@@ -52,7 +52,8 @@ The libpanels API lets developers have simple windows that they can draw
 raw 32 bit [true color] (https://en.wikipedia.org/wiki/Color_depth) pixels
 on; with or without a drawing API.  Sometimes you can draw much faster and
 more simply without a drawing API; sometimes antialiasing (and other
-effects) are just not needed and slow down the running code.
+effects) are just not needed and slow down the running code (and just
+bloat things).
 
 Mostly "panels" is minimalistic.  We wanted to:
 
@@ -60,11 +61,17 @@ Mostly "panels" is minimalistic.  We wanted to:
 2. draw and color pixels in the widgets,
 3. receive keyboard events associated with these widgets,
 4. the libpanels.so can be loaded and unloaded without leaking
-   system resources, and
-5. keep it small.
+   system resources into the process,
+5. make a minimal set of widget types, and
+6. keep it small.
 
-We also wanted to be able to create simple windows and draw to
-"raw" pixels, without a ton of dependencies.
+We also wanted to be able to create simple windows and draw to "raw"
+pixels, without a ton of dependencies.  Of course this screams of
+needing/wanting/having OpenGL/Wayland (EGL or whatever it's called) pixel
+rendering stuff, but currently it's just using xdg_wm_base to making
+usable window pixel surfaces.  I currently don't know why we need
+XDG when we have EGL.  Isn't EGL more performant.  Why not make that
+the default Wayland-client window pixel thingy?
 
 
 ## Dependencies
@@ -75,11 +82,17 @@ Panels only depends on libraries which we have found to be robust
 - wayland-client
 
 - cairo which depends on pixman and fontconfig, it's nice to build it
-  without X11 (but it works with the extra X11 cruft)
+  without X11 (but it works with the extra X11 cruft built into Cairo)
+
+  I'm temped to make a fork of Cairo that fixes "the toy" font stuff,
+  making it so there can be more than one font object.  Or maybe just
+  write more font code on top of the cairo glyph stuff.  We'll see.
 
 - fontconfig which depends on freetype
 
-We have made the cairo and fontconfig dependencies optional.
+We have made the cairo and fontconfig dependencies optional.  But we're
+not likely to be testing developing without the cairo and fontconfig
+dependencies until we make releases.
 
 The use of cairo and fontconfig provide very basic 2D drawing, but we also
 keep the "panels" users ability to draw without using cairo (and
@@ -126,24 +139,25 @@ hurdlers seem higher than the coding challenge.  Most people do not feel
 that the dynamic linker is a tool that should be made useful by users of
 shared libraries. Too me it's obvious, let all things do their thing.  The
 cost of making libraries unload-able is just cleaning up all the library's
-objects (for all constructors, there is a destructors); all they have to
-do is clean house.
+objects, for all constructors, there are destructors; all they have to do
+is clean house.
 
 As seen from above, Qt and GTK are not modules.  They are designed to take
 over and be central to your development.  They are that way by design.
 There may be modular aspects to Qt and GTK, but it is constrained to be
-internal to their respective libraries and framworks.  Once you use a part
-of them you'll likely be stuck with innate incompatibilities when trying
-to use them with other code outside those frameworks.  As a very common
-example, if you wish to code with pthreads (NPTL) and GTK you'll need to
-understand the internal workings of the GTK main loop code.  I wrote a
-hack to do it (in the same process without changing GTK codes), but if GTK
-was not designed to be the main loop controller of your code it would have
-been trivial to do; taking hours instead of weeks to code; and it would
-have been much more efficient had they not required using their main loop
-code in order to use GTK GUIs.  gthreads may wrap all of pthreads (and I
-don't think it does) but it's not near as standard and robust as pthreads,
-and it can't be, it's built on pthreads.  Qt is much worse, if you develop
+internal to their respective libraries and frameworks.  Once you use a
+part of them you'll likely be stuck with innate incompatibilities when
+trying to use them with other code outside those frameworks.  As a very
+common example, if you wish to code with pthreads (NPTL) and GTK you'll
+need to understand the internal workings of the GTK main loop code.  I
+wrote a hack to do it (in the same process without changing GTK codes),
+but if GTK was not designed to be the main loop controller of your code
+it would have been trivial to do; taking hours instead of weeks to code;
+and it would have been much more efficient had they not required using
+their main loop code in order to use GTK GUIs (also I was told it could
+not be done, so I did it).  gthreads may wrap all of pthreads (and I don't
+think it does) but it's not near as standard and robust as pthreads, and
+it can't be, it's built on pthreads.  Qt is much worse, if you develop
 with Qt you are married to the Qt development framework.  Qt even has it's
 own, unique, develop language called MOC which compiles into C++.  It's
 been said that C++ will likely get enough functionality to replace MOC in
