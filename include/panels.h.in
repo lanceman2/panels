@@ -60,6 +60,7 @@ extern "C" {
 #define PN_GENERIC_CB_RELEASE    1
 #define PN_BUTTON_CB_CLICK       0 // after release
 #define PN_BUTTON_CB_PRESS       1 // after press
+#define PN_BUTTON_CB_HOVER       2
 #define PN_GRAPH_CB_STATIC_DRAW  0 // For static plots
 #define PN_MENUITEM_CB_CLICK     0
 

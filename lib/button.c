@@ -90,6 +90,8 @@ struct PnButton {
 
     uint32_t width, height;
 
+    uint32_t x, y;
+
     uint32_t frames; // an animation frame counter
 
     bool entered; // is it focused from mouse enter?
@@ -217,6 +219,9 @@ static bool enter(struct PnWidget *w,
     if(b->state == PnButtonState_Normal)
         SetState(b, PnButtonState_Hover);
     b->entered = true;
+    b->x = x;
+    b->y = y;
+    pnWidget_callAction(w, PN_BUTTON_CB_HOVER);
     return true; // take focus
 }
 
@@ -312,13 +317,31 @@ static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
     DASSERT(callback);
     DASSERT(userCallback);
 
+    return userCallback(b, userData);
+}
+
+static bool hoverAction(struct PnWidget *w, struct PnCallback *callback,
+        bool (*userCallback)(struct PnWidget *b, uint32_t x, uint32_t y,
+            void *userData),
+        void *userData, uint32_t actionIndex, void *actionData) {
+
+    DASSERT(w);
+    DASSERT(actionData == 0);
+    ASSERT(GET_WIDGET_TYPE(w->type) == W_BUTTON);
+    DASSERT(actionIndex == PN_BUTTON_CB_HOVER);
+    DASSERT(callback);
+    DASSERT(userCallback);
+
+    struct PnButton *b = (void *) w;
+
     // callback() is the libpanels API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
     // this function from going through (calling) all connected
     // callbacks.
-    return userCallback(b, userData);
+    return userCallback(w, b->x, b->y, userData);
 }
+
 
 
 struct PnWidget *pnButton_create(struct PnWidget *parent,
@@ -374,6 +397,9 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
             0/*callbackSize*/);
     pnWidget_addAction(&b->widget, PN_BUTTON_CB_PRESS,
             (void *) pressAction, 0/*add()*/, 0/*actionData*/,
+            0/*callbackSize*/);
+    pnWidget_addAction(&b->widget, PN_BUTTON_CB_HOVER,
+            (void *) hoverAction, 0/*add()*/, 0/*actionData*/,
             0/*callbackSize*/);
 
 
