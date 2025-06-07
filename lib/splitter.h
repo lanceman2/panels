@@ -37,20 +37,6 @@ struct PnSplitter {
 };
 
 
-static inline struct PnSplitter *GetSplitter(const struct PnWidget *w) {
-
-    DASSERT(w);
-    ASSERT(GET_WIDGET_TYPE(w->type) == W_SPLITTER);
-    struct PnSplitter *s = (void *) w;
-    DASSERT(s->widget.l.firstChild);
-    DASSERT(s->slider);
-    DASSERT(s->widget.l.firstChild == s->slider);
-    DASSERT(s->widget.l.lastChild);
-
-    return s;
-}
-
-
 // The steps used to allocate the size and position of all widgets in the
 // window is (from allocation.c):
 //

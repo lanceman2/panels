@@ -3,81 +3,71 @@
 #include <cairo/cairo.h>
 #endif
 
-// It looks like most GUI (graphical user interface) based programs
-// (Wayland compositor included), as we shrink a window, cull out the
-// parts of the window to the right and bottom, keeping the left and top
-// most part of the window.  This is just convention, and "panels" follows
-// this convention.  Hence, we cull out widgets to the right and bottom
-// as windows shrink.  Widgets that cannot get there requested size due to
-// this window shrink culling will not be drawn, and the background
-// drawing of the window will be shown to the GUI user where widgets are
-// culled out and there is not large enough room in the lower right
-// corner of the window.
 
-// It turns out that the Wayland client has per process global data that
-// we are forced, by the wayland design, to have in this code.  This is
-// not a limitation that we prefer but we did not want to make our own
-// windowing standard.  We had to start somewhere.
+// CAUTION: We bit diddle for widget types using just a 32 bit int.
 //
-// I just want to make a thing that lets us quickly color pixels in a
-// window (and sub-windows) without writing ten thousand lines of compiled
-// source code.  Just a stupid little wrapper library.  "panels" is an
-// order of magnitude smaller than GTK and Qt (leaky bloat monsters).
-
-
-// Consolidate what would be many globals into one structure so as make
-// finding and understanding all these singleton objects easier.  We
-// appear to be trying to make what was in libX11 was called a "display"
-// object; but in libX11 the display was not necessarily a singleton
-// object: you could make as many X11 client display connections in a
-// given process as you wanted (or so it appeared given the interface).
-// This Wayland limitation seems short sighted to me.  On the brighter
-// side, Wayland is much less complex than X11, and could in many cases
-// have better performance (depends on a lot of shit, I suppose).
+// TODO: This limits the number of types of widgets we can have in
+// libpanels.so.  The number we can have depends on the number of layers
+// of widget inheritance (in this C sense of inheritance).  We assign N
+// bit layer at each level of widget inheritance, so if a widget
+// inherits another widget it gets a type number that is a combination of
+// two type numbers.  So far it looks like plenty of widget type number
+// with just one 32 bit number.
 //
-// When comparing the X11 client and the Wayland client: X11 is a huge
-// beast of complexity, Wayland is simple with more of its guts hanging
-// out.  Wayland broke up all the opaque X11 like display object into many
-// opaque Wayland objects.  Wayland seems to be providing more
-// compartmentalization (more parts) then X11.  Wayland in effect exposes
-// more of what would be internal (X11) components.  The Wayland client
-// way have more control, but at a cost of having to write more code in
-// many cases.
-//
-// I grant you, X11 maybe did not expose enough object layers; which maybe
-// in time caused to blow up with extensions and force server internal
-// bloat.  I love the simple idea of writing to shared memory pixels that
-// exists in Wayland client; the X11 client API approach of providing a
-// drawing primitives just smells of inefficiency and inflexibility.
-// For example, did all drawing operations incur a system call or two
-// (for all I know they did not all the time).
+// Note: In panels widget layout is a separate thing from widget type,
+// though the two are not necessarily independent.
 
-// Constrained by libwayland-client, we can only have one Pn Display
-// object in a process.  Not our fucking choose.  We're lucky that it's
-// not leaky (memory, files, and shit) like most libraries.  It appears
-// that for every Wayland client object that you can create there is a
-// destroy function, and that's a real good thing.  Most large popular
-// libraries do not do this.
-
+// Two Wayland like types:
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set
+// LEVEL 0 WIDGET
 #define WIDGET           (04) // third bit set
-#define GET_WIDGET_TYPE(x)  (~(TOPLEVEL|POPUP|WIDGET) & (x))
-// WIDGET TYPES: are a number in the (skip first 3 bits) higher bits.
-// ####################################################################
-// TODO: This is a broken IDEA.  Remove or fix all below:
-// Of course that means changing lots of other code.
-// ####################################################################
+//
+// Does x include a type (bits) in it.
+#define IS_TYPE(x, type)  (((x) & (type)) == (type))
+// WIDGET TYPES: are a number in the (starting by skipping first 3 bits)
+// higher bits.
+//
+// These are widgets that only inherit LEVEL 0 WIDGET
+// LEVEL 1 widgets
 #define W_GENERIC        (1 << 3)
 #define W_LABEL          (2 << 3)
 #define W_BUTTON         (3 << 3)
 #define W_TOGGLE_BUTTON  (4 << 3)
-#define W_MENU           (5 << 3)
+#define W_MENUBAR        (5 << 3)
 #define W_MENUITEM       (6 << 3)
-#define W_MENUBAR        (7 << 3)
+#define W_SPLITTER       (7 << 3)
 #define W_IMAGE          (8 << 3)
 #define W_GRAPH          (9 << 3) // 2D graph plotter with grid lines
-#define W_SPLITTER      (10 << 3)
+// ADD MORE up to number 127
+//
+// Lets say we can have 127 widget types based on WIDGET.
+// 128 = 2^7   highest would be (127 << 3)    3 + 7 = 10
+//
+// These are widgets that inherit at least an above LEVEL 1 widget
+// LEVEL 2 widgets (based on LEVEL 1 widget types)
+#define W_MENU           (1 << (10)) // See PnSurfaceType_menu
+// ADD MORE up to number 63
+//
+// Lets say we can have 63 widget types based on LEVEL 1 widgets
+// 10 + 6 = 16
+//
+// LEVEL 3 widgets (based on LEVEL 2 widget types)
+#define W_FOO            (1 << (16)) // Not real.  Just a bookmark.
+#define W_FOO2           (2 << (16))
+// CHANGE AND ADD MORE up to 63
+//
+// Lets say we can have 63 widget types based on LEVEL 2 widgets
+// 16 + 6 = 22
+//
+// LEVEL 4 widgets
+#define W_BAR            (1 << (22))
+// CHANGE AND ADD MORE up to 63
+//
+// Lets say we can have 63 widget types based on LEVEL 3 widgets 22 + 6 =
+// 28 and so we still have 3 bits left to get to the maximum bit shift of
+// 31.
+
 
 
 
@@ -100,21 +90,16 @@ enum PnSurfaceType {
     // Widget Surface types:  Not a Wayland client thing.
     PnSurfaceType_widget     = WIDGET, // a rectangular piece of a mmap()
                                        // surface
-    // ####################################################################
-    // TODO: This is a broken IDEA.  Remove or fix all below:
-    // ####################################################################
-    // There is no way to inherit from from base widget type.
-    // Example: menu inherits button; what the fuck is the type number of
-    // menu so that it is still a button.
+
     PnSurfaceType_generic    = (WIDGET | W_GENERIC), // a generic example widget
     PnSurfaceType_label      = (WIDGET | W_LABEL), // a label widget
     PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget
-    PnSurfaceType_menu       = (WIDGET | W_MENU), // ...
     PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
     PnSurfaceType_menubar    = (WIDGET | W_MENUBAR),
     PnSurfaceType_image      = (WIDGET | W_IMAGE),
     PnSurfaceType_graph      = (WIDGET | W_GRAPH),
-    PnSurfaceType_splitter   = (WIDGET | W_SPLITTER)
+    PnSurfaceType_splitter   = (WIDGET | W_SPLITTER),
+    PnSurfaceType_menu       = (WIDGET | W_BUTTON | W_MENU)
 };
 
 
@@ -377,7 +362,7 @@ struct PnWidget {
     // pointer prototypes.  If custom widget function prototypes change
     // with panel callbacks you're screwed, i.e. you must be careful. The
     // compiler will check the function types for you.  If the ABI
-    // (applcation binary interface) changes, ya no-fucking-shit, it will
+    // (application binary interface) changes, ya no-fucking-shit, it will
     // crash.  GTK uses CPP MACRO madness to check types.  I find that GTK
     // CPP macro gobject code is impossible to follow, code scoping CPP
     // macros is at least a pain in the ass.  Keep the power of C and:
@@ -578,6 +563,60 @@ struct PnOutput {
     uint32_t physical_width, physical_height; // in mm (millimeters)
 };
 
+// It looks like most GUI (graphical user interface) based programs
+// (Wayland compositor included), as we shrink a window, cull out the
+// parts of the window to the right and bottom, keeping the left and top
+// most part of the window.  This is just convention, and "panels" follows
+// this convention.  Hence, we cull out widgets to the right and bottom
+// as windows shrink.  Widgets that cannot get there requested size due to
+// this window shrink culling will not be drawn, and the background
+// drawing of the window will be shown to the GUI user where widgets are
+// culled out and there is not large enough room in the lower right
+// corner of the window.
+
+// It turns out that the Wayland client has per process global data that
+// we are forced, by the wayland design, to have in this code.  This is
+// not a limitation that we prefer but we did not want to make our own
+// windowing standard.  We had to start somewhere.
+//
+// I just want to make a thing that lets us quickly color pixels in a
+// window (and sub-windows) without writing ten thousand lines of compiled
+// source code.  Just a stupid little wrapper library.  "panels" is an
+// order of magnitude smaller than GTK and Qt (leaky bloat monsters).
+
+// Consolidate what would be many globals into one structure so as make
+// finding and understanding all these singleton objects easier.  We
+// appear to be trying to make what was in libX11 was called a "display"
+// object; but in libX11 the display was not necessarily a singleton
+// object: you could make as many X11 client display connections in a
+// given process as you wanted (or so it appeared given the interface).
+// This Wayland limitation seems short sighted to me.  On the brighter
+// side, Wayland is much less complex than X11, and could in many cases
+// have better performance (depends on a lot of shit, I suppose).
+//
+// When comparing the X11 client and the Wayland client: X11 is a huge
+// beast of complexity, Wayland is simple with more of its guts hanging
+// out.  Wayland broke up all the opaque X11 like display object into many
+// opaque Wayland objects.  Wayland seems to be providing more
+// compartmentalization (more parts) then X11.  Wayland in effect exposes
+// more of what would be internal (X11) components.  The Wayland client
+// way have more control, but at a cost of having to write more code in
+// many cases.
+//
+// I grant you, X11 maybe did not expose enough object layers; which maybe
+// in time caused to blow up with extensions and force server internal
+// bloat.  I love the simple idea of writing to shared memory pixels that
+// exists in Wayland client; the X11 client API approach of providing a
+// drawing primitives just smells of inefficiency and inflexibility.
+// For example, did all drawing operations incur a system call or two
+// (for all I know they did not all the time).
+
+// Constrained by libwayland-client, we can only have one Pn Display
+// object in a process.  Not our fucking choose.  We're lucky that it's
+// not leaky (memory, files, and shit) like most libraries.  It appears
+// that for every Wayland client object that you can create there is a
+// destroy function, and that's a real good thing.  Most large popular
+// libraries do not do this.
 
 // Making Wayland client objects into one big ass display thing, like
 // a X11 display.

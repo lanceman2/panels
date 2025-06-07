@@ -61,7 +61,7 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
 
     DASSERT(m->button->type == PnSurfaceType_button);
     DASSERT(m->button->type & WIDGET);
-    // TODO: We need to figure out this widget typing shit.
+    m->button->type = PnSurfaceType_menu;
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);
     pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD);

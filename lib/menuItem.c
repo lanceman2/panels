@@ -28,8 +28,7 @@ static bool press(struct PnWidget *w,
             struct PnMenuItem *m) {
     DASSERT(m);
     DASSERT(m == (void *) w);
-    DASSERT(w->type == PnSurfaceType_menuitem);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
+    DASSERT(IS_TYPE(w->type, W_MENUITEM));
 
     fprintf(stderr, "\n    press(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -42,8 +41,7 @@ static bool release(struct PnWidget *w,
             struct PnMenuItem *m) {
     DASSERT(m);
     DASSERT(m == (void *) w);
-    DASSERT(w->type == PnSurfaceType_menuitem);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
+    DASSERT(IS_TYPE(w->type, W_MENUITEM));
 
     fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -57,8 +55,7 @@ static bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnMenuItem *m) {
     DASSERT(m);
     DASSERT(m == (void *) w);
-    DASSERT(w->type == PnSurfaceType_menuitem);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
+    DASSERT(IS_TYPE(w->type, W_MENUITEM));
 
     fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -69,8 +66,7 @@ static bool enter(struct PnWidget *w,
 static void leave(struct PnWidget *w, struct PnMenuItem *m) {
     DASSERT(m);
     DASSERT(m == (void *) w);
-    DASSERT(w->type == PnSurfaceType_menuitem);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_MENUITEM);
+    DASSERT(IS_TYPE(w->type, W_MENUITEM));
 
     fprintf(stderr, "\n    leave(%p)[]\n", w);
 }
@@ -86,7 +82,7 @@ static bool clickAction(struct PnMenuItem *m, struct PnCallback *callback,
 
     DASSERT(m);
     DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(m->widget.type) == W_MENUITEM);
+    ASSERT(IS_TYPE(m->widget.type, W_MENUITEM));
     DASSERT(actionIndex == PN_MENUITEM_CB_CLICK);
     DASSERT(callback);
     DASSERT(userCallback);

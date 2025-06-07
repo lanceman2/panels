@@ -328,7 +328,8 @@ finish:
 void Splipper_preExpand(const struct PnWidget *w,
         const struct PnAllocation *a) {
 
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_SPLITTER);
+    DASSERT(w);
+    DASSERT(IS_TYPE(w->type, W_SPLITTER));
     DASSERT(w->layout == PnLayout_LR ||
             w->layout == PnLayout_TB);
     struct PnSplitter *s = (void *) w;
@@ -700,7 +701,7 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     DASSERT(s->widget.type == PnSurfaceType_widget);
     s->widget.type = PnSurfaceType_splitter;
     DASSERT(s->widget.type & WIDGET);
-    DASSERT(GET_WIDGET_TYPE(s->widget.type) == W_SPLITTER);
+    DASSERT(IS_TYPE(s->widget.type, W_SPLITTER));
     // Note: the widget type is "splitter" and the widget layout
     // type is PnLayout_LR or PnLayout_TB.
 

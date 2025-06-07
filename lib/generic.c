@@ -67,7 +67,7 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
             struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) widget);
-    DASSERT(GET_WIDGET_TYPE(widget->type) == W_GENERIC);
+    DASSERT(IS_TYPE(widget->type, W_GENERIC));
 
     DSPEW();
 }
@@ -76,7 +76,7 @@ static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
     DASSERT(cr);
 
     // This color may have been set by the API user with
@@ -100,7 +100,7 @@ static bool press(struct PnWidget *w,
     DASSERT(g);
     DASSERT(g == (void *) w);
     DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    press(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -119,7 +119,7 @@ static bool release(struct PnWidget *w,
     DASSERT(g);
     DASSERT(g == (void *) w);
     DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -134,7 +134,7 @@ static bool enter(struct PnWidget *w,
     DASSERT(g);
     DASSERT(g == (void *) w);
     DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
             w, x, y);
@@ -146,7 +146,7 @@ static void leave(struct PnWidget *w, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
     DASSERT(w->type == PnSurfaceType_generic);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    leave(%p)[]\n", w);
 }
@@ -155,7 +155,7 @@ static bool motion(struct PnWidget *w,
             int32_t x, int32_t y, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\r   motion(%p)[%" PRIi32 ",%" PRIi32 "]    ",
             w, x, y);
@@ -166,7 +166,7 @@ static bool motion(struct PnWidget *w,
 static void destroy(struct PnWidget *w, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(GET_WIDGET_TYPE(w->type) == W_GENERIC);
+    DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     DSPEW();
 }
@@ -200,10 +200,8 @@ static bool pressAction(struct PnGeneric *g, struct PnCallback *callback,
 
     DASSERT(g);
     DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GENERIC);
+    ASSERT(IS_TYPE(g->widget.type, W_GENERIC));
     DASSERT(actionIndex == PN_GENERIC_CB_PRESS);
-    // We use GET_WIDGET_TYPE() in case a user inherits W_GENERIC
-    // and adds bits to the type thingy.
     DASSERT(callback);
     DASSERT(userCallback);
 
@@ -221,7 +219,7 @@ static bool releaseAction(struct PnGeneric *g, struct PnCallback *callback,
 
     DASSERT(g);
     DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(g->widget.type) == W_GENERIC);
+    ASSERT(IS_TYPE(g->widget.type, W_GENERIC));
     DASSERT(actionIndex == PN_GENERIC_CB_RELEASE);
     DASSERT(callback);
     DASSERT(userCallback);

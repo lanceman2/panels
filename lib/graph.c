@@ -1028,7 +1028,7 @@ void pnGraph_setView(struct PnWidget *w,
         double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(w);
-    ASSERT(GET_WIDGET_TYPE(w->type) == W_GRAPH);
+    ASSERT(IS_TYPE(w->type, W_GRAPH));
     DASSERT(xMin < xMax);
     DASSERT(yMin < yMax);
 

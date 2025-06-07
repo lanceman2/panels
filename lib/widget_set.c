@@ -22,6 +22,12 @@ static void MotionLeave(struct PnWidget *w, void *userData) {
     DASSERT(w);
 }
 
+// All the pnWidget_set*() functions can only have one callback function
+// to set for each thingy, thingy being stuff like Draw, CairoDraw,
+// Config, Enter, Leave, Press, Release, Motion, Axis, ....
+//
+// Some pnWidget_set*() functions only set common widget parameters and
+// not callbacks.
 
 void pnWidget_setDraw(
         struct PnWidget *widget,

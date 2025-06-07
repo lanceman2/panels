@@ -144,8 +144,8 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnButton *b) {
     DASSERT(b);
-    DASSERT(w->type == PnSurfaceType_button);
     DASSERT(b == (void *) w);
+    DASSERT(IS_TYPE(w->type, W_BUTTON));
     DASSERT(cr);
     DASSERT(b->state < PnButtonState_NumRegularStates);
 
@@ -238,13 +238,13 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
     DASSERT(b == (void *) w);
 
-    if(w->type & W_BUTTON) {
+    if(IS_TYPE(w->type, W_BUTTON)) {
         DASSERT(b->colors);
         DZMEM(b->colors,
                 PnButtonState_NumRegularStates*sizeof(*b->colors));
         free(b->colors);
     } else {
-        DASSERT(w->type & W_TOGGLE_BUTTON);
+        DASSERT(IS_TYPE(w->type, W_TOGGLE_BUTTON));
         ASSERT(0, "WRITE MORE CODE");
     }
 }
@@ -263,7 +263,7 @@ static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
     DASSERT(b);
     DASSERT(actionData == 0);
     DASSERT(actionIndex == PN_BUTTON_CB_PRESS);
-    ASSERT(GET_WIDGET_TYPE(b->type) == W_BUTTON);
+    ASSERT(IS_TYPE(b->type, W_BUTTON));
     DASSERT(callback);
     DASSERT(userCallback);
 
@@ -312,7 +312,7 @@ static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
 
     DASSERT(b);
     DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(b->type) == W_BUTTON);
+    ASSERT(IS_TYPE(b->type, W_BUTTON));
     DASSERT(actionIndex == PN_BUTTON_CB_CLICK);
     DASSERT(callback);
     DASSERT(userCallback);
@@ -327,7 +327,7 @@ static bool hoverAction(struct PnWidget *w, struct PnCallback *callback,
 
     DASSERT(w);
     DASSERT(actionData == 0);
-    ASSERT(GET_WIDGET_TYPE(w->type) == W_BUTTON);
+    ASSERT(IS_TYPE(w->type, W_BUTTON));
     DASSERT(actionIndex == PN_BUTTON_CB_HOVER);
     DASSERT(callback);
     DASSERT(userCallback);

@@ -103,7 +103,7 @@ static bool ResetChildrenCull(const struct PnWidget *s) {
     // controlled by the splitter container widget to be squished to the
     // side.
     //
-    if(s->parent && GET_WIDGET_TYPE(s->parent->type) == W_SPLITTER)
+    if(s->parent && IS_TYPE(s->parent->type, W_SPLITTER))
         if( (s->parent->l.firstChild && s->parent->l.firstChild == s
                 && ((struct PnSplitter *)s->parent)->firstHidden)
                     ||
@@ -227,7 +227,7 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 //
 static inline uint32_t GetBWidth(const struct PnWidget *s) {
 
-    if(GET_WIDGET_TYPE(s->type) == W_SPLITTER)
+    if(IS_TYPE(s->type, W_SPLITTER))
         // The splitter container has no child separator borders.
         return 0;
 
@@ -2003,7 +2003,7 @@ static void ExpandChildren(const struct PnWidget *s,
     struct PnWidget *c;
 
     // This is like an if().  I did not know how to break from an if().
-    if(GET_WIDGET_TYPE(s->type) == W_SPLITTER)
+    if(IS_TYPE(s->type, W_SPLITTER))
         Splipper_preExpand(s, a);
 
     switch(s->layout) {

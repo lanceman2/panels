@@ -40,13 +40,8 @@ struct PnWidget *pnMenuBar_create(struct PnWidget *parent,
     if(!m)
         return 0; // Failure.
 
-    // Setting the widget surface type.  We decrease the data, but
-    // increase the complexity.  See enum PnSurfaceType in display.h.
-    // It's so easy to forget about all these bits, but DASSERT() is my
-    // hero.
     DASSERT(m->widget.type == PnSurfaceType_widget);
     m->widget.type = PnSurfaceType_menubar;
-    DASSERT(m->widget.type & WIDGET);
 
     pnWidget_setBackgroundColor(&m->widget, 0xFFCDCDCD);
 

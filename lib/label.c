@@ -219,7 +219,7 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
     // And now it becomes a label:
     l->widget.type = PnSurfaceType_label;
     // which is also a widget too (and more bits):
-    DASSERT(l->widget.type & WIDGET);
+    DASSERT(IS_TYPE(l->widget.type, WIDGET));
 
     l->fontSize = fontSize;
     l->fontColor = 0xFF000000;
