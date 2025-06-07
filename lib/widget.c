@@ -93,7 +93,7 @@ struct PnWidget *_pnWidget_createFull(
         widget->g.numRows = row;
     }
 
-    if(parent->type & WIDGET)
+    if(!IS_TYPE(widget->type, TOPLEVEL) && !IS_TYPE(widget->type, POPUP))
         widget->window = parent->window;
     else
         widget->window = (void *) parent;
@@ -167,10 +167,11 @@ void RemoveCallback(struct PnAction *a, struct PnCallback *c) {
     free(c);
 }
 
+
 void pnWidget_destroy(struct PnWidget *w) {
 
     DASSERT(w);
-    DASSERT(w->parent);
+    //DASSERT(w->parent);
     ASSERT(w->type & WIDGET);
 
     // Free actions
@@ -207,6 +208,12 @@ void pnWidget_destroy(struct PnWidget *w) {
     DestroySurfaceChildren(w);
 
     DestroySurface(w);
+
+    if(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP)) {
+        _pnWindow_destroy(w);
+        return;
+    }
+
     DZMEM(w, w->size);
     free(w);
 }

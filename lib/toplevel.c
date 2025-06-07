@@ -54,7 +54,7 @@ static void close(struct PnWindow *win,
     DASSERT(win->wl_surface);
     DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
 
-    pnWindow_destroy(&win->widget);
+    pnWidget_destroy(&win->widget);
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {

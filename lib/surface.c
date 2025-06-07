@@ -505,12 +505,12 @@ void InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
     }
 
     if(!s->parent) {
-        DASSERT(!(s->type & WIDGET));
+        DASSERT(IS_TYPE(s->type, TOPLEVEL) || IS_TYPE(s->type, POPUP));
         // this is a window.
         return;
     }
     // this is a widget and not a window.
-    DASSERT(s->type & WIDGET);
+    DASSERT(!IS_TYPE(s->type, TOPLEVEL) && !IS_TYPE(s->type, POPUP));
 
     // Default widget background color is that of it's
     // parent.
@@ -528,7 +528,7 @@ void DestroySurface(struct PnWidget *s) {
     DestroyCairo(s);
 #endif
 
-    if(s->type & WIDGET)
+    if(s->parent)
         RemoveChildSurface(s->parent, s);
 
     if(s->layout == PnLayout_Grid)

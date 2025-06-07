@@ -221,14 +221,16 @@ static bool enter(struct PnWidget *w,
     b->entered = true;
     b->x = x;
     b->y = y;
-    pnWidget_callAction(w, PN_BUTTON_CB_HOVER);
+    pnWidget_callAction(w, PN_BUTTON_CB_ENTER);
     return true; // take focus
 }
 
 static void leave(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
-    if(b->state == PnButtonState_Hover)
+    if(b->state == PnButtonState_Hover) {
         SetState(b, PnButtonState_Normal);
+        pnWidget_callAction(w, PN_BUTTON_CB_LEAVE);
+    }
     b->entered = false;
 }
 
@@ -320,7 +322,7 @@ static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
     return userCallback(b, userData);
 }
 
-static bool hoverAction(struct PnWidget *w, struct PnCallback *callback,
+static bool enterAction(struct PnWidget *w, struct PnCallback *callback,
         bool (*userCallback)(struct PnWidget *b, uint32_t x, uint32_t y,
             void *userData),
         void *userData, uint32_t actionIndex, void *actionData) {
@@ -328,7 +330,7 @@ static bool hoverAction(struct PnWidget *w, struct PnCallback *callback,
     DASSERT(w);
     DASSERT(actionData == 0);
     ASSERT(IS_TYPE(w->type, W_BUTTON));
-    DASSERT(actionIndex == PN_BUTTON_CB_HOVER);
+    DASSERT(actionIndex == PN_BUTTON_CB_ENTER);
     DASSERT(callback);
     DASSERT(userCallback);
 
@@ -342,6 +344,24 @@ static bool hoverAction(struct PnWidget *w, struct PnCallback *callback,
     return userCallback(w, b->x, b->y, userData);
 }
 
+static bool leaveAction(struct PnWidget *w, struct PnCallback *callback,
+        bool (*userCallback)(struct PnWidget *b, void *userData),
+        void *userData, uint32_t actionIndex, void *actionData) {
+
+    DASSERT(w);
+    DASSERT(actionData == 0);
+    ASSERT(IS_TYPE(w->type, W_BUTTON));
+    DASSERT(actionIndex == PN_BUTTON_CB_LEAVE);
+    DASSERT(callback);
+    DASSERT(userCallback);
+
+    // callback() is the libpanels API user set callback.
+    //
+    // We let the user return the value.  true will eat the event and stop
+    // this function from going through (calling) all connected
+    // callbacks.
+    return userCallback(w, userData);
+}
 
 
 struct PnWidget *pnButton_create(struct PnWidget *parent,
@@ -395,9 +415,13 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     pnWidget_addAction(&b->widget, PN_BUTTON_CB_PRESS,
             (void *) pressAction, 0/*add()*/, 0/*actionData*/,
             0/*callbackSize*/);
-    pnWidget_addAction(&b->widget, PN_BUTTON_CB_HOVER,
-            (void *) hoverAction, 0/*add()*/, 0/*actionData*/,
+    pnWidget_addAction(&b->widget, PN_BUTTON_CB_ENTER,
+            (void *) enterAction, 0/*add()*/, 0/*actionData*/,
             0/*callbackSize*/);
+    pnWidget_addAction(&b->widget, PN_BUTTON_CB_LEAVE,
+            (void *) leaveAction, 0/*add()*/, 0/*actionData*/,
+            0/*callbackSize*/);
+
 
 
     b->colors = calloc(1, PnButtonState_NumRegularStates*

@@ -52,7 +52,6 @@ pnWidget_setRelease
 pnWidget_show
 pnWindow_create
 pnWindow_createAsGrid
-pnWindow_destroy
 pnWindow_isDrawn
 pnWindow_isDrawnReset
 pnWindow_setDestroy

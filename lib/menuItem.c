@@ -19,79 +19,21 @@
 
 struct PnMenuItem {
 
-    struct PnWidget widget; // inherit first
+    struct PnWidget *button;
+
+    // Optional
+    struct PnWidget *popup;
 };
 
 
-static bool press(struct PnWidget *w,
-            uint32_t which, int32_t x, int32_t y,
-            struct PnMenuItem *m) {
+static
+void destroy(struct PnWidget *b, struct PnMenuItem *m) {
+    DASSERT(b);
     DASSERT(m);
-    DASSERT(m == (void *) w);
-    DASSERT(IS_TYPE(w->type, W_MENUITEM));
+    DASSERT(b == m->button);
 
-    fprintf(stderr, "\n    press(%p)[%" PRIi32 ",%" PRIi32 "]\n",
-            w, x, y);
-
-    return true; // true to grab
-}
-
-static bool release(struct PnWidget *w,
-            uint32_t which, int32_t x, int32_t y,
-            struct PnMenuItem *m) {
-    DASSERT(m);
-    DASSERT(m == (void *) w);
-    DASSERT(IS_TYPE(w->type, W_MENUITEM));
-
-    fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
-            w, x, y);
-
-    pnWidget_callAction(w, PN_MENUITEM_CB_CLICK);
-
-    return true;
-}
-
-static bool enter(struct PnWidget *w,
-            uint32_t x, uint32_t y, struct PnMenuItem *m) {
-    DASSERT(m);
-    DASSERT(m == (void *) w);
-    DASSERT(IS_TYPE(w->type, W_MENUITEM));
-
-    fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
-            w, x, y);
-
-    return true; // take focus
-}
-
-static void leave(struct PnWidget *w, struct PnMenuItem *m) {
-    DASSERT(m);
-    DASSERT(m == (void *) w);
-    DASSERT(IS_TYPE(w->type, W_MENUITEM));
-
-    fprintf(stderr, "\n    leave(%p)[]\n", w);
-}
-
-
-static bool clickAction(struct PnMenuItem *m, struct PnCallback *callback,
-        // This is the user callback function prototype that we choose for
-        // this "press" action.  The underlying API does not give a shit
-        // what this (callback) void pointer is, but we do at this
-        // point.
-        void (*userCallback)(struct PnWidget *w, void *userData),
-        void *userData, uint32_t actionIndex, void *actionData) {
-
-    DASSERT(m);
-    DASSERT(actionData == 0);
-    ASSERT(IS_TYPE(m->widget.type, W_MENUITEM));
-    DASSERT(actionIndex == PN_MENUITEM_CB_CLICK);
-    DASSERT(callback);
-    DASSERT(userCallback);
-
-    userCallback(&m->widget, userData);
-
-    // return true will eat the event and stop this function from going
-    // through (calling) all connected callbacks.
-    return false;
+    DZMEM(m, sizeof(*m));
+    free(m);
 }
 
 
@@ -101,27 +43,23 @@ struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
         enum PnAlign align,
         enum PnExpand expand) {
 
-    //
-    struct PnMenuItem *m = (void *) pnWidget_create(parent,
-            width, height,
-            layout, align, expand, sizeof(*m));
-    if(!m)
+    struct PnMenuItem *m = calloc(1, sizeof(*m));
+    ASSERT(m, "calloc(1,%zu) failed", sizeof(*m));
+
+    m->button = pnButton_create(parent, width, height,
+            layout, align, expand, 0/*label*/, false/*toggle*/);
+    if(!m->button) {
+        DZMEM(m, sizeof(*m));
+        free(m);
         return 0; // Failure.
+    }
 
-    DASSERT(m->widget.type == PnWidgetType_widget);
-    m->widget.type = PnWidgetType_menuitem;
-    DASSERT(m->widget.type & WIDGET);
+    DASSERT(m->button->type == PnWidgetType_button);
+    DASSERT(m->button->type & WIDGET);
+    m->button->type = PnWidgetType_menuitem;
 
-    pnWidget_setEnter(&m->widget, (void *) enter, m);
-    pnWidget_setLeave(&m->widget, (void *) leave, m);
-    pnWidget_setPress(&m->widget, (void *) press, m);
-    pnWidget_setRelease(&m->widget, (void *) release, m);
-
-    pnWidget_addAction(&m->widget, PN_MENUITEM_CB_CLICK,
-            (void *) clickAction, 0/*add()*/, 0/*actionData*/,
-            0/*callbackSize*/);
-
-    pnWidget_setBackgroundColor(&m->widget, 0xFFCD55CD);
-
-    return &m->widget;
+    pnWidget_addDestroy(m->button, (void *) destroy, m);
+    pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD);
+    // The user gets the button, but it's augmented.
+    return m->button;
 }

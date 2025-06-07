@@ -12,7 +12,7 @@
 // bit layer at each level of widget inheritance, so if a widget
 // inherits another widget it gets a type number that is a combination of
 // two type numbers.  So far it looks like there are plenty of widget type
-// numbers with just one 32 bit number.
+// numbers available with just one 32 bit number.
 //
 // Note: In panels, widget layout is a separate thing from widget type,
 // though the two are not necessarily independent (orthogonal attributes).
@@ -38,8 +38,8 @@
 #define W_LABEL          (2 << 3)
 #define W_BUTTON         (3 << 3)
 #define W_TOGGLE_BUTTON  (4 << 3)
-#define W_MENUBAR        (5 << 3)
-#define W_MENUITEM       (6 << 3)
+#define W_MENU_BAR        (5 << 3)
+#define W_MENU_ITEM       (6 << 3)
 #define W_SPLITTER       (7 << 3)
 #define W_IMAGE          (8 << 3)
 #define W_GRAPH          (9 << 3) // 2D graph plotter with grid lines
@@ -82,21 +82,24 @@ enum PnWidgetType {
     // a popup, and not a toplevel, and so does wayland-client.
 
     // 2 Window Surface types (Wayland client things):
-    PnWidgetType_toplevel   = TOPLEVEL, // From xdg_surface_get_toplevel()
-    PnWidgetType_popup      = POPUP,    // From wl_shell_surface_set_popup()
+    // From xdg_surface_get_toplevel()
+    PnWidgetType_toplevel   = WIDGET | TOPLEVEL,
+    // From wl_shell_surface_set_popup()
+    PnWidgetType_popup      = WIDGET | POPUP,
 
     // Widget Surface types:  Not a Wayland client thing.
     PnWidgetType_widget     = WIDGET, // a rectangular piece of a mmap()
-                                       // surface
+                                      // surface
 
     PnWidgetType_generic    = (WIDGET | W_GENERIC), // a generic example widget
     PnWidgetType_label      = (WIDGET | W_LABEL), // a label widget
     PnWidgetType_button     = (WIDGET | W_BUTTON), // a button widget
-    PnWidgetType_menuitem   = (WIDGET | W_MENUITEM),
-    PnWidgetType_menubar    = (WIDGET | W_MENUBAR),
+    PnWidgetType_menuitem   = (WIDGET | W_MENU_ITEM),
+    PnWidgetType_menubar    = (WIDGET | W_MENU_BAR),
     PnWidgetType_image      = (WIDGET | W_IMAGE),
     PnWidgetType_graph      = (WIDGET | W_GRAPH),
     PnWidgetType_splitter   = (WIDGET | W_SPLITTER),
+    // menu inherits button and widget, oh boy.
     PnWidgetType_menu       = (WIDGET | W_BUTTON | W_MENU)
 };
 
@@ -720,6 +723,8 @@ struct PnDisplay {
 // One big ass global display thingy that has 9 wayland-client display
 // thingys in it:
 extern struct PnDisplay d;
+
+extern void _pnWindow_destroy(struct PnWidget *window);
 
 extern int pnDisplay_create(void);
 extern void pnDisplay_destroy(void);

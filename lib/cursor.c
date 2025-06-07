@@ -63,12 +63,13 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
             (w->type & WIDGET));
 
     struct PnWindow *win;
-    switch(w->type & (TOPLEVEL|POPUP|WIDGET)) {
+    switch(w->type & (TOPLEVEL|POPUP)) {
         case TOPLEVEL:
         case POPUP:
             win = (struct PnWindow *) w;
             break;
-        case WIDGET:
+        case 0:
+            // Not a TOPLEVEL or POPUP
             win = w->window;
             DASSERT(win);
             break;

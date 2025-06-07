@@ -43,7 +43,7 @@ int main(void) {
         //
         // Yes.  The win pointer is still valid.
         // Just testing that we can call this:
-        pnWindow_destroy(win);
+        pnWidget_destroy(win);
 
     // We just wanted to exercise this function.  The libpanels.so
     // destructor calls it, but calling it here too should be fine.

@@ -23,7 +23,7 @@ struct button {
     // Fuck, fuck, shit, we can't inherit PnButton because it's opaque
     // at this level of coding.  I guess C++ classes have that same
     // problem too; C++ big ass header files from hell are needed to
-    // inherit classes.
+    // inherit C++ classes.
     //
     // We just have the PnButton pointer and not the data here:
     struct PnWidget *button;

@@ -200,6 +200,8 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
         enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
 
+    ASSERT(!parent || IS_TYPE(parent->widget.type, TOPLEVEL)
+            || IS_TYPE(parent->widget.type, POPUP));
     DASSERT(layout != PnLayout_None || (w && h));
 
     if(layout == PnLayout_None && !(w && h)) {
@@ -228,8 +230,6 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
         win->widget.type = PnWidgetType_toplevel;
         AddWindow(win, d.windows, &d.windows);
     }
-
-    DASSERT(win->widget.type < PnWidgetType_widget);
 
     win->buffer.pixels = MAP_FAILED;
     win->buffer.fd = -1;
@@ -291,7 +291,7 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
 
 fail:
 
-    pnWindow_destroy(&win->widget);
+    pnWidget_destroy(&win->widget);
 
     return 0;
 }
@@ -300,7 +300,6 @@ struct PnWidget *pnWindow_createAsGrid(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
-    ASSERT(!parent || parent->type < PnWidgetType_widget);
     DASSERT(numColumns);
     DASSERT(numRows);
     return (void *) _pnWindow_createFull((void *) parent, w, h, x, y,
@@ -311,17 +310,16 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand) {
-    ASSERT(!parent || parent->type < PnWidgetType_widget);
     ASSERT(layout != PnLayout_Grid);
-    return (void *) _pnWindow_createFull((void *) parent, w, h, x, y, layout, align,
-            expand, -1/*numColumns*/, -1/*numRows*/);
+    return (void *) _pnWindow_createFull((void *) parent, w, h, x, y,
+            layout, align, expand, -1/*numColumns*/, -1/*numRows*/);
 }
 
 
 void pnWindow_show(struct PnWidget *w, bool show) {
 
     DASSERT(w);
-    ASSERT(w->type < PnWidgetType_widget);
+    ASSERT(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP));
     struct PnWindow *win = (void *) w;
     DASSERT(win->wl_surface);
     ASSERT(show, "WRITE MORE CODE FOR THIS CASE");
@@ -352,17 +350,19 @@ void pnWindow_show(struct PnWidget *w, bool show) {
         pnWidget_queueDraw(w, true/*allocate*/);
 }
 
-void pnWindow_destroy(struct PnWidget *w) {
+
+void _pnWindow_destroy(struct PnWidget *w) {
 
     DASSERT(w);
     DASSERT(d.wl_display);
-    ASSERT(w->type < PnWidgetType_widget);
+    ASSERT(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP));
 
     struct PnWindow *win = (void *) w;
 
     if(win->destroy)
-        // This is called before we start destroying stuff.
         win->destroy(w, win->destroyData);
+
+#if 0
 
     // If there is state in the display that refers to this surface
     // (window) take care to not refer to it.  Like if this window surface
@@ -374,6 +374,9 @@ void pnWindow_destroy(struct PnWidget *w) {
     DestroySurfaceChildren(&win->widget);
 
     DestroySurface(&win->widget);
+
+#endif
+
 
     if(win->widget.type == PnWidgetType_popup) {
         // A popup
@@ -390,8 +393,13 @@ void pnWindow_destroy(struct PnWidget *w) {
         RemoveWindow(win, d.windows, &d.windows);
         // Destroy any child popup windows that this toplevel owns.
         while(win->toplevel.popups)
-            pnWindow_destroy(&win->toplevel.popups->widget);
+            pnWidget_destroy(&win->toplevel.popups->widget);
     }
+
+
+
+
+
 
     // Clean up stuff in reverse order that stuff was created.
 
@@ -439,7 +447,7 @@ void pnWindow_setDestroy(struct PnWidget *w,
         void *userData) {
 
     DASSERT(w);
-    ASSERT(w->type < PnWidgetType_widget);
+    ASSERT(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP));
     struct PnWindow *win = (void *) w;
     DASSERT(win);
 
@@ -478,7 +486,7 @@ bool _pnWindow_addCallback(struct PnWindow *win) {
 bool pnWindow_isDrawn(struct PnWidget *w) {
 
     DASSERT(w);
-    ASSERT(w->type < PnWidgetType_widget);
+    ASSERT(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP));
     struct PnWindow *win = (void *) w;
 
     if(win->haveDrawn >= 2)
@@ -497,7 +505,7 @@ bool pnWindow_isDrawn(struct PnWidget *w) {
 void pnWindow_isDrawnReset(struct PnWidget *w) {
 
     DASSERT(w);
-    ASSERT(w->type < PnWidgetType_widget);
+    ASSERT(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP));
     struct PnWindow *win = (void *) w;
     _pnWindow_addCallback(win);
     win->haveDrawn = 1;

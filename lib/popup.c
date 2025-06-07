@@ -39,7 +39,7 @@ static void popup_done(void *data, struct xdg_popup *xdg_popup) {
     struct PnWindow *win = data;
 
     DSPEW();
-    pnWindow_destroy(&win->widget);
+    pnWidget_destroy(&win->widget);
     DSPEW();
 }
 

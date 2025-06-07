@@ -227,6 +227,8 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 //
 static inline uint32_t GetBWidth(const struct PnWidget *s) {
 
+    DASSERT(s->type & WIDGET);
+
     if(IS_TYPE(s->type, W_SPLITTER))
         // The splitter container has no child separator borders.
         return 0;
@@ -240,11 +242,11 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
         // It can be zero, a container border that's 0.
         return s->reqWidth;
 
-    if(s->type & WIDGET)
+    if(!(s->type & (TOPLEVEL | POPUP)))
         return PN_MIN_WIDGET_WIDTH;
 
-    DASSERT(s->type == PnWidgetType_popup ||
-            s->type == PnWidgetType_toplevel);
+    DASSERT(s->type & (TOPLEVEL | POPUP));
+
     return PN_DEFAULT_WINDOW_WIDTH;
 }
 
@@ -257,6 +259,8 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
 //
 static inline uint32_t GetBHeight(const struct PnWidget *s) {
 
+    DASSERT(s->type & WIDGET);
+
     if(s->layout == PnLayout_Cover && HaveChildren(s))
         // The container with PnLayout_Cover can't have borders
         // the are not covered by the children.
@@ -266,7 +270,7 @@ static inline uint32_t GetBHeight(const struct PnWidget *s) {
         // It can be zero. It's just a border that's 0.
         return s->reqHeight;
 
-    if(s->type & WIDGET)
+    if(!(s->type & (TOPLEVEL | POPUP)))
         return PN_MIN_WIDGET_HEIGHT;
 
     DASSERT(s->type == PnWidgetType_popup ||

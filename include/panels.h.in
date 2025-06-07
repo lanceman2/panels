@@ -60,11 +60,12 @@ extern "C" {
 #define PN_GENERIC_CB_RELEASE    1
 #define PN_BUTTON_CB_CLICK       0 // after release
 #define PN_BUTTON_CB_PRESS       1 // after press
-#define PN_BUTTON_CB_HOVER       2
+#define PN_BUTTON_CB_ENTER       2
+#define PN_BUTTON_CB_LEAVE       3
 #define PN_GRAPH_CB_STATIC_DRAW  0 // For static plots
 #define PN_MENUITEM_CB_CLICK     0
 
-
+// 4 bytes of color is what is called True Color
 #define PN_PIXEL_SIZE     (4) // bytes per pixel
 // DEFAULTS
 #define PN_BORDER_WIDTH   (6) // default border pixels wide
@@ -446,7 +447,6 @@ PN_EXPORT bool pnWindow_isDrawn(struct PnWidget *window);
 PN_EXPORT void pnWindow_setPreferredSize(struct PnWidget *window,
         uint32_t width, uint32_t height);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWidget *window);
-PN_EXPORT void pnWindow_destroy(struct PnWidget *window);
 PN_EXPORT void pnWindow_show(struct PnWidget *window, bool show);
 PN_EXPORT void pnWindow_setDestroy(struct PnWidget *window,
         void (*destroy)(struct PnWidget *window, void *userData),

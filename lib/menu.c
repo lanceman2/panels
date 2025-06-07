@@ -21,20 +21,78 @@ struct PnMenu {
 
     // We are trying to keep the struct PnButton, which we build this
     // PnMenu widget on, opaque; so we just have a pointer to it.
+    // We'll append the widget button type with menu, W_MENU.
+    //
+    // This is a different way to inherit a button widget.  We know
+    // the widget part of it as it has a struct PnWidget in it.
+    //
+    // Funny how we can inherit without knowing the full button data
+    // structure.  We'll use this pointer as the thing that the user
+    // gets.  offsetof(3) is our friend to find other data in this.
+    //
+    // Does C++ have this kind of opaque inheritance built into the
+    // language?  I grant you, it's not as efficient (plus one pointer)
+    // but we don't need to expose the full class (struct) data structure
+    // in a header file.
     struct PnWidget *button;
 
+
+    struct PnWidget *popup;
     // More data here..
 };
 
 
 static
-void destroy(struct PnWidget *w, struct PnMenu *m) {
-
-    DASSERT(w);
-    DASSERT(w == m->button);
+void destroy(struct PnWidget *b, struct PnMenu *m) {
+    DASSERT(b);
+    DASSERT(m);
+    DASSERT(b == m->button);
 
     DZMEM(m, sizeof(*m));
     free(m);
+}
+
+static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
+            struct PnMenu *m) {
+    DASSERT(b);
+    DASSERT(m);
+    DASSERT(b == m->button);
+    DASSERT(b->window);
+
+    struct PnAllocation a;
+    pnWidget_getAllocation(b, &a);
+
+    if(m->popup) {
+        pnWidget_destroy(m->popup);
+        m->popup = 0;
+    }
+
+    m->popup = pnWindow_create(&b->window->widget/*parent*/, 100, 300,
+            a.x, a.y + a.height, 0, 0, 0);
+    // Looks like the Wayland compositor puts this popup in a good place
+    // even when the menu is in a bad place.
+    //
+    // TODO: We need to study what the failure modes of the Wayland popup
+    // are.
+    ASSERT(m->popup);
+    pnWidget_setBackgroundColor(m->popup, 0xFA299981);
+    pnWindow_show(m->popup, true);
+
+fprintf(stderr, "\r    widget=%p x,y=%" PRIu32 ",%" PRIu32 "    ", b, x, y);
+
+    return true; // eat it.
+}
+
+// TODO: Not sure we need this callback.
+//
+static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
+    DASSERT(b);
+    DASSERT(m);
+    DASSERT(b == m->button);
+
+fprintf(stderr, "\r leave widget=%p                ", b);
+
+    return true; // eat it.
 }
 
 
@@ -63,6 +121,10 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);
     pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD);
-
+    pnWidget_addCallback(m->button,
+            PN_BUTTON_CB_ENTER, enterAction, m);
+    pnWidget_addCallback(m->button,
+            PN_BUTTON_CB_LEAVE, leaveAction, m);
+    // The user gets the button, but it's augmented.
     return m->button;
 }

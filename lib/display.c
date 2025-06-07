@@ -652,7 +652,7 @@ static void _pnDisplay_destroy(void) {
     // Destroy all the windows.
     while(d.windows)
         // Which destroys all the widgets in them.
-        pnWindow_destroy(&d.windows->widget);
+        pnWidget_destroy(&d.windows->widget);
 
     if(d.zxdg_decoration_manager)
         zxdg_decoration_manager_v1_destroy(d.zxdg_decoration_manager);
