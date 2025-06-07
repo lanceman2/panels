@@ -221,9 +221,9 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 // the width and height then will be the width and height of the top
 // (leaf) child.
 //
-// If it's a container widget (surface), get this left and right widget
-// border width, else if it's a leaf widget (surface) return the minimum
-// width of the widget (surface).
+// If it's a container widget, get this left and right widget border
+// width, else if it's a leaf widget return the minimum width of the
+// widget.
 //
 static inline uint32_t GetBWidth(const struct PnWidget *s) {
 
@@ -243,8 +243,8 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
     if(s->type & WIDGET)
         return PN_MIN_WIDGET_WIDTH;
 
-    DASSERT(s->type == PnSurfaceType_popup ||
-            s->type == PnSurfaceType_toplevel);
+    DASSERT(s->type == PnWidgetType_popup ||
+            s->type == PnWidgetType_toplevel);
     return PN_DEFAULT_WINDOW_WIDTH;
 }
 
@@ -269,8 +269,8 @@ static inline uint32_t GetBHeight(const struct PnWidget *s) {
     if(s->type & WIDGET)
         return PN_MIN_WIDGET_HEIGHT;
 
-    DASSERT(s->type == PnSurfaceType_popup ||
-            s->type == PnSurfaceType_toplevel);
+    DASSERT(s->type == PnWidgetType_popup ||
+            s->type == PnWidgetType_toplevel);
     return PN_DEFAULT_WINDOW_HEIGHT;
 }
 
@@ -2135,8 +2135,8 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
 
     if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);
-        DASSERT(s->type == PnSurfaceType_toplevel ||
-                s->type == PnSurfaceType_popup);
+        DASSERT(s->type == PnWidgetType_toplevel ||
+                s->type == PnWidgetType_popup);
         a->width = GetBWidth(s);
         a->height = GetBHeight(s);
     }
@@ -2148,8 +2148,8 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
     //
 
     if(!HaveChildren(s)) {
-        DASSERT(s->type == PnSurfaceType_toplevel ||
-                s->type == PnSurfaceType_popup);
+        DASSERT(s->type == PnWidgetType_toplevel ||
+                s->type == PnWidgetType_popup);
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.

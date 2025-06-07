@@ -99,20 +99,17 @@ struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
-        enum PnExpand expand,
-        size_t size) {
+        enum PnExpand expand) {
 
-    if(size < sizeof(struct PnMenuItem))
-        size = sizeof(struct PnMenuItem);
     //
     struct PnMenuItem *m = (void *) pnWidget_create(parent,
             width, height,
-            layout, align, expand, size);
+            layout, align, expand, sizeof(*m));
     if(!m)
         return 0; // Failure.
 
-    DASSERT(m->widget.type == PnSurfaceType_widget);
-    m->widget.type = PnSurfaceType_menuitem;
+    DASSERT(m->widget.type == PnWidgetType_widget);
+    m->widget.type = PnWidgetType_menuitem;
     DASSERT(m->widget.type & WIDGET);
 
     pnWidget_setEnter(&m->widget, (void *) enter, m);

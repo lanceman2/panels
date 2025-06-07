@@ -631,17 +631,13 @@ static void leave(struct PnWidget *w, struct PnSplitter *s) {
 
 struct PnWidget *pnSplitter_create(struct PnWidget *parent,
         struct PnWidget *first, struct PnWidget *second,
-        bool isHorizontal /*or it's vertical*/,
-        size_t size) {
+        bool isHorizontal /*or it's vertical*/) {
 
     // For now, let these be in existence.
     // TODO: re-parenting.
     DASSERT(parent);
     DASSERT(first);
     DASSERT(second);
-
-    if(size < sizeof(struct PnSplitter))
-        size = sizeof(struct PnSplitter);
 
     enum PnExpand expand;
     enum PnLayout layout;
@@ -656,7 +652,7 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
 
     struct PnSplitter *s = (void *) pnWidget_create(parent,
             0/*width*/, 0/*height*/,
-            layout, PnAlign_CC, 0/*expand*/, size);
+            layout, PnAlign_CC, 0/*expand*/, sizeof(*s));
     if(!s)
         // pnWidget_create() will have spewed.
         return 0; // Failure.
@@ -698,8 +694,8 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     }
 
     // Setting the widget surface type.
-    DASSERT(s->widget.type == PnSurfaceType_widget);
-    s->widget.type = PnSurfaceType_splitter;
+    DASSERT(s->widget.type == PnWidgetType_widget);
+    s->widget.type = PnWidgetType_splitter;
     DASSERT(s->widget.type & WIDGET);
     DASSERT(IS_TYPE(s->widget.type, W_SPLITTER));
     // Note: the widget type is "splitter" and the widget layout

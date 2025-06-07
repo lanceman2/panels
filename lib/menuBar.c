@@ -28,20 +28,16 @@ struct PnWidget *pnMenuBar_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
-        enum PnExpand expand,
-        size_t size) {
+        enum PnExpand expand) {
 
-    if(size < sizeof(struct PnMenuBar))
-        size = sizeof(struct PnMenuBar);
-    //
     struct PnMenuBar *m = (void *) pnWidget_create(parent,
             width, height,
-            layout, align, expand, size);
+            layout, align, expand, sizeof(*m));
     if(!m)
         return 0; // Failure.
 
-    DASSERT(m->widget.type == PnSurfaceType_widget);
-    m->widget.type = PnSurfaceType_menubar;
+    DASSERT(m->widget.type == PnWidgetType_widget);
+    m->widget.type = PnWidgetType_menubar;
 
     pnWidget_setBackgroundColor(&m->widget, 0xFFCDCDCD);
 

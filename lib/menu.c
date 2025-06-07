@@ -21,7 +21,6 @@ struct PnMenu {
 
     // We are trying to keep the struct PnButton, which we build this
     // PnMenu widget on, opaque; so we just have a pointer to it.
-
     struct PnWidget *button;
 
     // More data here..
@@ -51,17 +50,16 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
     ASSERT(m, "calloc(1,%zu) failed", sizeof(*m));
 
     m->button = pnButton_create(parent, width, height,
-            layout, align, expand, label, false/*toggle*/,
-            0/*size*/);
+            layout, align, expand, label, false/*toggle*/);
     if(!m->button) {
         DZMEM(m, sizeof(*m));
         free(m);
         return 0; // Failure.
     }
 
-    DASSERT(m->button->type == PnSurfaceType_button);
+    DASSERT(m->button->type == PnWidgetType_button);
     DASSERT(m->button->type & WIDGET);
-    m->button->type = PnSurfaceType_menu;
+    m->button->type = PnWidgetType_menu;
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);
     pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD);

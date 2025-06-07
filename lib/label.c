@@ -103,7 +103,7 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
     DASSERT(l == (void *) widget);
     DASSERT(w);
     DASSERT(h);
-    DASSERT(widget->type == PnSurfaceType_label);
+    DASSERT(widget->type == PnWidgetType_label);
     //l->width = w;
     //l->height = h;
 }
@@ -111,7 +111,7 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnLabel *l) {
     DASSERT(l);
-    DASSERT(w->type == PnSurfaceType_label);
+    DASSERT(w->type == PnWidgetType_label);
     DASSERT(l == (void *) w);
     DASSERT(cr);
 
@@ -181,7 +181,7 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
         uint32_t xPadding, uint32_t yPadding,
         enum PnAlign align, // for text alignment
         enum PnExpand expand,
-        const char *text, size_t size) {
+        const char *text) {
 
     DASSERT(text);
     DASSERT(strlen(text));
@@ -201,13 +201,10 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
     if(width < xPadding)
         width = xPadding;
 
-    if(size < sizeof(struct PnLabel))
-        size = sizeof(struct PnLabel);
-    //
     struct PnLabel *l = (void *) pnWidget_create(parent,
             width, height,
             PnLayout_None, align/*align*/,
-            expand, size);
+            expand, sizeof(*l));
     if(!l)
         // TODO: Not sure that this can fail, other than memory allocation
         // failure.  For now, propagate the failure from
@@ -215,9 +212,9 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
         return 0; // Failure.
 
     // It starts out life as a widget:
-    DASSERT(l->widget.type == PnSurfaceType_widget);
+    DASSERT(l->widget.type == PnWidgetType_widget);
     // And now it becomes a label:
-    l->widget.type = PnSurfaceType_label;
+    l->widget.type = PnWidgetType_label;
     // which is also a widget too (and more bits):
     DASSERT(IS_TYPE(l->widget.type, WIDGET));
 
@@ -240,7 +237,7 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
 void pnLabel_setFontColor(struct PnWidget *w, uint32_t color) {
 
     DASSERT(w);
-    ASSERT(w->type == PnSurfaceType_label);
+    ASSERT(IS_TYPE(w->type, W_LABEL));
     struct PnLabel *l = (void *) w;
     l->fontColor = color;
 }

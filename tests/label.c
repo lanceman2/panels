@@ -39,8 +39,7 @@ static void Label(void) {
             0/*width*/, 30/*height*/,
             xPadding, yPadding,
             Rand(0,15)/*align*/,
-            PnExpand_HV/*expand*/,
-            text, 0/*size*/);
+            PnExpand_HV/*expand*/, text);
     ASSERT(label);
     pnLabel_setFontColor(label, 0xF0000000);
     pnWidget_setBackgroundColor(label, Color());

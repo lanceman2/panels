@@ -40,7 +40,7 @@ static void MenuBar(struct PnWidget *parent) {
             parent,
             0/*width*/, 0/*height*/,
             0/*layout*/, PnAlign_LT/*align*/,
-            PnExpand_None/*expand*/, 0/*size*/);
+            PnExpand_None/*expand*/);
     ASSERT(w);
 
     for(uint32_t i=Rand(3,9); i != -1; --i)

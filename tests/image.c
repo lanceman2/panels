@@ -21,7 +21,7 @@ static void W(const char *filename, uint32_t w, uint32_t h) {
             filename,
             w/*width*/, h/*height*/,
             PnAlign_RC/*align image relative to the widget surface*/,
-            PnExpand_HV/*expand*/, 0/*mem size*/);
+            PnExpand_HV/*expand*/);
     ASSERT(widget);
     //TODO: What does image widget do with background color.
     pnWidget_setBackgroundColor(widget, Color());

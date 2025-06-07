@@ -58,7 +58,7 @@ static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
     struct PnWidget *w = pnGraph_create(
             0/*parent*/,
             800/*width*/, 800/*height*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0);
+            PnExpand_HV/*expand*/);
     ASSERT(w);
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, Color());
@@ -106,7 +106,7 @@ int main(void) {
     struct PnWidget *w2 = MakeGraph(Plot2);
 
     pnSplitter_create(win/*parent*/, w1, w2,
-            true/*isHorizontal*/, 0/*size*/);
+            true/*isHorizontal*/);
 
     pnWindow_show(win, true);
 

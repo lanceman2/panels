@@ -31,7 +31,7 @@ void run(void) {
             20, 20,
             0/*align*/,
             PnExpand_H/*expand*/,
-            "Hello World!", 0/*size*/);
+            "Hello World!");
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color()/*random color*/);
 #endif

@@ -60,7 +60,7 @@ int main(void) {
     struct PnWidget *w = pnGraph_create(
             win/*parent*/,
             90/*width*/, 70/*height*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0);
+            PnExpand_HV/*expand*/);
     ASSERT(w);
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, 0xA0101010);

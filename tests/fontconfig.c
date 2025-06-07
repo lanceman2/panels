@@ -76,8 +76,7 @@ cairo_debug_reset_static_data();
             0/*width*/, 30/*height*/,
             10/*xPadding*/, 10/*yPadding*/,
             PnAlign_CC/*align*/,
-            PnExpand_HV/*expand*/,
-            "Hello World", 0/*size*/);
+            PnExpand_HV/*expand*/, "Hello World");
     ASSERT(label);
     pnWidget_setBackgroundColor(label, 0xFFF0F0F0);
     pnLabel_setFontColor(label, 0xFF000000);
@@ -90,8 +89,7 @@ cairo_debug_reset_static_data();
             0/*width*/, 30/*height*/,
             10/*xPadding*/, 10/*yPadding*/,
             PnAlign_CC/*align*/,
-            PnExpand_HV/*expand*/,
-            "Goodbye World", 0/*size*/);
+            PnExpand_HV/*expand*/, "Goodbye World");
     ASSERT(label);
     pnWidget_setBackgroundColor(label, 0xFFF0F0F0);
     pnLabel_setFontColor(label, 0xFF000000);

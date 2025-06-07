@@ -51,7 +51,7 @@ static void Generic(void) {
             win/*parent*/,
             100/*width*/, 200/*height*/,
             0/*layout*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0/*size*/);
+            PnExpand_HV/*expand*/);
     ASSERT(w);
 
     pnWidget_setBackgroundColor(w, Color());

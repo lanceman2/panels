@@ -29,7 +29,7 @@ static inline void AddWidget(const char *text,
                 0/*parent*/, 0/*width*/, textHeight,
                 10/*xPadding*/, 0/*yPadding*/,
                 PnAlign_RC/*align*/, PnExpand_HV/*expand*/,
-                text, 0/*size*/);
+                text);
     else
         w = pnWidget_createInGrid(
                 grid, width, height,

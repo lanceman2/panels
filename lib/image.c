@@ -43,7 +43,7 @@ void destroy(struct PnWidget *w, struct PnImage *image) {
 
     DASSERT(image);
     DASSERT(image = (void *) w);
-    DASSERT(w->type == PnSurfaceType_image);
+    DASSERT(w->type == PnWidgetType_image);
     DASSERT(image->surface);
 
     cairo_surface_destroy(image->surface);
@@ -53,7 +53,7 @@ void destroy(struct PnWidget *w, struct PnImage *image) {
 static int cairoDraw(struct PnWidget *widget,
             cairo_t *cr, struct PnImage *image) {
     DASSERT(image);
-    DASSERT(widget->type == PnSurfaceType_image);
+    DASSERT(widget->type == PnWidgetType_image);
     DASSERT(image == (void *) widget);
     DASSERT(image->surface);
     DASSERT(cr);
@@ -127,12 +127,9 @@ struct PnWidget *pnImage_create(struct PnWidget *parent,
         // it shrinks images.
         uint32_t width, uint32_t height,
         enum PnAlign align,
-        enum PnExpand expand, size_t size) {
+        enum PnExpand expand) {
 
     struct PnImage *image;
-
-    if(size < sizeof(*image))
-        size = sizeof(*image);
 
     cairo_surface_t *surface =
         cairo_image_surface_create_from_png(filename);
@@ -170,7 +167,7 @@ struct PnWidget *pnImage_create(struct PnWidget *parent,
     image = (void *) pnWidget_create(parent,
         width, height,
         PnLayout_None/*will have NO children*/,
-        align, expand, size);
+        align, expand, sizeof(*image));
     ASSERT(image);
     DASSERT(image->widget.type & WIDGET);
     image->widget.type |= W_IMAGE;

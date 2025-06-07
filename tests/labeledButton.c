@@ -49,17 +49,14 @@ static void Button(void) {
     struct PnWidget *button = pnButton_create(hbox,
             0/*width*/, 0/*height*/,
             0/*layout*/, 0/*align*/,
-            PnExpand_VH, 0/*label*/, false/*toggle*/,
-            0/*size*/);
+            PnExpand_VH, 0/*label*/, false/*toggle*/);
     ASSERT(button);
 
     struct PnWidget *l = (void *) pnLabel_create(
             button/*parent*/,
             0/*width*/, 30/*height*/,
             4/*xPadding*/, 4/*yPadding*/,
-            0/*align*/,
-            PnExpand_HV/*expand*/,
-            text, 0/*size*/);
+            0/*align*/, PnExpand_HV/*expand*/, text);
     ASSERT(l);
     pnLabel_setFontColor(l, 0xF0000000);
     uint32_t color = 0xDA000000 | (0x00FFFFFF & Color());

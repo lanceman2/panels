@@ -58,7 +58,7 @@ static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
     struct PnWidget *w = pnGraph_create(
             win/*parent*/,
             400/*width*/, 400/*height*/, 0/*align*/,
-            PnExpand_HV/*expand*/, 0);
+            PnExpand_HV/*expand*/);
     ASSERT(w);
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, Color());

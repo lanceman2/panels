@@ -349,7 +349,7 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand,
-        const char *label, bool toggle, size_t size) {
+        const char *label, bool toggle) {
 
     ASSERT(!toggle, "WRITE MORE CODE");
 
@@ -365,23 +365,20 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     // we're hoping to auto-generate these parameters as this button
     // abstraction evolves.
     //
-    if(size < sizeof(struct PnButton))
-        size = sizeof(struct PnButton);
-    //
     struct PnButton *b = (void *) pnWidget_create(parent,
             width, height,
-            layout, align, expand, size);
+            layout, align, expand, sizeof(*b));
     if(!b)
         // A common error mode is that the parent cannot have children.
         // pnWidget_create() should spew for us.
         return 0; // Failure.
 
     // Setting the widget surface type.  We decrease the data, but
-    // increase the complexity.  See enum PnSurfaceType in display.h.
+    // increase the complexity.  See enum PnWidgetType in display.h.
     // It's so easy to forget about all these bits, but DASSERT() is my
     // hero.
-    DASSERT(b->widget.type == PnSurfaceType_widget);
-    b->widget.type = PnSurfaceType_button;
+    DASSERT(b->widget.type == PnWidgetType_widget);
+    b->widget.type = PnWidgetType_button;
     DASSERT(b->widget.type & WIDGET);
 
     // Add widget callback functions:

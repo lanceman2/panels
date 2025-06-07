@@ -11,20 +11,24 @@
 // of widget inheritance (in this C sense of inheritance).  We assign N
 // bit layer at each level of widget inheritance, so if a widget
 // inherits another widget it gets a type number that is a combination of
-// two type numbers.  So far it looks like plenty of widget type number
-// with just one 32 bit number.
+// two type numbers.  So far it looks like there are plenty of widget type
+// numbers with just one 32 bit number.
 //
-// Note: In panels widget layout is a separate thing from widget type,
-// though the two are not necessarily independent.
+// Note: In panels, widget layout is a separate thing from widget type,
+// though the two are not necessarily independent (orthogonal attributes).
+//
+// We keep a one widget type at each level.  The higher level type
+// inherits a lower level type.  So widgets can be more than one type of
+// widget at a time; though most widgets are just one type at level 1.
 
 // Two Wayland like types:
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set
-// LEVEL 0 WIDGET
+// The LEVEL 0 WIDGET
 #define WIDGET           (04) // third bit set
 //
-// Does x include a type (bits) in it.
-#define IS_TYPE(x, type)  (((x) & (type)) == (type))
+// Does X include a type (bits) in it.
+#define IS_TYPE(X, type)  (((X) & (type)) == (type))
 // WIDGET TYPES: are a number in the (starting by skipping first 3 bits)
 // higher bits.
 //
@@ -46,7 +50,7 @@
 //
 // These are widgets that inherit at least an above LEVEL 1 widget
 // LEVEL 2 widgets (based on LEVEL 1 widget types)
-#define W_MENU           (1 << (10)) // See PnSurfaceType_menu
+#define W_MENU           (1 << (10)) // See PnWidgetType_menu
 // ADD MORE up to number 63
 //
 // Lets say we can have 63 widget types based on LEVEL 1 widgets
@@ -68,38 +72,32 @@
 // 28 and so we still have 3 bits left to get to the maximum bit shift of
 // 31.
 
-
-
-
-// If we add more (Wayland client) surface types we'll need to check all
-// the code.
 //
 // TODO: Add a Wayland subsurface to this type thingy?
 //
-// TODO: Rename SurfaceType to WidgetType?
-//
-enum PnSurfaceType {
+
+enum PnWidgetType {
 
     // Yes, a popup window is in a sense a toplevel window; but we call it
     // a popup, and not a toplevel, and so does wayland-client.
 
     // 2 Window Surface types (Wayland client things):
-    PnSurfaceType_toplevel   = TOPLEVEL, // From xdg_surface_get_toplevel()
-    PnSurfaceType_popup      = POPUP,    // From wl_shell_surface_set_popup()
+    PnWidgetType_toplevel   = TOPLEVEL, // From xdg_surface_get_toplevel()
+    PnWidgetType_popup      = POPUP,    // From wl_shell_surface_set_popup()
 
     // Widget Surface types:  Not a Wayland client thing.
-    PnSurfaceType_widget     = WIDGET, // a rectangular piece of a mmap()
+    PnWidgetType_widget     = WIDGET, // a rectangular piece of a mmap()
                                        // surface
 
-    PnSurfaceType_generic    = (WIDGET | W_GENERIC), // a generic example widget
-    PnSurfaceType_label      = (WIDGET | W_LABEL), // a label widget
-    PnSurfaceType_button     = (WIDGET | W_BUTTON), // a button widget
-    PnSurfaceType_menuitem   = (WIDGET | W_MENUITEM),
-    PnSurfaceType_menubar    = (WIDGET | W_MENUBAR),
-    PnSurfaceType_image      = (WIDGET | W_IMAGE),
-    PnSurfaceType_graph      = (WIDGET | W_GRAPH),
-    PnSurfaceType_splitter   = (WIDGET | W_SPLITTER),
-    PnSurfaceType_menu       = (WIDGET | W_BUTTON | W_MENU)
+    PnWidgetType_generic    = (WIDGET | W_GENERIC), // a generic example widget
+    PnWidgetType_label      = (WIDGET | W_LABEL), // a label widget
+    PnWidgetType_button     = (WIDGET | W_BUTTON), // a button widget
+    PnWidgetType_menuitem   = (WIDGET | W_MENUITEM),
+    PnWidgetType_menubar    = (WIDGET | W_MENUBAR),
+    PnWidgetType_image      = (WIDGET | W_IMAGE),
+    PnWidgetType_graph      = (WIDGET | W_GRAPH),
+    PnWidgetType_splitter   = (WIDGET | W_SPLITTER),
+    PnWidgetType_menu       = (WIDGET | W_BUTTON | W_MENU)
 };
 
 
@@ -193,14 +191,14 @@ struct PnAction {
     uint32_t actionIndex;
 };
 
-// surface type PnSurfaceType_widget
+// surface type PnWidgetType_widget
 //
 // Widgets do not have a Wayland surface (wl_surface) or other related
 // Wayland client objects in them.  Widgets use the parent window (parent
 // most) objects Wayland client stuff to draw to.
 struct PnWidget {
 
-    enum PnSurfaceType type;
+    enum PnWidgetType type;
 
     // A link in the draw queue.
     struct PnWidget *dqNext, *dqPrev;
@@ -470,7 +468,7 @@ struct PnDrawQueue {
     struct PnWidget *first, *last;
 };
 
-// surface type (widget.type) can be a toplevel or a popup
+// widget surface type (widget.type) can be a toplevel or a popup
 struct PnWindow {
 
     // 1st inherit widget

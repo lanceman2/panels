@@ -49,7 +49,7 @@ int main(void) {
 #endif
 
     pnSplitter_create(win/*parent*/, w1, w2,
-        isHorizontal/*isHorizontal*/, 0/*size*/);
+        isHorizontal/*isHorizontal*/);
 
     pnWindow_show(win, true);
 

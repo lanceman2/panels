@@ -66,7 +66,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 bool InitToplevel(struct PnWindow *win) {
 
     DASSERT(win);
-    DASSERT(win->widget.type == PnSurfaceType_toplevel);
+    DASSERT(win->widget.type == PnWidgetType_toplevel);
     DASSERT(!win->toplevel.xdg_toplevel);
 
     win->toplevel.xdg_toplevel =

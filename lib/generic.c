@@ -99,7 +99,7 @@ static bool press(struct PnWidget *w,
             struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
+    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    press(%p)[%" PRIi32 ",%" PRIi32 "]\n",
@@ -118,7 +118,7 @@ static bool release(struct PnWidget *w,
             struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
+    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
@@ -133,7 +133,7 @@ static bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
+    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
@@ -145,7 +145,7 @@ static bool enter(struct PnWidget *w,
 static void leave(struct PnWidget *w, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnSurfaceType_generic);
+    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    leave(%p)[]\n", w);
@@ -240,15 +240,11 @@ struct PnWidget *pnGeneric_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
-        enum PnExpand expand,
-        size_t size) {
+        enum PnExpand expand) {
 
-    if(size < sizeof(struct PnGeneric))
-        size = sizeof(struct PnGeneric);
-    //
     struct PnGeneric *g = (void *) pnWidget_create(parent,
             width, height,
-            layout, align, expand, size);
+            layout, align, expand, sizeof(*g));
     if(!g)
         // A common error mode is that the parent cannot have children.
         // pnWidget_create() should spew for us.
@@ -258,8 +254,8 @@ struct PnWidget *pnGeneric_create(struct PnWidget *parent,
     // increase the complexity.  See enum PnSurfaceType in display.h.
     // It's so easy to forget about all these bits, but DASSERT() is my
     // hero.
-    DASSERT(g->widget.type == PnSurfaceType_widget);
-    g->widget.type = PnSurfaceType_generic;
+    DASSERT(g->widget.type == PnWidgetType_widget);
+    g->widget.type = PnWidgetType_generic;
     DASSERT(g->widget.type & WIDGET);
 
     // Add common widget callback functions:

@@ -1050,12 +1050,9 @@ void pnGraph_setView(struct PnWidget *w,
 
 struct PnWidget *pnGraph_create(struct PnWidget *parent,
         uint32_t width, uint32_t height, enum PnAlign align,
-        enum PnExpand expand, size_t size) {
+        enum PnExpand expand) {
 
     struct PnGraph *g;
-
-    if(size < sizeof(*g))
-        size = sizeof(*g);
 
     g = (void *) pnWidget_create(
             parent/*parent*/,
@@ -1065,13 +1062,13 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
                            make a 2D plotter.  The transparent part of the
                            child widget will show the under laying grid
                            lines.*/,
-            align, expand, size);
+            align, expand, sizeof(*g));
     ASSERT(g);
 
     // It starts out life as a widget:
-    DASSERT(g->widget.type == PnSurfaceType_widget);
+    DASSERT(g->widget.type == PnWidgetType_widget);
     // And now it becomes a graph:
-    g->widget.type = PnSurfaceType_graph;
+    g->widget.type = PnWidgetType_graph;
     // which is also a widget too (and more bits):
     DASSERT(g->widget.type & WIDGET);
 

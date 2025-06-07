@@ -83,7 +83,7 @@ struct PnWidget *_pnWidget_createFull(
     widget->clip = true; // true or false
 
     widget->expand = expand;
-    widget->type = PnSurfaceType_widget;
+    widget->type = PnWidgetType_widget;
     if(widget->layout == PnLayout_Grid) {
         //DASSERT(column);
         //DASSERT(row);
