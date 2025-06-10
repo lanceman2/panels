@@ -31,7 +31,7 @@ static void configure(void *data,
 	int32_t x, int32_t y,
 	int32_t width, int32_t height) {
 
-    DSPEW();
+    //DSPEW();
 }
 
 static void popup_done(void *data, struct xdg_popup *xdg_popup) {
@@ -69,7 +69,7 @@ bool InitPopup(struct PnWindow *win,
     DASSERT(parent);
 
     // A user could do this accidentally, I did and I'm a developer.
-    ASSERT(parent->widget.type == PnWidgetType_toplevel);
+    ASSERT(parent->widget.type & (TOPLEVEL|POPUP));
 
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);

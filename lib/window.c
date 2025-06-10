@@ -194,15 +194,11 @@ static struct wl_callback_listener callback_listener = {
 
 
 static inline
-struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
+struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
-
-    ASSERT(!parent || IS_TYPE(parent->widget.type, TOPLEVEL)
-            || IS_TYPE(parent->widget.type, POPUP));
-    DASSERT(layout != PnLayout_None || (w && h));
 
     if(layout == PnLayout_None && !(w && h)) {
         ERROR("A window with no child widgets must have non-zero "
@@ -219,16 +215,37 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
     win->widget.reqWidth = w;
     win->widget.reqHeight = h;
 
-    if(parent) {
-        // A popup
-        win->popup.parent = parent;
-        win->widget.type = PnWidgetType_popup;
-        AddWindow(win, parent->toplevel.popups,
-                &parent->toplevel.popups);
-    } else {
-        // A toplevel
+    if(!pWidget) {
+        // We are making a toplevel window.
         win->widget.type = PnWidgetType_toplevel;
         AddWindow(win, d.windows, &d.windows);
+    } else {
+        // We are making a popup window.
+        win->widget.type = PnWidgetType_popup;
+
+        // Let pwin be the parent toplevel window we seek.
+        struct PnWindow *pwin = (void *) pWidget;
+
+        if(IS_TYPE(pWidget->type, POPUP)) {
+            // We'll let the parent start as another popup, but find the
+            // toplevel window from that.
+            pwin = pwin->popup.parent;
+            DASSERT(pwin);
+            DASSERT(IS_TYPE(pwin->widget.type, TOPLEVEL));
+        } else if(!IS_TYPE(pWidget->type, TOPLEVEL)) {
+            // We'll find the toplevel from a non-window widgets window.
+            DASSERT(IS_TYPE(pWidget->type, WIDGET));
+            pwin = pWidget->window;
+            DASSERT(pwin);
+            if(IS_TYPE(pwin->widget.type, POPUP)) {
+                pwin = pwin->popup.parent;
+                DASSERT(pwin);
+            }
+            DASSERT(IS_TYPE(pwin->widget.type, TOPLEVEL));
+        }
+
+        win->popup.parent = pwin;
+        AddWindow(win, pwin->toplevel.popups, &pwin->toplevel.popups);
     }
 
     win->buffer.pixels = MAP_FAILED;
@@ -279,7 +296,6 @@ struct PnWindow *_pnWindow_createFull(struct PnWindow *parent,
                 goto fail;
             break;
         case PnWidgetType_popup:
-            DASSERT(parent);
             if(InitPopup(win, w, h, x, y))
                 goto fail;
             break;
@@ -302,7 +318,7 @@ struct PnWidget *pnWindow_createAsGrid(struct PnWidget *parent,
         uint32_t numColumns, uint32_t numRows) {
     DASSERT(numColumns);
     DASSERT(numRows);
-    return (void *) _pnWindow_createFull((void *) parent, w, h, x, y,
+    return (void *) _pnWindow_createFull(parent, w, h, x, y,
             PnLayout_Grid, align, expand, numColumns, numRows);
 }
 
@@ -311,7 +327,7 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand) {
     ASSERT(layout != PnLayout_Grid);
-    return (void *) _pnWindow_createFull((void *) parent, w, h, x, y,
+    return (void *) _pnWindow_createFull(parent, w, h, x, y,
             layout, align, expand, -1/*numColumns*/, -1/*numRows*/);
 }
 

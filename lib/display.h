@@ -38,8 +38,8 @@
 #define W_LABEL          (2 << 3)
 #define W_BUTTON         (3 << 3)
 #define W_TOGGLE_BUTTON  (4 << 3)
-#define W_MENU_BAR        (5 << 3)
-#define W_MENU_ITEM       (6 << 3)
+#define W_MENU_BAR       (5 << 3)
+#define W_MENU_ITEM      (6 << 3)
 #define W_SPLITTER       (7 << 3)
 #define W_IMAGE          (8 << 3)
 #define W_GRAPH          (9 << 3) // 2D graph plotter with grid lines
@@ -504,7 +504,7 @@ struct PnWindow {
         struct {
             struct xdg_toplevel *xdg_toplevel;
             // list of child popups
-     struct PnWindow *popups; // points to newest one
+            struct PnWindow *popups; // points to newest one
         } toplevel;
         // for surface window type popup
         struct {

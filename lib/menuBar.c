@@ -15,13 +15,7 @@
 #include "debug.h"
 #include "display.h"
 #include "SetColor.h"
-
-
-struct PnMenuBar {
-
-    struct PnWidget widget; // inherit first
-
-};
+#include "menuBar.h"
 
 
 struct PnWidget *pnMenuBar_create(struct PnWidget *parent,

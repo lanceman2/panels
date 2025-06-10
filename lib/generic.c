@@ -99,7 +99,6 @@ static bool press(struct PnWidget *w,
             struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    press(%p)[%" PRIi32 ",%" PRIi32 "]\n",
@@ -118,7 +117,6 @@ static bool release(struct PnWidget *w,
             struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n  release(%p)[%" PRIi32 ",%" PRIi32 "]\n",
@@ -133,7 +131,6 @@ static bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
@@ -145,7 +142,6 @@ static bool enter(struct PnWidget *w,
 static void leave(struct PnWidget *w, struct PnGeneric *g) {
     DASSERT(g);
     DASSERT(g == (void *) w);
-    DASSERT(w->type == PnWidgetType_generic);
     DASSERT(IS_TYPE(w->type, W_GENERIC));
 
     fprintf(stderr, "\n    leave(%p)[]\n", w);
