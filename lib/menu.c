@@ -63,7 +63,6 @@ static bool enterPopup(struct PnWidget *popup,
     struct PnAllocation pa;
     pnWidget_getAllocation(popup, &pa);
 
-
     // The parent for the popup is the "panels" window that owns this
     // button (menu thingy), and not necessarily the menu button.  The
     // popup is a window with it's own pixel memory allocations and
