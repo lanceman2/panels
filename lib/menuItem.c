@@ -21,8 +21,6 @@ struct PnMenuItem {
 
     struct PnWidget *button;
 
-    // Optional
-    struct PnWidget *popup;
 };
 
 

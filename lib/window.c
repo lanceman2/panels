@@ -338,12 +338,11 @@ void pnWindow_show(struct PnWidget *w, bool show) {
     ASSERT(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP));
     struct PnWindow *win = (void *) w;
     DASSERT(win->wl_surface);
-    ASSERT(show, "WRITE MORE CODE FOR THIS CASE");
 
     // During and after pnWindow_create() non of the wl_suface (and other
     // wayland client window objects) callbacks are called yet.
 
-    // Make it be one of two values.
+    // Make it be one of two values; true can be equal to many values.
     show = show ? true: false;
 
     if(win->widget.hidden == !show)
@@ -362,8 +361,15 @@ void pnWindow_show(struct PnWidget *w, bool show) {
         //
         // This has no error return.
         wl_surface_commit(win->wl_surface);
-    else
+    else if(show)
         pnWidget_queueDraw(w, true/*allocate*/);
+    else if(win->buffer.wl_buffer) {
+        // ref: https://github.com/emersion/wleird.git
+        // unmap.c
+        //
+        wl_surface_attach(win->wl_surface, NULL, 0, 0);
+	wl_surface_commit(win->wl_surface);
+    }
 }
 
 

@@ -22,8 +22,8 @@ struct PnMenu {
     // dereferencing) but we don't need to expose the full class (struct)
     // data structure in a header file.
     //
-    // Why?  Why not.  It's not very efficient and we learn from it.
-    // Most code does this shit all the time.
+    // Why are we doing this?  Why not.  It's not very efficient and we
+    // learn from it.  Most code does this shit all the time.
     //
     // We'll use this pointer as the User interface pointer of this
     // structure, instead of a pointer to this structure.  We just append

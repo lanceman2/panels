@@ -82,7 +82,6 @@ static void leavePopup(struct PnWidget *w, struct PnMenu *m) {
 }
 
 
-
 static inline void ReCreatePopup(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->button);
@@ -129,8 +128,12 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
     if(m->button->parent && IS_TYPE(m->button->parent->type, W_MENU_BAR)) {
         // This menu is in a memu bar.
         struct PnMenuBar *mb = (void *) m->button->parent;
-        DestroyPopup(mb->menu);
-        // Change the active menu to "m".
+        //DestroyPopup(mb->menu);
+        if(m->popup) {
+            WARN();
+            pnWindow_show(m->popup, false);
+        }
+        // Change the active menu in the menuBar to "m".
         mb->menu = m;
     }
 
