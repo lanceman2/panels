@@ -107,13 +107,13 @@ enum PnWidgetType {
     PnWidgetType_widget     = 0, // a rectangular piece of a mmap()
                                  // surface
     // inherits widget, LEVEL1
-    PnWidgetType_generic    = W_GENERIC, // a generic example widget
-    PnWidgetType_label      = W_LABEL, // a label widget
-    PnWidgetType_button     = W_BUTTON, // a button widget
-    PnWidgetType_menubar    = W_MENU_BAR,
-    PnWidgetType_image      = W_IMAGE,
-    PnWidgetType_graph      = W_GRAPH,
-    PnWidgetType_splitter   = W_SPLITTER,
+    PnWidgetType_generic      = W_GENERIC, // a generic example widget
+    PnWidgetType_label        = W_LABEL, // a label widget
+    PnWidgetType_button       = W_BUTTON, // a button widget
+    PnWidgetType_menubar      = W_MENU_BAR,
+    PnWidgetType_image        = W_IMAGE,
+    PnWidgetType_graph        = W_GRAPH,
+    PnWidgetType_splitter     = W_SPLITTER,
     PnWidgetType_togglebutton = W_TOGGLE_BUTTON,
     
     // inherits level 1 and widget, LEVEL2
