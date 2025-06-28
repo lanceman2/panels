@@ -27,9 +27,12 @@
 //#define WINDOW           (TOPLEVEL | POPUP)
 // The LEVEL 0 WIDGET
 // They are all widgets, so we do not need this.
+// TODO: Ops we wasted a bit ... We do not need WIDGET,
+// they are all widgets; even TOPLEVEL and POPUP.
+//
 //#define WIDGET           (04) // third bit set
 
-// Does X include a type (bits) in it.  Note (CAUTION): there may be more
+// Does X include a type (bits) in it?  Note (CAUTION): there may be more
 // than one bit set in (X) so using X & type will not do.  Widgets can
 // be of more than one type at a time; like W_MENU is a W_BUTTON too.
 //
