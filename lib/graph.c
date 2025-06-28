@@ -1028,7 +1028,7 @@ void pnGraph_setView(struct PnWidget *w,
         double xMin, double xMax, double yMin, double yMax) {
 
     DASSERT(w);
-    ASSERT(IS_TYPE(w->type, W_GRAPH));
+    ASSERT(IS_TYPE1(w->type, PnWidgetType_graph));
     DASSERT(xMin < xMax);
     DASSERT(yMin < yMax);
 
@@ -1069,8 +1069,6 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     DASSERT(g->widget.type == PnWidgetType_widget);
     // And now it becomes a graph:
     g->widget.type = PnWidgetType_graph;
-    // which is also a widget too (and more bits):
-    DASSERT(g->widget.type & WIDGET);
 
     // Add widget callback functions:
     pnWidget_setCairoDraw(&g->widget, (void *) cairoDraw, g);

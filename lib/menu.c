@@ -30,7 +30,7 @@ void destroy(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(b);
     DASSERT(m);
     DASSERT(b == m->button);
-    DASSERT(IS_TYPE(b->type, W_MENU));
+    DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
     DZMEM(m, sizeof(*m));
     free(m);
@@ -123,9 +123,10 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
     DASSERT(b);
     DASSERT(m);
     DASSERT(b == m->button);
-    DASSERT(IS_TYPE(b->type, W_MENU));
+    DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
-    if(m->button->parent && IS_TYPE(m->button->parent->type, W_MENU_BAR)) {
+    if(m->button->parent &&
+            IS_TYPE2(m->button->parent->type, PnWidgetType_menubar)) {
         // This menu is in a memu bar.
         struct PnMenuBar *mb = (void *) m->button->parent;
         //DestroyPopup(mb->menu);
@@ -148,7 +149,7 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(b);
     DASSERT(m);
     DASSERT(b == m->button);
-    DASSERT(IS_TYPE(b->type, W_MENU));
+    DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
 fprintf(stderr, "    leave widget=%p \n", b);
 
@@ -176,7 +177,6 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
     }
 
     DASSERT(m->button->type == PnWidgetType_button);
-    DASSERT(m->button->type & WIDGET);
     m->button->type = PnWidgetType_menu;
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);

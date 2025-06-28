@@ -24,7 +24,7 @@ void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
 
     DASSERT(actionIndex == PN_GRAPH_CB_STATIC_DRAW);
     DASSERT(w);
-    ASSERT(IS_TYPE(w->type, W_GRAPH));
+    ASSERT(IS_TYPE1(w->type, PnWidgetType_graph));
 
     // Set the plot default settings:
     struct PnPlot *p = (void *) callback;
@@ -49,7 +49,7 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(g->lineCr);
     DASSERT(g->pointCr);
     DASSERT(g->bgSurface);
-    ASSERT(IS_TYPE(g->widget.type, W_GRAPH));
+    ASSERT(IS_TYPE1(g->widget.type, PnWidgetType_graph));
     DASSERT(userCallback);
 
     struct PnPlot *p = (void *) callback;

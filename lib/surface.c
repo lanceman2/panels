@@ -489,7 +489,6 @@ void InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
         uint32_t cSpan, uint32_t rSpan) {
 
     DASSERT(s);
-    DASSERT(s->type);
 
     if(s->layout == PnLayout_Grid) {
         DASSERT(!s->g.numRows);
@@ -505,12 +504,12 @@ void InitSurface(struct PnWidget *s, uint32_t column, uint32_t row,
     }
 
     if(!s->parent) {
-        DASSERT(IS_TYPE(s->type, TOPLEVEL) || IS_TYPE(s->type, POPUP));
+        DASSERT((s->type & TOPLEVEL) || (s->type & POPUP));
         // this is a window.
         return;
     }
     // this is a widget and not a window.
-    DASSERT(!IS_TYPE(s->type, TOPLEVEL) && !IS_TYPE(s->type, POPUP));
+    DASSERT(!(s->type & (TOPLEVEL | POPUP)));
 
     // Default widget background color is that of it's
     // parent.

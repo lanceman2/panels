@@ -93,7 +93,7 @@ struct PnWidget *_pnWidget_createFull(
         widget->g.numRows = row;
     }
 
-    if(!IS_TYPE(widget->type, TOPLEVEL) && !IS_TYPE(widget->type, POPUP))
+    if(!(widget->type & TOPLEVEL) && !(widget->type & POPUP))
         widget->window = parent->window;
     else
         widget->window = (void *) parent;
@@ -172,7 +172,6 @@ void pnWidget_destroy(struct PnWidget *w) {
 
     DASSERT(w);
     //DASSERT(w->parent);
-    ASSERT(w->type & WIDGET);
 
     // Free actions
     if(w->actions) {
@@ -209,7 +208,7 @@ void pnWidget_destroy(struct PnWidget *w) {
 
     DestroySurface(w);
 
-    if(IS_TYPE(w->type, TOPLEVEL) || IS_TYPE(w->type, POPUP)) {
+    if((w->type & TOPLEVEL) || (w->type & POPUP)) {
         _pnWindow_destroy(w);
         return;
     }
@@ -221,7 +220,6 @@ void pnWidget_destroy(struct PnWidget *w) {
 void pnWidget_show(struct PnWidget *widget, bool show) {
 
     DASSERT(widget);
-    ASSERT(widget->type & WIDGET);
     DASSERT(widget->window);
 
     // Make it be one of two values.  Because we can have things like (3)

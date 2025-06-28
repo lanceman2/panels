@@ -53,7 +53,6 @@ struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
     }
 
     DASSERT(m->button->type == PnWidgetType_button);
-    DASSERT(m->button->type & WIDGET);
     m->button->type = PnWidgetType_menuitem;
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);

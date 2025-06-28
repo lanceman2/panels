@@ -20,7 +20,7 @@
 
 static inline void Check(struct PnWidget *g) {
     DASSERT(g);
-    ASSERT(IS_TYPE(g->type, W_GRAPH));
+    ASSERT(IS_TYPE1(g->type, PnWidgetType_graph));
 }
 
 void pnGraph_setSubGridColor(struct PnWidget *g, uint32_t color) {

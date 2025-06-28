@@ -103,7 +103,7 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
     DASSERT(l == (void *) widget);
     DASSERT(w);
     DASSERT(h);
-    DASSERT(widget->type == PnWidgetType_label);
+    DASSERT(IS_TYPE1(widget->type, PnWidgetType_label));
     //l->width = w;
     //l->height = h;
 }
@@ -111,7 +111,7 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnLabel *l) {
     DASSERT(l);
-    DASSERT(w->type == PnWidgetType_label);
+    DASSERT(IS_TYPE1(w->type, PnWidgetType_label));
     DASSERT(l == (void *) w);
     DASSERT(cr);
 
@@ -126,6 +126,7 @@ void destroy(struct PnWidget *w, struct PnLabel *l) {
 
     DASSERT(l);
     DASSERT(l = (void *) w);
+    DASSERT(IS_TYPE1(w->type, PnWidgetType_label));
     DASSERT(l->text);
     DZMEM(l->text, strlen(l->text));
     free(l->text);
@@ -216,7 +217,6 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
     // And now it becomes a label:
     l->widget.type = PnWidgetType_label;
     // which is also a widget too (and more bits):
-    DASSERT(IS_TYPE(l->widget.type, WIDGET));
 
     l->fontSize = fontSize;
     l->fontColor = 0xFF000000;
@@ -237,7 +237,7 @@ struct PnWidget *pnLabel_create(struct PnWidget *parent,
 void pnLabel_setFontColor(struct PnWidget *w, uint32_t color) {
 
     DASSERT(w);
-    ASSERT(IS_TYPE(w->type, W_LABEL));
+    ASSERT(IS_TYPE1(w->type, PnWidgetType_label));
     struct PnLabel *l = (void *) w;
     l->fontColor = color;
 }

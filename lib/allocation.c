@@ -103,7 +103,7 @@ static bool ResetChildrenCull(const struct PnWidget *s) {
     // controlled by the splitter container widget to be squished to the
     // side.
     //
-    if(s->parent && IS_TYPE(s->parent->type, W_SPLITTER))
+    if(s->parent && IS_TYPE1(s->parent->type, PnWidgetType_splitter))
         if( (s->parent->l.firstChild && s->parent->l.firstChild == s
                 && ((struct PnSplitter *)s->parent)->firstHidden)
                     ||
@@ -227,9 +227,7 @@ static uint32_t ResetCanExpand(struct PnWidget *s) {
 //
 static inline uint32_t GetBWidth(const struct PnWidget *s) {
 
-    DASSERT(s->type & WIDGET);
-
-    if(IS_TYPE(s->type, W_SPLITTER))
+    if(IS_TYPE1(s->type, PnWidgetType_splitter))
         // The splitter container has no child separator borders.
         return 0;
 
@@ -245,8 +243,6 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
     if(!(s->type & (TOPLEVEL | POPUP)))
         return PN_MIN_WIDGET_WIDTH;
 
-    DASSERT(s->type & (TOPLEVEL | POPUP));
-
     return PN_DEFAULT_WINDOW_WIDTH;
 }
 
@@ -259,7 +255,9 @@ static inline uint32_t GetBWidth(const struct PnWidget *s) {
 //
 static inline uint32_t GetBHeight(const struct PnWidget *s) {
 
-    DASSERT(s->type & WIDGET);
+    if(IS_TYPE1(s->type, PnWidgetType_splitter))
+        // The splitter container has no child separator borders.
+        return 0;
 
     if(s->layout == PnLayout_Cover && HaveChildren(s))
         // The container with PnLayout_Cover can't have borders
@@ -273,8 +271,6 @@ static inline uint32_t GetBHeight(const struct PnWidget *s) {
     if(!(s->type & (TOPLEVEL | POPUP)))
         return PN_MIN_WIDGET_HEIGHT;
 
-    DASSERT(s->type == PnWidgetType_popup ||
-            s->type == PnWidgetType_toplevel);
     return PN_DEFAULT_WINDOW_HEIGHT;
 }
 
@@ -2007,7 +2003,7 @@ static void ExpandChildren(const struct PnWidget *s,
     struct PnWidget *c;
 
     // This is like an if().  I did not know how to break from an if().
-    if(IS_TYPE(s->type, W_SPLITTER))
+    if(IS_TYPE1(s->type, PnWidgetType_splitter))
         Splipper_preExpand(s, a);
 
     switch(s->layout) {
@@ -2139,8 +2135,8 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
 
     if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);
-        DASSERT(s->type == PnWidgetType_toplevel ||
-                s->type == PnWidgetType_popup);
+        DASSERT((s->type & PnWidgetType_toplevel) ||
+                (s->type & PnWidgetType_popup));
         a->width = GetBWidth(s);
         a->height = GetBHeight(s);
     }
@@ -2152,8 +2148,8 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
     //
 
     if(!HaveChildren(s)) {
-        DASSERT(s->type == PnWidgetType_toplevel ||
-                s->type == PnWidgetType_popup);
+        DASSERT((s->type & PnWidgetType_toplevel) ||
+                (s->type & PnWidgetType_popup));
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.

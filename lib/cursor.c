@@ -58,9 +58,6 @@ bool pnWindow_setCursor(struct PnWidget *w, const char *name) {
     DASSERT(surface);
     //DASSERT(d.pointerWindow);
     DASSERT(d.surface_damage_func);
-    DASSERT((w->type & TOPLEVEL) ||
-            (w->type & POPUP) ||
-            (w->type & WIDGET));
 
     struct PnWindow *win;
     switch(w->type & (TOPLEVEL|POPUP)) {

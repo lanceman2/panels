@@ -69,7 +69,8 @@ bool InitPopup(struct PnWindow *win,
     DASSERT(parent);
 
     // A user could do this accidentally, I did and I'm a developer.
-    ASSERT(parent->widget.type & (TOPLEVEL|POPUP));
+    ASSERT((parent->widget.type & TOPLEVEL) ||
+            (parent->widget.type & POPUP));
 
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);

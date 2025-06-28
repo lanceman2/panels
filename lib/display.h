@@ -21,14 +21,23 @@
 // inherits a lower level type.  So widgets can be more than one type of
 // widget at a time; though most widgets are just one type at level 1.
 
-// Two Wayland like types:
+// Two Wayland like (or window) types:
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set
+//#define WINDOW           (TOPLEVEL | POPUP)
 // The LEVEL 0 WIDGET
-#define WIDGET           (04) // third bit set
+// They are all widgets, so we do not need this.
+//#define WIDGET           (04) // third bit set
+
+// Does X include a type (bits) in it.  Note (CAUTION): there may be more
+// than one bit set in (X) so using X & type will not do.  Widgets can
+// be of more than one type at a time; like W_MENU is a W_BUTTON too.
 //
-// Does X include a type (bits) in it.
-#define IS_TYPE(X, type)  (((X) & (type)) == (type))
+#define IS_TYPE1(X, type)  (((LEVEL1) & (X)) == (type))
+#define IS_TYPE2(X, type)  (((LEVEL2) & (X)) == (type))
+#define IS_TYPE3(X, type)  (((LEVEL3) & (X)) == (type))
+#define IS_TYPE4(X, type)  (((LEVEL4) & (X)) == (type))
+
 // WIDGET TYPES: are a number in the (starting by skipping first 3 bits)
 // higher bits.
 //
@@ -39,10 +48,10 @@
 #define W_BUTTON         (3 << 3)
 #define W_TOGGLE_BUTTON  (4 << 3)
 #define W_MENU_BAR       (5 << 3)
-#define W_MENU_ITEM      (6 << 3)
-#define W_SPLITTER       (7 << 3)
+#define W_SPLITTER       (6 << 3)
+#define W_GRAPH          (7 << 3) // 2D graph plotter with grid lines
 #define W_IMAGE          (8 << 3)
-#define W_GRAPH          (9 << 3) // 2D graph plotter with grid lines
+#define LEVEL1           (127 << 3) // All level 1 bits
 // ADD MORE up to number 127
 //
 // Lets say we can have 127 widget types based on WIDGET.
@@ -50,22 +59,26 @@
 //
 // These are widgets that inherit at least an above LEVEL 1 widget
 // LEVEL 2 widgets (based on LEVEL 1 widget types)
-#define W_MENU           (1 << (10)) // See PnWidgetType_menu
+#define W_MENU           (1 << 10) // See PnWidgetType_menu
+#define W_MENU_ITEM      (2 << 10)
+#define LEVEL2           ((63 << 10) | LEVEL1) // All level 2 bits
 // ADD MORE up to number 63
 //
 // Lets say we can have 63 widget types based on LEVEL 1 widgets
 // 10 + 6 = 16
 //
 // LEVEL 3 widgets (based on LEVEL 2 widget types)
-#define W_FOO            (1 << (16)) // Not real.  Just a bookmark.
-#define W_FOO2           (2 << (16))
+#define W_FOO            (1 << 16) // Not real.  Just a bookmark.
+#define W_FOO2           (2 << 16)
+#define LEVEL3           ((63 << 16) | LEVEL2) // All level 3 bits
 // CHANGE AND ADD MORE up to 63
 //
 // Lets say we can have 63 widget types based on LEVEL 2 widgets
 // 16 + 6 = 22
 //
 // LEVEL 4 widgets
-#define W_BAR            (1 << (22))
+#define W_BAR            (1 << 22)
+#define LEVEL4           ((63 << 22) | LEVEL3) // All level 4 bits
 // CHANGE AND ADD MORE up to 63
 //
 // Lets say we can have 63 widget types based on LEVEL 3 widgets 22 + 6 =
@@ -83,24 +96,24 @@ enum PnWidgetType {
 
     // 2 Window Surface types (Wayland client things):
     // From xdg_surface_get_toplevel()
-    PnWidgetType_toplevel   = WIDGET | TOPLEVEL,
+    PnWidgetType_toplevel   = TOPLEVEL,
     // From wl_shell_surface_set_popup()
-    PnWidgetType_popup      = WIDGET | POPUP,
+    PnWidgetType_popup      = POPUP,
 
     // Widget Surface types:  Not a Wayland client thing.
-    PnWidgetType_widget     = WIDGET, // a rectangular piece of a mmap()
+    PnWidgetType_widget     = 0, // a rectangular piece of a mmap()
                                       // surface
 
-    PnWidgetType_generic    = (WIDGET | W_GENERIC), // a generic example widget
-    PnWidgetType_label      = (WIDGET | W_LABEL), // a label widget
-    PnWidgetType_button     = (WIDGET | W_BUTTON), // a button widget
-    PnWidgetType_menuitem   = (WIDGET | W_MENU_ITEM),
-    PnWidgetType_menubar    = (WIDGET | W_MENU_BAR),
-    PnWidgetType_image      = (WIDGET | W_IMAGE),
-    PnWidgetType_graph      = (WIDGET | W_GRAPH),
-    PnWidgetType_splitter   = (WIDGET | W_SPLITTER),
+    PnWidgetType_generic    = W_GENERIC, // a generic example widget
+    PnWidgetType_label      = W_LABEL, // a label widget
+    PnWidgetType_button     = W_BUTTON, // a button widget
+    PnWidgetType_menubar    = W_MENU_BAR,
+    PnWidgetType_image      = W_IMAGE,
+    PnWidgetType_graph      = W_GRAPH,
+    PnWidgetType_splitter   = W_SPLITTER,
     // menu inherits button and widget, oh boy.
-    PnWidgetType_menu       = (WIDGET | W_BUTTON | W_MENU)
+    PnWidgetType_menu       = (W_BUTTON | W_MENU),
+    PnWidgetType_menuitem   = (W_BUTTON | W_MENU_ITEM)
 };
 
 

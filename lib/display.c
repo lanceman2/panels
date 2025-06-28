@@ -643,11 +643,9 @@ static void _pnDisplay_destroy(void) {
     DASSERT(d.widget.layout == PnLayout_LR);
     DASSERT(PnLayout_LR == 0);
 
-    while(d.widget.l.firstChild) {
+    while(d.widget.l.firstChild)
         // Destroy widgets without regular parents.
-        DASSERT(d.widget.l.firstChild->type & WIDGET);
         pnWidget_destroy((void *) d.widget.l.firstChild);
-    }
 
     // Destroy all the windows.
     while(d.windows)
