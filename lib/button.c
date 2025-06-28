@@ -246,7 +246,7 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
                 PnButtonState_NumRegularStates*sizeof(*b->colors));
         free(b->colors);
     } else {
-        DASSERT(IS_TYPE1(w->type, W_TOGGLE_BUTTON));
+        DASSERT(IS_TYPE1(w->type, PnWidgetType_togglebutton));
         ASSERT(0, "WRITE MORE CODE");
     }
 }

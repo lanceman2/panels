@@ -46,11 +46,11 @@
 #define W_GENERIC        (1 << 3)
 #define W_LABEL          (2 << 3)
 #define W_BUTTON         (3 << 3)
-#define W_TOGGLE_BUTTON  (4 << 3)
-#define W_MENU_BAR       (5 << 3)
-#define W_SPLITTER       (6 << 3)
-#define W_GRAPH          (7 << 3) // 2D graph plotter with grid lines
-#define W_IMAGE          (8 << 3)
+#define W_MENU_BAR       (4 << 3)
+#define W_SPLITTER       (5 << 3)
+#define W_GRAPH          (6 << 3) // 2D graph plotter with grid lines
+#define W_IMAGE          (7 << 3)
+#define W_TOGGLE_BUTTON  (8 << 3)
 #define LEVEL1           (127 << 3) // All level 1 bits
 // ADD MORE up to number 127
 //
@@ -102,8 +102,8 @@ enum PnWidgetType {
 
     // Widget Surface types:  Not a Wayland client thing.
     PnWidgetType_widget     = 0, // a rectangular piece of a mmap()
-                                      // surface
-
+                                 // surface
+    // inherits widget, LEVEL1
     PnWidgetType_generic    = W_GENERIC, // a generic example widget
     PnWidgetType_label      = W_LABEL, // a label widget
     PnWidgetType_button     = W_BUTTON, // a button widget
@@ -111,14 +111,32 @@ enum PnWidgetType {
     PnWidgetType_image      = W_IMAGE,
     PnWidgetType_graph      = W_GRAPH,
     PnWidgetType_splitter   = W_SPLITTER,
-    // menu inherits button and widget, oh boy.
+    PnWidgetType_togglebutton = W_TOGGLE_BUTTON,
+    
+    // inherits level 1 and widget, LEVEL2
     PnWidgetType_menu       = (W_BUTTON | W_MENU),
     PnWidgetType_menuitem   = (W_BUTTON | W_MENU_ITEM)
 };
 
 
-struct PnWidget;
+// We un-define these so that we do not miss-use them as we (I) did in the
+// past.  These are not simple bits.  They are complex groups of bits.  I
+// stupidly used them like they where simple bits in some of the code.
+#undef W_GENERIC
+#undef W_LABEL
+#undef W_BUTTON
+#undef W_TOGGLE_BUTTON
+#undef W_MENU_BAR
+#undef W_SPLITTER
+#undef W_GRAPH
+#undef W_IMAGE
+#undef W_MENU
+#undef W_MENU_ITEM
+#undef W_FOO
+#undef W_FOO2
+#undef W_BAR
 
+struct PnWidget;
 
 struct PnGrid {
 
