@@ -36,7 +36,7 @@ void destroy(struct PnWidget *b, struct PnMenu *m) {
     free(m);
 }
 
-static inline void DestroyPopup(struct PnMenu *m) {
+static inline void PopupDestroy(struct PnMenu *m) {
 
     if(!m) return;
     if(m->popup) {
@@ -87,7 +87,7 @@ static inline void ReCreatePopup(struct PnMenu *m) {
     DASSERT(m->button);
     DASSERT(m->button->window);
 
-    DestroyPopup(m);
+    PopupDestroy(m);
 
     // We don't care where the mouse pointer is, we just want the popup
     // to line-up as best it can with the menu widget.
@@ -99,8 +99,18 @@ static inline void ReCreatePopup(struct PnMenu *m) {
     // button (menu thingy), and not necessarily the menu button.  The
     // popup is a window with it's own pixel memory allocations and
     // mappings.
-    m->popup = pnWindow_create(m->button/*parent*/, 100, 300,
-            a.x, a.y + a.height, 0, 0, 0);
+    m->popup = pnWindow_create(m->button/*parent*/,
+            100/*width*/, 100/*height*/,
+            a.x, a.y + a.height, PnLayout_TB, 0, 0);
+
+    {
+        // Test add buttons to it.
+        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
+        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
+        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
+        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
+    }
+
     // Looks like the Wayland compositor puts this popup in a good place
     // even when the menu is in a bad place.
     //
@@ -129,7 +139,6 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
             IS_TYPE2(m->button->parent->type, PnWidgetType_menubar)) {
         // This menu is in a memu bar.
         struct PnMenuBar *mb = (void *) m->button->parent;
-        //DestroyPopup(mb->menu);
         if(m->popup) {
             WARN();
             pnWindow_show(m->popup, false);

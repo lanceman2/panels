@@ -58,20 +58,36 @@ static struct xdg_popup_listener xdg_popup_listener = {
     .repositioned = repositioned
 };
 
+// This just destroys the popup.xdg_positioner and the popup.xdg_popup
+// part of the PnWindow.
+//
+void DestroyPopup(struct PnWindow *win) {
 
-bool InitPopup(struct PnWindow *win,
+    DASSERT(win);
+    DASSERT(win->widget.type & POPUP);
+ 
+    if(win->popup.xdg_popup) {
+        xdg_popup_destroy(win->popup.xdg_popup);
+        win->popup.xdg_popup = 0;
+    }
+    if(win->popup.xdg_positioner) {
+        xdg_positioner_destroy(win->popup.xdg_positioner);
+        win->popup.xdg_positioner = 0;
+    }
+}
+
+
+bool ReInitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y) {
 
     DASSERT(win);
-    DASSERT(win->widget.type == PnWidgetType_popup);
+    DASSERT(win->widget.type & POPUP);
     struct PnWindow *parent = win->popup.parent;
     DASSERT(parent);
 
-    // A user could do this accidentally, I did and I'm a developer.
-    ASSERT((parent->widget.type & TOPLEVEL) ||
-            (parent->widget.type & POPUP));
-
+    DASSERT(parent->widget.type & TOPLEVEL);
+    DestroyPopup(win);
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);
     DASSERT(w > 0);

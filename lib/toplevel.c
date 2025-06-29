@@ -66,7 +66,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 bool InitToplevel(struct PnWindow *win) {
 
     DASSERT(win);
-    DASSERT(win->widget.type & PnWidgetType_toplevel);
+    DASSERT(win->widget.type & TOPLEVEL);
     DASSERT(!win->toplevel.xdg_toplevel);
 
     win->toplevel.xdg_toplevel =
@@ -84,16 +84,16 @@ bool InitToplevel(struct PnWindow *win) {
 
     if(d.zxdg_decoration_manager) {
         // Let the compositor do window decoration management
-	win->decoration =
+	win->toplevel.decoration =
 	        zxdg_decoration_manager_v1_get_toplevel_decoration(
 		        d.zxdg_decoration_manager,
                         win->toplevel.xdg_toplevel);
-        if(!win->decoration) {
+        if(!win->toplevel.decoration) {
             ERROR("zxdg_decoration_manager_v1_get_toplevel_decoration()"
                     " failed");
             return true;
         }
-	zxdg_toplevel_decoration_v1_set_mode(win->decoration,
+	zxdg_toplevel_decoration_v1_set_mode(win->toplevel.decoration,
 		ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
     }
 

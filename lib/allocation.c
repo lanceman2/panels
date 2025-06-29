@@ -2135,8 +2135,8 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
 
     if(!a->width && !HaveChildren(s)) {
         DASSERT(!a->height);
-        DASSERT((s->type & PnWidgetType_toplevel) ||
-                (s->type & PnWidgetType_popup));
+        DASSERT((s->type & TOPLEVEL) ||
+                (s->type & POPUP));
         a->width = GetBWidth(s);
         a->height = GetBHeight(s);
     }
@@ -2148,8 +2148,8 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
     //
 
     if(!HaveChildren(s)) {
-        DASSERT((s->type & PnWidgetType_toplevel) ||
-                (s->type & PnWidgetType_popup));
+        DASSERT((s->type & TOPLEVEL) ||
+                (s->type & POPUP));
         // This is the case where an API user wants to draw on a simple
         // window, without dumb-ass widgets.  Fuck ya!  The main point of
         // this API is to do simple shit like draw pixels.

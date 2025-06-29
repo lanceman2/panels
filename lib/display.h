@@ -24,7 +24,7 @@
 // Two Wayland like (or window) types:
 #define TOPLEVEL         (01) // first bit set
 #define POPUP            (02) // second bit set
-//#define WINDOW           (TOPLEVEL | POPUP)
+#define DISPLAY          (03) // third bit
 // The LEVEL 0 WIDGET
 // They are all widgets, so we do not need this.
 // TODO: Ops we wasted a bit ... We do not need WIDGET,
@@ -99,9 +99,9 @@ enum PnWidgetType {
 
     // 2 Window Surface types (Wayland client things):
     // From xdg_surface_get_toplevel()
-    PnWidgetType_toplevel   = TOPLEVEL,
+    //PnWidgetType_toplevel   = TOPLEVEL,
     // From wl_shell_surface_set_popup()
-    PnWidgetType_popup      = POPUP,
+    //PnWidgetType_popup      = POPUP,
 
     // Widget Surface types:  Not a Wayland client thing.
     PnWidgetType_widget     = 0, // a rectangular piece of a mmap()
@@ -530,27 +530,37 @@ struct PnWindow {
 
     // Wayland client objects:
     //
-    struct wl_surface  *wl_surface;
-    struct xdg_surface *xdg_surface;
+    struct wl_surface  *wl_surface; // made first
+    struct xdg_surface *xdg_surface; // made second
     //
     union {
         // for surface window type toplevel
         struct {
-            struct xdg_toplevel *xdg_toplevel;
+            struct xdg_toplevel *xdg_toplevel; // made third
+            struct zxdg_toplevel_decoration_v1 *decoration; // made forth
             // list of child popups
             struct PnWindow *popups; // points to newest one
         } toplevel;
         // for surface window type popup
+        //
+        // TODO: How do you resize a wayland popup?  Or reposition?
+        // Can you recreate a xdg_popup without recreating the xdg_surface
+        // (and/or wl_surface)?
+        // Best I can tell you can't move or resize a popup without
+        // recreating all the wayland objects that make it, wl_surface,
+        // xdg_surface, xdg_positioner, and xdg_popup.  When using the
+        // KWin compositor in making a popup and then remaking
+        // xdg_positioner, and xdg_popup without remaking wl_surface, and
+        // xdg_surface the compositor crashed (and restarted).
         struct {
-            struct xdg_positioner *xdg_positioner;
-            struct xdg_popup *xdg_popup;
+            struct xdg_positioner *xdg_positioner; // made third
+            struct xdg_popup *xdg_popup; // made forth
             struct PnWindow *parent;
         } popup;
     };
     //
-    struct zxdg_toplevel_decoration_v1 *decoration;
     struct wl_callback *wl_callback;
-    struct PnBuffer buffer;
+    struct PnBuffer buffer; // made fifth (and many times for toplevel)
 
 
     void (*destroy)(struct PnWidget *window, void *userData);
@@ -814,9 +824,10 @@ extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
 extern void FreeBuffer(struct PnBuffer *buffer);
 
 extern bool InitToplevel(struct PnWindow *win);
-extern bool InitPopup(struct PnWindow *win,
+extern bool ReInitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y);
+extern void DestroyPopup(struct PnWindow *win);
 
 extern void InitSurface(struct PnWidget *s,
         uint32_t column, uint32_t row, uint32_t cSpan, uint32_t rSpan);

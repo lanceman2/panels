@@ -29,9 +29,9 @@ void DrawAll(struct PnWindow *win, struct PnBuffer *buffer) {
     struct PnWidget *w = &win->widget;
 
     if(w->needAllocate) {
+        struct PnAllocation *a = &w->allocation;
         if(win->preferredWidth && win->preferredHeight &&
                 !w->allocation.width) {
-            struct PnAllocation *a = &w->allocation;
             DASSERT(!a->height);
             a->width = win->preferredWidth;
             a->height = win->preferredHeight;
@@ -217,11 +217,11 @@ struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
 
     if(!pWidget) {
         // We are making a toplevel window.
-        win->widget.type = PnWidgetType_toplevel;
+        win->widget.type = TOPLEVEL;
         AddWindow(win, d.windows, &d.windows);
     } else {
         // We are making a popup window.
-        win->widget.type = PnWidgetType_popup;
+        win->widget.type = POPUP;
 
         // Let pwin be the parent toplevel window we seek.
         struct PnWindow *pwin = (void *) pWidget;
@@ -289,17 +289,13 @@ struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
         goto fail;
     }
 
-    switch(win->widget.type) {
-        case PnWidgetType_toplevel:
+    switch(win->widget.type & (TOPLEVEL | POPUP)) {
+        case TOPLEVEL:
             if(InitToplevel(win))
                 goto fail;
             break;
-        case PnWidgetType_popup:
-            if(InitPopup(win, w, h, x, y))
-                goto fail;
-            break;
-        default:
-            ASSERT(0, "Write more code here case=%d", win->widget.type);
+        case POPUP:
+            ReInitPopup(win, w, h, x, y);
     }
 
     return win;
@@ -399,27 +395,22 @@ void _pnWindow_destroy(struct PnWidget *w) {
 #endif
 
 
-    if(win->widget.type == PnWidgetType_popup) {
+    if(win->widget.type & POPUP) {
         // A popup
         DASSERT(win->popup.parent);
-        DASSERT(win->popup.parent->widget.type ==
-                PnWidgetType_toplevel);
+        DASSERT(win->popup.parent->widget.type & TOPLEVEL);
         // Remove this popup from the parents popup window list
         RemoveWindow(win, win->popup.parent->toplevel.popups,
                 &win->popup.parent->toplevel.popups);
     } else {
         // A toplevel
-        DASSERT(win->widget.type == PnWidgetType_toplevel);
+        DASSERT(win->widget.type & TOPLEVEL);
         // Remove this toplevel from the displays toplevel window list
         RemoveWindow(win, d.windows, &d.windows);
         // Destroy any child popup windows that this toplevel owns.
         while(win->toplevel.popups)
             pnWidget_destroy(&win->toplevel.popups->widget);
     }
-
-
-
-
 
 
     // Clean up stuff in reverse order that stuff was created.
@@ -431,25 +422,18 @@ void _pnWindow_destroy(struct PnWidget *w) {
     FreeBuffer(&win->buffer);
 
 
-    switch(win->widget.type) {
-        case PnWidgetType_toplevel:
-            if(win->decoration)
+    switch(win->widget.type & (TOPLEVEL | POPUP)) {
+        case TOPLEVEL:
+            if(win->toplevel.decoration)
                 zxdg_toplevel_decoration_v1_destroy(
-                        win->decoration);
+                        win->toplevel.decoration);
             if(win->toplevel.xdg_toplevel)
                 xdg_toplevel_destroy(win->toplevel.xdg_toplevel);
             break;
-        case PnWidgetType_popup:
-            if(win->popup.xdg_popup) {
-                xdg_popup_destroy(win->popup.xdg_popup);
-                win->popup.xdg_popup = 0;
-            }
-            if(win->popup.xdg_positioner) {
-                xdg_positioner_destroy(win->popup.xdg_positioner);
-                win->popup.xdg_positioner = 0;
-            }
-            break;
-        default:
+        case POPUP:
+            // Destroy the popup.xdg_popup and popup.xdg_positioner
+            // if they exist.
+            DestroyPopup(win);
     }
 
     if(win->xdg_surface)
@@ -535,7 +519,7 @@ void pnWindow_isDrawnReset(struct PnWidget *w) {
 void pnWindow_setPreferredSize(struct PnWidget *w,
         uint32_t width, uint32_t height) {
     DASSERT(w);
-    ASSERT(w->type == PnWidgetType_toplevel);
+    ASSERT(w->type & TOPLEVEL);
 
     struct PnWindow *win = (void *) w;
     // Note: the value(s) zero works okay, and means that these
