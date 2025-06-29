@@ -541,6 +541,7 @@ struct PnWindow {
             // list of child popups
             struct PnWindow *popups; // points to newest one
         } toplevel;
+
         // for surface window type popup
         //
         // TODO: How do you resize a wayland popup?  Or reposition?
@@ -552,6 +553,7 @@ struct PnWindow {
         // KWin compositor in making a popup and then remaking
         // xdg_positioner, and xdg_popup without remaking wl_surface, and
         // xdg_surface the compositor crashed (and restarted).
+        //
         struct {
             struct xdg_positioner *xdg_positioner; // made third
             struct xdg_popup *xdg_popup; // made forth
