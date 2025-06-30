@@ -110,6 +110,8 @@ static void configure(struct PnWindow *win,
     }
 
     if(win->widget.type & POPUP)
+        // TODO: We're not sure that this works if we show and then hide
+        // and then show again.
         DrawAll(win, 0);
     else if(win->needDraw)
         // We need to wait for the wayland compositor to tell us we can
