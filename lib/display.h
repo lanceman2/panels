@@ -554,10 +554,15 @@ struct PnWindow {
         // xdg_positioner, and xdg_popup without remaking wl_surface, and
         // xdg_surface the compositor crashed (and restarted).
         //
+        // I'm just going to assume that to resize a popup we just remake
+        // all the wayland parts:  wl_surface, xdg_surface,
+        // xdg_positioner, and xdg_popup.
+        //
         struct {
             struct xdg_positioner *xdg_positioner; // made third
             struct xdg_popup *xdg_popup; // made forth
             struct PnWindow *parent;
+            int32_t x, y; // for the xdg_positioner
         } popup;
     };
     //
@@ -826,7 +831,7 @@ extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
 extern void FreeBuffer(struct PnBuffer *buffer);
 
 extern bool InitToplevel(struct PnWindow *win);
-extern bool ReInitPopup(struct PnWindow *win,
+extern bool InitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y);
 extern void DestroyPopup(struct PnWindow *win);

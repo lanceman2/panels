@@ -31,8 +31,24 @@ static void configure(void *data,
 	int32_t x, int32_t y,
 	int32_t width, int32_t height) {
 
-    //DSPEW();
+    DASSERT(data);
+    struct PnWindow *win = data;
+    DASSERT(xdg_popup);
+    DASSERT(xdg_popup == win->popup.xdg_popup);
+    DASSERT(!win->widget.hidden);
+
+    struct PnAllocation a;
+    pnWidget_getAllocation(&win->widget, &a);
+    if(win->popup.x != x || win->popup.y != y
+            || a.width != width || a.height != height)
+        WARN("tried for: x,y=%" PRIi32 ",%" PRIi32
+                " and width,height=%" PRIi32 ",%" PRIi32
+            " got: x,y=%" PRIi32 ",%" PRIi32
+                " and width,height=%" PRIu32 ",%" PRIu32,
+                win->popup.x, win->popup.y, a.width, a.height,
+                x, y, width, height);
 }
+
 
 static void popup_done(void *data, struct xdg_popup *xdg_popup) {
 
@@ -77,7 +93,7 @@ void DestroyPopup(struct PnWindow *win) {
 }
 
 
-bool ReInitPopup(struct PnWindow *win,
+bool InitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y) {
 
@@ -87,7 +103,6 @@ bool ReInitPopup(struct PnWindow *win,
     DASSERT(parent);
 
     DASSERT(parent->widget.type & TOPLEVEL);
-    DestroyPopup(win);
     DASSERT(!win->popup.xdg_positioner);
     DASSERT(!win->popup.xdg_popup);
     DASSERT(w > 0);

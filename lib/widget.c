@@ -237,6 +237,11 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
         // No change.
         return;
 
+    if(widget->type & (TOPLEVEL | POPUP)) {
+        pnWindow_show(widget, show);
+        return;
+    }
+
     widget->hidden = !show;
     // This change may change the size of the window and many of the
     // widgets in the window.

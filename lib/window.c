@@ -106,9 +106,12 @@ static void configure(struct PnWindow *win,
         // This is the first call to draw real pixels.
         win->widget.needAllocate = true;
         DrawAll(win, 0);
+        return;
     }
 
-    if(win->needDraw)
+    if(win->widget.type & POPUP)
+        DrawAll(win, 0);
+    else if(win->needDraw)
         // We need to wait for the wayland compositor to tell us we can
         // draw.
         _pnWindow_addCallback(win);
@@ -295,7 +298,16 @@ struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
                 goto fail;
             break;
         case POPUP:
-            ReInitPopup(win, w, h, x, y);
+            // We'll make xdg_positioner and xdg_popup later, at
+            // pnWindow_show().  The wayland xdg_positioner and xdg_popup
+            // can't be made until we know the position and size of the
+            // popup, like from the popup's children widgets that are
+            // added.
+            //InitPopup(win, w, h, x, y);
+            win->popup.x = x;
+            win->popup.y = y;
+            win->widget.allocation.width = w;
+            win->widget.allocation.height = h;
     }
 
     return win;
@@ -330,7 +342,7 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
 void pnWindow_show(struct PnWidget *w, bool show) {
 
     DASSERT(w);
-    ASSERT((w->type & TOPLEVEL) || (w->type & POPUP));
+    ASSERT(w->type & (TOPLEVEL | POPUP));
     struct PnWindow *win = (void *) w;
     DASSERT(win->wl_surface);
 
@@ -348,6 +360,14 @@ void pnWindow_show(struct PnWidget *w, bool show) {
         return;
 
     win->widget.hidden = !show;
+
+    if(show && (w->type & POPUP) && !win->popup.xdg_popup) {
+        _pnWidget_getAllocations(w);
+        DASSERT(w->allocation.width);
+        DASSERT(w->allocation.height);
+        InitPopup(win, w->allocation.width, w->allocation.height,
+                win->popup.x, win->popup.y);
+    }
 
     // The win->widget.culled variable is not used in windows.
 
