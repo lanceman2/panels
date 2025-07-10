@@ -101,7 +101,7 @@ cairo_debug_reset_static_data();
 cairo_debug_reset_static_data();
 
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 #endif

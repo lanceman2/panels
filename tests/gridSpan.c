@@ -113,7 +113,7 @@ int main(void) {
     // Test having a cell gap at x=7 and 8
     AddWidget(0,  9, 1, 2, 6);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

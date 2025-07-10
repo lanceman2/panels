@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
     pnWidget_setDraw(w, draw2, 0);
 
     pnWindow_setPreferredSize(win, 1100, 900);
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

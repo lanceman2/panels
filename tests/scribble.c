@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
     pnWidget_setConfig(w, config, 0);
     pnWidget_setMotion(w, motion, (void *) (uintptr_t)(argc - 1));
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

@@ -65,7 +65,7 @@ int main(void) {
     pnWidget_setCairoDraw(over, cairoDraw, 0);
 
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
     return 0;

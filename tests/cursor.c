@@ -67,7 +67,7 @@ static void Do(void) {
     while(*curserName)
         MakeWidget(*curserName++);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 }
 
 

@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     ASSERT(w);
     pnWidget_setBackgroundColor(w, 0xCC00CF00);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

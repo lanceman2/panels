@@ -70,7 +70,7 @@ static bool enterPopup(struct PnWidget *popup,
     struct PnWidget *p = pnWindow_create(m->button/*parent*/,
             150, 300,
             a.x + pa.width, a.y + a.height, 0, 0, 0);
-    pnWindow_show(p, true);
+    pnWindow_show(p);
 
     return true; // take focus
 }
@@ -121,7 +121,7 @@ static inline void ReCreatePopup(struct PnMenu *m) {
     pnWidget_setLeave(m->popup, (void *) leavePopup, m);
 
     pnWidget_setBackgroundColor(m->popup, 0xFA299981);
-    pnWindow_show(m->popup, true);
+    pnWindow_show(m->popup);
 
 fprintf(stderr, "\r    widget=%p popup at x,y=%" PRIu32 ",%" PRIu32 "    ",
         m->button, a.x, a.y + a.height);
@@ -141,7 +141,6 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
         struct PnMenuBar *mb = (void *) m->button->parent;
         if(m->popup) {
             WARN();
-            pnWindow_show(m->popup, false);
         }
         // Change the active menu in the menuBar to "m".
         mb->menu = m;

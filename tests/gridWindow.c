@@ -67,7 +67,7 @@ int main(void) {
         for(uint32_t x=0; x<numColumns; ++x)
             Widget(x, y);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

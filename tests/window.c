@@ -23,7 +23,7 @@ int main(void) {
 
     pnWindow_setDestroy(win, destroy, &win);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
 
     Run(win);

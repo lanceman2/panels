@@ -37,6 +37,7 @@ static bool click(struct PnWidget *button, struct button *b) {
     ASSERT(button == b->button);
 
     fprintf(stderr, "CLICK button %d\n", b->buttonNum);
+
     return false;
 }
 
@@ -95,7 +96,7 @@ int main(void) {
     for(int i=0; i<8; ++i)
         Button();
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

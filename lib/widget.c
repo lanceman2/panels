@@ -37,11 +37,13 @@ struct PnWidget *_pnWidget_createFull(
     //
     DASSERT(parent->layout != PnLayout_None,
             "Widget can't have children");
-    DASSERT(!parent->l.firstChild ||
-            (parent->layout != PnLayout_One &&
-            parent->layout != PnLayout_Cover),
-            "Widget can only have one child");
-    //
+#ifdef DEBUG
+    if(parent->layout < PnLayout_Grid)
+        DASSERT(!parent->l.firstChild ||
+                (parent->layout != PnLayout_One &&
+                parent->layout != PnLayout_Cover),
+                "Widget can only have one child");
+#endif
     if(parent->layout == PnLayout_None) {
         ERROR("Parent widget cannot have children");
         return 0;
@@ -221,6 +223,7 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
 
     DASSERT(widget);
     DASSERT(widget->window);
+    ASSERT(!(widget->type & (TOPLEVEL | POPUP)));
 
     // Make it be one of two values.  Because we can have things like (3)
     // == true
@@ -236,11 +239,6 @@ void pnWidget_show(struct PnWidget *widget, bool show) {
     if(widget->hidden == !show)
         // No change.
         return;
-
-    if(widget->type & (TOPLEVEL | POPUP)) {
-        pnWindow_show(widget, show);
-        return;
-    }
 
     widget->hidden = !show;
     // This change may change the size of the window and many of the

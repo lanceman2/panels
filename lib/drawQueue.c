@@ -74,17 +74,41 @@ static void DequeueChildren(struct PnDrawQueue *q, struct PnWidget *s) {
     DASSERT(s);
 
     struct PnWidget *c;
-    for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
-        // If the widget surface "c" is culled it can get un-culled at any
-        // time so we just work with it.  It could happen that things
-        // change before we get to draw.  Drawing events are somewhat
-        // asynchronous to this process.
-        if(c->isQueued)
-            RemoveFromDrawQueue(q, c);
-        else if(s->l.firstChild)
-            // If a child is not queued it could have queued children.
-            DequeueChildren(q, c);
+    if(s->layout != PnLayout_Grid) {
+        for(c = s->l.firstChild; c; c = c->pl.nextSibling) {
+            // If the widget surface "c" is culled it can get un-culled at
+            // any time so we just work with it.  It could happen that
+            // things change before we get to draw.  Drawing events are
+            // somewhat asynchronous to this process.
+            if(c->isQueued)
+                RemoveFromDrawQueue(q, c);
+            else if(HaveChildren(s))
+                // If a child is not queued it could have queued children.
+                DequeueChildren(q, c);
+        }
+        return;
     }
+
+    // else // This widget "s" is a grid container.
+    if(!s->g.grid)
+            // "s" has no children.
+            return;
+    struct PnWidget ***child = s->g.grid->child;
+    DASSERT(child);
+    for(uint32_t y=s->g.numRows-1; y != -1; --y)
+        for(uint32_t x=s->g.numColumns-1; x != -1; --x) {
+            struct PnWidget *c = child[y][x];
+            // rows and columns can share widgets; like for row span 2 and
+            // column span 2; that is adjacent cells that share the same
+            // widget.
+            if(IsUpperLeftCell(c, child, x, y)) {
+                if(c->isQueued)
+                    RemoveFromDrawQueue(q, c);
+                else if(HaveChildren(s))
+                    // If a child is not queued it could have queued children.
+                    DequeueChildren(q, c);
+            }
+        }
 }
 
 void pnWidget_queueDraw(struct PnWidget *s, bool allocate) {
@@ -107,7 +131,6 @@ void pnWidget_queueDraw(struct PnWidget *s, bool allocate) {
         // callback code when it's culled; it could get culled before the
         // draw happens.
         return;
-
 
     if(_pnWindow_addCallback(win))
         // Failure.  That sucks.
@@ -145,7 +168,9 @@ void pnWidget_queueDraw(struct PnWidget *s, bool allocate) {
     // now; but we still need to wait for the compositor to tell us when
     // the wl_buffer is ready so we can re-setup the Cairo surfaces on the
     // wl_buffer (for the case when allocate == true).
-    s->needAllocate = allocate;
+
+    if(allocate)
+        s->needAllocate = allocate;
 }
 
 // Return false if the queue was drawn.

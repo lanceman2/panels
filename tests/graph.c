@@ -78,7 +78,7 @@ int main(void) {
 
     pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
     return 0;

@@ -333,7 +333,7 @@ struct PnWidget {
         ////////////////////////////////////////////////////////
         struct {
             struct PnWidget *firstChild, *lastChild;
-        } l; // widget is a container list (l)
+        } l; // widget is a container list (l): layout != PnLayout_Grid
 
         struct {
             // We make this "g" the same size as PnWidget::l by
@@ -341,7 +341,7 @@ struct PnWidget {
             // PnWidget::l above.
             struct PnGrid *grid;
             uint32_t numColumns, numRows;
-        } g; // widget is a container grid (g)
+        } g; // widget is a container grid (g): layout == PnLayout_Grid
     };
 
     union {
@@ -438,14 +438,7 @@ struct PnWidget {
     // Widgets are showing after pnWidget_create().  The API user sets
     // this with pnWidget_show().
     //
-    // TODO: BUG: We use this flag with the child widgets of the splitter
-    // widget container.  If the API user uses this with a child widgets
-    // of the splitter widget container the splitter widget container will
-    // be a little fucked up.  But, I don't think it will crash the program
-    // but the behavior of the splitter widget and it's children will be a
-    // little wonky.
-    //
-    bool hidden;
+    bool hidden; // not used for PnWindow
 
     // If this is a leaf widget and this "clip" is true this leaf is
     // clipped (instead of culled) to a size smaller than reqWidth (or
@@ -619,12 +612,12 @@ struct PnOutput {
 // (Wayland compositor included), as we shrink a window, cull out the
 // parts of the window to the right and bottom, keeping the left and top
 // most part of the window.  This is just convention, and "panels" follows
-// this convention.  Hence, we cull out widgets to the right and bottom
-// as windows shrink.  Widgets that cannot get there requested size due to
+// this convention.  Hence, we cull out widgets to the right and bottom as
+// windows shrink.  Widgets that cannot get there requested size due to
 // this window shrink culling will not be drawn, and the background
 // drawing of the window will be shown to the GUI user where widgets are
-// culled out and there is not large enough room in the lower right
-// corner of the window.
+// culled out and there is not large enough room in the lower right corner
+// of the window.
 
 // It turns out that the Wayland client has per process global data that
 // we are forced, by the wayland design, to have in this code.  This is
@@ -815,7 +808,6 @@ static bool inline HaveChildren(const struct PnWidget *s) {
     }
 
     // else
-    DASSERT(s->layout == PnLayout_Grid);
     if(!s->g.grid) return false;
 
     return (s->g.grid->numChildren);

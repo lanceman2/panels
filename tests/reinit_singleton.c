@@ -36,7 +36,7 @@ void run(void) {
     pnWidget_setBackgroundColor(w, Color()/*random color*/);
 #endif
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

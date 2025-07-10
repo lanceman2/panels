@@ -192,7 +192,7 @@ int main(void) {
     for(uint32_t i=0; i<TOTAL_WIDGETS; ++i)
         Widget();
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

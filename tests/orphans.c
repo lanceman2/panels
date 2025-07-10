@@ -47,7 +47,7 @@ int main(void) {
             0/*expand*/, 0);
     ASSERT(cw);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

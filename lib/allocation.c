@@ -587,12 +587,12 @@ static uint32_t ClipOrCullChildren(const struct PnWidget *s,
 
 #define GOT_CULL             (01)
 // In order to a change to no child showing there must be a clip or cull.
-#define TO_NO_SHOWING_CHILD  (GOT_CULL|02)
+#define NO_SHOWING_CHILD  (GOT_CULL|02)
 
 
-// Returns 0 or GOT_CULL or TO_NO_SHOWING_CHILD
+// Returns 0 or GOT_CULL or NO_SHOWING_CHILD
 //
-// non-zero -> c or a descendent was culled or clipped
+// non-zero -> c or a descendent was culled
 // 0        -> nothing was culled
 //
 static inline uint32_t RecurseClipOrCullX(
@@ -608,7 +608,7 @@ static inline uint32_t RecurseClipOrCullX(
         // Cull this whole widget.
         c->culled = true;
         if(c->l.firstChild)
-            return TO_NO_SHOWING_CHILD;
+            return NO_SHOWING_CHILD;
         return GOT_CULL;
     }
 
@@ -631,7 +631,7 @@ static inline uint32_t RecurseClipOrCullX(
         ca->width = a->x + a->width - ca->x;
         // We have children in "c".
         uint32_t ret = ClipOrCullChildren(c, ca);
-        if(ret == TO_NO_SHOWING_CHILD)
+        if(ret == NO_SHOWING_CHILD)
             // "c" has no children showing any more so cull it.
             c->culled = true;
         return ret;
@@ -640,9 +640,9 @@ static inline uint32_t RecurseClipOrCullX(
     return 0; // no culling or clipping
 }
 
-// Returns 0 or GOT_CULL or TO_NO_SHOWING_CHILD
+// Returns 0 or GOT_CULL or NO_SHOWING_CHILD
 //
-// non-zero -> c or a descendent was culled or clipped
+// non-zero -> c or a descendent was culled
 // 0        -> nothing was culled
 //
 static inline uint32_t RecurseClipOrCullY(
@@ -658,7 +658,7 @@ static inline uint32_t RecurseClipOrCullY(
         // Cull this whole widget.
         c->culled = true;
         if(c->l.firstChild)
-            return TO_NO_SHOWING_CHILD;
+            return NO_SHOWING_CHILD;
         return GOT_CULL;
     }
 
@@ -681,7 +681,7 @@ static inline uint32_t RecurseClipOrCullY(
         ca->height = a->y + a->height - ca->y;
         // We have children in "c".
         uint32_t ret = ClipOrCullChildren(c, ca);
-        if(ret == TO_NO_SHOWING_CHILD)
+        if(ret == NO_SHOWING_CHILD)
             // "c" has no children showing any more so cull it.
             c->culled = true;
         return ret;
@@ -693,7 +693,7 @@ static inline uint32_t RecurseClipOrCullY(
 // For when the layout of the packing for the container of "c"
 // is vertical.
 //
-// Returns 0 or GOT_CULL or TO_NO_SHOWING_CHILD
+// Returns 0 or GOT_CULL or NO_SHOWING_CHILD
 //
 // non-zero -> c or a descendent was culled or clipped
 // 0        -> nothing was culled
@@ -722,13 +722,13 @@ ClipOrCullX(const struct PnAllocation *a, struct PnWidget *c) {
             showingChild = true;
     }
     if(showingChild) return ret;
-    return TO_NO_SHOWING_CHILD;
+    return NO_SHOWING_CHILD;
 }
 
 // For when the layout of the packing for the container of "c"
 // is horizontal.
 //
-// Returns 0 or GOT_CULL or TO_NO_SHOWING_CHILD
+// Returns 0 or GOT_CULL or NO_SHOWING_CHILD
 //
 // non-zero -> c or a descendent was culled or clipped
 // 0        -> nothing was culled
@@ -758,7 +758,7 @@ ClipOrCullY(const struct PnAllocation *a, struct PnWidget *c) {
     }
 
     if(showingChild) return ret;
-    return TO_NO_SHOWING_CHILD;
+    return NO_SHOWING_CHILD;
 }
 
 
@@ -767,7 +767,7 @@ ClipOrCullY(const struct PnAllocation *a, struct PnWidget *c) {
 // can contain arbitrarily complex shapes, only limited to how random
 // rectangles can be packed.
 //
-// Returns 0 or GOT_CULL or TO_NO_SHOWING_CHILD
+// Returns 0 or GOT_CULL or NO_SHOWING_CHILD
 //
 // Returns true if there is a descendent of "s" is trimmed or culled.
 //
@@ -834,7 +834,7 @@ ClipOrCullChildren(const struct PnWidget *s,
                 if(!c->culled)
                     RecurseClipOrCullY(a, c, &c->allocation);
             }
-            if(c->culled) ret = TO_NO_SHOWING_CHILD;
+            if(c->culled) ret = NO_SHOWING_CHILD;
             return ret;
 
         case PnLayout_BT:
@@ -862,7 +862,7 @@ ClipOrCullChildren(const struct PnWidget *s,
                 if(!c->culled)
                     RecurseClipOrCullY(a, c, &c->allocation);
             }
-            if(c->culled) ret = TO_NO_SHOWING_CHILD;
+            if(c->culled) ret = NO_SHOWING_CHILD;
             return ret;
 
         case PnLayout_LR:
@@ -890,7 +890,7 @@ ClipOrCullChildren(const struct PnWidget *s,
                 if(!c->culled)
                     RecurseClipOrCullX(a, c, &c->allocation);
             }
-            if(c->culled) ret = TO_NO_SHOWING_CHILD;
+            if(c->culled) ret = NO_SHOWING_CHILD;
             return ret;
 
         case PnLayout_RL:
@@ -918,7 +918,7 @@ ClipOrCullChildren(const struct PnWidget *s,
                 if(!c->culled)
                     RecurseClipOrCullX(a, c, &c->allocation);
             }
-            if(c->culled) ret = TO_NO_SHOWING_CHILD;
+            if(c->culled) ret = NO_SHOWING_CHILD;
             return ret;
 
         case PnLayout_Grid: {
@@ -959,11 +959,12 @@ ClipOrCullChildren(const struct PnWidget *s,
                         bool haveCull = false;
                         // Squish "c".
                         c->allocation.width = xMax - c->allocation.x;
-                        // See if it gets widget culls and it should.
+                        // See if it gets widget culls.
                         if(HaveChildren(c)) {
                             haveCull = (ret |=
                                 ClipOrCullChildren(c, &c->allocation));
-                            DASSERT(ret);
+                            if(ret == NO_SHOWING_CHILD)
+                                c->culled = true;
                         }  else if(!c->clip) {
                             // This is a leaf widget.
                             haveCull = c->culled = true;
@@ -1014,11 +1015,12 @@ ClipOrCullChildren(const struct PnWidget *s,
                         bool haveCull = false;
                         // Squish "c".
                         c->allocation.height = yMax - c->allocation.y;
-                        // See if it gets widget culls and it should.
+                        // See if it gets widget culls.
                         if(HaveChildren(c)) {
                             haveCull = (ret |=
                                 ClipOrCullChildren(c, &c->allocation));
-                            DASSERT(ret);
+                            if(ret == NO_SHOWING_CHILD)
+                                c->culled = true;
                         } else if(!c->clip) {
                             haveCull = c->culled = true;
                             ret |= GOT_CULL;
@@ -1197,7 +1199,7 @@ void ExpandHShared(const struct PnWidget *s,
         if(c->canExpand & PnExpand_H)
             ++numExpand;
     }
-    // There got to be something, otherwise "s" should have been culled
+    // There's got to be something, otherwise "s" should have been culled
     // and this would not be called.
     DASSERT(neededWidth);
     neededWidth += border;
@@ -1313,7 +1315,7 @@ void ExpandVShared(const struct PnWidget *s,
         if(c->canExpand & PnExpand_V)
             ++numExpand;
     }
-    // There got to be something, otherwise "s" should have been culled
+    // There's got to be something, otherwise "s" should have been culled
     // and this would not be called.
     DASSERT(neededHeight);
     neededHeight += border;
@@ -2130,7 +2132,6 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
 
     DASSERT(s);
     struct PnAllocation *a = &s->allocation;
-    DASSERT(!s->hidden);
     DASSERT(!s->culled);
 
     if(!a->width && !HaveChildren(s)) {

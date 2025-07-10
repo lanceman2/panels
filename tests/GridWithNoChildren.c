@@ -34,7 +34,7 @@ int main(void) {
     ASSERT(grid);
     pnWidget_setBackgroundColor(grid, 0xFF000000);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

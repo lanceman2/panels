@@ -107,7 +107,7 @@ int main(void) {
     MakeGraph(Plot2);
     MakeGraph(Plot2);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
     return 0;

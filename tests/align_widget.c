@@ -77,7 +77,7 @@ int main(void) {
         Widget(w);
 
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

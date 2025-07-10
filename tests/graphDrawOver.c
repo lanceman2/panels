@@ -72,7 +72,7 @@ int main(void) {
     pnWidget_setDraw(over, Draw, 0);
     pnGraph_setLabelsColor(graph, 0xFFFF0000);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
     return 0;

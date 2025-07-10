@@ -16,10 +16,51 @@
 static void configure(struct PnWindow *win,
 		struct xdg_toplevel *xdg_toplevel,
                 int32_t w, int32_t h,
-		struct wl_array *state) {
+		struct wl_array *states) {
     DASSERT(win);
     DASSERT(xdg_toplevel);
     DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
+
+#if 0 // I cannot make sense of this state.
+
+    if(states->size == 0) {
+        INFO("zero state w,h=%" PRIi32 ",%" PRIi32, w, h);
+        if(win->widget.allocation.width) {
+            DASSERT(win->widget.allocation.height);
+            WARN();
+        }
+    }
+
+    uint32_t *p;
+    wl_array_for_each(p, states) {
+        uint32_t state = *p;
+        switch(state) {
+
+            case XDG_TOPLEVEL_STATE_FULLSCREEN:
+                INFO("FULLSCREEN");
+                break;
+            case XDG_TOPLEVEL_STATE_MAXIMIZED:
+                INFO("MAXIMIZED");
+                break;
+            case XDG_TOPLEVEL_STATE_RESIZING:
+                INFO("RESIZING");
+                break;
+            case XDG_TOPLEVEL_STATE_ACTIVATED:
+                INFO("ACTIVATED");
+                break;
+
+            case XDG_TOPLEVEL_STATE_TILED_TOP:
+            case XDG_TOPLEVEL_STATE_TILED_RIGHT:
+            case XDG_TOPLEVEL_STATE_TILED_BOTTOM:
+            case XDG_TOPLEVEL_STATE_TILED_LEFT:
+                INFO("TILED");
+                break;
+            default:
+                INFO("UNKNOWN_STATE = %" PRIu32, state);
+        }
+    }
+#endif
+
 
     if(w <= 0 || h <= 0) return;
 

@@ -69,7 +69,7 @@ int main(void) {
     }
 #endif
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

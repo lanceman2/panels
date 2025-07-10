@@ -60,7 +60,7 @@ int main(void) {
     for(int i=0; i<5; ++i)
         Label();
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

@@ -115,7 +115,7 @@ int main(void) {
     w[10] = W(w[9], PnLayout_LR);
 #endif
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

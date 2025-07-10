@@ -50,7 +50,7 @@ int main(void) {
     W(FILENAME, 100, 100);
     W(FILENAME, 100, 0);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

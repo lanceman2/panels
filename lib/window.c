@@ -264,9 +264,6 @@ struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
     win->widget.backgroundColor = PN_WINDOW_BGCOLOR;
     win->needDraw = true;
     win->widget.window = win;
-    // Default for windows so that user build the window before showing
-    // it.
-    win->widget.hidden = true;
 
     InitSurface(&win->widget, numColumns, numRows, 0, 0);
 
@@ -325,8 +322,8 @@ struct PnWidget *pnWindow_createAsGrid(struct PnWidget *parent,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnAlign align, enum PnExpand expand,
         uint32_t numColumns, uint32_t numRows) {
-    DASSERT(numColumns);
-    DASSERT(numRows);
+    //DASSERT(numColumns);
+    //DASSERT(numRows);
     return (void *) _pnWindow_createFull(parent, w, h, x, y,
             PnLayout_Grid, align, expand, numColumns, numRows);
 }
@@ -341,29 +338,14 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
 }
 
 
-void pnWindow_show(struct PnWidget *w, bool show) {
+void pnWindow_show(struct PnWidget *w) {
 
     DASSERT(w);
     ASSERT(w->type & (TOPLEVEL | POPUP));
     struct PnWindow *win = (void *) w;
     DASSERT(win->wl_surface);
 
-    // During and after pnWindow_create() non of the wl_suface (and other
-    // wayland client window objects) callbacks are called yet.
-
-    // Make it be one of two values; true can be equal to many values.
-    show = show ? true: false;
-
-    if(win->widget.hidden == !show)
-        // No change.
-        //
-        // TODO: Nothing to do unless we can pop up the window that is
-        // hidden by the desktop window manager.
-        return;
-
-    win->widget.hidden = !show;
-
-    if(show && (w->type & POPUP) && !win->popup.xdg_popup) {
+    if((w->type & POPUP) && !win->popup.xdg_popup) {
         _pnWidget_getAllocations(w);
         DASSERT(w->allocation.width);
         DASSERT(w->allocation.height);
@@ -371,22 +353,8 @@ void pnWindow_show(struct PnWidget *w, bool show) {
                 win->popup.x, win->popup.y);
     }
 
-    // The win->widget.culled variable is not used in windows.
-
-    if(show && !win->buffer.wl_buffer)
-        // This is the first surface commit.
-        //
-        // This has no error return.
-        wl_surface_commit(win->wl_surface);
-    else if(show)
-        pnWidget_queueDraw(w, true/*allocate*/);
-    else if(win->buffer.wl_buffer) {
-        // ref: https://github.com/emersion/wleird.git
-        // unmap.c
-        //
-        wl_surface_attach(win->wl_surface, NULL, 0, 0);
-	wl_surface_commit(win->wl_surface);
-    }
+    pnWidget_queueDraw(w, false);
+    return;
 }
 
 
@@ -394,7 +362,7 @@ void _pnWindow_destroy(struct PnWidget *w) {
 
     DASSERT(w);
     DASSERT(d.wl_display);
-    ASSERT((w->type & TOPLEVEL) || (w->type & POPUP));
+    ASSERT(w->type & (TOPLEVEL | POPUP));
 
     struct PnWindow *win = (void *) w;
 
@@ -402,7 +370,6 @@ void _pnWindow_destroy(struct PnWidget *w) {
         win->destroy(w, win->destroyData);
 
 #if 0
-
     // If there is state in the display that refers to this surface
     // (window) take care to not refer to it.  Like if this window surface
     // had focus for example.

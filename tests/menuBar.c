@@ -90,7 +90,7 @@ int main(void) {
     SubWindow(win);
     SubWindow(win);
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

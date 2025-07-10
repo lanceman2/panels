@@ -77,7 +77,7 @@ int main(void) {
     for(int i=0; i<6; ++i)
         Generic();
 
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 
     Run(win);
 

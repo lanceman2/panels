@@ -38,6 +38,13 @@ popup_run_SOURCES := popup.c
 popup_run_LDFLAGS := $(PN_LIB)
 popup_run_CPPFLAGS := -DRUN
 
+029_popup_showHideShow_SOURCES := popup_showHideShow.c
+029_popup_showHideShow_LDFLAGS := $(PN_LIB)
+
+popup_showHideShow_run_SOURCES := popup_showHideShow.c
+popup_showHideShow_run_LDFLAGS := $(PN_LIB)
+popup_showHideShow_run_CPPFLAGS := -DRUN
+
 033_widget_SOURCES := widget.c
 033_widget_LDFLAGS := $(PN_LIB)
 
@@ -292,6 +299,10 @@ generic_run_CPPFLAGS := -DRUN
 menuBar_run_SOURCES := menuBar.c
 menuBar_run_LDFLAGS := $(PN_LIB)
 menuBar_run_CPPFLAGS := -DRUN
+
+
+windowSizingButtons_run_SOURCES := windowSizingButtons.c
+windowSizingButtons_run_LDFLAGS := $(PN_LIB)
 
 endif # ifdef WITH_CAIRO
 

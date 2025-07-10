@@ -11,7 +11,7 @@ static void CreateWindow(uint32_t w, uint32_t h) {
 
     win = pnWindow_create(0, w, h, 0, 0, 0, 0, PnExpand_HV);
     ASSERT(win);
-    pnWindow_show(win, true);
+    pnWindow_show(win);
 }
 
 
