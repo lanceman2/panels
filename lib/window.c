@@ -349,6 +349,8 @@ void pnWindow_show(struct PnWidget *w) {
         _pnWidget_getAllocations(w);
         DASSERT(w->allocation.width);
         DASSERT(w->allocation.height);
+        // Now, we should have the window size information needed
+        // for this:
         InitPopup(win, w->allocation.width, w->allocation.height,
                 win->popup.x, win->popup.y);
     }
