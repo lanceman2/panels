@@ -53,12 +53,13 @@ pnWindow_createAsGrid
 pnWindow_fullscreen
 pnWindow_isDrawn
 pnWindow_isDrawnReset
-pnWindow_maximize
-pnWindow_minimize
+pnWindow_setMaximized
+pnWindow_setMinimized
 pnWindow_popCursor
 pnWindow_pushCursor
 pnWindow_setDestroy
 pnWindow_setPreferredSize
+pnWindow_setShrinkWrapped
 pnWindow_show
 pnWindow_unsetFullscreen
-pnWindow_unsetMaximize
+pnWindow_unsetMaximized

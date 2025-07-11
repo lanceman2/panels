@@ -30,24 +30,26 @@ static bool click(struct PnWidget *b,  void (*func)(void)) {
 }
 
 static void Minimize(void) {
-    pnWindow_minimize(win);
+    pnWindow_setMinimized(win);
 }
 static void Maximize(void) {
-    pnWindow_maximize(win);
+    pnWindow_setMaximized(win);
 }
 static void unsetMaximize(void) {
-    pnWindow_unsetMaximize(win);
+    pnWindow_unsetMaximized(win);
 }
 static void Fullscreen(void) {
-    pnWindow_fullscreen(win);
+    pnWindow_setFullscreen(win);
 }
 static void unsetFullscreen(void) {
     pnWindow_unsetFullscreen(win);
 }
+static void setShrinkWrapped(void) {
+    pnWindow_setShrinkWrapped(win);
+}
 static void quit(void) {
     win = 0;
 }
-
 
 static void Button(
         void (*func)(void), const char *label,
@@ -93,8 +95,9 @@ int main(void) {
     Button(unsetMaximize, "Unset Maximize", 1, 1, 1, 1);
     Button(Fullscreen, "Fullscreen", 0, 2, 1, 1);
     Button(unsetFullscreen, "Unset Fullscreen", 1, 2, 1, 1);
-    Button(0, "Hello", 0, 3, 1, 1);
-    Button(quit, "Quit", 1, 3, 1, 1);
+    Button(setShrinkWrapped, "Set Shrink Wrapped", 0, 3, 2, 1);
+    Button(0, "Hello", 0, 4, 1, 1);
+    Button(quit, "Quit", 1, 4, 1, 1);
 
     pnWindow_show(win);
 

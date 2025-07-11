@@ -73,7 +73,7 @@ libpanels.so_SOURCES :=\
  menuItem.c\
  menu.c\
  menuBar.c\
- windowSize.c
+ window_set.c
 
 ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\

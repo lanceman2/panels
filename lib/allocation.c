@@ -340,7 +340,7 @@ static void TallyRequestedSizes(const struct PnWidget *s,
             break;
         case PnLayout_Grid: {
             if(!s->g.grid)
-                // The grid is not set up yet.
+                // The grid isnot set up yet.
                 break;
             // Good luck following this shit.  I think it's inherently
             // complex.  I suck at writing, but I think the codes okay.
@@ -543,7 +543,15 @@ static void GetChildrenXY(const struct PnWidget *s,
                     // must start aligned left so culling (we do next)
                     // works correctly.  We must do aligning after
                     // culling.
-                    DASSERT(s->g.grid->widths[xi] >= c->allocation.width);
+#ifdef DEBUG
+                    DASSERT(c->pg.cSpan >= 1);
+                    uint32_t i = c->pg.cSpan - 1;
+                    uint32_t w = s->g.grid->widths[xi + i];
+                    while(i)
+                        // width is more than one cell
+                        w += s->g.grid->widths[xi + (--i)];
+                    DASSERT(w >= c->allocation.width);
+#endif
                     c->allocation.x = x;
                 }
             }
@@ -564,7 +572,15 @@ static void GetChildrenXY(const struct PnWidget *s,
                     // must start aligned top so the culling (we do next)
                     // works correctly.  We must do aligning after
                     // culling.
-                    DASSERT(s->g.grid->heights[yi] >= c->allocation.height);
+#ifdef DEBUG
+                    DASSERT(c->pg.cSpan >= 1);
+                    uint32_t i = c->pg.rSpan - 1;
+                    uint32_t h = s->g.grid->heights[yi + i];
+                    while(i)
+                        // height is more than one cell
+                        h += s->g.grid->heights[yi + (--i)];
+                    DASSERT(h >= c->allocation.height);
+#endif
                     c->allocation.y = y;
                     if(HaveChildren(c))
                         GetChildrenXY(c, &c->allocation);

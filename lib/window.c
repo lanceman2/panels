@@ -438,20 +438,6 @@ void _pnWindow_destroy(struct PnWidget *w) {
     free(win);
 }
 
-void pnWindow_setDestroy(struct PnWidget *w,
-        void (*destroy)(struct PnWidget *window, void *userData),
-        void *userData) {
-
-    DASSERT(w);
-    ASSERT((w->type & TOPLEVEL) || (w->type & POPUP));
-    struct PnWindow *win = (void *) w;
-    DASSERT(win);
-
-    win->destroy = destroy;
-    win->destroyData = userData;
-}
-
-
 bool _pnWindow_addCallback(struct PnWindow *win) {
 
     DASSERT(win);

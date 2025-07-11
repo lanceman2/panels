@@ -448,14 +448,15 @@ PN_EXPORT void pnWindow_setPreferredSize(struct PnWidget *window,
         uint32_t width, uint32_t height);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWidget *window);
 PN_EXPORT void pnWindow_show(struct PnWidget *window);
-PN_EXPORT void pnWindow_minimize(struct PnWidget *window);
-PN_EXPORT void pnWindow_maximize(struct PnWidget *window);
-PN_EXPORT void pnWindow_unsetMaximize(struct PnWidget *window);
-PN_EXPORT void pnWindow_fullscreen(struct PnWidget *window);
+PN_EXPORT void pnWindow_setMinimized(struct PnWidget *window);
+PN_EXPORT void pnWindow_setMaximized(struct PnWidget *window);
+PN_EXPORT void pnWindow_unsetMaximized(struct PnWidget *window);
+PN_EXPORT void pnWindow_setFullscreen(struct PnWidget *window);
 PN_EXPORT void pnWindow_unsetFullscreen(struct PnWidget *window);
 PN_EXPORT void pnWindow_setDestroy(struct PnWidget *window,
         void (*destroy)(struct PnWidget *window, void *userData),
         void *userData);
+PN_EXPORT void pnWindow_setShrinkWrapped(struct PnWidget *window);
 
 PN_EXPORT struct PnWidget *pnWidget_create(
         struct PnWidget *parent,
