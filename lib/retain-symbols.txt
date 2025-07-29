@@ -16,13 +16,12 @@ pnGraph_setZeroLineColor
 pnImage_create
 pnLabel_create
 pnLabel_setFontColor
-pnMenuBar_create
 pnMenu_create
-pnMenuItem_create
 pnPlot_setLineColor
 pnPlot_setLineWidth
 pnPlot_setPointColor
 pnPlot_setPointSize
+pnPopup_hide
 pnSplitter_create
 pnWidget_addAction
 pnWidget_addCallback

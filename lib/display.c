@@ -70,6 +70,9 @@ static void enter(void *data,
     DASSERT(d.wl_pointer == p);
  
     DASSERT(!d.pointerWindow);
+    if(!wl_surface)
+        // This happened.
+        return;
     d.pointerWindow = wl_surface_get_user_data(wl_surface);
     d.pointerWindow->lastSerial = serial;
     DASSERT(serial);
@@ -112,6 +115,7 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     DASSERT(d.wl_seat);
     DASSERT(p);
     DASSERT(d.wl_pointer == p);
+    if(!d.pointerWindow) return;
     //DASSERT(d.pointerWidget);
     //DASSERT(d.pointerWindow);
 

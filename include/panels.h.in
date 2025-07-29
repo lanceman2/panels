@@ -409,6 +409,9 @@ PN_EXPORT struct PnWidget *pnWindow_create(
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand);
+
+PN_EXPORT void pnPopup_hide(struct PnWidget *popup);
+
 PN_EXPORT struct PnWidget *pnWindow_createAsGrid(
         struct PnWidget *parent,
         uint32_t width, uint32_t height, int32_t x, int32_t y,
@@ -421,21 +424,11 @@ PN_EXPORT struct PnWidget *pnGeneric_create(struct PnWidget *parent,
         enum PnAlign align,
         enum PnExpand expand);
 
-PN_EXPORT struct PnWidget *pnMenuBar_create(struct PnWidget *parent,
-        uint32_t width, uint32_t height,
-        enum PnLayout layout,
-        enum PnAlign align,
-        enum PnExpand expand);
 PN_EXPORT struct PnWidget *pnMenu_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand, const char *label);
-PN_EXPORT struct PnWidget *pnMenuItem_create(struct PnWidget *parent,
-        uint32_t width, uint32_t height,
-        enum PnLayout layout,
-        enum PnAlign align,
-        enum PnExpand expand);
 
 // We have one theme per app process.
 //

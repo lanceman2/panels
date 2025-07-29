@@ -26,7 +26,6 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
         double a = 1.0 - t/tMax;
         pnGraph_drawPoint(p, a * cos(t), a * sin(t));
     }
-    DSPEW();
     return false;
 }
 

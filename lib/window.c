@@ -337,6 +337,29 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
             layout, align, expand, -1/*numColumns*/, -1/*numRows*/);
 }
 
+// TODO: This does not work.  Minimize does not make sense...
+//
+// If we can't get this to work we need to remove this function.
+// It may be that we can create and show popups, but we can't
+// hide them without destroying the popup wl_surface and/or
+// other related wayland client objects.
+//
+void pnPopup_hide(struct PnWidget *popup) {
+
+    DASSERT(popup);
+    ASSERT(popup->type & POPUP);
+
+    struct PnWindow *win = (void *) popup;
+    if(!win->popup.xdg_popup)
+        // It was never showing to begin with.
+        return;
+
+    ERROR("win=%p", win);
+    // This seems to kind-of work for toplevel Wayland windows.
+    wl_surface_attach(win->wl_surface, 0/*wl_buffer*/, 0, 0);
+    wl_surface_commit(win->wl_surface);
+    pnWidget_queueDraw(&win->widget, false);
+}
 
 void pnWindow_show(struct PnWidget *w) {
 

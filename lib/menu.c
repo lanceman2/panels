@@ -15,14 +15,51 @@
 #include "debug.h"
 #include "display.h"
 #include "SetColor.h"
-#include "menuBar.h"
 
 
-struct Popup {
+struct PnMenu {
 
-    struct PnWindow popup; // inherit popup
+    // Perhaps it's called composition, but the API user will not know or
+    // see the difference, so I think it's fair to call it inheritance.
+    struct PnWidget *button; // inherit (opaquely).
 
+    struct PnWidget *popup;
+    bool showing;
 };
+
+
+static inline
+void PopupShow(struct PnMenu *m) {
+    DASSERT(m);
+    DASSERT(m->button);
+    struct PnWidget *popup = m->popup;
+
+    if(!popup) {
+
+        popup = pnWindow_create(m->button/*parent*/, 100, 300,
+            200/*x*/, 0/*y*/, 0, 0, 0);
+        ASSERT(popup);
+        pnWidget_setBackgroundColor(popup, 0xFA299981);
+        pnWindow_show(popup);
+        m->popup = popup;
+    }
+}
+
+static inline
+void PopupDestroy(struct PnMenu *m) {
+    DASSERT(m);
+    struct PnWidget *popup = m->popup;
+    if(!popup) return;
+
+    pnWidget_destroy(popup);
+    m->popup = 0;
+}
+
+static inline
+void PopupHide(struct PnMenu *m) {
+    // TODO: How can we just hide it?
+    PopupDestroy(m);
+}
 
 
 static
@@ -31,102 +68,11 @@ void destroy(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(m);
     DASSERT(b == m->button);
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
-
+    PopupDestroy(m);
     DZMEM(m, sizeof(*m));
     free(m);
 }
 
-static inline void PopupDestroy(struct PnMenu *m) {
-
-    if(!m) return;
-    if(m->popup) {
-        pnWidget_destroy(m->popup);
-        m->popup = 0;
-    }
-}
-
-
-static bool enterPopup(struct PnWidget *popup,
-            uint32_t x, uint32_t y, struct PnMenu *m) {
-    DASSERT(popup);
-    DASSERT(m);
-    DASSERT(m->button);
-
-    fprintf(stderr, "\n    enter(%p)[%" PRIi32 ",%" PRIi32 "]\n",
-            popup, x, y);
-
-    // We don't care where the mouse pointer is, we just want the popup
-    // to line-up as best it can with the menu widget.
-    //
-    struct PnAllocation a;
-    pnWidget_getAllocation(m->button, &a);
-    struct PnAllocation pa;
-    pnWidget_getAllocation(popup, &pa);
-
-    // The parent for the popup is the "panels" window that owns this
-    // button (menu thingy), and not necessarily the menu button.  The
-    // popup is a window with it's own pixel memory allocations and
-    // mappings.
-    struct PnWidget *p = pnWindow_create(m->button/*parent*/,
-            150, 300,
-            a.x + pa.width, a.y + a.height, 0, 0, 0);
-    pnWindow_show(p);
-
-    return true; // take focus
-}
-
-static void leavePopup(struct PnWidget *w, struct PnMenu *m) {
-    DASSERT(w);
-
-    fprintf(stderr, "    leave(%p)[]\n", w);
-}
-
-
-static inline void ReCreatePopup(struct PnMenu *m) {
-    DASSERT(m);
-    DASSERT(m->button);
-    DASSERT(m->button->window);
-
-    PopupDestroy(m);
-
-    // We don't care where the mouse pointer is, we just want the popup
-    // to line-up as best it can with the menu widget.
-    //
-    struct PnAllocation a;
-    pnWidget_getAllocation(m->button, &a);
-
-    // The parent for the popup is the "panels" window that owns this
-    // button (menu thingy), and not necessarily the menu button.  The
-    // popup is a window with it's own pixel memory allocations and
-    // mappings.
-    m->popup = pnWindow_create(m->button/*parent*/,
-            100/*width*/, 100/*height*/,
-            a.x, a.y + a.height, PnLayout_TB, 0, 0);
-
-    {
-        // Test add buttons to it.
-        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
-        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
-        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
-        pnButton_create(m->popup, 130, 50, 0, 0, 0, 0, false/*toggle*/);
-    }
-
-    // Looks like the Wayland compositor puts this popup in a good place
-    // even when the menu is in a bad place.
-    //
-    // TODO: We need to study what the failure modes of the Wayland popup
-    // are.
-    ASSERT(m->popup);
-    pnWidget_setEnter(m->popup, (void *) enterPopup, m);
-    pnWidget_setLeave(m->popup, (void *) leavePopup, m);
-
-    pnWidget_setBackgroundColor(m->popup, 0xFA299981);
-    pnWindow_show(m->popup);
-
-fprintf(stderr, "\r    widget=%p popup at x,y=%" PRIu32 ",%" PRIu32 "    ",
-        m->button, a.x, a.y + a.height);
-
-}
 
 static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
             struct PnMenu *m) {
@@ -135,19 +81,8 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
     DASSERT(b == m->button);
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
-    if(m->button->parent &&
-            IS_TYPE2(m->button->parent->type, PnWidgetType_menubar)) {
-        // This menu is in a memu bar.
-        struct PnMenuBar *mb = (void *) m->button->parent;
-        if(m->popup) {
-            WARN();
-        }
-        // Change the active menu in the menuBar to "m".
-        mb->menu = m;
-    }
-
-    ReCreatePopup(m);
-
+    PopupShow(m);
+    fprintf(stderr, "    enter widget=%p \n", b);
     return true; // eat it.
 }
 
@@ -159,7 +94,8 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(b == m->button);
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
-fprintf(stderr, "    leave widget=%p \n", b);
+    PopupHide(m);
+//fprintf(stderr, "    leave widget=%p \n", b);
 
     return true; // eat it.
 }

@@ -36,11 +36,11 @@ static void MenuBar(struct PnWidget *parent) {
 
     ASSERT(parent);
 
-    struct PnWidget *w = pnMenuBar_create(
+    struct PnWidget *w = pnWidget_create(
             parent,
             0/*width*/, 0/*height*/,
             0/*layout*/, PnAlign_LT/*align*/,
-            PnExpand_None/*expand*/);
+            PnExpand_None/*expand*/, 0/*size*/);
     ASSERT(w);
 
     for(uint32_t i=Rand(3,9); i != -1; --i)
@@ -77,7 +77,7 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
-    srand(1);
+    srand(13);
 
     struct PnWidget *win = pnWindow_create(0,
             10/*width*/, 10/*height*/,
