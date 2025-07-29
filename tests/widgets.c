@@ -23,7 +23,7 @@ struct PnWidget *W(struct PnWidget *container, enum PnLayout layout) {
             layout, 0/*align*/,
             PnExpand_H | PnExpand_V/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, GetColor());
+    pnWidget_setBackgroundColor(w, GetColor(), 0);
 #ifdef CULL
     pnWidget_setClipBeforeCull(w, false);
 #endif

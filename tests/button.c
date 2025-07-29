@@ -79,7 +79,7 @@ static void Button(void) {
     pnWidget_addCallback(b->button,
             PN_BUTTON_CB_PRESS, press, b);
     pnWidget_addDestroy(b->button, destroy, b);
-    pnWidget_setBackgroundColor(b->button, 0xFF707070);
+    pnWidget_setBackgroundColor(b->button, 0xFF707070, 0);
 }
 
 
@@ -91,7 +91,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_LR, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xAA010101);
+    pnWidget_setBackgroundColor(win, 0xAA010101, 0);
 
     for(int i=0; i<8; ++i)
         Button();

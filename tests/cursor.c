@@ -44,7 +44,7 @@ DSPEW("cursorName=\"%s\"", cursorName);
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
     pnWidget_setEnter(w, enter, (char *) cursorName);
     pnWidget_setLeave(w, leave, (char *) cursorName);
 }

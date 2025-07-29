@@ -393,6 +393,7 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
         // pnWidget_create() should spew for us.
         return 0; // Failure.
 
+
     // Setting the widget surface type.  We decrease the data, but
     // increase the complexity.  See enum PnWidgetType in display.h.
     // It's so easy to forget about all these bits, but DASSERT() is my
@@ -433,7 +434,17 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     b->colors[PnButtonState_Hover] =   0xFF00EDFF;
     b->colors[PnButtonState_Pressed] = 0xFFD06AC7;
     b->colors[PnButtonState_Active] =  0xFF0BD109;
-    pnWidget_setBackgroundColor(&b->widget, b->colors[b->state]);
+    pnWidget_setBackgroundColor(&b->widget, b->colors[b->state], 0);
+
+    if(label) {
+        struct PnWidget *l = (void *) pnLabel_create(
+            &b->widget/*parent*/,
+            0/*width*/, 20/*height*/,
+            4/*xPadding*/, 4/*yPadding*/,
+            0/*align*/, PnExpand_HV/*expand*/, label);
+        ASSERT(l);
+        pnLabel_setFontColor(l, 0xF0FF0000);
+    }
 
     return &b->widget;
 }

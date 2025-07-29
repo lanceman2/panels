@@ -39,7 +39,7 @@ void PopupShow(struct PnMenu *m) {
         popup = pnWindow_create(m->button/*parent*/, 100, 300,
             200/*x*/, 0/*y*/, 0, 0, 0);
         ASSERT(popup);
-        pnWidget_setBackgroundColor(popup, 0xFA299981);
+        pnWidget_setBackgroundColor(popup, 0xFA299981, 0);
         pnWindow_show(popup);
         m->popup = popup;
     }
@@ -101,6 +101,13 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
 }
 
 
+struct PnWidget *pnMenu_addItem(struct PnWidget *menu,
+    const char *label) {
+
+    return 0;
+}
+
+
 struct PnWidget *pnMenu_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
@@ -124,7 +131,7 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
     m->button->type = PnWidgetType_menu;
 
     pnWidget_addDestroy(m->button, (void *) destroy, m);
-    pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD);
+    pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD, true);
     pnWidget_addCallback(m->button,
             PN_BUTTON_CB_ENTER, enterAction, m);
     pnWidget_addCallback(m->button,

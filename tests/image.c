@@ -24,7 +24,7 @@ static void W(const char *filename, uint32_t w, uint32_t h) {
             PnExpand_HV/*expand*/);
     ASSERT(widget);
     //TODO: What does image widget do with background color.
-    pnWidget_setBackgroundColor(widget, Color());
+    pnWidget_setBackgroundColor(widget, Color(), 0);
 }
 
 static void catcher(int sig) {
@@ -43,7 +43,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/,
             PnAlign_CC/*align*/, PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xFF000000);
+    pnWidget_setBackgroundColor(win, 0xFF000000, 0);
 
     W(FILENAME, 0, 0);
     W(FILENAME, 0, 100);

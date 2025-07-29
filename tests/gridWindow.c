@@ -24,14 +24,14 @@ bool enter(struct PnWidget *w,
             uint32_t x, uint32_t y, void *userData) {
 
     color = pnWidget_getBackgroundColor(w);
-    pnWidget_setBackgroundColor(w, 0xAAFF0000);
+    pnWidget_setBackgroundColor(w, 0xAAFF0000, 0);
     pnWidget_queueDraw(w, 0);
     return true;
 }
 
 void leave(struct PnWidget *w, void *userData) {
 
-    pnWidget_setBackgroundColor(w, color);
+    pnWidget_setBackgroundColor(w, color, 0);
     pnWidget_queueDraw(w, 0);
 }
 
@@ -44,7 +44,7 @@ void Widget(uint32_t x, uint32_t y) {
         x/*columnNum*/, y/*rowNum*/,
         1/*columnSpan*/, 1/*rowSpan*/,
         0/*size*/);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 
     pnWidget_setEnter(w, enter, 0/*userData*/);
     pnWidget_setLeave(w, leave, 0/*userData*/);

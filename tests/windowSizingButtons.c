@@ -71,8 +71,8 @@ static void Button(
     ASSERT(l);
     pnLabel_setFontColor(l, 0xF0000000);
     uint32_t color = 0xDA000000 | (0x00FFFFFF & Color());
-    pnWidget_setBackgroundColor(l, color);
-    pnWidget_setBackgroundColor(button, color);
+    pnWidget_setBackgroundColor(l, color, 0);
+    pnWidget_setBackgroundColor(button, color, 0);
     pnWidget_addCallback(button, PN_BUTTON_CB_CLICK, click, func);
 }
 
@@ -88,7 +88,7 @@ int main(void) {
         0/*align*/, PnExpand_HV/*expand*/,
         0/*numColumns*/, 0/*numRows*/);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xFF000000);
+    pnWidget_setBackgroundColor(win, 0xFF000000, 0);
 
     Button(Minimize, "Minimize", 0, 0, 2, 1);
     Button(Maximize, "Maximize", 0, 1, 1, 1);

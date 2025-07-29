@@ -62,7 +62,7 @@ int main(void) {
             PnExpand_HV/*expand*/);
     ASSERT(w);
     //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(w, 0xA0101010);
+    pnWidget_setBackgroundColor(w, 0xA0101010, 0);
 
     struct PnPlot *p = pnStaticPlot_create(w, Plot, catcher);
     ASSERT(p);

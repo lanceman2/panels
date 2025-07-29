@@ -30,7 +30,7 @@ static struct PnWidget *Widget(struct PnWidget *parent) {
             //PnExpand_H * Rand(0, 1));
             PnExpand_HV & 0/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 
     return w;
 }
@@ -46,7 +46,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_TB/*layout*/,
             0/*align*/, PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xFF000000);
+    pnWidget_setBackgroundColor(win, 0xFF000000, 0);
 
     struct PnWidget *w = pnWidget_create(
             win,
@@ -56,7 +56,7 @@ int main(void) {
             PnAlign_RC/*align*/, PnExpand_HV/*expand*/,
             0/*size*/);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 
 
     for(uint32_t i=0; i<3; ++i)
@@ -70,7 +70,7 @@ int main(void) {
             PnAlign_JC/*align*/, PnExpand_H/*expand*/,
             0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 
 
     for(uint32_t i=0; i<2; ++i)

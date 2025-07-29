@@ -23,7 +23,7 @@ void run(void) {
             0, 0, 0, 0, PnExpand_HV);
     ASSERT(win);
 
-    pnWidget_setBackgroundColor(win, Color()/*random color*/);
+    pnWidget_setBackgroundColor(win, Color()/*random color*/, 0);
 
 #ifdef WITH_CAIRO
     struct PnWidget *w = pnLabel_create(win/*parent*/,
@@ -33,7 +33,7 @@ void run(void) {
             PnExpand_H/*expand*/,
             "Hello World!");
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color()/*random color*/);
+    pnWidget_setBackgroundColor(w, Color()/*random color*/, 0);
 #endif
 
     pnWindow_show(win);

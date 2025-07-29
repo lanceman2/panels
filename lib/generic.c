@@ -277,7 +277,7 @@ struct PnWidget *pnGeneric_create(struct PnWidget *parent,
             0/*callbackSize*/);
 
 
-    pnWidget_setBackgroundColor(&g->widget, 0xFFCDCDCD);
+    pnWidget_setBackgroundColor(&g->widget, 0xFFCDCDCD, 0);
 
     return &g->widget;
 }

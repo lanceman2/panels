@@ -484,7 +484,7 @@ PN_EXPORT void pnWidget_addDestroy(struct PnWidget *widget,
 
 
 PN_EXPORT void pnWidget_setBackgroundColor(
-        struct PnWidget *w, uint32_t argbColor);
+        struct PnWidget *w, uint32_t argbColor, bool recurse);
 
 PN_EXPORT uint32_t pnWidget_getBackgroundColor(struct PnWidget *w);
 

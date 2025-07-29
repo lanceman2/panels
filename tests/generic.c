@@ -27,7 +27,7 @@ void pressAction(struct PnWidget *w, int32_t x, int32_t y,
     ASSERT(w);
     ASSERT(userData == myUserData);
 
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
     pnWidget_queueDraw(w, false/*allocate*/);
 }
 
@@ -37,7 +37,7 @@ bool releaseAction(struct PnWidget *w, void *userData) {
     ASSERT(w);
     ASSERT(userData == myUserData);
 
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
     pnWidget_queueDraw(w, false/*allocate*/);
 
     return false;
@@ -54,7 +54,7 @@ static void Generic(void) {
             PnExpand_HV/*expand*/);
     ASSERT(w);
 
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
     pnWidget_addCallback(w, PN_GENERIC_CB_PRESS,
             pressAction, myUserData);
     pnWidget_addCallback(w, PN_GENERIC_CB_RELEASE,
@@ -72,7 +72,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_LR, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xAA010101);
+    pnWidget_setBackgroundColor(win, 0xAA010101, 0);
 
     for(int i=0; i<6; ++i)
         Generic();

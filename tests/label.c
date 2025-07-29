@@ -42,7 +42,7 @@ static void Label(void) {
             PnExpand_HV/*expand*/, text);
     ASSERT(label);
     pnLabel_setFontColor(label, 0xF0000000);
-    pnWidget_setBackgroundColor(label, Color());
+    pnWidget_setBackgroundColor(label, Color(), 0);
 }
 
 
@@ -55,7 +55,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xA0010101);
+    pnWidget_setBackgroundColor(win, 0xA0010101, 0);
 
     for(int i=0; i<5; ++i)
         Label();

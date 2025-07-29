@@ -83,7 +83,7 @@ int main(void) {
             0/*layout*/, 0/*align*/,
             PnExpand_V/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xCC00CF00);
+    pnWidget_setBackgroundColor(w, 0xCC00CF00, 0);
 
     pnWindow_show(win);
 

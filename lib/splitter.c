@@ -713,8 +713,8 @@ struct PnWidget *pnSplitter_create(struct PnWidget *parent,
     pnWidget_setRelease(slider, (void *) release, s);
     pnWidget_setMotion(slider, (void *) motion, s);
 
-    pnWidget_setBackgroundColor(&s->widget, 0xFF999999);
-    pnWidget_setBackgroundColor(slider,     0xFFFF0000);
+    pnWidget_setBackgroundColor(&s->widget, 0xFF999999, 0);
+    pnWidget_setBackgroundColor(slider,     0xFFFF0000, 0);
 
     return &s->widget;
 }

@@ -32,7 +32,7 @@ int main(void) {
             0/*numColumns*/, 0/*numRows*/,
             0/*size*/);
     ASSERT(grid);
-    pnWidget_setBackgroundColor(grid, 0xFF000000);
+    pnWidget_setBackgroundColor(grid, 0xFF000000, 0);
 
     pnWindow_show(win);
 

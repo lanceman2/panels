@@ -23,7 +23,7 @@ static struct PnWidget *MakeWidget(void) {
             0/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
     return w;
 }
 
@@ -36,7 +36,7 @@ int main(void) {
     win = pnWindow_create(0, 110/*width*/, 110/*height*/,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
-    pnWidget_setBackgroundColor(win, Color());
+    pnWidget_setBackgroundColor(win, Color(), 0);
     ASSERT(win);
     pnWindow_setPreferredSize(win, 900, 640);
 

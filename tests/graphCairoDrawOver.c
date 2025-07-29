@@ -56,7 +56,7 @@ int main(void) {
             PnExpand_HV/*expand*/);
     ASSERT(graph);
     //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(graph, 0xA0101010);
+    pnWidget_setBackgroundColor(graph, 0xA0101010, 0);
 
     struct PnWidget *over = pnWidget_create(graph/*parent*/,
         0/*width*/, 0/*height*/, PnLayout_Cover,

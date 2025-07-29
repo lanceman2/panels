@@ -61,7 +61,7 @@ static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
             PnExpand_HV/*expand*/);
     ASSERT(w);
     //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 
     struct PnPlot *p = pnStaticPlot_create(w, plot, 0);
     ASSERT(p);

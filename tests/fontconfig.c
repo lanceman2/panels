@@ -69,7 +69,7 @@ cairo_debug_reset_static_data();
     struct PnWidget *win = pnWindow_create(0, 10, 10,
             0, 0, 0, 0, PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xFF000000);
+    pnWidget_setBackgroundColor(win, 0xFF000000, 0);
 
     struct PnWidget *label = (void *) pnLabel_create(
             win/*parent*/,
@@ -78,7 +78,7 @@ cairo_debug_reset_static_data();
             PnAlign_CC/*align*/,
             PnExpand_HV/*expand*/, "Hello World");
     ASSERT(label);
-    pnWidget_setBackgroundColor(label, 0xFFF0F0F0);
+    pnWidget_setBackgroundColor(label, 0xFFF0F0F0, 0);
     pnLabel_setFontColor(label, 0xFF000000);
 
 
@@ -91,7 +91,7 @@ cairo_debug_reset_static_data();
             PnAlign_CC/*align*/,
             PnExpand_HV/*expand*/, "Goodbye World");
     ASSERT(label);
-    pnWidget_setBackgroundColor(label, 0xFFF0F0F0);
+    pnWidget_setBackgroundColor(label, 0xFFF0F0F0, 0);
     pnLabel_setFontColor(label, 0xFF000000);
 
 cairo_debug_reset_static_data();

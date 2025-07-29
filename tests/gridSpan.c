@@ -48,7 +48,7 @@ static inline void AddWidget(const char *text,
     pnWidget_setClipBeforeCull(w, false);
 #endif
 
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 }
 
 
@@ -72,8 +72,8 @@ int main(void) {
             0/*numColumns*/, 0/*numRows*/,
             0/*memory size*/);
     ASSERT(grid);
-    pnWidget_setBackgroundColor(grid, 0xA0A08080); // muddy translucent.
-    //pnWidget_setBackgroundColor(grid, 0xFF000000); // black
+    pnWidget_setBackgroundColor(grid, 0xA0A08080, 0); // muddy translucent.
+    //pnWidget_setBackgroundColor(grid, 0xFF000000, 0); // black
 
     // For testing the grid we intentionally do not fill all the cells
     // that are in the grid.  We also skip some cell indexes in whole rows

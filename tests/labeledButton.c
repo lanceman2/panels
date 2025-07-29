@@ -46,22 +46,31 @@ static void Button(void) {
     char text[Len];
     snprintf(text, Len, format, buttonCount++);
 
+    // Half the time we'll use the button's label thingy.
+    bool labeled = (buttonCount % 2)?true:false;
+
     struct PnWidget *button = pnButton_create(hbox,
             0/*width*/, 0/*height*/,
             0/*layout*/, 0/*align*/,
-            PnExpand_VH, 0/*label*/, false/*toggle*/);
+            PnExpand_VH, labeled?text:0/*label*/,
+            false/*toggle*/);
     ASSERT(button);
 
-    struct PnWidget *l = (void *) pnLabel_create(
-            button/*parent*/,
-            0/*width*/, 30/*height*/,
-            4/*xPadding*/, 4/*yPadding*/,
-            0/*align*/, PnExpand_HV/*expand*/, text);
-    ASSERT(l);
-    pnLabel_setFontColor(l, 0xF0000000);
     uint32_t color = 0xDA000000 | (0x00FFFFFF & Color());
-    pnWidget_setBackgroundColor(l, color);
-    pnWidget_setBackgroundColor(button, color);
+
+
+    if(!labeled) {
+        // Test adding a separate label widget as a child.
+        struct PnWidget *l = (void *) pnLabel_create(
+                button/*parent*/,
+                0/*width*/, 30/*height*/,
+                4/*xPadding*/, 4/*yPadding*/,
+                0/*align*/, PnExpand_HV/*expand*/, text);
+        ASSERT(l);
+        pnLabel_setFontColor(l, 0xF0000000);
+    }
+
+    pnWidget_setBackgroundColor(button, color, true/*recurse*/);
     pnWidget_addCallback(button,
             PN_BUTTON_CB_CLICK, click, button);
 }
@@ -76,7 +85,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_TB/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xFF000000);
+    pnWidget_setBackgroundColor(win, 0xFF000000, 0);
 
     for(int i=0; i<20; ++i)
         Button();

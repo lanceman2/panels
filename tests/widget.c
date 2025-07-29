@@ -31,14 +31,14 @@ int main(void) {
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xCCCF0000);
+    pnWidget_setBackgroundColor(w, 0xCCCF0000, 0);
 
     w = pnWidget_create(win/*parent*/,
             100/*width*/, 300/*height*/,
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xCC00CF00);
+    pnWidget_setBackgroundColor(w, 0xCC00CF00, 0);
     //pnWidget_show(w, false);
 
     struct PnWidget *cw = pnWidget_create(
@@ -47,7 +47,7 @@ int main(void) {
             PnLayout_LR/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/, 0);
     ASSERT(cw);
-    pnWidget_setBackgroundColor(cw, 0xFF0000CF);
+    pnWidget_setBackgroundColor(cw, 0xFF0000CF, 0);
 
 #if 1
     {
@@ -56,7 +56,7 @@ int main(void) {
             0/*layout*/, 0/*align*/, PnExpand_V/*expand*/,
             0);
         ASSERT(w);
-        pnWidget_setBackgroundColor(w, 0xCCCFFF00);
+        pnWidget_setBackgroundColor(w, 0xCCCFFF00, 0);
         //pnWidget_show(w, false);
 
         w = pnWidget_create(cw/*parent*/,
@@ -64,7 +64,7 @@ int main(void) {
             0/*layout*/, PnAlign_CB/*align*/, 0/*expand*/,
             0);
         ASSERT(w);
-        pnWidget_setBackgroundColor(w, 0xCC00CFFF);
+        pnWidget_setBackgroundColor(w, 0xCC00CFFF, 0);
         pnWidget_show(w, true);
     }
 #endif

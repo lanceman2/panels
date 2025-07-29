@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
             0/*layout*/, 0/*align*/,
             EXPAND/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xCC00CF00);
+    pnWidget_setBackgroundColor(w, 0xCC00CF00, 0);
     pnWidget_setDraw(w, draw2, 0);
 
     pnWindow_setPreferredSize(win, 1100, 900);

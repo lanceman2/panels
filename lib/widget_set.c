@@ -56,9 +56,25 @@ void pnWidget_getAllocation(const struct PnWidget *w,
 }
 
 void pnWidget_setBackgroundColor(
-        struct PnWidget *w, uint32_t argbColor) {
+        struct PnWidget *w, uint32_t argbColor, bool recurse) {
     DASSERT(w);
     w->backgroundColor = argbColor;
+    if(!recurse) return;
+    // Change the children's colors.
+    if(w->layout == PnLayout_Grid) {
+        struct PnWidget ***child = w->g.grid->child;
+        if(!child) return;
+        for(uint32_t y=w->g.numRows-1; y != -1; --y)
+            for(uint32_t x=w->g.numColumns-1; x != -1; --x) {
+                struct PnWidget *c = child[y][x];
+                if(c && IsUpperLeftCell(c, child, x, y))
+                    c->backgroundColor = argbColor;
+            }
+        return;
+    }
+    DASSERT(w->layout < PnLayout_Grid);
+    for(struct PnWidget *c = w->l.firstChild; c; c = c->pl.nextSibling)
+        c->backgroundColor = argbColor;
 }
 
 uint32_t pnWidget_getBackgroundColor(struct PnWidget *w) {

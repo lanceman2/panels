@@ -32,7 +32,7 @@ int main(void) {
             0/*layout*/, 0/*align*/,
             0/*expand*/, 0);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, 0xCCCF0000);
+    pnWidget_setBackgroundColor(w, 0xCCCF0000, 0);
 
     w = pnWidget_create(w/*parent*/,
             100/*width*/, 300/*height*/,

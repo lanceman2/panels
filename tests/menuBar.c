@@ -28,7 +28,7 @@ static void AddMenu(struct PnWidget *parent) {
             0/*text label*/);
     ASSERT(menu);
 
-    pnWidget_setBackgroundColor(menu, Color());
+    pnWidget_setBackgroundColor(menu, Color(), 0);
 }
 
 
@@ -46,7 +46,7 @@ static void MenuBar(struct PnWidget *parent) {
     for(uint32_t i=Rand(3,9); i != -1; --i)
         AddMenu(w);
 
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 }
 
 static void SubWindow(struct PnWidget *parent) {
@@ -59,7 +59,7 @@ static void SubWindow(struct PnWidget *parent) {
             PnLayout_TB/*layout*/, PnAlign_LT/*align*/,
             PnExpand_HV/*expand*/, 0/*size*/);
     ASSERT(w);
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 
     MenuBar(w);
 
@@ -69,7 +69,7 @@ static void SubWindow(struct PnWidget *parent) {
             PnExpand_HV/*expand*/, 0/*size*/);
     ASSERT(w);
 
-    pnWidget_setBackgroundColor(w, Color());
+    pnWidget_setBackgroundColor(w, Color(), 0);
 }
 
 
@@ -84,7 +84,7 @@ int main(void) {
             0/*x*/, 0/*y*/, PnLayout_TB, 0,
             PnExpand_HV);
     ASSERT(win);
-    pnWidget_setBackgroundColor(win, 0xAA010101);
+    pnWidget_setBackgroundColor(win, 0xAA010101, 0);
 
     SubWindow(win);
     SubWindow(win);
