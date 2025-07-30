@@ -74,6 +74,7 @@ static struct xdg_popup_listener xdg_popup_listener = {
     .repositioned = repositioned
 };
 
+
 // This just destroys the popup.xdg_positioner and the popup.xdg_popup
 // part of the PnWindow.
 //
@@ -108,6 +109,9 @@ bool InitPopup(struct PnWindow *win,
     DASSERT(w > 0);
     DASSERT(h > 0);
 
+    if(!win->wl_surface && InitWaylandWindow(win))
+        return true; // true ==> fail
+
     win->popup.xdg_positioner =
         xdg_wm_base_create_positioner(d.xdg_wm_base);
     if(!win->popup.xdg_positioner) {
@@ -132,4 +136,41 @@ bool InitPopup(struct PnWindow *win,
     }
 
     return false; // return false for success
+}
+
+
+// TODO: It appears that once a Wayland popup window is shown
+// the way to "hide it" is to destroy it.  I could be totally
+// wrong about this, but this will at least give the appearance
+// of hiding the popup, and not destroy all the non-wayland object
+// stuff in this libpanels popup window thingy.
+//
+void pnPopup_hide(struct PnWidget *w) {
+    DASSERT(w);
+    ASSERT(w->type & POPUP);
+    struct PnWindow *win = (void *) w;
+
+    // Clean up stuff in reverse order that stuff was created.
+    /////////////////////////////////////////////////////////////////
+
+    if(win->wl_callback) {
+        wl_callback_destroy(win->wl_callback);
+        win->wl_callback = 0;
+    }
+
+    // Make sure buffer is freed up and reset.
+    if(win->buffer.wl_buffer)
+        FreeBuffer(&win->buffer);
+
+    DestroyPopup(win);
+
+    if(win->xdg_surface) {
+        xdg_surface_destroy(win->xdg_surface);
+        win->xdg_surface = 0;
+    }
+
+    if(win->wl_surface) {
+        wl_surface_destroy(win->wl_surface);
+        win->wl_surface = 0;
+    }
 }

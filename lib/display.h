@@ -306,6 +306,7 @@ struct PnWidget {
             void *userData);
     void *axisData;
 
+
 #ifdef WITH_CAIRO
     int (*cairoDraw)(struct PnWidget *w,
             cairo_t *cr, void *userData);
@@ -313,6 +314,8 @@ struct PnWidget {
     cairo_t *cr;
     cairo_surface_t *cairo_surface;
 #endif
+
+    void *userData;
 
     // We keep a linked list (tree like) graph of widget starting at a
     // window with PnWidget::parent == 0.
@@ -815,8 +818,6 @@ static bool inline HaveChildren(const struct PnWidget *s) {
 
 extern const struct wl_output_listener output_listener;
 
-extern void GetSurfaceDamageFunction(struct PnWindow *win);
-
 extern int create_shm_file(size_t size);
 extern struct PnBuffer *GetNextBuffer(struct PnWindow *win,
         uint32_t width, uint32_t height);
@@ -826,6 +827,7 @@ extern bool InitToplevel(struct PnWindow *win);
 extern bool InitPopup(struct PnWindow *win,
         int32_t w, int32_t h,
         int32_t x, int32_t y);
+extern bool InitWaylandWindow(struct PnWindow *win);
 extern void DestroyPopup(struct PnWindow *win);
 
 extern void InitSurface(struct PnWidget *s,

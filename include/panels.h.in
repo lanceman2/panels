@@ -429,6 +429,8 @@ PN_EXPORT struct PnWidget *pnMenu_create(struct PnWidget *parent,
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand, const char *label);
+PN_EXPORT struct PnWidget *pnMenu_addItem(struct PnWidget *menu,
+        const char *label);
 
 // We have one theme per app process.
 //
@@ -440,7 +442,7 @@ PN_EXPORT bool pnWindow_isDrawn(struct PnWidget *window);
 PN_EXPORT void pnWindow_setPreferredSize(struct PnWidget *window,
         uint32_t width, uint32_t height);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWidget *window);
-PN_EXPORT void pnWindow_show(struct PnWidget *window);
+PN_EXPORT bool pnWindow_show(struct PnWidget *window);
 PN_EXPORT void pnWindow_setMinimized(struct PnWidget *window);
 PN_EXPORT void pnWindow_setMaximized(struct PnWidget *window);
 PN_EXPORT void pnWindow_unsetMaximized(struct PnWidget *window);
@@ -595,6 +597,10 @@ static inline struct PnPlot *pnStaticPlot_create(struct PnWidget *graph,
 
 PN_EXPORT bool pnWidget_isInSurface(const struct PnWidget *w,
         uint32_t x, uint32_t y);
+
+PN_EXPORT void *pnWidget_getUserData(const struct PnWidget *w);
+PN_EXPORT void pnWidget_setUserData(struct PnWidget *w, void *userData);
+
 
 
 /////////////////////////////////////////////////////////////////

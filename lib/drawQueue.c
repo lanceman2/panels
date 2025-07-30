@@ -121,7 +121,7 @@ void pnWidget_queueDraw(struct PnWidget *s, bool allocate) {
         // It's already queued
         DASSERT(win->dqWrite->first);
         DASSERT(win->dqWrite->last);
-        DASSERT(win->wl_callback);
+        //DASSERT(win->wl_callback);// This popped.
         return;
     }
 

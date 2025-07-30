@@ -201,3 +201,18 @@ void pnWidget_setClipBeforeCull(struct PnWidget *w, bool clip) {
 
     // We leave it to other things to cause a redraw.
 }
+
+
+void *pnWidget_getUserData(const struct PnWidget *w) {
+    DASSERT(w);
+    return w->userData;
+}
+
+void pnWidget_setUserData(struct PnWidget *w, void *userData) {
+    DASSERT(w);
+    w->userData = userData;
+}
+
+
+
+

@@ -16,6 +16,7 @@ pnGraph_setZeroLineColor
 pnImage_create
 pnLabel_create
 pnLabel_setFontColor
+pnMenu_addItem
 pnMenu_create
 pnPlot_setLineColor
 pnPlot_setLineWidth
@@ -34,6 +35,7 @@ pnWidget_createAsGrid
 pnWidget_createInGrid
 pnWidget_destroy
 pnWidget_getBackgroundColor
+pnWidget_getUserData
 pnWidget_isInSurface
 pnWidget_queueDraw
 pnWidget_setAxis
@@ -46,6 +48,7 @@ pnWidget_setLeave
 pnWidget_setMotion
 pnWidget_setPress
 pnWidget_setRelease
+pnWidget_setUserData
 pnWidget_show
 pnWindow_create
 pnWindow_createAsGrid

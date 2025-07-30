@@ -205,6 +205,7 @@ void FreeBuffer(struct PnBuffer *buffer) {
     if(buffer->fd > -1)
         close(buffer->fd);
 
+    // We reset the stored values too.
     memset(buffer, 0, sizeof(*buffer));
     buffer->pixels = MAP_FAILED;
     buffer->fd = -1;

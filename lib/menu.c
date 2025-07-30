@@ -24,25 +24,35 @@ struct PnMenu {
     struct PnWidget *button; // inherit (opaquely).
 
     struct PnWidget *popup;
-    bool showing;
+    bool popupShowing;
 };
 
+static inline
+void PopupCreate(struct PnMenu *m) {
+    DASSERT(m);
+    DASSERT(m->button);
+    DASSERT(!m->popupShowing);
+    DASSERT(!m->popup);
+
+    struct PnWidget *popup = pnWindow_create(m->button/*parent*/,
+            100, 300, 200/*x*/, 0/*y*/, 0, 0, 0);
+    ASSERT(popup);
+    pnWidget_setBackgroundColor(popup, 0xFA299981, 0);
+    m->popup = popup;
+}
 
 static inline
 void PopupShow(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->button);
-    struct PnWidget *popup = m->popup;
+    DASSERT(!m->popupShowing);
 
-    if(!popup) {
+    if(!m->popup)
+        PopupCreate(m);
 
-        popup = pnWindow_create(m->button/*parent*/, 100, 300,
-            200/*x*/, 0/*y*/, 0, 0, 0);
-        ASSERT(popup);
-        pnWidget_setBackgroundColor(popup, 0xFA299981, 0);
-        pnWindow_show(popup);
-        m->popup = popup;
-    }
+    // WTF do we do if this fails:
+    ASSERT(!pnWindow_show(m->popup));
+    m->popupShowing = true;
 }
 
 static inline
@@ -57,10 +67,13 @@ void PopupDestroy(struct PnMenu *m) {
 
 static inline
 void PopupHide(struct PnMenu *m) {
-    // TODO: How can we just hide it?
-    PopupDestroy(m);
-}
+    DASSERT(m);
+    DASSERT(m->popup);
+    DASSERT(m->popupShowing);
 
+    pnPopup_hide(m->popup);
+    m->popupShowing = false;
+}
 
 static
 void destroy(struct PnWidget *b, struct PnMenu *m) {
@@ -72,7 +85,6 @@ void destroy(struct PnWidget *b, struct PnMenu *m) {
     DZMEM(m, sizeof(*m));
     free(m);
 }
-
 
 static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
             struct PnMenu *m) {
@@ -86,8 +98,6 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
     return true; // eat it.
 }
 
-// TODO: Not sure we need this callback.
-//
 static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(b);
     DASSERT(m);
@@ -103,6 +113,12 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
 
 struct PnWidget *pnMenu_addItem(struct PnWidget *menu,
     const char *label) {
+
+    DASSERT(menu); // pointer to the button
+
+    //struct PnMenu *m = pnWidget_getUserData(menu);
+
+    // LEFT OFF HERE ..................
 
     return 0;
 }
@@ -136,6 +152,7 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
             PN_BUTTON_CB_ENTER, enterAction, m);
     pnWidget_addCallback(m->button,
             PN_BUTTON_CB_LEAVE, leaveAction, m);
+    pnWidget_setUserData(m->button, m);
     // The user gets the button, but it's augmented.
     return m->button;
 }

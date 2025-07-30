@@ -28,6 +28,8 @@ static void AddMenu(struct PnWidget *parent) {
             0/*text label*/);
     ASSERT(menu);
 
+    pnMenu_addItem(menu, "shit label");
+
     pnWidget_setBackgroundColor(menu, Color(), 0);
 }
 

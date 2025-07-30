@@ -199,6 +199,103 @@ static struct wl_callback_listener callback_listener = {
 
 
 static inline
+void GetSurfaceDamageFunction(struct PnWindow *win) {
+
+    DASSERT(win);
+    DASSERT(win->wl_surface);
+
+    if(!d.surface_damage_func) {
+        // WTF (what the fuck): Why do they change the names of functions
+        // in an API, and still keep both accessible even when one is
+        // broken.
+        //
+        // This may not be setting the correct function needed to see what
+        // surface_damage_func should be set to.  We just make it work on
+        // the current system (the deprecated function
+        // wl_surface_damage()).  When this fails you'll see (from the
+        // stderr tty spew):
+        // 
+        //  wl_display@1: error 1: invalid method 9 (since 1 < 4), object wl_surface@3
+        //
+        // ...or something like that.
+        //
+        // Given it took me a month (at least) to find this (not so great
+        // fix) we're putting lots of comment-age here.  I had a hard time
+        // finding the point in the code where that broke it after it
+        // keeps running with no error some time after.
+        //
+        // This one may be correct. We would have hoped that
+        // wl_proxy_get_version() would have used argument prototype const
+        // struct wl_proxy * so we do not change memory at/in
+        // win->wl_surface, but alas they do not:
+        uint32_t version = wl_proxy_get_version(
+                (struct wl_proxy *) win->wl_surface);
+        //
+        // These two may be the wrong function to use (I leave here for
+        // the record):
+        //uint32_t version = xdg_toplevel_get_version(win->xdg_toplevel);
+        //uint32_t version = xdg_surface_get_version(win->xdg_surface);
+
+        switch(version) {
+            case 1:
+                // Older deprecated version (see:
+                // https://wayland-book.com/surfaces-in-depth/damaging-surfaces.html)
+                DSPEW("Using deprecated function wl_surface_damage()"
+                        " version=%" PRIu32, version);
+                d.surface_damage_func = wl_surface_damage;
+                break;
+
+            case 4: // We saw a version 4 in another compiled program that used
+                    // wl_surface_damage_buffer()
+            default:
+                // newer version:
+                DSPEW("Using newer function wl_surface_damage_buffer() "
+                        "version=%" PRIu32, version);
+                d.surface_damage_func = wl_surface_damage_buffer;
+        }
+    }
+}
+
+// Returns true on failure.
+//
+// Sets up the wl_surface and xdg_surface; which are the Wayland objects
+// that are common to the toplevel window and the popup window.
+//
+bool InitWaylandWindow(struct PnWindow *win) {
+    DASSERT(win);
+    DASSERT(!win->wl_surface);
+    DASSERT(!win->xdg_surface);
+
+    win->needDraw = true;
+
+    win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
+    if(!win->wl_surface) {
+        ERROR("wl_compositor_create_surface() failed");
+        return true;
+    }
+
+    wl_surface_set_user_data(win->wl_surface, win);
+
+    GetSurfaceDamageFunction(win);
+
+    win->xdg_surface = xdg_wm_base_get_xdg_surface(
+            d.xdg_wm_base, win->wl_surface);
+
+    if(!win->xdg_surface) {
+        ERROR("xdg_wm_base_get_xdg_surface() failed");
+        return true;
+    }
+    //
+    if(xdg_surface_add_listener(win->xdg_surface,
+                &xdg_surface_listener, win)) {
+        ERROR("xdg_surface_add_listener(,,) failed");
+        return true;
+    }
+    return false; // false => success.
+}
+
+
+static inline
 struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
         uint32_t w, uint32_t h, int32_t x, int32_t y,
         enum PnLayout layout, enum PnAlign align,
@@ -262,34 +359,12 @@ struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
     win->widget.layout = layout;
     win->widget.align = align;
     win->widget.backgroundColor = PN_WINDOW_BGCOLOR;
-    win->needDraw = true;
     win->widget.window = win;
 
     InitSurface(&win->widget, numColumns, numRows, 0, 0);
 
-    win->wl_surface = wl_compositor_create_surface(d.wl_compositor);
-    if(!win->wl_surface) {
-        ERROR("wl_compositor_create_surface() failed");
+    if(InitWaylandWindow(win))
         goto fail;
-    }
-
-    wl_surface_set_user_data(win->wl_surface, win);
-
-    GetSurfaceDamageFunction(win);
-
-    win->xdg_surface = xdg_wm_base_get_xdg_surface(
-            d.xdg_wm_base, win->wl_surface);
-
-    if(!win->xdg_surface) {
-        ERROR("xdg_wm_base_get_xdg_surface() failed");
-        goto fail;
-    }
-    //
-    if(xdg_surface_add_listener(win->xdg_surface,
-                &xdg_surface_listener, win)) {
-        ERROR("xdg_surface_add_listener(,,) failed");
-        goto fail;
-    }
 
     switch(win->widget.type & (TOPLEVEL | POPUP)) {
         case TOPLEVEL:
@@ -337,36 +412,13 @@ struct PnWidget *pnWindow_create(struct PnWidget *parent,
             layout, align, expand, -1/*numColumns*/, -1/*numRows*/);
 }
 
-// TODO: This does not work.  Minimize does not make sense...
+// Return true on failure.
 //
-// If we can't get this to work we need to remove this function.
-// It may be that we can create and show popups, but we can't
-// hide them without destroying the popup wl_surface and/or
-// other related wayland client objects.
-//
-void pnPopup_hide(struct PnWidget *popup) {
-
-    DASSERT(popup);
-    ASSERT(popup->type & POPUP);
-
-    struct PnWindow *win = (void *) popup;
-    if(!win->popup.xdg_popup)
-        // It was never showing to begin with.
-        return;
-
-    ERROR("win=%p", win);
-    // This seems to kind-of work for toplevel Wayland windows.
-    wl_surface_attach(win->wl_surface, 0/*wl_buffer*/, 0, 0);
-    wl_surface_commit(win->wl_surface);
-    pnWidget_queueDraw(&win->widget, false);
-}
-
-void pnWindow_show(struct PnWidget *w) {
+bool pnWindow_show(struct PnWidget *w) {
 
     DASSERT(w);
     ASSERT(w->type & (TOPLEVEL | POPUP));
     struct PnWindow *win = (void *) w;
-    DASSERT(win->wl_surface);
 
     if((w->type & POPUP) && !win->popup.xdg_popup) {
         _pnWidget_getAllocations(w);
@@ -374,12 +426,15 @@ void pnWindow_show(struct PnWidget *w) {
         DASSERT(w->allocation.height);
         // Now, we should have the window size information needed
         // for this:
-        InitPopup(win, w->allocation.width, w->allocation.height,
-                win->popup.x, win->popup.y);
+        if(InitPopup(win, w->allocation.width, w->allocation.height,
+                win->popup.x, win->popup.y))
+            return true; // fail
     }
 
+    DASSERT(win->wl_surface);
+
     pnWidget_queueDraw(w, false);
-    return;
+    return false; // success
 }
 
 
