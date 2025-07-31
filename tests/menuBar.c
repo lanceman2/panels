@@ -25,7 +25,7 @@ void AddItem(struct PnWidget *menu) {
     char label[LEN];
     snprintf(label, LEN, format, itemCount++);
 
-    pnMenu_addItem(menu, label);
+    ASSERT(pnMenu_addItem(menu, label));
 }
 
 static int menuCount = 0;
