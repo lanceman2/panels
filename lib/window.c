@@ -380,8 +380,8 @@ struct PnWindow *_pnWindow_createFull(struct PnWidget *pWidget,
             //InitPopup(win, w, h, x, y);
             win->popup.x = x;
             win->popup.y = y;
-            win->widget.allocation.width = w;
-            win->widget.allocation.height = h;
+            //win->widget.allocation.width = w;
+            //win->widget.allocation.height = h;
     }
 
     return win;
@@ -420,16 +420,8 @@ bool pnWindow_show(struct PnWidget *w) {
     ASSERT(w->type & (TOPLEVEL | POPUP));
     struct PnWindow *win = (void *) w;
 
-    if((w->type & POPUP) && !win->popup.xdg_popup) {
-        _pnWidget_getAllocations(w);
-        DASSERT(w->allocation.width);
-        DASSERT(w->allocation.height);
-        // Now, we should have the window size information needed
-        // for this:
-        if(InitPopup(win, w->allocation.width, w->allocation.height,
-                win->popup.x, win->popup.y))
-            return true; // fail
-    }
+    if(w->type & POPUP)
+        return pnPopup_show(w, win->popup.x, win->popup.y);
 
     DASSERT(win->wl_surface);
 

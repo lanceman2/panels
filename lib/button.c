@@ -423,7 +423,6 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
             0/*callbackSize*/);
 
 
-
     b->colors = calloc(1, PnButtonState_NumRegularStates*
             sizeof(*b->colors));
     ASSERT(b->colors, "calloc(1,%zu) failed",
@@ -441,7 +440,7 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
             &b->widget/*parent*/,
             0/*width*/, 20/*height*/,
             4/*xPadding*/, 4/*yPadding*/,
-            0/*align*/, PnExpand_HV/*expand*/, label);
+            0/*align*/, expand/*expand*/, label);
         ASSERT(l);
         pnLabel_setFontColor(l, 0xF0FF0000);
     }

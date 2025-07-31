@@ -15,22 +15,43 @@ static void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
+static int itemCount = 0;
+
+static inline
+void AddItem(struct PnWidget *menu) {
+
+    const char *format = "item label %d";
+    const size_t LEN = strlen(format) + 3;
+    char label[LEN];
+    snprintf(label, LEN, format, itemCount++);
+
+    pnMenu_addItem(menu, label);
+}
+
+static int menuCount = 0;
 
 static void AddMenu(struct PnWidget *parent) {
 
     ASSERT(parent);
 
+    const char *format = "menu %d";
+    const size_t LEN = strlen(format) + 3;
+    char label[LEN];
+    snprintf(label, LEN, format, menuCount++);
+
     struct PnWidget *menu = pnMenu_create(
             parent,
-            30 + 24 * Rand(1,4)/*width*/, 50/*height*/,
+            3/*width*/, 3/*height*/,
             0/*layout*/, 0/*align*/,
             PnExpand_None/*expand*/,
-            0/*text label*/);
+            label/*text label*/);
     ASSERT(menu);
-
-    pnMenu_addItem(menu, "shit label");
-
     pnWidget_setBackgroundColor(menu, Color(), 0);
+
+    AddItem(menu);
+    AddItem(menu);
+    AddItem(menu);
+    AddItem(menu);
 }
 
 
@@ -82,7 +103,7 @@ int main(void) {
     srand(13);
 
     struct PnWidget *win = pnWindow_create(0,
-            10/*width*/, 10/*height*/,
+            0/*width*/, 0/*height*/,
             0/*x*/, 0/*y*/, PnLayout_TB, 0,
             PnExpand_HV);
     ASSERT(win);

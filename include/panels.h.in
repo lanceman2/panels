@@ -443,6 +443,7 @@ PN_EXPORT void pnWindow_setPreferredSize(struct PnWidget *window,
         uint32_t width, uint32_t height);
 PN_EXPORT void pnWindow_isDrawnReset(struct PnWidget *window);
 PN_EXPORT bool pnWindow_show(struct PnWidget *window);
+PN_EXPORT bool pnPopup_show(struct PnWidget *w, int32_t x, int32_t y);
 PN_EXPORT void pnWindow_setMinimized(struct PnWidget *window);
 PN_EXPORT void pnWindow_setMaximized(struct PnWidget *window);
 PN_EXPORT void pnWindow_unsetMaximized(struct PnWidget *window);

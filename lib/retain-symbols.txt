@@ -23,6 +23,7 @@ pnPlot_setLineWidth
 pnPlot_setPointColor
 pnPlot_setPointSize
 pnPopup_hide
+pnPopup_show
 pnSplitter_create
 pnWidget_addAction
 pnWidget_addCallback

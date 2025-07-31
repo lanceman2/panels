@@ -27,31 +27,50 @@ struct PnMenu {
     bool popupShowing;
 };
 
+bool PopupEnter(struct PnWidget *widget,
+            uint32_t x, uint32_t y, struct PnMenu *m) {
+
+WARN();
+    return false;
+}
+
 static inline
 void PopupCreate(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->button);
     DASSERT(!m->popupShowing);
     DASSERT(!m->popup);
-
     struct PnWidget *popup = pnWindow_create(m->button/*parent*/,
-            100, 300, 200/*x*/, 0/*y*/, 0, 0, 0);
+            4, 4, 0/*x*/, 0/*y*/, PnLayout_TB, 0, 0);
     ASSERT(popup);
-    pnWidget_setBackgroundColor(popup, 0xFA299981, 0);
+    pnWidget_setBackgroundColor(popup,
+            pnWidget_getBackgroundColor(m->button), 0);
     m->popup = popup;
+    pnWidget_setEnter(popup, (void *) PopupEnter, m);
+}
+
+static inline
+struct PnWidget *PopupGet(struct PnMenu *m) {
+
+    DASSERT(m);
+    if(!m->popup)
+        PopupCreate(m);
+    return m->popup;
 }
 
 static inline
 void PopupShow(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->button);
-    DASSERT(!m->popupShowing);
+    //DASSERT(!m->popupShowing);
 
-    if(!m->popup)
-        PopupCreate(m);
+    if(!m->popup) return;
+
+    struct PnAllocation a;
+    pnWidget_getAllocation(m->button, &a);
 
     // WTF do we do if this fails:
-    ASSERT(!pnWindow_show(m->popup));
+    ASSERT(!pnPopup_show(m->popup, a.x, a.y + a.height));
     m->popupShowing = true;
 }
 
@@ -59,7 +78,7 @@ static inline
 void PopupDestroy(struct PnMenu *m) {
     DASSERT(m);
     struct PnWidget *popup = m->popup;
-    if(!popup) return;
+    if(!m->popup) return;
 
     pnWidget_destroy(popup);
     m->popup = 0;
@@ -68,11 +87,10 @@ void PopupDestroy(struct PnMenu *m) {
 static inline
 void PopupHide(struct PnMenu *m) {
     DASSERT(m);
-    DASSERT(m->popup);
-    DASSERT(m->popupShowing);
+    if(!m->popup) return;
 
-    pnPopup_hide(m->popup);
-    m->popupShowing = false;
+    //pnPopup_hide(m->popup);
+    //m->popupShowing = false;
 }
 
 static
@@ -105,7 +123,7 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
     PopupHide(m);
-//fprintf(stderr, "    leave widget=%p \n", b);
+fprintf(stderr, "    leave widget=%p \n", b);
 
     return true; // eat it.
 }
@@ -116,11 +134,16 @@ struct PnWidget *pnMenu_addItem(struct PnWidget *menu,
 
     DASSERT(menu); // pointer to the button
 
-    //struct PnMenu *m = pnWidget_getUserData(menu);
+    struct PnMenu *m = pnWidget_getUserData(menu);
+    struct PnWidget *w = PopupGet(m);
+    DASSERT(w);
 
-    // LEFT OFF HERE ..................
+    w = pnButton_create(w, 4/*width*/, 2/*height*/,
+            PnLayout_LR, PnAlign_CC, PnExpand_H, label,
+            false/*toggle*/);
+    ASSERT(w);
 
-    return 0;
+    return w;
 }
 
 
@@ -129,8 +152,6 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand, const char *label) {
-
-    ASSERT(!label, "WRITE MORE CODE");
 
     struct PnMenu *m = calloc(1, sizeof(*m));
     ASSERT(m, "calloc(1,%zu) failed", sizeof(*m));

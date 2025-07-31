@@ -37,16 +37,20 @@ static void configure(void *data,
     DASSERT(xdg_popup == win->popup.xdg_popup);
     DASSERT(!win->widget.hidden);
 
+/*
     struct PnAllocation a;
     pnWidget_getAllocation(&win->widget, &a);
     if(win->popup.x != x || win->popup.y != y
-            || a.width != width || a.height != height)
+            || a.width != width || a.height != height) {
+        // This is not a problem any more.
         WARN("tried for: x,y=%" PRIi32 ",%" PRIi32
                 " and width,height=%" PRIi32 ",%" PRIi32
             " got: x,y=%" PRIi32 ",%" PRIi32
                 " and width,height=%" PRIu32 ",%" PRIu32,
                 win->popup.x, win->popup.y, a.width, a.height,
                 x, y, width, height);
+    }
+*/
 }
 
 
@@ -174,3 +178,32 @@ void pnPopup_hide(struct PnWidget *w) {
         win->wl_surface = 0;
     }
 }
+
+
+// Return true on failure.
+//
+bool pnPopup_show(struct PnWidget *w, int32_t x, int32_t y) {
+
+    DASSERT(w);
+    ASSERT(w->type & POPUP);
+    struct PnWindow *win = (void *) w;
+
+    if(!win->popup.xdg_popup) {
+        _pnWidget_getAllocations(w);
+        DASSERT(w->allocation.width);
+        DASSERT(w->allocation.height);
+        // Now, we should have the window size information needed
+        // for this:
+        if(InitPopup(win,
+                w->allocation.width, w->allocation.height, x, y))
+            return true; // fail
+    }
+
+    DASSERT(win->wl_surface);
+
+    pnWidget_queueDraw(w, false);
+    return false; // success
+}
+
+
+
