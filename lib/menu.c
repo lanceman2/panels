@@ -19,16 +19,27 @@
 
 struct PnMenu {
 
+    struct PnWidget *parentPopup; // For popup menus within menus.
+
     // Perhaps it's called composition, but the API user will not know or
     // see the difference, so I think it's fair to call it inheritance.
     struct PnWidget *button; // inherit (opaquely).
 
     struct PnWidget *popup;
-    bool popupShowing;
 };
 
-bool PopupEnter(struct PnWidget *widget,
+
+// We only allow one menu (and it's popups) to be active at a time; per
+// process.
+static struct PnMenu *menu = 0; // active menu.
+
+
+bool PopupEnter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnMenu *m) {
+    DASSERT(w);
+    DASSERT(m);
+    DASSERT(m->popup);
+    DASSERT(menu == m);
 
 WARN();
     return false;
@@ -38,7 +49,6 @@ static inline
 void PopupCreate(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->button);
-    DASSERT(!m->popupShowing);
     DASSERT(!m->popup);
     struct PnWidget *popup = pnWindow_create(m->button/*parent*/,
             4, 4, 0/*x*/, 0/*y*/, PnLayout_TB, 0, 0);
@@ -58,20 +68,43 @@ struct PnWidget *PopupGet(struct PnMenu *m) {
     return m->popup;
 }
 
-static inline
-void PopupShow(struct PnMenu *m) {
+static void PopupHide(struct PnMenu *m) {
     DASSERT(m);
-    DASSERT(m->button);
-    //DASSERT(!m->popupShowing);
-
     if(!m->popup) return;
 
-    struct PnAllocation a;
-    pnWidget_getAllocation(m->button, &a);
+    DASSERT(m == menu);
 
+    pnPopup_hide(m->popup);
+    menu = 0;
+}
+
+static inline void PopupShow(struct PnMenu *m) {
+    DASSERT(m);
+    DASSERT(m->button);
+    if(!m->popup)
+        // If there was no menu items created than there is no
+        // popup created.
+        return;
+
+    if(menu && menu != m)
+        PopupHide(menu);
+
+    menu = m;
+
+    int32_t x, y;
+    struct PnAllocation a;
+
+    if(!m->parentPopup) {
+        pnWidget_getAllocation(m->button, &a);
+        x = a.x;
+        y = a.y + a.height;
+    } else {
+        pnWidget_getAllocation(m->parentPopup, &a);
+        x = a.x + 100;
+        y = a.y + 100;
+    }
     // WTF do we do if this fails:
-    ASSERT(!pnPopup_show(m->popup, a.x, a.y + a.height));
-    m->popupShowing = true;
+    ASSERT(!pnPopup_show(m->popup, x, y));
 }
 
 static inline
@@ -82,15 +115,6 @@ void PopupDestroy(struct PnMenu *m) {
 
     pnWidget_destroy(popup);
     m->popup = 0;
-}
-
-static inline
-void PopupHide(struct PnMenu *m) {
-    DASSERT(m);
-    if(!m->popup) return;
-
-    //pnPopup_hide(m->popup);
-    //m->popupShowing = false;
 }
 
 static
@@ -122,7 +146,7 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(b == m->button);
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
-    PopupHide(m);
+    //PopupHide(m);
 fprintf(stderr, "    leave widget=%p \n", b);
 
     return true; // eat it.
@@ -135,13 +159,16 @@ struct PnWidget *pnMenu_addItem(struct PnWidget *menu,
     DASSERT(menu); // pointer to the button
 
     struct PnMenu *m = pnWidget_getUserData(menu);
-    struct PnWidget *w = PopupGet(m);
-    DASSERT(w);
-
-    w = pnButton_create(w, 4/*width*/, 2/*height*/,
-            PnLayout_LR, PnAlign_CC, PnExpand_H, label,
-            false/*toggle*/);
+    struct PnWidget *popup = PopupGet(m);
+    DASSERT(popup);
+    struct PnWidget *w = pnMenu_create(popup,
+            4/*width*/, 2/*height*/,
+            PnLayout_LR, PnAlign_CC, PnExpand_H, label);
     ASSERT(w);
+    // This makes a menu but with a parent menu.
+    // Reuse variable m.
+    m = pnWidget_getUserData(w);
+    m->parentPopup = popup;
 
     return w;
 }
