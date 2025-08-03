@@ -599,6 +599,7 @@ static inline struct PnPlot *pnStaticPlot_create(struct PnWidget *graph,
 PN_EXPORT bool pnWidget_isInSurface(const struct PnWidget *w,
         uint32_t x, uint32_t y);
 
+// TODO: This has issues.  How can we reuse it at different levels?
 PN_EXPORT void *pnWidget_getUserData(const struct PnWidget *w);
 PN_EXPORT void pnWidget_setUserData(struct PnWidget *w, void *userData);
 

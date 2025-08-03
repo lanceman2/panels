@@ -205,11 +205,14 @@ void pnWidget_setClipBeforeCull(struct PnWidget *w, bool clip) {
 
 void *pnWidget_getUserData(const struct PnWidget *w) {
     DASSERT(w);
+
     return w->userData;
 }
 
 void pnWidget_setUserData(struct PnWidget *w, void *userData) {
     DASSERT(w);
+    // TODO: Can't use it at different user levels.
+    ASSERT(!w->userData);
     w->userData = userData;
 }
 

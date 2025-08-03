@@ -17,15 +17,27 @@ static void catcher(int sig) {
 
 static int itemCount = 0;
 
-static inline
-void AddItem(struct PnWidget *menu) {
+#define DEPTH  (4)
 
-    const char *format = "item label %d";
-    const size_t LEN = strlen(format) + 3;
+static
+void AddItem(struct PnWidget *menu, int depth) {
+
+    ++depth;
+    const char *format = "item %d  ";
+    const size_t LEN = strlen(format) + 7;
     char label[LEN];
     snprintf(label, LEN, format, itemCount++);
+    if(depth < DEPTH)
+        label[strlen(label)-1] = '>';
 
-    ASSERT(pnMenu_addItem(menu, label));
+    struct PnWidget *w = pnMenu_addItem(menu, label);
+    ASSERT(w);
+
+    if(depth >= DEPTH) return;
+
+    AddItem(w, depth);
+    AddItem(w, depth);
+    AddItem(w, depth);
 }
 
 static int menuCount = 0;
@@ -35,7 +47,7 @@ static void AddMenu(struct PnWidget *parent) {
     ASSERT(parent);
 
     const char *format = "menu %d";
-    const size_t LEN = strlen(format) + 3;
+    const size_t LEN = strlen(format) + 4;
     char label[LEN];
     snprintf(label, LEN, format, menuCount++);
 
@@ -48,10 +60,9 @@ static void AddMenu(struct PnWidget *parent) {
     ASSERT(menu);
     pnWidget_setBackgroundColor(menu, Color(), 0);
 
-    AddItem(menu);
-    AddItem(menu);
-    AddItem(menu);
-    AddItem(menu);
+    AddItem(menu, 0);
+    AddItem(menu, 0);
+    AddItem(menu, 0);
 }
 
 

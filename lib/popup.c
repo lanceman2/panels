@@ -192,6 +192,10 @@ bool pnPopup_show(struct PnWidget *w, int32_t x, int32_t y) {
         _pnWidget_getAllocations(w);
         DASSERT(w->allocation.width);
         DASSERT(w->allocation.height);
+        if(win->popup.x != x)
+            win->popup.x = x;
+        if(win->popup.y != y)
+            win->popup.y = y;
         // Now, we should have the window size information needed
         // for this:
         if(InitPopup(win,
