@@ -73,7 +73,19 @@ static void enter(void *data,
     if(!wl_surface)
         // This happened.
         return;
-    d.pointerWindow = wl_surface_get_user_data(wl_surface);
+
+    struct PnWindow *win = wl_surface_get_user_data(wl_surface);
+
+    if(!win || !win->wl_surface) {
+        // This can happen if pnPopup_hide() was called.
+        //
+        // The compositor is not in sync with this process; so it does not
+        // know we destroyed the wl_surface in this process.
+        return;
+    }
+
+    d.pointerWindow = win;
+
     d.pointerWindow->lastSerial = serial;
     DASSERT(serial);
     DASSERT(d.pointerWindow->wl_surface == wl_surface);
@@ -118,6 +130,15 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     if(!d.pointerWindow) return;
     //DASSERT(d.pointerWidget);
     //DASSERT(d.pointerWindow);
+
+    struct PnWindow *win = d.pointerWindow;
+    if(!win || !win->wl_surface) {
+        // This can happen if pnPopup_hide() was called.
+        //
+        // The compositor is not in sync with this process; so it does not
+        // know we destroyed the wl_surface in this process.
+        return;
+    }
 
     // Save old pointer widget surface.
     struct PnWidget *pointerWidget = d.pointerWidget;
@@ -339,7 +360,7 @@ static void kb_key(void* data, struct wl_keyboard* kb,
 
 static void kb_mod(void* data, struct wl_keyboard* kb,
         uint32_t ser, uint32_t dep, uint32_t lat,
-        uint32_t lock, uint32_t grp) {
+       uint32_t lock, uint32_t grp) {
 
     DASSERT(d.wl_display);
     DASSERT(d.wl_seat);

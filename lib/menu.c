@@ -44,6 +44,17 @@ struct PnMenu {
 static struct PnMenu *top = 0; // active showing menu popup
 
 
+// NEEDS WORK HERE.  THE widget enter shit is a broken idea.
+// We need to rethink how to share enter and leave events.
+void PopupLeave(struct PnWidget *w, struct PnMenu *m) {
+
+    DASSERT(w);
+    DASSERT(m);
+    DASSERT(m->popup);
+
+WARN();
+}
+
 bool PopupEnter(struct PnWidget *w,
             uint32_t x, uint32_t y, struct PnMenu *m) {
     DASSERT(w);
@@ -66,6 +77,7 @@ void PopupCreate(struct PnMenu *m) {
             pnWidget_getBackgroundColor(m->button), 0);
     m->popup = popup;
     pnWidget_setEnter(popup, (void *) PopupEnter, m);
+    pnWidget_setLeave(popup, (void *) PopupLeave, m);
 }
 
 static inline
@@ -110,12 +122,18 @@ static inline void PopupShow(struct PnMenu *m) {
         DASSERT(m->parent->popup);
         DASSERT(m->button->window->widget.type & POPUP);
         pnWidget_getAllocation(m->button, &a);
-        x = m->button->window->popup.x + a.x + a.width;
+        // On KDE KWin compositor there is a BUG which sometimes places
+        // the popups off by 1 pixel to the right; so without causing too
+        // bad an eye sore we overlap in x by one pixel.  It could expose
+        // a one pixel wide section of screen that gives focus to the
+        // window below as we slide the mouse pointer over to the next
+        // popup menu.
+        x = m->button->window->popup.x + a.x + a.width - 1;
         y = m->button->window->popup.y + a.y;
     } else {
         pnWidget_getAllocation(m->button, &a);
         x = a.x;
-        y = a.y + a.height;
+        y = a.y + a.height - 1;
     }
 
     // WTF do we do if this fails:

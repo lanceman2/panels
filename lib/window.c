@@ -544,11 +544,11 @@ bool pnWindow_isDrawn(struct PnWidget *w) {
     if(win->haveDrawn >= 2)
         return true;
 
-    // We request a wl_callback.  We are just assuming that if the
-    // wayland compositor releases a frame via wl_callback that the
-    // window is showing.  That may not be true, but it's all I do.
-    // This may be the best we can do to answer the question: "Is
-    // the window being shown to the user now?"
+    // We request a wl_callback.  We are just assuming that if the Wayland
+    // compositor releases a frame via wl_callback that the window is
+    // showing.  That may not be true, but it's all I can do.  This may be
+    // the best we can do to answer the question: "Is the window being
+    // shown to the user now?"
     _pnWindow_addCallback(win);
     win->haveDrawn = 1;
     return false;

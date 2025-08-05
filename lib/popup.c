@@ -149,6 +149,11 @@ bool InitPopup(struct PnWindow *win,
 // of hiding the popup, and not destroy all the non-wayland object
 // stuff in this libpanels popup window thingy.
 //
+// The hard part: because the Wayland compositor is not in sync with this
+// process, we can get Wayland events associated with this surface, even
+// though we destroy the surface (Wayland objects).  Now we need to check
+// for zeros of the Wayland objects that get events.
+//
 void pnPopup_hide(struct PnWidget *w) {
     DASSERT(w);
     ASSERT(w->type & POPUP);
@@ -156,6 +161,9 @@ void pnPopup_hide(struct PnWidget *w) {
 
     // Clean up stuff in reverse order that stuff was created.
     /////////////////////////////////////////////////////////////////
+
+    // Make this widget not be in focus and stuff like that.
+    RemoveSurfaceFromDisplay(w);
 
     if(win->wl_callback) {
         wl_callback_destroy(win->wl_callback);
@@ -208,6 +216,3 @@ bool pnPopup_show(struct PnWidget *w, int32_t x, int32_t y) {
     pnWidget_queueDraw(w, false);
     return false; // success
 }
-
-
-
