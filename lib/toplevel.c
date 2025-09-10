@@ -21,7 +21,8 @@ static void configure(struct PnWindow *win,
     DASSERT(xdg_toplevel);
     DASSERT(xdg_toplevel == win->toplevel.xdg_toplevel);
 
-#if 0 // I cannot make sense of this state.
+#if 0 // I cannot make sense of this state.  And we seem to not be getting
+      // enough events for popup menus.
 
     if(states->size == 0) {
         INFO("zero state w,h=%" PRIi32 ",%" PRIi32, w, h);

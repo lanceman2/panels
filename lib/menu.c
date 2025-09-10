@@ -30,40 +30,22 @@ struct PnMenu {
     //
     struct PnWidget *button; // inherit (opaquely).
 
-    struct PnMenu *parent; // for sub-menus that have a parent menu
+    // for sub-menus that have a parent menu.  "parent" is the 
+    struct PnMenu *parent; // menu (button) activated to pop this menu.
 
     struct PnWidget *popup; // Or no popup
 };
 
 
 // We only allow one leaf menu (and it's popups) to be active at a time;
-// per process.  "top" is the last menu (popup) to be showing (triggered).
+// per process.  "d.topMenu" is the last menu (popup) to be showing
+// (triggered).
 //
 // So: we use a stack with the child most menu at the top.  We pop it by
-// changing the top to the parent.  We push a child menu to the top.
-static struct PnMenu *top = 0; // active showing menu popup
+// changing the d.topMenu to the parent.  We push a child menu to the top.
+// d.topMenu = 0; // active showing menu popup
 
 
-// NEEDS WORK HERE.  THE widget enter shit is a broken idea.
-// We need to rethink how to share enter and leave events.
-void PopupLeave(struct PnWidget *w, struct PnMenu *m) {
-
-    DASSERT(w);
-    DASSERT(m);
-    DASSERT(m->popup);
-
-WARN();
-}
-
-bool PopupEnter(struct PnWidget *w,
-            uint32_t x, uint32_t y, struct PnMenu *m) {
-    DASSERT(w);
-    DASSERT(m);
-    DASSERT(m->popup);
-
-WARN();
-    return false;
-}
 
 static inline
 void PopupCreate(struct PnMenu *m) {
@@ -76,8 +58,6 @@ void PopupCreate(struct PnMenu *m) {
     pnWidget_setBackgroundColor(popup,
             pnWidget_getBackgroundColor(m->button), 0);
     m->popup = popup;
-    pnWidget_setEnter(popup, (void *) PopupEnter, m);
-    pnWidget_setLeave(popup, (void *) PopupLeave, m);
 }
 
 static inline
@@ -92,36 +72,56 @@ struct PnWidget *PopupGet(struct PnMenu *m) {
 static void PopupHide(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->popup);
-    DASSERT(m == top);
+    DASSERT(m == d.topMenu);
     pnPopup_hide(m->popup);
-    top = m->parent;
+    d.topMenu = m->parent;
+    if(!d.topMenu) {
+        DASSERT(d.bottomMenuButton);
+        // The menu stack is gone.
+        d.bottomMenuButton = 0;
+    }
+}
+
+void HidePopupMenus(void) {
+    // Hide all menus that are showing.
+    while(d.topMenu)
+        PopupHide(d.topMenu);
 }
 
 static inline void PopupShow(struct PnMenu *m) {
     DASSERT(m);
     DASSERT(m->button);
     
-    if(m == top) return;
+    if(m == d.topMenu) return;
 
     // First: hide menus that are showing, that are not m's parent.
-    while(top && m->parent != top)
-        PopupHide(top);
+    while(d.topMenu && m->parent != d.topMenu)
+        PopupHide(d.topMenu);
 
     if(!m->popup)
         // If there was no menu items created than there is no
         // popup created.
         return;
 
-    // Current/last menu to show.
-    top = m;
+
+    if(!d.topMenu) {
+        DASSERT(!d.bottomMenuButton);
+        DASSERT(m->button);
+        // Keep the bottom of the stack.
+        d.bottomMenuButton = m->button;
+    }
+
+    // Current/last menu to show on the top of the stack.
+    d.topMenu = m;
+
 
     int32_t x, y;
     struct PnAllocation a;
+    pnWidget_getAllocation(m->button, &a);
 
     if(m->parent) {
         DASSERT(m->parent->popup);
         DASSERT(m->button->window->widget.type & POPUP);
-        pnWidget_getAllocation(m->button, &a);
         // On KDE KWin compositor there is a BUG which sometimes places
         // the popups off by 1 pixel to the right; so without causing too
         // bad an eye sore we overlap in x by one pixel.  It could expose
@@ -131,8 +131,7 @@ static inline void PopupShow(struct PnMenu *m) {
         x = m->button->window->popup.x + a.x + a.width - 1;
         y = m->button->window->popup.y + a.y;
     } else {
-        pnWidget_getAllocation(m->button, &a);
-        x = a.x;
+        x = a.x + a.width/3;
         y = a.y + a.height - 1;
     }
 
@@ -169,7 +168,8 @@ static bool enterAction(struct PnWidget *b, uint32_t x, uint32_t y,
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
     PopupShow(m);
-    fprintf(stderr, "    enter widget=%p \n", b);
+    //fprintf(stderr, "    ----------------- enter widget=%p"
+    //        " x,y=%" PRIu32 ",%" PRIu32 "\n", b, x, y);
     return true; // eat it.
 }
 
@@ -179,7 +179,7 @@ static bool leaveAction(struct PnWidget *b, struct PnMenu *m) {
     DASSERT(b == m->button);
     DASSERT(IS_TYPE2(b->type, PnWidgetType_menu));
 
-fprintf(stderr, "    leave widget=%p \n", b);
+//fprintf(stderr, "    leave widget=%p \n", b);
 
     return true; // eat it.
 }

@@ -66,14 +66,15 @@ static void AddMenu(struct PnWidget *parent) {
 }
 
 
-static void MenuBar(struct PnWidget *parent) {
+static void MenuBar(struct PnWidget *parent,
+        enum PnLayout layout) {
 
     ASSERT(parent);
 
     struct PnWidget *w = pnWidget_create(
             parent,
             0/*width*/, 0/*height*/,
-            0/*layout*/, PnAlign_LT/*align*/,
+            layout, PnAlign_LT/*align*/,
             PnExpand_None/*expand*/, 0/*size*/);
     ASSERT(w);
 
@@ -82,6 +83,8 @@ static void MenuBar(struct PnWidget *parent) {
 
     pnWidget_setBackgroundColor(w, Color(), 0);
 }
+
+static int subWindow_count = 0;
 
 static void SubWindow(struct PnWidget *parent) {
 
@@ -95,7 +98,11 @@ static void SubWindow(struct PnWidget *parent) {
     ASSERT(w);
     pnWidget_setBackgroundColor(w, Color(), 0);
 
-    MenuBar(w);
+    if(++subWindow_count != 2)
+        MenuBar(w, 0);
+    else
+        MenuBar(w, PnLayout_TB);
+
 
     w = pnWidget_create(
             w/*parent*/, 100/*width*/, 80/*height*/,

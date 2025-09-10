@@ -58,7 +58,7 @@ static const struct xdg_wm_base_listener xdg_wm_base_listener = {
 };
 
 
-// This is the window enter event
+// This is the window enter event, and also a widget enter.
 //
 static void enter(void *data,
         struct wl_pointer *p, uint32_t serial,
@@ -71,7 +71,7 @@ static void enter(void *data,
  
     DASSERT(!d.pointerWindow);
     if(!wl_surface)
-        // This happened.
+        // This happened.  What the shit?
         return;
 
     struct PnWindow *win = wl_surface_get_user_data(wl_surface);
@@ -83,6 +83,10 @@ static void enter(void *data,
         // know we destroyed the wl_surface in this process.
         return;
     }
+
+    if((win->widget.type & TOPLEVEL) && d.topMenu)
+        // We had active pop-up menus, so now hide them.
+        HidePopupMenus();
 
     d.pointerWindow = win;
 
@@ -120,6 +124,9 @@ static void leave(void *data, struct wl_pointer *p,
 
 // Window motion.  Wayland compositor mouse pointer motion event.
 //
+// We use the wayland window motion event, in addition to the wayland
+// window enter event, to generate the libpanels widget enter event.
+//
 static void motion(void *, struct wl_pointer *p, uint32_t,
         wl_fixed_t x,  wl_fixed_t y) {
 
@@ -141,7 +148,7 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
     }
 
     // Save old pointer widget surface.
-    struct PnWidget *pointerWidget = d.pointerWidget;
+    struct PnWidget *oldPointerWidget = d.pointerWidget;
     // We get the widget surface that pointer has the pointer if we can.
     GetSurfaceWithXY(d.pointerWindow, x, y, false);
  
@@ -172,8 +179,33 @@ static void motion(void *, struct wl_pointer *p, uint32_t,
 
     DASSERT(d.pointerWidget);
     DASSERT(d.pointerWindow);
+    DASSERT(oldPointerWidget);
 
-    if(pointerWidget != d.pointerWidget)
+    // TODO:  This is a little kludgey; but will not pass the first
+    // conditional in the if statement most of the time (so it should be
+    // plenty fast enough).  Do we need to make a new event type that can
+    // pull this very particular code block out of here and put a new
+    // catcher in the popup menu code in menu.c ?
+    if(d.topMenu &&
+            d.bottomMenuButton &&
+            oldPointerWidget == d.bottomMenuButton &&
+            oldPointerWidget != d.pointerWidget &&
+            d.pointerWidget->window &&
+            (d.pointerWidget->window->widget.type & TOPLEVEL) &&
+            IS_TYPE2(oldPointerWidget->type, PnWidgetType_menu)) {
+
+            // Is d.pointerWidget a relative of d.bottomMenuButton?
+            struct PnWidget *w = d.pointerWidget;
+            while(w && w != d.bottomMenuButton)
+                w = w->parent;
+            if(!w) {
+                // d.bottomMenuButton is not a relative of d.pointerWidget
+                //ERROR();
+                HidePopupMenus();
+            }
+    }
+
+    if(oldPointerWidget != d.pointerWidget)
         // The widget surface we are pointing to changed.
         // The focused widget may be changed.
         DoEnterAndLeave();

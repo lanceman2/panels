@@ -753,6 +753,9 @@ struct PnDisplay {
 
     // List of windows.
     struct PnWindow *windows; // points to newest window made.
+
+    struct PnMenu *topMenu;
+    struct PnWidget *bottomMenuButton;
 };
 
 
@@ -851,6 +854,7 @@ extern void GetSurfaceWithXY(const struct PnWindow *win,
         wl_fixed_t x,  wl_fixed_t y, bool isEnter);
 
 #ifdef WITH_CAIRO
+extern void HidePopupMenus(void);
 extern void RecreateCairos(struct PnWindow *win, struct PnWidget *w);
 extern void DestroyCairos(struct PnWidget *win);
 extern void DestroyCairo(struct PnWidget *s);

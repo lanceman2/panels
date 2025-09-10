@@ -109,6 +109,10 @@ static void configure(struct PnWindow *win,
         return;
     }
 
+    if((win->widget.type & TOPLEVEL) && d.topMenu && !d.pointerWindow)
+        // We had active pop-up menus, so now hide them.
+        HidePopupMenus();
+
     if(win->widget.type & POPUP)
         // TODO: We're not sure that this works if we show and then hide
         // and then show again.
