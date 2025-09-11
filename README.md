@@ -23,8 +23,8 @@ code.  Wayland client lets you do that with about 200 lines of C code.
 Wayland client is not quite at the C library layer that can do that.
 
 It would appear that Wayland is the only free desktop standard that
-"panels" needs to use.  We don't see the need to port develop to
-"black box" operating systems.  Unless you pay me a lot.
+"panels" needs to use.  We don't see the need to port to "black box"
+operating systems.  Unless you pay me a lot.
 
 This programmer sees that there are some simple and basic libraries that
 form the basis for free desktops.  Hence "panels" depends on a small
@@ -34,7 +34,7 @@ number of popular and robust libraries.
 ## What is Panels?
 
 This software project is strictly for a Wayland compositor based windowing
-desktop systems, like on a GNU/Linux computer system; the Wayland
+desktop system, like on a GNU/Linux computer system; the Wayland
 protocols being the new replacement to the X11 window desktop system on
 UNIX like operating systems.  Panels is currently being developed on
 Debian GNU/Linux 12 with KDE Plasma Wayland.  Currently KDE Plasma KWin
@@ -43,7 +43,8 @@ lines between user windows), but provides the built-in compositor side
 window borders.  On Gnome the mutter Wayland compositor suffers from what
 can described as dynamic linker loader diarrhea; it forces windows to use
 lots of leaky libraries.  In the end we wish to make libpanels unload-able
-and that is not easy (practically impossible) with leaky libraries.
+and that is not easy (practically impossible) with leaky libraries.  We
+don't wish to write our on linker loader to work around that.
 
 Panels provides a C API (application programming interface) library
 and utility programs.  It can be used with C++.
@@ -148,23 +149,37 @@ modular aspects to Qt and GTK, but it is constrained to be internal to
 their respective libraries and frameworks.  Once you use a part of them
 you'll likely be stuck with innate incompatibilities when trying to use
 them with other code outside those frameworks.  As a very common example,
-if you wish to code with pthreads (NPTL) and GTK you'll need to understand
-the internal workings of the GTK main loop code.  I wrote a hack to do it
-(in the same process without changing GTK codes), but if GTK was not
-designed to be the main loop controller of your code it would have been
-trivial to do; taking hours instead of weeks to code; and it would have
-been much more efficient had they not required using their main loop code
-in order to use GTK GUIs (also I was told it could not be done, so I did
-it).  gthreads may wrap all of pthreads (and I don't think it does) but
-it's not as standard and robust as pthreads, and it can't be, it's built
-on pthreads.  Qt is much worse, if you develop with Qt you are married to
-the Qt development framework.  Qt even has it's own, unique, develop
-language called MOC which compiles into C++.  It's been said that C++ will
-likely get enough functionality to replace MOC in the future.
+if you wish to code with pthreads (NPTL) and GTK you'll need to
+understand the internal workings of the GTK main loop code.  I wrote a
+hack to do it (in the same process without changing GTK codes), but if GTK
+was not designed to be the main loop controller of your code it would have
+been trivial to do; taking hours instead of weeks to code; and it would
+have been much more efficient had they not required using their main loop
+code in order to use GTK GUIs (also I was told it could not be done, so I
+did it out of spite).  gthreads may wrap all of pthreads (and I don't
+think it does) but it's not as standard and robust as pthreads, and it
+can't be, it's built on pthreads.  Qt is much worse, if you develop with
+Qt you are married to the Qt development framework.  Qt even has it's own,
+unique, develop language called MOC which compiles into C++.  It's been
+said that C++ will likely get enough functionality to replace MOC in the
+future.
 
 Don't get me wrong.  GTK and Qt are great things.  But, they are what they
 are, large and dominate.  You can't develop with either one of them
-without it dominating most aspects of your projects coding design.
+without it dominating many aspects of your projects coding design.
+
+Put simply, libpanels strives to be unopinionated software.  Clearly, GTK
+and Qt are very opinionated.
+
+I'm under the impression that unopinionated software tend to be more
+robust than opinionated software.  As a simple example of robustness, you
+will have a hard time using two independent opinionated software packages
+together (would likely make a complex mess), but using two independent
+unopinionated software packages together should be easy (kind-of by
+definition).
+
+A challenge: write a widget API that can be used with widgets from another
+widget API in the same process.
 
 
 ## Development notes:
