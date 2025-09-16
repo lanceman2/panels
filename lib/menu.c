@@ -30,8 +30,10 @@ struct PnMenu {
     //
     struct PnWidget *button; // inherit (opaquely).
 
-    // for sub-menus that have a parent menu.  "parent" is the 
-    struct PnMenu *parent; // menu (button) activated to pop this menu.
+    // for sub-menus that have a parent menu.  "parent" is the menu
+    // (button) activated to pop this menu.  For the top level menu button
+    // parent is 0.
+    struct PnMenu *parent;
 
     struct PnWidget *popup; // Or no popup
 };
@@ -131,7 +133,19 @@ static inline void PopupShow(struct PnMenu *m) {
         x = m->button->window->popup.x + a.x + a.width - 1;
         y = m->button->window->popup.y + a.y;
     } else {
-        x = a.x + a.width/3;
+        // This is a top level menu.
+        x = a.x;
+        if(!(m->button->parent &&
+                (m->button->parent->layout == PnLayout_LR ||
+                m->button->parent->layout == PnLayout_RL))
+                )
+            // Not in a container with Horizontal layout.
+            //
+            // TODO: But it could be in a container that is in a container
+            // that has a Horizontal layout, so this is not quite right.
+            //
+            x += a.width/3;  // move over so we see menus below.
+
         y = a.y + a.height - 1;
     }
 
