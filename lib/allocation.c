@@ -2110,7 +2110,7 @@ static void ExpandChildren(const struct PnWidget *s,
 }
 
 
-// NOT A FULL PASS through the widget tree.
+// Likely NOT A FULL PASS through the widget tree.
 //
 bool HaveShowingChild(const struct PnWidget *s) {
 
@@ -2199,7 +2199,7 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
     // See ../tests/rand_widgets.c
     //
     // We count widget tree passes, but note: widget passes can get
-    // quicker as widget passes cull and so on.
+    // quicker as widget passes cull out widgets.
 
     ResetChildrenCull(s); // PASS 1
 
@@ -2342,7 +2342,7 @@ void _pnWidget_getAllocations(struct PnWidget *s) {
         // expand; so both the positions and sizes of the widgets may
         // change.
         //
-        // Also aligns the widgets if they to not fill their container
+        // Also aligns the widgets if they do not fill their container
         // space.
         //
         // PASS 6

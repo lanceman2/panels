@@ -89,7 +89,8 @@ libpanels.so_SOURCES +=\
  graph.h\
  staticPlot.c\
  plot.c\
- graphSet.c
+ graphSet.c\
+ check.c
 endif
 
 

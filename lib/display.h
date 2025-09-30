@@ -53,7 +53,7 @@
 #define W_SPLITTER       (5 << 3)
 #define W_GRAPH          (6 << 3) // 2D graph plotter with grid lines
 #define W_IMAGE          (7 << 3)
-#define W_TOGGLE_BUTTON  (8 << 3)
+#define W_CHECK          (9 << 3)
 #define LEVEL1           (127 << 3) // All level 1 bits
 // ADD MORE up to number 127
 //
@@ -64,6 +64,7 @@
 // LEVEL 2 widgets (based on LEVEL 1 widget types)
 #define W_MENU           (1 << 10) // See PnWidgetType_menu
 #define W_MENU_ITEM      (2 << 10)
+#define W_TOGGLE_BUTTON  (3 << 10)
 #define LEVEL2           ((63 << 10) | LEVEL1) // All level 2 bits
 // ADD MORE up to number 63
 //
@@ -87,6 +88,8 @@
 // Lets say we can have 63 widget types based on LEVEL 3 widgets 22 + 6 =
 // 28 and so we still have 3 bits left to get to the maximum bit shift of
 // 31.
+
+// Our shitty widget typing thing.
 
 //
 // TODO: Add a Wayland subsurface to this type thingy?
@@ -114,11 +117,12 @@ enum PnWidgetType {
     PnWidgetType_image        = W_IMAGE,
     PnWidgetType_graph        = W_GRAPH,
     PnWidgetType_splitter     = W_SPLITTER,
-    PnWidgetType_togglebutton = W_TOGGLE_BUTTON,
+    PnWidgetType_check        = W_CHECK,
     
     // inherits level 1 and widget, LEVEL2
-    PnWidgetType_menu       = (W_BUTTON | W_MENU),
-    PnWidgetType_menuitem   = (W_BUTTON | W_MENU_ITEM)
+    PnWidgetType_menu         = (W_BUTTON | W_MENU),
+    PnWidgetType_menuitem     = (W_BUTTON | W_MENU_ITEM),
+    PnWidgetType_togglebutton = (W_BUTTON | W_TOGGLE_BUTTON)
 };
 
 

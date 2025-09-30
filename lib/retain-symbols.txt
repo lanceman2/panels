@@ -1,4 +1,6 @@
 pnButton_create
+pnCheck_create
+pnCheck_set
 pnDisplay_destroy
 pnDisplay_dispatch
 pnDisplay_haveXDGDecoration
@@ -25,6 +27,10 @@ pnPlot_setPointSize
 pnPopup_hide
 pnPopup_show
 pnSplitter_create
+pnToggleButton_create
+pnToggleButton_addCheck
+pnToggleButton_removeCheck
+pnToggleButton_getToggled
 pnWidget_addAction
 pnWidget_addCallback
 pnWidget_addChild

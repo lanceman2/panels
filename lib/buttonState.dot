@@ -3,6 +3,10 @@
 //  %  display buttonState.dot
 //
 // The program "display" is from the graphviz software package.
+//
+// One could imagine a button with more (or less) states than this.
+// We just chose to have these states for the libpanels button and
+// libpanels toggle button.
 
 digraph Button {
 

@@ -16,6 +16,7 @@
 #include "display.h"
 #include "SetColor.h"
 #include "DrawHalo.h"
+#include "check.h"
 
 
 // button States
@@ -50,27 +51,28 @@
 #define HOVER      (1)
 #define PRESSED    (2)
 #define ACTIVE     (3) // animation, released
-// TOGGLED is higher bits than the above.
-#define TOGGLED    (1 << 2) // 4
 
-// This must be true.  We cannot share bits between the first 4 state
-// flags and TOGGLED.  In code we say:
-//ASSERT( !( (NORMAL|HOVER|PRESSED|ACTIVE) & TOGGLED))
 
 enum PnButtonState {
 
+    // Regular Buttons have just 4 states.
     PnButtonState_Normal   = NORMAL,
     PnButtonState_Hover    = HOVER,
     PnButtonState_Pressed  = PRESSED,
     PnButtonState_Active   = ACTIVE,
-    PnButtonState_NumRegularStates,
-    PnButtonState_ToggledNormal  = NORMAL  | TOGGLED,
-    PnButtonState_ToggledHover   = HOVER   | TOGGLED,
-    PnButtonState_ToggledPressed = PRESSED | TOGGLED,
-    PnButtonState_ToggledActive  = ACTIVE  | TOGGLED,
-    PnButtonState_NumToggleStates
+    PnButtonState_NumStates,
+    // Toggle Buttons have double the number of states
+    // of Regular Buttons.
+    PnToggledState_Normal  = NORMAL | (4),
+    PnToggledState_Hover   = HOVER | (4),
+    PnToggledState_Pressed = PRESSED | (4),
+    PnToggledState_Active  = ACTIVE | (4),
+    PnToggle_NumStates
 };
 
+// See state diagram (run in shell): % display buttonState.dot
+// That's for both the button and the toggle button.
+//
 
 // Number of drawing cycles for a button "click" animation.
 //
@@ -101,13 +103,34 @@ struct PnButton {
 struct PnToggleButton {
 
     struct PnButton button; // inherit first
+
+    // A singly linked list of checks that show the toggle state to the
+    // user.
+    struct PnCheck *checks;
+
+    bool toggled; // used if it's a toggle button.
 };
 
+
+static inline void FlipToggle(struct PnToggleButton *t) {
+
+    t->toggled = (t->toggled)?false:true;
+    for(struct PnCheck *c = t->checks; c; c = c->next)
+        pnCheck_set(&c->widget, t->toggled);
+}
 
 static inline void
 SetState(struct PnButton *b, enum PnButtonState state) {
     DASSERT(b);
-    if(state == b->state) return;
+
+    DASSERT(state != b->state);
+    ASSERT(IS_TYPE1(b->widget.type, PnWidgetType_button));
+
+    // We have a state change.
+
+    if(IS_TYPE2(b->widget.type, PnWidgetType_togglebutton) &&
+            state == PnButtonState_Active)
+        FlipToggle((void *) b);
 
     if(b->frames) b->frames = 0;
 
@@ -115,13 +138,42 @@ SetState(struct PnButton *b, enum PnButtonState state) {
     pnWidget_queueDraw(&b->widget, false/*allocate*/);
 }
 
+static inline void DrawToggle(cairo_t *cr, struct PnToggleButton *t) {
+
+    DASSERT(IS_TYPE1(t->button.widget.type, PnWidgetType_button));
+    DASSERT(IS_TYPE2(t->button.widget.type, PnWidgetType_togglebutton));
+
+    // Switch on 8 state values:
+    switch(t->button.state | ((t->toggled)?4:0)) {
+
+        case PnToggledState_Normal:
+        case PnToggledState_Hover:
+        case PnButtonState_Pressed:
+        case PnToggledState_Active:
+            DrawHalo2(cr, MIN_WIDTH, MIN_HEIGHT, 0xFF000000);
+
+        case PnButtonState_Normal:
+        case PnButtonState_Hover:
+        case PnToggledState_Pressed:
+        case PnButtonState_Active:
+            DrawHalo(cr, MIN_WIDTH, MIN_HEIGHT,
+                    t->button.colors[t->button.state]);
+    }
+}
 
 static inline void Draw(cairo_t *cr, struct PnButton *b) {
 
     SetColor(cr, b->widget.backgroundColor);
     cairo_paint(cr);
 
-    DrawHalo(cr, MIN_WIDTH, MIN_HEIGHT, b->colors[b->state]);
+    if(IS_TYPE2(b->widget.type, PnWidgetType_togglebutton))
+        // It's a toggle button.
+        DrawToggle(cr, (void *) b);
+    else {
+        // It's a regular button.
+        DASSERT(IS_TYPE1(b->widget.type, PnWidgetType_button));
+        DrawHalo(cr, MIN_WIDTH, MIN_HEIGHT, b->colors[b->state]);
+    }
 }
 
 static void config(struct PnWidget *widget, uint32_t *pixels,
@@ -133,7 +185,8 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
     DASSERT(b);
     DASSERT(b == (void *) widget);
     if(b->frames) b->frames = 0;
-    SetState(b, PnButtonState_Normal);
+    if(b->state != PnButtonState_Normal)
+        SetState(b, PnButtonState_Normal);
     DASSERT(w);
     DASSERT(h);
     b->width = w;
@@ -141,13 +194,19 @@ static void config(struct PnWidget *widget, uint32_t *pixels,
 }
 
 
+#define ASSERT_BUTTON(w)  \
+    ASSERT(IS_TYPE1(w->type, PnWidgetType_button))
+#define DASSERT_BUTTON(w)  \
+    DASSERT(IS_TYPE1(w->type, PnWidgetType_button))
+
+
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnButton *b) {
     DASSERT(b);
     DASSERT(b == (void *) w);
-    DASSERT(IS_TYPE1(w->type, PnWidgetType_button));
+    DASSERT_BUTTON(w);
     DASSERT(cr);
-    DASSERT(b->state < PnButtonState_NumRegularStates);
+    DASSERT(b->state < PnButtonState_NumStates);
 
     if(b->state != PnButtonState_Active) {
         Draw(cr, b);
@@ -155,6 +214,8 @@ static int cairoDraw(struct PnWidget *w,
             b->frames = 0;
         return 0;
     }
+
+    //b->state == PnButtonState_Active
 
     DASSERT(b->frames);
 
@@ -240,15 +301,9 @@ void destroy(struct PnWidget *w, struct PnButton *b) {
     DASSERT(b);
     DASSERT(b == (void *) w);
 
-    if(IS_TYPE1(w->type, PnWidgetType_button)) {
-        DASSERT(b->colors);
-        DZMEM(b->colors,
-                PnButtonState_NumRegularStates*sizeof(*b->colors));
-        free(b->colors);
-    } else {
-        DASSERT(IS_TYPE1(w->type, PnWidgetType_togglebutton));
-        ASSERT(0, "WRITE MORE CODE");
-    }
+    DASSERT(b->colors);
+    DZMEM(b->colors, PnButtonState_NumStates*sizeof(*b->colors));
+    free(b->colors);
 }
 
 
@@ -265,7 +320,7 @@ static bool pressAction(struct PnWidget *b, struct PnCallback *callback,
     DASSERT(b);
     DASSERT(actionData == 0);
     DASSERT(actionIndex == PN_BUTTON_CB_PRESS);
-    ASSERT(IS_TYPE1(b->type, PnWidgetType_button));
+    ASSERT_BUTTON(b);
     DASSERT(callback);
     DASSERT(userCallback);
 
@@ -314,7 +369,7 @@ static bool clickAction(struct PnWidget *b, struct PnCallback *callback,
 
     DASSERT(b);
     DASSERT(actionData == 0);
-    ASSERT(IS_TYPE1(b->type, PnWidgetType_button));
+    ASSERT_BUTTON(b);
     DASSERT(actionIndex == PN_BUTTON_CB_CLICK);
     DASSERT(callback);
     DASSERT(userCallback);
@@ -329,7 +384,7 @@ static bool enterAction(struct PnWidget *w, struct PnCallback *callback,
 
     DASSERT(w);
     DASSERT(actionData == 0);
-    ASSERT(IS_TYPE1(w->type, PnWidgetType_button));
+    ASSERT_BUTTON(w);
     DASSERT(actionIndex == PN_BUTTON_CB_ENTER);
     DASSERT(callback);
     DASSERT(userCallback);
@@ -350,7 +405,7 @@ static bool leaveAction(struct PnWidget *w, struct PnCallback *callback,
 
     DASSERT(w);
     DASSERT(actionData == 0);
-    ASSERT(IS_TYPE1(w->type, PnWidgetType_button));
+    ASSERT_BUTTON(w);
     DASSERT(actionIndex == PN_BUTTON_CB_LEAVE);
     DASSERT(callback);
     DASSERT(userCallback);
@@ -363,20 +418,148 @@ static bool leaveAction(struct PnWidget *w, struct PnCallback *callback,
     return userCallback(w, userData);
 }
 
+bool pnToggleButton_getToggled(struct PnWidget *w) {
+
+    DASSERT(w);
+    ASSERT(IS_TYPE1(w->type, PnWidgetType_button));
+    ASSERT(IS_TYPE2(w->type, PnWidgetType_togglebutton));
+
+    return ((struct PnToggleButton *) w)->toggled;
+}
+
+static inline void AddToggleCheck(struct PnToggleButton *t,
+        struct PnCheck *check) {
+
+    DASSERT(t);
+    DASSERT(check);
+    DASSERT(!check->next);
+
+    if(t->checks) {
+        struct PnCheck *last = t->checks;
+        for(; last->next; last = last->next);
+        last->next = check;
+    } else
+        t->checks = check;
+
+    check->toggleButton = t;
+}
+
+
+void RemoveToggleCheck(struct PnCheck *check) {
+
+    DASSERT(check);
+    struct PnToggleButton *t = check->toggleButton;
+    if(!t) {
+        DASSERT(!check->next);
+        return;
+    }
+    struct PnCheck *prev = 0;
+    for(struct PnCheck *c = t->checks;
+            c; c = c->next) {
+        if(check == c) {
+            if(prev)
+                prev->next = check->next;
+            else
+                t->checks = check->next;
+            check->toggleButton = 0;
+            check->next = 0;
+            break;
+        }
+        prev = c;
+    }
+}
+
+
+void pnToggleButton_addCheck(struct PnWidget *w,
+        struct PnWidget *check) {
+
+    DASSERT(w);
+    DASSERT(check);
+    ASSERT(IS_TYPE1(check->type, PnWidgetType_check));
+    ASSERT(IS_TYPE2(w->type, PnWidgetType_togglebutton));
+
+    struct PnCheck *c = (void *) check;
+    struct PnToggleButton *t = (void *) w;
+
+    if(c->toggleButton)
+        RemoveToggleCheck(c);
+
+    pnCheck_set(check, t->toggled);
+    AddToggleCheck(t, (void *) check);
+}
+
+void pnToggleButton_removeCheck(struct PnWidget *w,
+        struct PnWidget *check) {
+
+    DASSERT(w);
+    DASSERT(check);
+    ASSERT(IS_TYPE2(w->type, PnWidgetType_togglebutton));
+    ASSERT(IS_TYPE1(check->type, PnWidgetType_check));
+
+    RemoveToggleCheck((void *) check);
+}
+
+
+static void ToggleDestroy(struct PnWidget *w,
+        struct PnToggleButton *t) {
+    DASSERT(w);
+    DASSERT(w = (void *) t);
+    DASSERT(IS_TYPE2(w->type, PnWidgetType_togglebutton));
+
+    while(t->checks)
+        RemoveToggleCheck(t->checks);
+}
+
+
+struct PnWidget *pnToggleButton_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height,
+        enum PnLayout layout,
+        enum PnAlign align,
+        enum PnExpand expand,
+        const char *label, bool toggled, size_t size) {
+
+    struct PnToggleButton *t;
+
+    if(size < sizeof(*t))
+        size = sizeof(*t);
+
+    t = (void *) pnButton_create(parent,
+        width, height, layout, align, expand, label, size);
+
+    if(!t) return 0; // fail.
+
+    DASSERT(t->button.widget.type == PnWidgetType_button);
+    // We have a different widget type that shares code with the button
+    // widget, so we put it in the same source file: here.
+    //
+    // TODO: Will this idea hold up over time?  I'm not sure.
+    t->button.widget.type = PnWidgetType_togglebutton;
+
+    pnWidget_addDestroy(&t->button.widget, (void *) ToggleDestroy, t);
+
+    // Initialize toggle:
+    t->toggled = toggled;
+
+    return &t->button.widget;
+}
+
 
 struct PnWidget *pnButton_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout,
         enum PnAlign align,
         enum PnExpand expand,
-        const char *label, bool toggle) {
-
-    ASSERT(!toggle, "WRITE MORE CODE");
+        const char *label, size_t size) {
 
     if(width < MIN_WIDTH)
         width = MIN_WIDTH;
     if(height < MIN_HEIGHT)
         height = MIN_HEIGHT;
+
+    struct PnButton *b;
+
+    if(size < sizeof(*b))
+        size = sizeof(*b);
 
     // TODO: How many more function parameters should we add to the
     // button create function?
@@ -385,9 +568,9 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
     // we're hoping to auto-generate these parameters as this button
     // abstraction evolves.
     //
-    struct PnButton *b = (void *) pnWidget_create(parent,
+    b = (void *) pnWidget_create(parent,
             width, height,
-            layout, align, expand, sizeof(*b));
+            layout, align, expand, size);
     if(!b)
         // A common error mode is that the parent cannot have children.
         // pnWidget_create() should spew for us.
@@ -423,10 +606,10 @@ struct PnWidget *pnButton_create(struct PnWidget *parent,
             0/*callbackSize*/);
 
 
-    b->colors = calloc(1, PnButtonState_NumRegularStates*
+    b->colors = calloc(1, PnButtonState_NumStates*
             sizeof(*b->colors));
     ASSERT(b->colors, "calloc(1,%zu) failed",
-            PnButtonState_NumRegularStates*sizeof(*b->colors));
+            PnButtonState_NumStates*sizeof(*b->colors));
     // Default state colors:
     //b->colors[PnButtonState_Normal] =  0xFFCDCDCD;
     b->colors[PnButtonState_Normal] = b->widget.backgroundColor;

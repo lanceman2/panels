@@ -228,7 +228,7 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
     ASSERT(m, "calloc(1,%zu) failed", sizeof(*m));
 
     m->button = pnButton_create(parent, width, height,
-            layout, align, expand, label, false/*toggle*/);
+            layout, align, expand, label, 0);
     if(!m->button) {
         DZMEM(m, sizeof(*m));
         free(m);

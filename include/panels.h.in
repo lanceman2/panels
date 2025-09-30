@@ -245,15 +245,15 @@ enum PnExpand {
 // Align is a:
 //
 //   1. Container (non-grid) widget attribute for child widget layout,
-//   2. A leaf widget attribute for leaf widgets (like to align a text
-//   label, image, ... in the leaf widget space), and
+//   2. A leaf widget attribute for leaf widgets, like to align a text
+//   label, image, ... in the leaf widget space, and
 //   3. Grid widgets use their align widget attribute the same way leaf
 //   widgets do.
 //
 // Reasoning:
 //
 //   1. The alignment of many children in a hBox or vBox needs only one
-//   parameter (not one for each child).  We can't align cells that are
+//   parameter, not one for each child.  We can't align cells that are
 //   together in different alignment ways, the same sibling children
 //   widgets have to share the same alignment attribute.
 //   2. The leaf widget needs to control placement of the something on
@@ -625,7 +625,26 @@ PN_EXPORT struct PnWidget *pnButton_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnLayout layout, enum PnAlign align,
         enum PnExpand expand,
-        const char *label, bool toggle);
+        const char *label, size_t size);
+
+PN_EXPORT struct PnWidget *pnToggleButton_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height,
+        enum PnLayout layout,
+        enum PnAlign align,
+        enum PnExpand expand,
+        const char *label, bool toggled, size_t size);
+PN_EXPORT bool pnToggleButton_getToggled(struct PnWidget *w);
+
+// Just for a bool like display (not control).
+PN_EXPORT struct PnWidget *pnCheck_create(struct PnWidget *parent,
+        uint32_t width, uint32_t height,
+        enum PnAlign align,
+        enum PnExpand expand);
+PN_EXPORT void pnToggleButton_addCheck(struct PnWidget *w,
+        struct PnWidget *check);
+PN_EXPORT void pnToggleButton_removeCheck(struct PnWidget *w,
+        struct PnWidget *check);
+PN_EXPORT void pnCheck_set(struct PnWidget *w, bool on);
 
 PN_EXPORT struct PnWidget *pnSplitter_create(struct PnWidget *parent,
         struct PnWidget *first, struct PnWidget *second,

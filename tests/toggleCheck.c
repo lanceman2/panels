@@ -20,12 +20,6 @@ static int buttonCount = 0;
 static struct PnWidget *win;
 
 struct button {
-    // Fuck, fuck, shit, we can't inherit PnButton because it's opaque
-    // at this level of coding.  I guess C++ classes have that same
-    // problem too; C++ big ass header files from hell are needed to
-    // inherit C++ classes.
-    //
-    // We just have the PnButton pointer and not the data here:
     struct PnWidget *button;
     int buttonNum;
 };
@@ -36,12 +30,9 @@ static bool click(struct PnWidget *button, struct button *b) {
     ASSERT(button);
     ASSERT(button == b->button);
 
-    fprintf(stderr, "CLICK button %d", b->buttonNum);
-#ifdef TOGGLE
-    fprintf(stderr, " is%s toggled",
+    fprintf(stderr, "Button %d is %s toggled\n",
+            b->buttonNum,
             pnToggleButton_getToggled(button)?"":" not");
-#endif    
-    putc('\n', stderr);
 
     return false;
 }
@@ -54,10 +45,8 @@ static bool press(struct PnWidget *button, struct button *b) {
     ASSERT(button == b->button);
 
     fprintf(stderr, "PRESS button %d", b->buttonNum);
-#ifdef TOGGLE
     fprintf(stderr, " is%s toggled",
             pnToggleButton_getToggled(button)?"":" not");
-#endif    
     putc('\n', stderr);
 
     return false;
@@ -77,27 +66,52 @@ static void Button(void) {
     struct button *b = calloc(1, sizeof(*b));
     ASSERT(b, "calloc(1,%zu) failed", sizeof(*b));
 
-#ifdef TOGGLE
     static bool initToggle = true;
-#endif
     b->button =
-#ifdef TOGGLE
         pnToggleButton_create(
-#else
-        pnButton_create(
-#endif
             win/*parent*/,
             30/*width*/, 20/*height*/,
-            0/*layout*/, 0/*align*/,
+            PnLayout_LR/*layout*/, 0/*align*/,
             PnExpand_HV/*expand*/,
-            "Quit",
-#ifdef TOGGLE
+            0/*label*/,
             // Alternate toggle values.
             (initToggle = !initToggle),
-#endif
             0);
 
     ASSERT(b->button);
+
+#define LEN  (122)
+
+    char labelText[LEN];
+    snprintf(labelText, LEN, "Button %d", buttonCount);
+
+    struct PnWidget *w = pnCheck_create(b->button/*parent*/,
+        30/*width*/, 30/*height*/,
+        PnAlign_LC, 0/*expand*/);
+    ASSERT(w);
+    pnToggleButton_addCheck(b->button, w);
+
+#if 0 // To test with more than one check:
+w = pnCheck_create(b->button/*parent*/,
+        30/*width*/, 30/*height*/,
+        PnAlign_LC, 0/*expand*/);
+    ASSERT(w);
+    pnToggleButton_addCheck(b->button, w);
+
+w = pnCheck_create(b->button/*parent*/,
+        30/*width*/, 30/*height*/,
+        PnAlign_LC, 0/*expand*/);
+    ASSERT(w);
+    pnToggleButton_addCheck(b->button, w);
+#endif
+
+    w =  pnLabel_create(
+            b->button/*parent*/,
+            0/*width*/, 30/*height*/,
+            4/*xPadding*/, 4/*yPadding*/,
+            0/*align*/, PnExpand_HV/*expand*/, labelText);
+    ASSERT(w);
+
 
     b->buttonNum = buttonCount++;
 

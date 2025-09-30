@@ -187,6 +187,23 @@ button_run_SOURCES := button.c
 button_run_LDFLAGS := $(PN_LIB)
 button_run_CPPFLAGS := -DRUN
 
+107_togglebutton_SOURCES := button.c
+107_togglebutton_LDFLAGS := $(PN_LIB)
+107_togglebutton_CPPFLAGS := -DTOGGLE
+
+togglebutton_run_SOURCES := button.c
+togglebutton_run_LDFLAGS := $(PN_LIB)
+togglebutton_run_CPPFLAGS := -DRUN -DTOGGLE
+
+109_toggleCheck_SOURCES := toggleCheck.c
+109_toggleCheck_LDFLAGS := $(PN_LIB)
+
+toggleCheck_run_SOURCES := toggleCheck.c
+toggleCheck_run_LDFLAGS := $(PN_LIB)
+toggleCheck_run_CPPFLAGS := -DRUN
+
+
+
 111_fontconfig_SOURCES := fontconfig.c
 111_fontconfig_LDFLAGS := $(PN_LIB) $(FONTCONFIG_LDFLAGS) $(CAIRO_LDFLAGS)
 111_fontconfig_CPPFLAGS := $(FONTCONFIG_CFLAGS) $(CAIRO_CFLAGS)
@@ -292,6 +309,13 @@ image_run_CPPFLAGS := -DRUN
 generic_run_SOURCES := generic.c
 generic_run_LDFLAGS := $(PN_LIB)
 generic_run_CPPFLAGS := -DRUN
+
+156_check_SOURCES := check.c
+156_check_LDFLAGS := $(PN_LIB)
+
+check_run_SOURCES := check.c
+check_run_LDFLAGS := $(PN_LIB)
+check_run_CPPFLAGS := -DRUN
 
 145_menuBar_SOURCES := menuBar.c
 145_menuBar_LDFLAGS := $(PN_LIB)

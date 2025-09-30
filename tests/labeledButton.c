@@ -52,8 +52,7 @@ static void Button(void) {
     struct PnWidget *button = pnButton_create(hbox,
             0/*width*/, 0/*height*/,
             0/*layout*/, 0/*align*/,
-            PnExpand_VH, labeled?text:0/*label*/,
-            false/*toggle*/);
+            PnExpand_VH, labeled?text:0/*label*/, 0);
     ASSERT(button);
 
     uint32_t color = 0xDA000000 | (0x00FFFFFF & Color());

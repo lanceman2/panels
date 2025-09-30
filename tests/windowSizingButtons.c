@@ -59,7 +59,7 @@ static void Button(
     struct PnWidget *button = pnButton_create(0/*parent*/,
             0/*width*/, 0/*height*/,
             0/*layout*/, 0/*align*/,
-            PnExpand_VH, 0/*label*/, false/*toggle*/);
+            PnExpand_VH, 0/*label*/, 0);
     ASSERT(button);
     pnWidget_addChildToGrid(win, button, i, j, rowSpan, colSpan);
 
