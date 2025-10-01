@@ -25,7 +25,7 @@ static void Check(void) {
 
     struct PnWidget *w = pnCheck_create(win,
         31/*width*/, 31/*height*/,
-        0/*align*/, 0/*expand*/);
+        0/*align*/, PnExpand_HV/*expand*/);
 
     ASSERT(w);
 
@@ -49,7 +49,7 @@ int main(void) {
     ASSERT(win);
     pnWidget_setBackgroundColor(win, 0xAA010101, 0);
 
-    for(int i=0; i<6; ++i)
+    for(int i=0; i<4; ++i)
         Check();
 
     pnWindow_show(win);

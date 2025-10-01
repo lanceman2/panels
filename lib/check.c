@@ -1,3 +1,4 @@
+#include <math.h>
 #include <cairo/cairo.h>
 
 #include "../include/panels.h"
@@ -10,9 +11,6 @@
 #include "SetColor.h"
 #include "check.h"
 
-
-#define LW    (2.8)
-#define PAD   (3.2)
 
 static int cairoDraw(struct PnWidget *w,
             cairo_t *cr, struct PnCheck *c) {
@@ -27,10 +25,16 @@ static int cairoDraw(struct PnWidget *w,
     DASSERT(a.width);
     DASSERT(a.height);
 
-    double x, y;
-
     SetColor(cr, w->backgroundColor);
     cairo_paint(cr);
+    double LW;
+    if(a.height < a.width)
+        LW = a.height;
+    else
+        LW = a.width;
+    LW *= 0.09;
+    const double PAD = LW * (3.2/2.8);
+    double x, y;
 
     // Draw a box.
     SetColor(cr, 0xFF000000);
@@ -71,9 +75,6 @@ struct PnWidget *pnCheck_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
         enum PnAlign align,
         enum PnExpand expand) {
-
-    ASSERT(width > 2*PAD);
-    ASSERT(height > 2*PAD);
 
     struct PnCheck *c = (void *) pnWidget_create(parent,
             width, height,
