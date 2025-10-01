@@ -49,7 +49,7 @@ static int cairoDraw(struct PnWidget *w,
 
     if(c->checked) {
         // Draw a check.
-        SetColor(cr, 0xFF000000);
+        //SetColor(cr, 0xFF000000);
         cairo_set_line_width(cr, LW);
         cairo_move_to(cr, PAD + 1.2*LW, a.height/2.0);
         cairo_line_to(cr, a.width/2.0, a.height - 1.2*LW - PAD);
