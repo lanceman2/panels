@@ -41,7 +41,7 @@ Debian GNU/Linux 12 with KDE Plasma Wayland.  Currently KDE Plasma KWin
 compositor is popular and a little buggy (random stray 1 pixel wide border
 lines between user windows), but provides the built-in compositor side
 window borders.  On Gnome the mutter Wayland compositor suffers from what
-can described as dynamic linker loader diarrhea; it forces windows to use
+can be described as dynamic linker loader diarrhea; it forces windows to use
 lots of leaky libraries.  In the end we wish to make libpanels unload-able
 and that is not easy (practically impossible) with leaky libraries.  We
 don't wish to write our on linker loader to work around that.

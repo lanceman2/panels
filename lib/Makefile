@@ -97,7 +97,7 @@ endif
 libpanels.so_CPPFLAGS :=\
  $(WL_CFLAGS)\
  $(WLCU_CFLAGS)\
-  $(CAIRO_CFLAGS)\
+ $(CAIRO_CFLAGS)\
  $(FONTCONFIG_CFLAGS)\
  -DPN_LIB_CODE
 
