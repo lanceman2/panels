@@ -217,5 +217,6 @@ extern void AddStaticPlot(struct PnWidget *w,
 extern bool StaticDrawAction(struct PnGraph *p,
         struct PnCallback *callback,
         bool (*userCallback)(struct PnWidget *graph,
-                struct PnPlot *plot, void *userData),
+                struct PnPlot *plot, void *userData,
+                double xMin, double xMax, double yMin, double yMax),
         void *userData, uint32_t actionIndex, void *actionData);

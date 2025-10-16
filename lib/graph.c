@@ -793,7 +793,8 @@ drawGrid:
                 fontSize, startY, deltaY);
     }
 
-    bool haveXZero = !((xToPix(g->xMin, g->zoom) > g->width + lineWidth*1.9 + g->padX) ||
+    bool haveXZero = !((xToPix(g->xMin, g->zoom) >
+                g->width + lineWidth*1.9 + g->padX) ||
             (xToPix(g->xMax, g->zoom) <= - lineWidth*1.9 - g->padX));
     bool haveYZero = !((yToPix(g->yMax, g->zoom) >
                 g->height + lineWidth*1.9 + g->padY) ||

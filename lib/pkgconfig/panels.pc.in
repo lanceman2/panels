@@ -7,6 +7,6 @@ Name: panels
 Description: panels, GUI library
 Version: @VERSION@
 Requires: wayland-client >= 1.21.0
-Requires.private: cairo >= 1.18.0 fontconfig >= 2.14.1
+Requires.private: cairo >= 1.16.0 fontconfig >= 2.14.1
 Libs: -L${libdir} -lpanels
 Cflags: -I${includedir}

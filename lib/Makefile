@@ -95,6 +95,7 @@ endif
 
 
 libpanels.so_CPPFLAGS :=\
+ -DUSER_PREFIX=\"PN_\"\
  $(WL_CFLAGS)\
  $(WLCU_CFLAGS)\
  $(CAIRO_CFLAGS)\

@@ -39,7 +39,8 @@ void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
 
 bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
         bool (*userCallback)(struct PnWidget *g, struct PnPlot *p,
-                void *userData),
+                void *userData,
+                double xMin, double xMax, double yMin, double yMax),
         void *userData, uint32_t actionIndex, void *actionData) {
     DASSERT(g);
     DASSERT(actionData == 0);
@@ -77,7 +78,8 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     SetColor(lcr, p->lineColor);
     cairo_set_line_width(lcr, p->lineWidth);
 
-    bool ret = userCallback(&g->widget, p, userData);
+    bool ret = userCallback(&g->widget, p, userData,
+            g->xMin, g->xMax, g->yMin, g->yMax);
 
     const double hw = p->pointSize;
     const double w = 2.0*hw;

@@ -590,7 +590,8 @@ PN_EXPORT void *pnWidget_addCallback(struct PnWidget *widget,
 
 static inline struct PnPlot *pnStaticPlot_create(struct PnWidget *graph,
         bool (*plotter)(struct PnWidget *graph, struct PnPlot *plot,
-            void *userData), void *userData) {
+            void *userData, double xMin, double xMax, double yMin, double yMax),
+        void *userData) {
     // TODO: Add type check here for graph?  Like ASSERT().
     return pnWidget_addCallback(graph, PN_GRAPH_CB_STATIC_DRAW,
             plotter, userData);

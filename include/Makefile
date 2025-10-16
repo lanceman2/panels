@@ -22,7 +22,7 @@ IN_VARS :=\
 
 INSTALLED :=\
  panels.h\
- panel_drawingUtils.h
+ panels_drawingUtils.h
 
 
 

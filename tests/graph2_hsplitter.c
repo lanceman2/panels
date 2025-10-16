@@ -18,7 +18,8 @@ void catcher(int sig) {
 }
 
 static
-bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
+bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
 
     const double tMax = 20 * M_PI;
 
@@ -31,7 +32,8 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
 }
 
 static
-bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData) {
+bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
 
     const double tMax = 20 * M_PI;
 
@@ -50,7 +52,8 @@ static uint32_t count = 0;
 
 
 static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
-            struct PnPlot *p, void *userData)) {
+            struct PnPlot *p, void *userData,
+            double xMin, double xMax, double yMin, double yMax)) {
 
     ++count;
 

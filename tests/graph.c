@@ -16,7 +16,8 @@ void catcher(int sig) {
     ASSERT(0, "caught signal number %d", sig);
 }
 
-bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
+bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
 
     ASSERT(userData == (void *) catcher); // testing userData.
 
@@ -29,7 +30,8 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData) {
     return false;
 }
 
-bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData) {
+bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
 
     ASSERT(userData == 0); // testing userData.
 
