@@ -241,6 +241,10 @@ loadAndUnloadCheckMaps_run_SOURCES := loadAndUnloadCheckMaps.c  ../lib/debug.c
 loadAndUnloadCheckMaps_run_CPPFLAGS :=\
  -DDSO_FILE=\"./fontconfig_run.so\"
 
+graph0_run_SOURCES := graph0.c
+graph0_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+graph0_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
 graph_run_SOURCES := graph.c
 graph_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 graph_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
