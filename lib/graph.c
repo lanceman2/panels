@@ -99,7 +99,7 @@ static inline void CreateBGSurface(struct PnGraph *g,
     // plus and minus the pad values (padX, panY), with the mouse pointer
     // or something.
     //
-    // TODO: We could make the padX, and padY, a function of w, and h.
+    // TODO: We could make the padX, and padY, a function of w and h.
     //
     w += 2 * g->padX;
     h += 2 * g->padY;
