@@ -852,6 +852,7 @@ drawGrid:
     }
 
     pnWidget_callAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW);
+    pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
 }
 
 static
@@ -1086,6 +1087,11 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     pnWidget_addAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW,
             (void *) StaticDrawAction, AddStaticPlot, 0/*actionData*/,
             sizeof(struct PnStaticPlot));
+
+    pnWidget_addAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW,
+            (void *) ScopeDrawAction, AddScopePlot, 0/*actionData*/,
+            sizeof(struct PnScopePlot));
+
 
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):

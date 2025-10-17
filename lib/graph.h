@@ -220,3 +220,17 @@ extern bool StaticDrawAction(struct PnGraph *p,
                 struct PnPlot *plot, void *userData,
                 double xMin, double xMax, double yMin, double yMax),
         void *userData, uint32_t actionIndex, void *actionData);
+
+extern void AddScopePlot(struct PnWidget *w,
+        struct PnCallback *callback, uint32_t actionIndex,
+        void *actionData);
+
+extern bool ScopeDrawAction(struct PnGraph *p,
+        struct PnCallback *callback,
+        bool (*userCallback)(struct PnWidget *graph,
+                struct PnPlot *plot, void *userData,
+                double xMin, double xMax, double yMin, double yMax),
+        void *userData, uint32_t actionIndex, void *actionData);
+
+
+

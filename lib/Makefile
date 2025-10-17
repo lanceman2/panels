@@ -88,6 +88,7 @@ libpanels.so_SOURCES +=\
  graphCallbacks.c\
  graph.h\
  staticPlot.c\
+ scopePlot.c\
  plot.c\
  graphSet.c\
  check.c

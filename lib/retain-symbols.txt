@@ -9,7 +9,6 @@ pnFindFont
 pnGeneric_create
 pnGraph_create
 pnGraph_drawPoint
-pnGraph_drawPoints
 pnGraph_setGridColor
 pnGraph_setLabelsColor
 pnGraph_setSubGridColor

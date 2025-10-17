@@ -245,6 +245,10 @@ graph0_run_SOURCES := graph0.c
 graph0_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 graph0_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
+scope_run_SOURCES := scope.c
+scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
 graph_run_SOURCES := graph.c
 graph_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 graph_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)

@@ -63,7 +63,7 @@ extern "C" {
 #define PN_BUTTON_CB_ENTER       2
 #define PN_BUTTON_CB_LEAVE       3
 #define PN_GRAPH_CB_STATIC_DRAW  0 // For static plots
-#define PN_GRAPH_CB_SCOPE_DRAW   0 // For oscilloscope
+#define PN_GRAPH_CB_SCOPE_DRAW   1 // For oscilloscope
 #define PN_MENUITEM_CB_CLICK     0
 
 // 4 bytes of color is what is called True Color
@@ -597,6 +597,16 @@ static inline struct PnPlot *pnStaticPlot_create(struct PnWidget *graph,
     return pnWidget_addCallback(graph, PN_GRAPH_CB_STATIC_DRAW,
             plotter, userData);
 }
+
+static inline struct PnPlot *pnScopePlot_create(struct PnWidget *graph,
+        bool (*plotter)(struct PnWidget *graph, struct PnPlot *plot,
+            void *userData, double xMin, double xMax, double yMin, double yMax),
+        void *userData) {
+    // TODO: Add type check here for graph?  Like ASSERT().
+    return pnWidget_addCallback(graph, PN_GRAPH_CB_SCOPE_DRAW,
+            plotter, userData);
+}
+
 
 PN_EXPORT bool pnWidget_isInSurface(const struct PnWidget *w,
         uint32_t x, uint32_t y);
