@@ -374,6 +374,8 @@ struct PnPlot {
     struct PnCallback callback; // inherit first.
 
     struct PnGraph *graph;
+    // For a static plot these are connected to the PnGraph's
+    // bgSurface.
     cairo_t *lineCr, *pointCr;
     struct PnZoom *zoom;
 
@@ -381,7 +383,6 @@ struct PnPlot {
 
     // We keep a list of plots in a graph.
     struct PnPlot *next, *prev;
-
 
     uint32_t lineColor, pointColor;
 
