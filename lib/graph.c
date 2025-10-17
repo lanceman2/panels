@@ -991,8 +991,10 @@ static inline void OverlayGridSurface(struct PnGraph *g,
 
     // Transfer the bgSurface to this cr (and its surface).
     //
-    // Tests show this uses 1/2 the CPU usage as redrawing the grid lines
-    // every time.
+    // IMPORTANT note: Tests show this uses 1/2 the CPU usage as redrawing
+    // the grid lines every time; so that's what we seem to have extra
+    // buffers with 2D plotter graph stuff on them:  PnGraph::bgMemory
+    // This gives us graph left mouse pointer button grab and slide.
     //
     // We let the background pixels that we just painted to be seen, that
     // is if the pixels are transparent.  Alpha is fun.

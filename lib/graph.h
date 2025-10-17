@@ -149,9 +149,10 @@ struct PnGraph {
     //
     //     padX and/or padY can be 0.
     //
-    // This may be redundant, and the same as the widget size allocation
-    // width and height.  But, we kind of need it when we free the
-    // bgMemory, at which time the widget size allocation may not exist.
+    // This width and height may be redundant, and the same as the widget
+    // size allocation width and height.  But, we kind of need it when we
+    // free the bgMemory, at which time the widget size allocation may not
+    // exist.
     //
     uint32_t width, height;
 

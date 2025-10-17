@@ -56,7 +56,7 @@ int main(void) {
     pnPlot_setLineColor(p, 0xFFFF0000);
     pnPlot_setPointColor(p, 0xFF00FFFF);
     pnPlot_setLineWidth(p, 3.2);
-    pnPlot_setPointSize(p, 12.5);
+    pnPlot_setPointSize(p, 4.5);
 
     pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
