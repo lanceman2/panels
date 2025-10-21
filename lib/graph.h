@@ -116,7 +116,6 @@ struct PnGraph {
     // top of it.
     //
     cairo_surface_t *bgSurface;
-    //uint32_t *bgMemory; // This is the memory for the Cairo surface.
     cairo_t *cr; // This is used at Config() time.
     // one to draw points, and one to draw lines.
     cairo_t *lineCr, *pointCr;
