@@ -374,8 +374,9 @@ struct PnPlot {
     struct PnCallback callback; // inherit first.
 
     struct PnGraph *graph;
-    // For a static plot these are connected to the PnGraph's
-    // bgSurface.
+    // For a static plot these are connected to the PnGraph's bgSurface.
+    // We do not deference one more pointer, like p->pointCr and
+    // not p->g->pointCr, in a tight loop.
     cairo_t *lineCr, *pointCr;
     struct PnZoom *zoom;
 
