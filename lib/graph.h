@@ -116,7 +116,8 @@ struct PnGraph {
     // top of it.
     //
     cairo_surface_t *bgSurface;
-    cairo_t *cr; // This is used at Config() time.
+    // This, cr,  is used when the plot grid is drawn to bgSurface.
+    cairo_t *cr;
     // one to draw points, and one to draw lines.
     cairo_t *lineCr, *pointCr;
 
