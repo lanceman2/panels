@@ -72,7 +72,8 @@ static inline void DestroyBGSurface(struct PnGraph *g) {
         cairo_destroy(g->cr);
         cairo_destroy(g->pointCr);
         cairo_destroy(g->lineCr);
-        uint32_t *data = (void *) cairo_image_surface_get_data(g->bgSurface);
+        uint32_t *data = (void *)
+            cairo_image_surface_get_data(g->bgSurface);
         ASSERT(data);
         DZMEM(data, sizeof(*data) *
                 (g->width + 2 * g->padX) *
