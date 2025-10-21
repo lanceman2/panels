@@ -116,8 +116,8 @@ struct PnGraph {
     // top of it.
     //
     cairo_surface_t *bgSurface;
-    uint32_t *bgMemory; // This is the memory for the Cairo surface.
-    cairo_t *cr; // This is used at config() time.
+    //uint32_t *bgMemory; // This is the memory for the Cairo surface.
+    cairo_t *cr; // This is used at Config() time.
     // one to draw points, and one to draw lines.
     cairo_t *lineCr, *pointCr;
 
@@ -134,12 +134,12 @@ struct PnGraph {
     // we keep shift and slope instead.
     double xMin, xMax, yMin, yMax;
 
+    uint32_t subGridColor, gridColor, labelsColor, zeroLineColor;
+
     // padX, padY is padding size added to cairo drawing surface.  The
     // padding is added to each of the 4 sides of the Cairo surface.
     // See the ASCII art above.
     uint32_t padX, padY;
-
-    uint32_t subGridColor, gridColor, labelsColor, zeroLineColor;
 
     // width and height of the view box; that is the width and height
     // without the padX and padY added to all sides.
@@ -148,11 +148,6 @@ struct PnGraph {
     //     cairo_surface_height = height + 2 * padY
     //
     //     padX and/or padY can be 0.
-    //
-    // This width and height may be redundant, and the same as the widget
-    // size allocation width and height.  But, we kind of need it when we
-    // free the bgMemory, at which time the widget size allocation may not
-    // exist.
     //
     uint32_t width, height;
 

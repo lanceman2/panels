@@ -65,24 +65,30 @@ static inline void DestroyBGSurface(struct PnGraph *g) {
     if(g->bgSurface) {
         DASSERT(g->width);
         DASSERT(g->height);
-        DASSERT(g->bgMemory);
         DASSERT(g->cr);
         DASSERT(g->pointCr);
         DASSERT(g->lineCr);
+        DASSERT(g->bgSurface);
         cairo_destroy(g->cr);
         cairo_destroy(g->pointCr);
         cairo_destroy(g->lineCr);
-        DZMEM(g->bgMemory, sizeof(*g->bgMemory)*g->width*g->height);
-        free(g->bgMemory);
+        uint32_t *data = (void *) cairo_image_surface_get_data(g->bgSurface);
+        ASSERT(data);
+        DZMEM(data, sizeof(*data) *
+                (g->width + 2 * g->padX) *
+                (g->height + 2 * g->padY));
+        free(data);
         cairo_surface_destroy(g->bgSurface);
         g->bgSurface = 0;
-        g->bgMemory = 0;
         g->cr = 0;
+        g->pointCr = 0;
+        g->lineCr = 0;
     } else {
         DASSERT(!g->width);
         DASSERT(!g->height);
-        DASSERT(!g->bgMemory);
         DASSERT(!g->cr);
+        DASSERT(!g->pointCr);
+        DASSERT(!g->lineCr);
     }
 }
 
@@ -104,14 +110,14 @@ static inline void CreateBGSurface(struct PnGraph *g,
     w += 2 * g->padX;
     h += 2 * g->padY;
 
-    // Note: the memory and Cairo surface may be larger than g->width
-    // times g->height (with the padding).
-    g->bgMemory = calloc(sizeof(*g->bgMemory), w * h);
-    ASSERT(g->bgMemory, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
-            sizeof(*g->bgMemory), w, h);
+    // Note: the memory and Cairo surface may be larger than
+    // sizeof(uint32_t) times g->width times g->height with the padding.
+    uint32_t *data = calloc(sizeof(*data), w * h);
+    ASSERT(data, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
+            sizeof(*data), w, h);
 
     g->bgSurface = cairo_image_surface_create_for_data(
-            (void *) g->bgMemory,
+            (void *) data,
             CAIRO_FORMAT_ARGB32,
             w, h,
             w * 4/*stride in bytes*/);
@@ -956,7 +962,7 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     DASSERT(widget == (void *) g);
 
     if(g->bgSurface && g->width == w && g->height == h) {
-        DASSERT(g->bgMemory);
+        DASSERT(cairo_image_surface_get_data(g->bgSurface));
         return;
     }
 
@@ -993,7 +999,7 @@ static inline void OverlayGridSurface(struct PnGraph *g,
     //
     // IMPORTANT note: Tests show this uses 1/2 the CPU usage as redrawing
     // the grid lines every time; so that's what we seem to have extra
-    // buffers with 2D plotter graph stuff on them:  PnGraph::bgMemory
+    // buffers with 2D plotter graph stuff.
     // This gives us graph left mouse pointer button grab and slide.
     //
     // We let the background pixels that we just painted to be seen, that
