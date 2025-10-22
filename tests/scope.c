@@ -1,14 +1,104 @@
 #include <signal.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include <math.h>
+
+#include <wayland-client.h>
 
 #include "../include/panels.h"
 #include "../lib/debug.h"
 
-#include "run.h"
 
+static inline bool preDispatch(struct wl_display *d, int wl_fd) {
+
+    if(wl_display_dispatch_pending(d) < 0)
+        // TODO: Handle failure modes.
+        return true; // fail
+
+        // TODO: Add code (with poll(2)) to handle the errno == EAGAIN
+        // case.  I think the wl_fd is a bi-directional file descriptor.
+
+    // See
+    // https://www.systutorials.com/docs/linux/man/3-wl_display_flush/
+    //
+    // apt install libwayland-doc  gives a large page 'man wl_display'
+    // but not 'man wl_display_dispatch'
+    //
+    // wl_display_flush(d) Flushes write commands to compositor.
+    errno = 0;
+    // wl_display_flush(d) Flushes write commands to compositor.
+
+    int ret = wl_display_flush(d);
+
+    while(ret == -1 && errno == EAGAIN) {
+    
+        fd_set wfds;
+        FD_ZERO(&wfds);
+        FD_SET(wl_fd, &wfds);
+        // This may never happen, so lets see it.
+        DSPEW("waiting to flush wayland display");
+        ret = select(wl_fd+1, 0, &wfds, 0, 0);
+        switch(ret) {
+            case -1:
+                ERROR("select failed");
+                exit(1);
+            case 1:
+                ASSERT(FD_ISSET(wl_fd, &wfds));
+                break;
+            default:
+                ASSERT(0, "select() returned %d", ret);
+        }
+
+        errno = 0;
+        ret = wl_display_flush(d);
+    }
+    if(ret == -1) {
+        ERROR("wl_display_flush() failed");
+        return true;
+    }
+    return false; // success.
+}
+
+
+static inline void Run(struct PnWidget *win) {
+    
+    struct wl_display *d = pnDisplay_getWaylandDisplay();
+    ASSERT(d);
+    int wl_fd = wl_display_get_fd(d);
+    ASSERT(wl_fd == 3);
+
+    fd_set rfds;
+    FD_ZERO(&rfds);
+
+    // Run the main loop until the GUI user causes it to stop.
+    while(true) {
+
+        if(preDispatch(d, wl_fd)) return;
+
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(wl_fd, &rfds);
+        int ret = select(wl_fd+1, &rfds, 0, 0, 0);
+
+        switch(ret) {
+            case -1:
+                ERROR("select failed");
+                exit(1);
+            case 1:
+                ASSERT(FD_ISSET(wl_fd, &rfds));
+                if(wl_display_dispatch(d) == -1 || !pnDisplay_haveWindow())
+                    // Got running window based GUI.
+                    return;
+                break;
+            default:
+                ASSERT(0, "select() returned %d", ret);
+        }
+    }
+}
 
 static
 void catcher(int sig) {
@@ -18,8 +108,6 @@ void catcher(int sig) {
 
 bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
         double xMin, double xMax, double yMin, double yMax) {
-
-    ASSERT(userData == (void *) catcher); // testing userData.
 
     const double tMax = 20 * M_PI;
 

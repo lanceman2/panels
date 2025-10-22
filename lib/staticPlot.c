@@ -47,9 +47,9 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(actionIndex == PN_GRAPH_CB_STATIC_DRAW);
     DASSERT(g->zoom);
     DASSERT(g->cr);
-    DASSERT(g->lineCr);
-    DASSERT(g->pointCr);
-    DASSERT(g->bgSurface);
+    DASSERT(g->bgSurface.lineCr);
+    DASSERT(g->bgSurface.pointCr);
+    DASSERT(g->bgSurface.surface);
     ASSERT(IS_TYPE1(g->widget.type, PnWidgetType_graph));
     DASSERT(userCallback);
 
@@ -64,14 +64,16 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     // this function from going through (calling) all connected
     // callbacks.
 
-    cairo_t *pcr = g->pointCr;
-    cairo_t *lcr = g->lineCr;
+    cairo_t *pcr = g->bgSurface.pointCr;
+    cairo_t *lcr = g->bgSurface.lineCr;
 
     // TODO: This is a little redundant, but we need these pointers in "p"
-    // (too) so we can inline the pnGraph_drawPoint() function.
+    // (too) so we can inline the pnGraph_drawPoint() function, and not
+    // have to add a extra pointer dereference at every
+    // pnGraph_drawPoint() call.
     //
-    p->lineCr = g->lineCr;
-    p->pointCr = g->pointCr;
+    p->lineCr = g->bgSurface.lineCr;
+    p->pointCr = g->bgSurface.pointCr;
     p->zoom = g->zoom;
 
     SetColor(pcr, p->pointColor);

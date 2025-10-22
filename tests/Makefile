@@ -3,6 +3,7 @@ root := ..
 include $(root)/config.make
 include $(root)/pkg-fontconfig.make
 include $(root)/pkg-cairo.make
+include $(root)/pkg-waylandclient.make
 
 PN_LIB := -L../lib -lpanels -Wl,-rpath=\$$ORIGIN/../lib
 
@@ -246,8 +247,8 @@ graph0_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 graph0_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
 scope_run_SOURCES := scope.c
-scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
-scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
+scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS) $(WL_CFLAGS)
 
 graph_run_SOURCES := graph.c
 graph_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm

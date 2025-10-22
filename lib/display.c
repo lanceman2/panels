@@ -828,6 +828,22 @@ bool pnDisplay_haveXDGDecoration(void) {
 }
 
 
+struct wl_display *pnDisplay_getWaylandDisplay(void) {
+
+    if(!d.wl_display) {
+        if(_pnDisplay_create())
+            return 0;
+    }
+
+    return d.wl_display;
+}
+
+
+bool pnDisplay_haveWindow(void) {
+    return (d.wl_display && d.windows)?true:false;
+}
+
+
 // This can block.
 //
 // Return true if we can keep running.

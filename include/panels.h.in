@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <float.h>
 
+
 #ifndef PN_EXPORT
 #  define PN_EXPORT extern
 #endif
@@ -400,6 +401,12 @@ struct PnWidget;
 PN_EXPORT void pnDisplay_destroy(void);
 PN_EXPORT bool pnDisplay_dispatch(void);
 PN_EXPORT bool pnDisplay_haveXDGDecoration(void);
+PN_EXPORT bool pnDisplay_haveWindow(void);
+
+// TODO: Should this exist?
+struct wl_display;
+
+PN_EXPORT struct wl_display *pnDisplay_getWaylandDisplay(void);
 
 PN_EXPORT struct PnWidget *pnWindow_create(
         // parent = 0 for toplevel

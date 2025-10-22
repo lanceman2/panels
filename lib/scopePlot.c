@@ -28,12 +28,18 @@ void AddScopePlot(struct PnWidget *w, struct PnCallback *callback,
 
     // Set the plot default settings:
     struct PnPlot *p = (void *) callback;
+    struct PnGraph *g = (void *) w;
     //                 A R G B
     p->lineColor =  0xFFF0F030;
     p->pointColor = 0xFFFF0000;
     p->lineWidth = 6.0;
     p->pointSize = 6.1;
-    p->graph = (void *) w;
+    p->graph = g;
+    // TODO: removing scopes?
+    if(!p->graph->have_scopes)
+        p->graph->have_scopes = true;
+    if(g->bgSurface.surface && !g->scopeSurface.surface)
+        CreateBGSurface(g, &g->scopeSurface);
 }
 
 
@@ -47,9 +53,9 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(actionIndex == PN_GRAPH_CB_SCOPE_DRAW);
     DASSERT(g->zoom);
     DASSERT(g->cr);
-    DASSERT(g->lineCr);
-    DASSERT(g->pointCr);
-    DASSERT(g->bgSurface);
+    DASSERT(g->bgSurface.lineCr);
+    DASSERT(g->bgSurface.pointCr);
+    DASSERT(g->bgSurface.surface);
     ASSERT(IS_TYPE1(g->widget.type, PnWidgetType_graph));
     DASSERT(userCallback);
 
@@ -64,14 +70,14 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     // this function from going through (calling) all connected
     // callbacks.
 
-    cairo_t *pcr = g->pointCr;
-    cairo_t *lcr = g->lineCr;
+    cairo_t *pcr = g->bgSurface.pointCr;
+    cairo_t *lcr = g->bgSurface.lineCr;
 
     // TODO: This is a little redundant, but we need these pointers in "p"
     // (too) so we can inline the pnGraph_drawPoint() function.
     //
-    p->lineCr = g->lineCr;
-    p->pointCr = g->pointCr;
+    p->lineCr = g->bgSurface.lineCr;
+    p->pointCr = g->bgSurface.pointCr;
     p->zoom = g->zoom;
 
     SetColor(pcr, p->pointColor);

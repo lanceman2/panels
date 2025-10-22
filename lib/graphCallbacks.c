@@ -124,7 +124,7 @@ static inline void FinishBoxZoom(struct PnGraph *g,
 
 finish:
 
-    cairo_t *cr = cairo_create(g->bgSurface);
+    cairo_t *cr = cairo_create(g->bgSurface.surface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
     pnWidget_queueDraw(&g->widget, 0);
@@ -160,7 +160,7 @@ static inline void FinishDragZoom(
             pixToX(g->width + padX + dx, g->zoom),
             pixToY(g->height + padY + dy, g->zoom),
             pixToY(padY + dy, g->zoom));
-    cairo_t *cr = cairo_create(g->bgSurface);
+    cairo_t *cr = cairo_create(g->bgSurface.surface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
     pnWidget_queueDraw(&g->widget, 0);
@@ -414,10 +414,10 @@ bool axis(struct PnWidget *w,
     //DSPEW(" %d,%d   %lg,%lg == %lg,%lg", x_l, y_l, X_l, Y_l,
     //        pixToX(x_l + g->padX, z), pixToY(y_l + g->padY, z));
 
-    // Draw the g->bgSurface which will be the new graph "background"
-    // surface with this zoom.
+    // Draw the g->bgSurface.surface which will be the new graph
+    // "background" surface with this zoom.
 
-    cairo_t *cr = cairo_create(g->bgSurface);
+    cairo_t *cr = cairo_create(g->bgSurface.surface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
 

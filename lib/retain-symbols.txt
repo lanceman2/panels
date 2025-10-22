@@ -3,7 +3,9 @@ pnCheck_create
 pnCheck_set
 pnDisplay_destroy
 pnDisplay_dispatch
+pnDisplay_getWaylandDisplay
 pnDisplay_haveXDGDecoration
+pnDisplay_haveWindow
 pnDisplay_setTheme
 pnFindFont
 pnGeneric_create

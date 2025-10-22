@@ -42,6 +42,33 @@
 
 
 // For oscilloscope like 2D plots
+//
+// For a scope there are two "signal" like things causing the points
+// and/or lines to be drawn:
+//   1. the I/O event from the operating system data input device or
+// something like a virtual input device from the panels API user's code
+// which may have "throttling" code in it; or a
+//   2. signal received from the wayland compositor (like in the static
+// case below).
+//
+// When does the panels API user code plot points and/or lines?
+//
+// We need to keep the fast data input from being drawn when it never
+// shows to the user because it is drawn faster than the wayland
+// compositor refresh rate.
+//
+// Overrun we define as when the fast data input is drawn and it never
+// shows to the user because it is being drawn faster than the wayland
+// compositor refresh rate.  If the user just misses seeing 2 frames out
+// of 10 drawn, that may be okay; but missing 999 frames out of 1000
+// frames may be wasting a lot of operating system resources for
+// nothing.
+//
+// For device input under-run (device input is relatively slow), input
+// needs to queue a draw when the input comes.  Both the device input and
+// the wayland compositor (configure, mouse pointer motions events, and
+// keyboard events) must drive the plot drawing.
+//
 struct PnScopePlot {
 
     struct PnPlot plot;
@@ -49,10 +76,29 @@ struct PnScopePlot {
 };
 
 // For captured/stored 2D plots
+//
+// The plotted points and/or lines come from a user callback function that
+// is called from a "signal" (fd pop or something) received from the
+// wayland compositor.  The panels API user's code only indirectly causes
+// this callback to be called through events like a after a window resize
+// or mouse pointer motion zooming event.
+//
 struct PnStaticPlot {
 
     struct PnPlot plot;
 
+};
+
+
+struct PnGraphSurface {
+
+    // Just a stupid-ass compo structure to keep things together in
+    // struct PnGraph below.
+
+    // Allocated memory image surface
+    cairo_surface_t *surface;
+    // drawing contexts for the surface
+    cairo_t *lineCr, *pointCr;
 };
 
 
@@ -115,11 +161,14 @@ struct PnGraph {
     // this "background grid" changes more slowly then we plot points on
     // top of it.
     //
-    cairo_surface_t *bgSurface;
+    // For drawing the grid and static plots (points and/or lines).
+    struct PnGraphSurface bgSurface;
+
+    // For drawing scope plots (points and/or lines).
+    struct PnGraphSurface scopeSurface;
+
     // This, cr,  is used when the plot grid is drawn to bgSurface.
     cairo_t *cr;
-    // one to draw points, and one to draw lines.
-    cairo_t *lineCr, *pointCr;
 
     // Pointers to a doubly listed list of Zooms.
     //
@@ -159,9 +208,13 @@ struct PnGraph {
     uint32_t zoomCount;
 
     bool show_subGrid;
+    bool have_scopes;
 };
 
 
+
+extern void CreateBGSurface(const struct PnGraph *g,
+        struct PnGraphSurface *s);
 
 // The major grid lines get labeled with numbers.
 //

@@ -133,6 +133,7 @@ void pnWidget_queueDraw(struct PnWidget *s, bool allocate) {
         return;
 
     if(_pnWindow_addCallback(win))
+        // It already spewed via ERROR().
         // Failure.  That sucks.
         return;
 
