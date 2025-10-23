@@ -39,7 +39,7 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
         fd_set wfds;
         FD_ZERO(&wfds);
         FD_SET(wl_fd, &wfds);
-        // This may never happen, so lets see it.
+        // This may never happen, so lets see it if it does.
         DSPEW("waiting to flush wayland display");
         ret = select(wl_fd+1, 0, &wfds, 0, 0);
         switch(ret) {
