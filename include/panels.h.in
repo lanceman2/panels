@@ -375,16 +375,21 @@ struct PnPlot {
     struct PnCallback callback; // inherit first.
 
     struct PnGraph *graph;
-    // For a static plot these are connected to the PnGraph's bgSurface.
-    // We do not deference one more pointer, like p->pointCr and
-    // not p->g->pointCr, in a tight loop.
+    // For a static or scope plot these are connected to the appropriate
+    // object at the start of a plot draw.
+    // This is just so we do not deference one more pointer, like
+    // p->pointCr and not p->g->pointCr, in a tight loop.
     cairo_t *lineCr, *pointCr;
+
     struct PnZoom *zoom;
 
     enum PnPlotType type;
 
     // We keep a list of plots in a graph.
     struct PnPlot *next, *prev;
+
+    // Just for scope plots.  Is zero for static plots.
+    uint32_t shiftX, shiftY;
 
     uint32_t lineColor, pointColor;
 
@@ -785,8 +790,11 @@ pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
     struct PnZoom *z = p->zoom;
     cairo_t *cr = p->lineCr;
 
-    x = xToPix(x, z);
-    y = yToPix(y, z);
+    // The p->shiftX and p->shiftY is only non-zero for the scope plot
+    // because the scope plot is drawn on the widget surface, which is
+    // smaller than the static plotting and grid surface.
+    x = xToPix(x, z) - p->shiftX;
+    y = yToPix(y, z) - p->shiftY;
 
     if(p->x != DBL_MAX) {
 

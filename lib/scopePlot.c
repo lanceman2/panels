@@ -38,8 +38,6 @@ void AddScopePlot(struct PnWidget *w, struct PnCallback *callback,
     // TODO: removing scopes?
     if(!p->graph->have_scopes)
         p->graph->have_scopes = true;
-    if(g->bgSurface.surface && !g->scopeSurface.surface)
-        CreateBGSurface(g, &g->scopeSurface);
 }
 
 
@@ -56,6 +54,9 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(g->bgSurface.lineCr);
     DASSERT(g->bgSurface.pointCr);
     DASSERT(g->bgSurface.surface);
+    DASSERT(g->scopeSurface.lineCr);
+    DASSERT(g->scopeSurface.pointCr);
+    DASSERT(g->scopeSurface.surface);
     ASSERT(IS_TYPE1(g->widget.type, PnWidgetType_graph));
     DASSERT(userCallback);
 
@@ -64,26 +65,37 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     // Initialize the last plotted x value.
     p->x = DBL_MAX;
 
+    p->shiftX = g->padX - g->slideX;
+    p->shiftY = g->padY - g->slideY;
+
     // userCallback() is the libpanels API user set callback.
     //
     // We let the user return the value.  true will eat the event and stop
     // this function from going through (calling) all connected
     // callbacks.
 
-    cairo_t *pcr = g->bgSurface.pointCr;
-    cairo_t *lcr = g->bgSurface.lineCr;
+    cairo_t *pcr = g->scopeSurface.pointCr;
+    cairo_t *lcr = g->scopeSurface.lineCr;
+
+    // TODO: Put this in CreateBGSurface() in graph.c.
+    cairo_set_operator(pcr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_operator(lcr, CAIRO_OPERATOR_SOURCE);
 
     // TODO: This is a little redundant, but we need these pointers in "p"
-    // (too) so we can inline the pnGraph_drawPoint() function.
+    // (too) so we can inline the pnGraph_drawPoint() function without
+    // having to add many pointer dereferences, or having the user pass
+    // a pointer to the graph (just the plot pointer is passed).
     //
-    p->lineCr = g->bgSurface.lineCr;
-    p->pointCr = g->bgSurface.pointCr;
+    p->lineCr = g->scopeSurface.lineCr;
+    p->pointCr = g->scopeSurface.pointCr;
     p->zoom = g->zoom;
 
     SetColor(pcr, p->pointColor);
     SetColor(lcr, p->lineColor);
     cairo_set_line_width(lcr, p->lineWidth);
 
+    // userCallback() may call the pnGraph_drawPoint() function many
+    // times.
     bool ret = userCallback(&g->widget, p, userData,
             g->xMin, g->xMax, g->yMin, g->yMax);
 

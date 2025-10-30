@@ -212,10 +212,6 @@ struct PnGraph {
 };
 
 
-
-extern void CreateBGSurface(const struct PnGraph *g,
-        struct PnGraphSurface *s);
-
 // The major grid lines get labeled with numbers.
 //
 // The closer together minor (sub) grid lines do not get labeled with

@@ -246,9 +246,16 @@ graph0_run_SOURCES := graph0.c
 graph0_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 graph0_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
+# Uses inline function in panels.h that needs libcario.
 scope_run_SOURCES := scope.c
-scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
-scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS) $(WL_CFLAGS)
+scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+# Uses inline function in panels.h that needs libcario.
+# Also, needs to directly link with libwayland-client.
+scopeWithMic_run_SOURCES := scopeWithMic.c
+scopeWithMic_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
+scopeWithMic_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS) $(WL_CFLAGS)
 
 graph_run_SOURCES := graph.c
 graph_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm

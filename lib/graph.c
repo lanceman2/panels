@@ -61,7 +61,7 @@ static inline bool _PopZoom(struct PnGraph *g) {
     return (g->zoom == g->top)?false:true;
 }
 
-static inline void DestroyBGSurface(const struct PnGraph *g,
+static inline void DestroyGraphSurface(const struct PnGraph *g,
         struct PnGraphSurface *s) {
 
     if(s->surface) {
@@ -69,31 +69,41 @@ static inline void DestroyBGSurface(const struct PnGraph *g,
         DASSERT(s->lineCr);
         cairo_destroy(s->pointCr);
         cairo_destroy(s->lineCr);
-        uint32_t *data = (void *)
-            cairo_image_surface_get_data(s->surface);
-        ASSERT(data);
-        DZMEM(data, sizeof(*data) *
-                (g->width + 2 * g->padX) *
-                (g->height + 2 * g->padY));
-        cairo_surface_destroy(s->surface);
-        free(data);
+
+        if(s == &g->bgSurface) {
+            uint32_t *data = (void *)
+                cairo_image_surface_get_data(s->surface);
+            ASSERT(data);
+            DZMEM(data, sizeof(*data) *
+                    (g->width + 2 * g->padX) *
+                    (g->height + 2 * g->padY));
+            cairo_surface_destroy(s->surface);
+            free(data);
+        } else {
+            // We where using the surface owned by the widget; so we do
+            // not destroy it.
+            DASSERT(s == &g->scopeSurface);
+        }
+
         s->surface = 0;
         s->pointCr = 0;
         s->lineCr = 0;
     }
 }
 
-static inline void DestroyBGSurfaces(struct PnGraph *g) {
+static inline void DestroyGraphSurfaces(struct PnGraph *g) {
 
     if(g->bgSurface.surface) {
+        DASSERT(g->bgSurface.pointCr);
+        DASSERT(g->bgSurface.lineCr);
         DASSERT(g->width);
         DASSERT(g->height);
         DASSERT(g->cr);
         cairo_destroy(g->cr);
-        DestroyBGSurface(g, &g->bgSurface);
         g->cr = 0;
+        DestroyGraphSurface(g, &g->bgSurface);
         if(g->scopeSurface.surface)
-            DestroyBGSurface(g, &g->scopeSurface);
+            DestroyGraphSurface(g, &g->scopeSurface);
         else {
             DASSERT(!g->scopeSurface.pointCr);
             DASSERT(!g->scopeSurface.lineCr);
@@ -110,37 +120,47 @@ static inline void DestroyBGSurfaces(struct PnGraph *g) {
     }
 }
 
-void CreateBGSurface(const struct PnGraph *g, struct PnGraphSurface *s) {
+
+static inline
+void CreateGraphSurface(const struct PnGraph *g, struct PnGraphSurface *s,
+        cairo_surface_t *surface) {
 
     DASSERT(g);
     DASSERT(g->width);
     DASSERT(g->height);
 
-    // Add the view box wiggle room, so that the user could pan the view
-    // plus and minus the pad values (padX, panY), with the mouse pointer
-    // or something.
-    //
-    // TODO: We could make the padX, and padY, a function of w and h.
-    //
-    uint32_t w = g->width + 2 * g->padX;
-    uint32_t h = g->height + 2 * g->padY;
+    if(!surface) {
+        // Add the view box wiggle room, so that the user could pan the view
+        // plus and minus the pad values (padX, panY), with the mouse pointer
+        // or something.
+        //
+        // TODO: We could make the padX, and padY, a function of w and h.
+        //
+        uint32_t w = g->width + 2 * g->padX;
+        uint32_t h = g->height + 2 * g->padY;
 
-    // Note: the memory and Cairo surface may be larger than
-    // sizeof(uint32_t) times g->width times g->height with the padding.
-    uint32_t *data = calloc(sizeof(*data), w * h);
-    ASSERT(data, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
-            sizeof(*data), w, h);
+        // Note: the memory and Cairo surface may be larger than
+        // sizeof(uint32_t) times g->width times g->height with the padding.
+        uint32_t *data = calloc(sizeof(*data), w * h);
+        ASSERT(data, "calloc(%zu, %" PRIu32 "*%" PRIu32 ") failed",
+                sizeof(*data), w, h);
 
-    s->surface = cairo_image_surface_create_for_data(
-            (void *) data,
-            CAIRO_FORMAT_ARGB32,
-            w, h,
-            w * 4/*stride in bytes*/);
-    DASSERT(s->surface);
-    s->lineCr = cairo_create(s->surface);
+        s->surface = cairo_image_surface_create_for_data(
+                (void *) data,
+                CAIRO_FORMAT_ARGB32,
+                w, h,
+                w * 4/*stride in bytes*/);
+        DASSERT(s->surface);
+        surface = s->surface;
+    } else {
+        // We are using the surface that was passed in.
+        s->surface = surface;
+    }
+
+    s->lineCr = cairo_create(surface);
     DASSERT(s->lineCr);
     cairo_set_operator(s->lineCr, CAIRO_OPERATOR_OVER);
-    s->pointCr = cairo_create(s->surface);
+    s->pointCr = cairo_create(surface);
     DASSERT(s->pointCr);
     cairo_set_operator(s->pointCr, CAIRO_OPERATOR_OVER);
 }
@@ -151,10 +171,14 @@ static inline void CreateSurfaces(struct PnGraph *g) {
     DASSERT(g->width);
     DASSERT(g->height);
 
-    CreateBGSurface(g, &g->bgSurface);
+    CreateGraphSurface(g, &g->bgSurface, 0);
 
-    if(g->have_scopes)
-        CreateBGSurface(g, &g->scopeSurface);
+    if(g->have_scopes) {
+        DASSERT(g->widget.cairo_surface);
+        // The scope plots will use the widget cairo_surface to draw
+        // points and/or lines to.
+        CreateGraphSurface(g, &g->scopeSurface, g->widget.cairo_surface);
+    }
 
     g->cr = cairo_create(g->bgSurface.surface);
     DASSERT(g->cr);
@@ -895,7 +919,7 @@ void destroy(struct PnWidget *w, struct PnGraph *p) {
     DASSERT(p);
     DASSERT(p = (void *) w);
 
-    DestroyBGSurfaces(p);
+    DestroyGraphSurfaces(p);
     FreeZooms(p);
 }
 
@@ -994,7 +1018,7 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
         return;
     }
 
-    DestroyBGSurfaces(g);
+    DestroyGraphSurfaces(g);
 
     if(!g->zoom) {
         DASSERT(!g->top);
@@ -1038,6 +1062,21 @@ static inline void OverlayGridSurface(struct PnGraph *g,
     cairo_paint(cr);
 }
 
+// Call the scope plot callbacks and then put the scopeSurface
+// on the 
+static inline void ScopesDraw(struct PnGraph *g,
+        cairo_t *cr) {
+
+    DASSERT(cr);
+    DASSERT(g);
+    DASSERT(g->have_scopes);
+    DASSERT(g->scopeSurface.surface);
+
+    // Draw the scope surface
+    pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
+}
+
+
 static int cairoDraw(struct PnWidget *w, cairo_t *cr,
             struct PnGraph *g) {
 
@@ -1047,10 +1086,11 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
     // be here since they are drawn on the graph background grid surface,
     // PnGraph::bgSurface::surface
 
-    pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
-
     // Put PnGraph::bgSurface::surface on to this cr.
     OverlayGridSurface(g, cr);
+
+    if(g->have_scopes)
+        ScopesDraw(g, cr);
 
     if(g->boxX != INT32_MAX) {
         // Draw a zoom box.
