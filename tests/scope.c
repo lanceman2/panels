@@ -27,7 +27,7 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
     for( uint32_t n = 100; n; t += 0.1, n--) {
         //double a = 1.0 - t/tMax;
         double a = cos(0.34 + t/(540.2 * M_PI));
-        pnGraph_drawPoint(p, a * cos(t), a * sin(t));
+        pnGraph_drawPoint(p, a * cos(t), a * sin(2.01*t));
         t += 0.1;
     }
     pnWidget_queueDraw(g, 0);
