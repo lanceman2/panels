@@ -73,6 +73,7 @@ void pnWidget_addAction(struct PnWidget *w,
         a->callbackSize = sizeof(*a->first);
 }
 
+
 void pnWidget_callAction(struct PnWidget *w, uint32_t index) {
     DASSERT(w);
     ASSERT(index < w->numActions);
@@ -95,6 +96,9 @@ void pnWidget_callAction(struct PnWidget *w, uint32_t index) {
             break;
 }
 
+
+// Each action[] has a linked list of callbacks.
+//
 void *pnWidget_addCallback(struct PnWidget *w, uint32_t index,
         // The callback function prototype varies with particular widget
         // and index.  The widget maker must publish a list of function

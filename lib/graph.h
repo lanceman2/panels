@@ -71,9 +71,10 @@
 //
 struct PnScopePlot {
 
-    struct PnPlot plot;
-
+    // Note: PnPlot inherits callback (the action crap).
+    struct PnPlot plot; // first inherit plot
 };
+
 
 // For captured/stored 2D plots
 //
@@ -85,8 +86,7 @@ struct PnScopePlot {
 //
 struct PnStaticPlot {
 
-    struct PnPlot plot;
-
+    struct PnPlot plot; // first inherit plot
 };
 
 
@@ -149,8 +149,6 @@ struct PnGraph {
 
     struct PnWidget widget; // inherit first.
 
-    struct PnPlot *plots; // A list of 2D plots: static or scope type.
-
     // This bgSurface uses a alloc(3) allocated memory buffer; and is not
     // the mmap(2) pixel buffer that is created for us by libpanels that
     // the Cairo object is tied to in our draw function (Draw() or
@@ -206,6 +204,18 @@ struct PnGraph {
     int32_t boxX, boxY, boxWidth, boxHeight; // To draw a zoom box.
 
     uint32_t zoomCount;
+
+    // pushBGSurface is a flag used to say that the bgSurface (declared
+    // above in this structure) changed and needs to be painted onto the
+    // graph widget surface.  This is so we do not bother painting the
+    // bgSurface onto graph widget surface at every draw cycle.  The scope
+    // plots may make many draws for a single bgSurface draw.  If not for
+    // scope plots this flag, pushBGSurface, would not be needed.
+    //
+    bool pushBGSurface;
+    // needScopeDraw is set by pnPlot_queueScopeDraw().
+    //
+    bool needScopeDraw;
 
     bool show_subGrid;
     bool have_scopes;

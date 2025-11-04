@@ -385,9 +385,6 @@ struct PnPlot {
 
     enum PnPlotType type;
 
-    // We keep a list of plots in a graph.
-    struct PnPlot *next, *prev;
-
     // Just for scope plots.  Is zero for static plots.
     uint32_t shiftX, shiftY;
 
@@ -776,10 +773,10 @@ static inline bool CullLine(struct PnGraph *g,
 // we need to make it faster.  In-lining is step one.
 //
 // TODO: Add non-Cairo versions of point and line drawing; just directly
-// writing to the mapped pixels.
+// writing to the mapped pixel memory.
 //
 static inline void
-pnGraph_drawPoint(struct PnPlot *p, double x, double y) {
+pnPlot_drawPoint(struct PnPlot *p, double x, double y) {
 
     // TODO: It would be nice to have some assertions here;
     // maybe with DEBUG mode.

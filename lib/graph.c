@@ -910,6 +910,9 @@ drawGrid:
     }
 
     pnWidget_callAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW);
+
+    g->pushBGSurface = true;
+
     //pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
 }
 
@@ -1087,7 +1090,8 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
     // PnGraph::bgSurface::surface
 
     // Put PnGraph::bgSurface::surface on to this cr.
-    OverlayGridSurface(g, cr);
+    if(g->pushBGSurface)
+        OverlayGridSurface(g, cr);
 
     if(g->have_scopes)
         ScopesDraw(g, cr);
@@ -1176,7 +1180,6 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     pnWidget_addAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW,
             (void *) ScopeDrawAction, AddScopePlot, 0/*actionData*/,
             sizeof(struct PnScopePlot));
-
 
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):

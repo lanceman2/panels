@@ -92,5 +92,7 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
         cairo_fill(pcr);
     }
 
+    g->pushBGSurface = true;
+
     return ret;
 }
