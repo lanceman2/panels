@@ -1,3 +1,9 @@
+// This is a test.  It uses lots of ASSERT() functions instead of regular
+// error checking, but I think all the error modes are tested.  So, it
+// could be a usable program by replacing the ASSERT() calls with regular
+// error checks.  ASSERT() is just a great way to test code when your
+// not sure how things (failure modes) work.
+
 #define _GNU_SOURCE
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -17,11 +23,15 @@
 #include "../include/panels.h"
 #include "../lib/debug.h"
 
-// This is a test.  It uses lots of ASSERT() functions instead of regular
-// error checking, but I think all the error modes are tested.  So, it
-// could be a usable program by replacing the ASSERT() calls with regular
-// error checks.  ASSERT() is just a great way to test code when your
-// not sure how things work.
+// TODO: We need to check, in this code, that the program "arecord" is
+// really using the parameters we tell it to use.
+
+#define RATE   44100  // samples per second feed to program arecord
+
+// STR(X) turns any CPP macro number into a string by using two macros.
+#define STR(s) XSTR(s)
+#define XSTR(s) #s
+
 
 static inline bool preDispatch(struct wl_display *d, int wl_fd) {
 
@@ -30,7 +40,8 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
         return true; // fail
 
         // TODO: Add code (with poll(2)) to handle the errno == EAGAIN
-        // case.  I think the wl_fd is a bi-directional file descriptor.
+        // case.  I think the wl_fd is a bi-directional (r/w) file
+        // descriptor.
 
     // See
     // https://www.systutorials.com/docs/linux/man/3-wl_display_flush/
@@ -80,7 +91,7 @@ static inline int Spawn(void) {
 
     // -f FORMAT -c numChannels -r Hz
     // -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
-    const char command[] = "arecord -f S32_LE -c1 -r44100 -B20000";
+    const char command[] = "arecord -f S32_LE -c1 -r" STR(RATE) " -B20000";
 
     int fd[2] = { -1, -1 };
     ASSERT(pipe(fd) == 0);
@@ -122,6 +133,17 @@ static int pipe_fd = -1;
 static size_t lenRd = 0;
 static int32_t buf[LEN];
 
+bool triggered = false;
+
+
+
+size_t pointsPerDraw;
+
+
+void InitConstants(void) {
+
+}
+
 
 static inline void ReadSound(void) {
 
@@ -138,6 +160,7 @@ static inline void ReadSound(void) {
     lenRd /= 4;
     // If select() popped we should have data.
     ASSERT(lenRd > 0);
+
 
     pnWidget_queueDraw(graph, 0);
 }

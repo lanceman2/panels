@@ -12,6 +12,16 @@
 #endif
 
 
+#define PN_STR(s) QS_XSTR(s)
+#define PN_XSTR(s) #s
+
+#define PN_MAJOR  0
+#define PN_MINOR  0
+#define PN_EDIT   0
+
+#define PANELS_VERSION PN_STR(PN_MAJOR) "." PN_STR(PN_MINOR) "." PN_STR(PN_EDIT)
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
