@@ -263,16 +263,27 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
     size_t i = 1;
     for(;!triggered && i < samples; ++i) {
 
-        if(buf[i] < triggerHeight) continue;
+        if(buf[i-1] > 0 || buf[i] < triggerHeight
+                || buf[i-1] >= buf[i]) continue;
 
-        if((buf[i] > buf[i-1]) && (buf[i] >= triggerHeight)) {
-            triggered = true;
-            break;
-        }
+        triggered = true;
+        break;
     }
     --i;
-
     if(!triggered || i >= samples) return false;
+
+    // dt is the time that a linear interpolation shows the sound would
+    // pass through zero.  buf[i] is below or equal to zero and buf[i+1]
+    // is above zero.
+    ASSERT(buf[i+1] > buf[i]);
+    ASSERT(buf[i] <= 0);
+    double dt;
+    dt = buf[i+1];
+    dt -= buf[i];
+    ASSERT(dt >= ((double) buf[i+1]));
+    dt = period - buf[i+1] * period/(dt);
+
+    //printf("dt = %lg * period\n\n", dt/period);
 
     size_t num = 0;
 
@@ -280,7 +291,7 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
     // ignoring the rest of the sound data buffer.
 
     for(;i < samples && num < pointsPerDraw; ++i, ++num)
-        pnPlot_drawPoint(p, num*period, (double) buf[i]);
+        pnPlot_drawPoint(p, num*period - dt, (double) buf[i]);
 
     triggered = false;
 
