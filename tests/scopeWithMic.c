@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
+#include <limits.h>
 #include <math.h>
 
 #include <wayland-client.h>
@@ -85,13 +86,24 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
 }
 
 pid_t pid = 0;
+typedef int32_t snd_t;
+#define SND_FMT  PRIi32
+#define YMIN ((double) INT_MIN)
+#define YMAX ((double) INT_MAX)
+#define SAMPLE_BYTES  (4)
+#define ARECORD_FMT   "S32_LE"
+
+const snd_t triggerHeight = 16000000;
+
+
 
 // Returns the pipe input file descriptor.
 static inline int Spawn(void) {
 
     // -f FORMAT -c numChannels -r Hz
     // -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
-    const char command[] = "arecord -f S32_LE -c1 -r" STR(RATE) " -B20000";
+    const char command[] =
+        "arecord -f " ARECORD_FMT " -c1 -r" STR(RATE) " -B20000";
 
     int fd[2] = { -1, -1 };
     ASSERT(pipe(fd) == 0);
@@ -127,42 +139,65 @@ static inline int Spawn(void) {
 }
 
 
+
 static struct PnWidget *graph = 0;
 static int pipe_fd = -1;
 #define LEN  (1024)
-static size_t lenRd = 0;
-static int32_t buf[LEN];
+static size_t samples = 0;
+static snd_t buf[LEN];
 
 bool triggered = false;
 
-
-
 size_t pointsPerDraw;
 
+double period;
 
-void InitConstants(void) {
 
+static inline void Init(void) {
+
+    ASSERT(graph);
+
+    period = 1.0/RATE; // time in seconds between samples
+    pointsPerDraw = 200;
+    double tMin = - period * 5.0; // near 0.0 but a little negitive
+    double tMax = tMin + pointsPerDraw * 1.05 * period;
+
+
+    // We'll plot signal VS. time in seconds
+
+    //                     xMin  xMax   yMin YMax
+    pnGraph_setView(graph, tMin, tMax, YMIN, YMAX);
 }
 
 
 static inline void ReadSound(void) {
 
     ssize_t rd;
+    size_t lenRd = 0;
 
     // likely errno is 11 WOULDBLOCK on failure.
     // TODO: We could deal with errno. 
     //
     while((rd = read(pipe_fd, buf, LEN)) > 0) {
-        ASSERT(rd % 4 == 0, "read non-multiple of 4 bytes");
+        ASSERT(rd % SAMPLE_BYTES == 0,
+                "read non-multiple of " STR(SAMPLE_BYTES) " bytes");
         lenRd += rd;
-        INFO("read %zu samples", lenRd/4);
     }
-    lenRd /= 4;
+    samples = lenRd/SAMPLE_BYTES;
+
+#if 0
+    INFO("read %zu samples:", samples);
+
+    for(size_t i=0; i < samples; ++i)
+        printf("%" SND_FMT " ", buf[i]);
+    printf("\n");
+#endif
+
     // If select() popped we should have data.
-    ASSERT(lenRd > 0);
+    ASSERT(samples > 0);
 
-
-    pnWidget_queueDraw(graph, 0);
+    if(samples >= pointsPerDraw)
+        pnWidget_queueDraw(graph, 0);
 }
 
 
@@ -218,15 +253,37 @@ void catcher(int sig) {
 
 double t = 0.0;
 
+
+
+
 bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
         double xMin, double xMax, double yMin, double yMax) {
 
-    for( uint32_t n = 100; n; t += 0.1, n--) {
-        //double a = 1.0 - t/tMax;
-        double a = cos(0.34 + t/(540.2 * M_PI));
-        pnPlot_drawPoint(p, a * cos(t), a * sin(t));
-        t += 0.1;
+
+    size_t i = 1;
+    for(;!triggered && i < samples; ++i) {
+
+        if(buf[i] < triggerHeight) continue;
+
+        if((buf[i] > buf[i-1]) && (buf[i] >= triggerHeight)) {
+            triggered = true;
+            break;
+        }
     }
+    --i;
+
+    if(!triggered || i >= samples) return false;
+
+    size_t num = 0;
+
+    // Note: we are just plotting pointsPerDraw (or less) and than
+    // ignoring the rest of the sound data buffer.
+
+    for(;i < samples && num < pointsPerDraw; ++i, ++num)
+        pnPlot_drawPoint(p, num*period, (double) buf[i]);
+
+    triggered = false;
+
     return false;
 }
 
@@ -255,12 +312,12 @@ int main(void) {
     // This plot, p, is owned by the graph, w.
     pnPlot_setLineColor(p, 0xFFFF0000);
     pnPlot_setPointColor(p, 0xFF00FFFF);
-    pnPlot_setLineWidth(p, 3.2);
-    pnPlot_setPointSize(p, 4.5);
-
-    pnGraph_setView(graph, -1.05, 1.05, -1.05, 1.05);
+    pnPlot_setLineWidth(p, 2.2);
+    pnPlot_setPointSize(p, 2.1);
 
     pnWindow_show(win);
+
+    Init();
 
     Run(win);
 

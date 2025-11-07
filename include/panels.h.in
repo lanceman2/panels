@@ -580,7 +580,6 @@ PN_EXPORT void pnWidget_setAxis(struct PnWidget *w,
 
 
 struct PnCallback;
-struct PnPlot;
 
 
 PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
