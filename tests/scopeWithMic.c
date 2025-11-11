@@ -4,6 +4,20 @@
 // error checks.  ASSERT() is just a great way to test code when your
 // not sure how things (failure modes) work.
 
+/*
+
+  I have found that the arecord program makes sound files (sound data) that
+  has the "wrong" sample rate.  In this example the play back sounds like
+  it is playing very fast.  And now today (Tue Nov 11 10:53:22 AM EST
+  2025) it works, WTF!
+
+  Testing reading and writing sound:  Run in a bash shell or whatever:
+
+arecord -r 384000 -f S32_LE -t raw -c1 -d 5 -B20000  xxx
+aplay -r 384000  -f S32_LE -c1 -t raw  xxx
+
+*/
+
 #define _GNU_SOURCE
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -28,8 +42,8 @@
 // really using the parameters we tell it to use.
 
 //#define RATE   44100  // samples per second feed to program arecord
-//#define RATE  192000  // samples per second feed to program arecord
-#define RATE  384000  // samples per second feed to program arecord
+#define RATE  192000  // samples per second feed to program arecord
+//#define RATE  384000  // samples per second feed to program arecord
 
 
 
@@ -97,7 +111,7 @@ typedef int32_t snd_t;
 #define SAMPLE_BYTES  (4)
 #define ARECORD_FMT   "S32_LE"
 
-const snd_t triggerHeight = 7000000;
+const snd_t triggerHeight = 2000000;
 
 
 
@@ -105,13 +119,14 @@ const snd_t triggerHeight = 7000000;
 static inline int Spawn(void) {
 
     // example:
-    //   arecord -f S32_LE  -c1 -r192000 -B20000 -s 192000
+    //   arecord -r 384000 -f S32_LE -t raw -c1 -d 5 -B20000
+
 
     // -f FORMAT -c numChannels -r Hz
     // -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
     // 1 micro second is second/1000000 
     const char command[] =
-        "arecord -f " ARECORD_FMT " -c1 -t raw -r" STR(RATE) " -B20000";
+        "arecord -r " STR(RATE) " -f " ARECORD_FMT " -c1 -t raw -B80000";
 
     int fd[2] = { -1, -1 };
     ASSERT(pipe(fd) == 0);
@@ -156,7 +171,7 @@ static snd_t buf[LEN];
 
 bool triggered = false;
 
-const size_t pointsPerDraw = 600;
+const size_t pointsPerDraw = 2000;
 
 double dt; // dt is time between samples in seconds
 
@@ -166,9 +181,10 @@ static inline void Init(void) {
     ASSERT(graph);
 
     dt = 1.0/((double) RATE); // time in seconds between samples
-    double tMin = - dt * 5.0; // near 0.0 but a little negitive
-    double tMax = pointsPerDraw * dt + dt * 5.0;
+    double range = pointsPerDraw * dt;
 
+    double tMin = - range * 0.01; // near 0.0 but a little negitive
+    double tMax = pointsPerDraw * dt - tMin;
 
     // We'll plot signal VS. time in seconds
 
@@ -298,7 +314,7 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
     for(;i < samples && num < pointsPerDraw; ++i, ++num) {
         double x = num;
         x *= dt;
-        x += t0;
+        x -= t0;
         pnPlot_drawPoint(p, x, (double) buf[i]);
     }
 
