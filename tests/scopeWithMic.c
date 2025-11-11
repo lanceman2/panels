@@ -1,14 +1,14 @@
 // This is a test.  It uses lots of ASSERT() functions instead of regular
-// error checking, but I think all the error modes are tested.  So, it
-// could be a usable program by replacing the ASSERT() calls with regular
-// error checks.  ASSERT() is just a great way to test code when your
-// not sure how things (failure modes) work.
+// error checking, but I think all the error modes are tested in some way.
+// So, it could be a usable program by replacing the ASSERT() calls with
+// regular error checks.  ASSERT() is just a great way to test code when
+// your not sure how things like failure modes work.
 
 /*
 
   I have found that the arecord program makes sound files (sound data) that
   has the "wrong" sample rate.  In this example the play back sounds like
-  it is playing very fast.  And now today (Tue Nov 11 10:53:22 AM EST
+  it is playing very fast.  And now, today, (Tue Nov 11 10:53:22 AM EST
   2025) it works, WTF!
 
   Testing reading and writing sound:  Run in a bash shell or whatever:
@@ -38,18 +38,48 @@ aplay -r 384000  -f S32_LE -c1 -t raw  xxx
 #include "../include/panels.h"
 #include "../lib/debug.h"
 
-// TODO: We need to check, in this code, that the program "arecord" is
-// really using the parameters we tell it to use.
 
 //#define RATE   44100  // samples per second feed to program arecord
 #define RATE  192000  // samples per second feed to program arecord
 //#define RATE  384000  // samples per second feed to program arecord
 
-
-
 // STR(X) turns any CPP macro number into a string by using two macros.
 #define STR(s) XSTR(s)
 #define XSTR(s) #s
+
+
+#define SND_FMT  PRIi32
+#define YMIN ((double) INT_MIN)
+#define YMAX ((double) INT_MAX)
+#define SAMPLE_BYTES  (4)
+#define ARECORD_FMT   "S32_LE"
+
+// example:
+//   arecord -r 384000 -f S32_LE -t raw -c1 -d 5 -B20000
+
+// -f FORMAT -c numChannels -r Hz
+// -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
+// 1 micro second is second/1000000 
+static const char command[] =
+        "arecord -r " STR(RATE) " -f " ARECORD_FMT " -c1 -t raw -B80000";
+
+static pid_t pid = 0;
+typedef int32_t snd_t;
+static const snd_t triggerHeight = 2000000;
+
+static struct PnWidget *graph = 0;
+static int pipe_fd = -1;
+#define LEN  (1024 * 4)
+static size_t samples = 0;
+// The read(2) buffer.
+static snd_t buf[LEN];
+
+static bool triggered = false;
+
+static const size_t pointsPerDraw = 2000;
+
+static double dt; // dt is time between samples in seconds
+
 
 
 static inline bool preDispatch(struct wl_display *d, int wl_fd) {
@@ -103,30 +133,9 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
     return false; // success.
 }
 
-pid_t pid = 0;
-typedef int32_t snd_t;
-#define SND_FMT  PRIi32
-#define YMIN ((double) INT_MIN)
-#define YMAX ((double) INT_MAX)
-#define SAMPLE_BYTES  (4)
-#define ARECORD_FMT   "S32_LE"
-
-const snd_t triggerHeight = 2000000;
-
-
-
 // Returns the pipe input file descriptor.
 static inline int Spawn(void) {
 
-    // example:
-    //   arecord -r 384000 -f S32_LE -t raw -c1 -d 5 -B20000
-
-
-    // -f FORMAT -c numChannels -r Hz
-    // -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
-    // 1 micro second is second/1000000 
-    const char command[] =
-        "arecord -r " STR(RATE) " -f " ARECORD_FMT " -c1 -t raw -B80000";
 
     int fd[2] = { -1, -1 };
     ASSERT(pipe(fd) == 0);
@@ -162,18 +171,6 @@ static inline int Spawn(void) {
 }
 
 
-
-static struct PnWidget *graph = 0;
-static int pipe_fd = -1;
-#define LEN  (1024 * 4)
-static size_t samples = 0;
-static snd_t buf[LEN];
-
-bool triggered = false;
-
-const size_t pointsPerDraw = 2000;
-
-double dt; // dt is time between samples in seconds
 
 
 static inline void Init(void) {
