@@ -18,6 +18,7 @@
 #include <sys/select.h>
 #include <limits.h>
 #include <math.h>
+#include <fftw3.h>
 
 #include <wayland-client.h>
 
@@ -27,11 +28,7 @@
 // TODO: We need to check, in this code, that the program "arecord" is
 // really using the parameters we tell it to use.
 
-//#define RATE   44100  // samples per second feed to program arecord
-//#define RATE  192000  // samples per second feed to program arecord
-#define RATE  384000  // samples per second feed to program arecord
-
-
+#define RATE   44100  // samples per second feed to program arecord
 
 // STR(X) turns any CPP macro number into a string by using two macros.
 #define STR(s) XSTR(s)
@@ -89,29 +86,48 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
     return false; // success.
 }
 
-pid_t pid = 0;
+static struct PnWidget *graph = 0;
+static int pipe_fd = -1;
+#define LEN  (1024)
+static size_t samples = 0;
 typedef int32_t snd_t;
+static snd_t buf[LEN];
+
+bool triggered = false;
+
+size_t pointsPerDraw;
+
+double t = 0.0;
+
+#define NUM_POINTS 256
+fftw_complex in[NUM_POINTS];
+fftw_complex out[NUM_POINTS];
+double measure[NUM_POINTS];
+fftw_plan plan;
+
+pid_t pid = 0;
 #define SND_FMT  PRIi32
-#define YMIN ((double) INT_MIN)
-#define YMAX ((double) INT_MAX)
+#define YMIN ((double) - 0.01)
+#define YMAX ((double)   1.01)
 #define SAMPLE_BYTES  (4)
 #define ARECORD_FMT   "S32_LE"
 
-const snd_t triggerHeight = 7000000;
+const snd_t triggerHeight = 16000000;
+#define REAL 0
+#define IMAG 1
 
+double fMax = ((double) RATE) / 2;
+// delta frequency in FFT
+double df;
 
 
 // Returns the pipe input file descriptor.
 static inline int Spawn(void) {
 
-    // example:
-    //   arecord -f S32_LE  -c1 -r192000 -B20000 -s 192000
-
     // -f FORMAT -c numChannels -r Hz
     // -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
-    // 1 micro second is second/1000000 
     const char command[] =
-        "arecord -f " ARECORD_FMT " -c1 -t raw -r" STR(RATE) " -B20000";
+        "arecord -f " ARECORD_FMT " -c1 -r" STR(RATE) " -B40000";
 
     int fd[2] = { -1, -1 };
     ASSERT(pipe(fd) == 0);
@@ -147,33 +163,57 @@ static inline int Spawn(void) {
 }
 
 
+bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
 
-static struct PnWidget *graph = 0;
-static int pipe_fd = -1;
-#define LEN  (1024 * 4)
-static size_t samples = 0;
-static snd_t buf[LEN];
+    if(!triggered) return false;
 
-bool triggered = false;
+    for(size_t i = 0; i < pointsPerDraw; ++i) {
+        pnPlot_drawPoint(p, i * df, measure[i]);
+        //printf("(%g,%g) ",  i * df, measure[i]);
+    }
+    //printf("\n\n");
 
-const size_t pointsPerDraw = 600;
+    triggered = false;
 
-double dt; // dt is time between samples in seconds
+    return false;
+}
 
+static inline void InitGraph(struct PnWidget *win) {
 
-static inline void Init(void) {
-
+    // The auto 2D plotter grid (graph)
+    graph = pnGraph_create(
+            win/*parent*/,
+            90/*width*/, 70/*height*/, 0/*align*/,
+            PnExpand_HV/*expand*/);
     ASSERT(graph);
+    //                  Color Bytes:  A R G B
+    pnWidget_setBackgroundColor(graph, 0xA0101010, 0);
 
-    dt = 1.0/((double) RATE); // time in seconds between samples
-    double tMin = - dt * 5.0; // near 0.0 but a little negitive
-    double tMax = pointsPerDraw * dt + dt * 5.0;
+    struct PnPlot *p = pnScopePlot_create(graph, Plot, 0);
+    ASSERT(p);
+    // This plot, p, is owned by the graph, w.
+    pnPlot_setLineColor(p, 0xFFFF0000);
+    pnPlot_setPointColor(p, 0xFF00FFFF);
+    pnPlot_setLineWidth(p, 2.2);
+    pnPlot_setPointSize(p, 2.1);
 
+    ASSERT(NUM_POINTS %2 == 0);
 
-    // We'll plot signal VS. time in seconds
+    pointsPerDraw = NUM_POINTS/2;
+    df = fMax/((double) pointsPerDraw);
+    ASSERT(pointsPerDraw > 100);
+    double xMin = - 5.0 * df; // near 0.0 but a little negitive
+    double xMax = xMin + fMax + 5.0 * df;
+    plan = fftw_plan_dft_1d(NUM_POINTS, in, out,
+                        FFTW_FORWARD, FFTW_ESTIMATE);
+    ASSERT(plan);
 
     //                     xMin  xMax   yMin YMax
-    pnGraph_setView(graph, tMin, tMax, YMIN, YMAX);
+    pnGraph_setView(graph, xMin, xMax, YMIN, YMAX);
+
+    for(size_t i=0; i<NUM_POINTS; ++i)
+        in[i][IMAG] = 0.0;
 }
 
 
@@ -185,16 +225,15 @@ static inline void ReadSound(void) {
     // likely errno is 11 WOULDBLOCK on failure.
     // TODO: We could deal with errno. 
     //
-    while((rd = read(pipe_fd, buf + lenRd, SAMPLE_BYTES * (LEN - lenRd))) > 0) {
+    while((rd = read(pipe_fd, buf, LEN)) > 0) {
         ASSERT(rd % SAMPLE_BYTES == 0,
                 "read non-multiple of " STR(SAMPLE_BYTES) " bytes");
         lenRd += rd;
-        if(LEN <= lenRd) break;
     }
     samples = lenRd/SAMPLE_BYTES;
 
+    //INFO("read %zu samples:", samples);
 #if 0
-    INFO("read %zu samples:", samples);
 
     for(size_t i=0; i < samples; ++i)
         printf("%" SND_FMT " ", buf[i]);
@@ -204,8 +243,31 @@ static inline void ReadSound(void) {
     // If select() popped we should have data.
     ASSERT(samples > 0);
 
-    if(samples >= pointsPerDraw)
+    if(samples >= NUM_POINTS) {
         pnWidget_queueDraw(graph, 0);
+        if(!triggered) {
+            ASSERT(plan);
+            // We compute the FFT for plotting now.  Note, we don't
+            // recompute the FFT if we have one waiting to be plotted
+            // already.
+            triggered = true;
+            // Convert uint32_t to double.
+            double max = 0.0;
+            for(size_t i=0; i<NUM_POINTS; ++i) {
+                double x = fabs((double) buf[i]);
+                if(x > max)
+                    max = x;
+            }
+            max *= ((double) NUM_POINTS);
+
+            for(size_t i=0; i<NUM_POINTS; ++i)
+                in[i][REAL] = ((double) buf[i])/max;
+            fftw_execute(plan);
+            for(size_t i=0; i<NUM_POINTS; ++i)
+                measure[i] = sqrt(out[i][REAL] * out[i][REAL] +
+                        out[i][IMAG] * out[i][IMAG]);
+        }
+    }
 }
 
 
@@ -255,56 +317,7 @@ static inline void Run(struct PnWidget *win) {
 
 static
 void catcher(int sig) {
-
     ASSERT(0, "caught signal number %d", sig);
-}
-
-double t = 0.0;
-
-
-bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
-        double xMin, double xMax, double yMin, double yMax) {
-
-
-    size_t i = 1;
-    for(;!triggered && i < samples; ++i) {
-
-        if(buf[i-1] > 0 || buf[i] < triggerHeight
-                || buf[i-1] >= buf[i]) continue;
-
-        triggered = true;
-        break;
-    }
-    --i;
-    if(!triggered || i >= samples) return false;
-
-    // t0 is the time that a linear interpolation shows the sound would
-    // pass through zero in both time and signal.  buf[i] is below or
-    // equal to zero and buf[i+1] is above zero.
-    ASSERT(buf[i+1] > buf[i]);
-    ASSERT(buf[i] <= 0);
-    double t0;
-    t0 = buf[i+1];
-    t0 -= buf[i];
-    ASSERT(t0 >= ((double) buf[i+1]));
-    t0 = dt - buf[i+1] * dt/(t0);
-
-    size_t num = 0;
-
-    // Note: we are just plotting pointsPerDraw (or less) and than
-    // ignoring the rest of the sound data buffer.  We could do what ever
-    // we like.
-
-    for(;i < samples && num < pointsPerDraw; ++i, ++num) {
-        double x = num;
-        x *= dt;
-        x += t0;
-        pnPlot_drawPoint(p, x, (double) buf[i]);
-    }
-
-    triggered = false;
-
-    return false;
 }
 
 
@@ -312,38 +325,24 @@ int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
+    printf("fftw_execute=%p\n", fftw_execute);
+
     struct PnWidget *win = pnWindow_create(0, 10, 10,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWindow_setPreferredSize(win, 1100, 900);
 
-    // The auto 2D plotter grid (graph)
-    graph = pnGraph_create(
-            win/*parent*/,
-            90/*width*/, 70/*height*/, 0/*align*/,
-            PnExpand_HV/*expand*/);
-    ASSERT(graph);
-    //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(graph, 0xA0101010, 0);
-
-    struct PnPlot *p = pnScopePlot_create(graph, Plot, catcher);
-    ASSERT(p);
-    // This plot, p, is owned by the graph, w.
-    pnPlot_setLineColor(p, 0xFFFF0000);
-    pnPlot_setPointColor(p, 0xFF00FFFF);
-    pnPlot_setLineWidth(p, 2.2);
-    pnPlot_setPointSize(p, 2.1);
+    InitGraph(win);
 
     pnWindow_show(win);
-
-    Init();
-
     Run(win);
 
+    // Cleanup child processes.
     if(pid) {
         ASSERT(kill(pid, SIGTERM) == 0);
         ASSERT(waitpid(pid, 0, 0) == pid);
     }
+    fftw_destroy_plan(plan);
     return 0;
 }

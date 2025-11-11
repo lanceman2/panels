@@ -46,6 +46,37 @@ bool Plot2(struct PnWidget *g, struct PnPlot *p, void *userData,
     return false;
 }
 
+static
+bool Plot3(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
+
+    const double tMax = 20 * M_PI;
+
+    for(double t = 0.02; t <= 2*tMax + 10; t += 0.1) {
+        double a = 1.0 - t/tMax;
+        // This in an inline function, so it can be faster then
+        // if it was not an inline function.
+        pnPlot_drawPoint(p, a * sin(t), a * cos(t));
+    }
+    return false;
+}
+
+static
+bool Plot4(struct PnWidget *g, struct PnPlot *p, void *userData,
+        double xMin, double xMax, double yMin, double yMax) {
+
+    pnPlot_drawPoint(p, -1.0, -1.0);
+    pnPlot_drawPoint(p, -0.5, -0.5);
+    pnPlot_drawPoint(p, -0.5, 0.0);
+
+    pnPlot_drawPoint(p, 0.0, 0.0);
+    pnPlot_drawPoint(p, 0.5, 0.5);
+    pnPlot_drawPoint(p, 1.0, 0.5);
+    pnPlot_drawPoint(p, 1.0, 1.0);
+     return false;
+}
+
+
 static struct PnWidget *win;
 
 static uint32_t count = 0;
@@ -73,21 +104,23 @@ static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
     pnPlot_setPointColor(p, Color());
     pnPlot_setLineWidth(p, Rand(1, 8.2));
     pnPlot_setPointSize(p, Rand(1, 8.2));
+    pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
     switch(count) {
         case 1:
+            break;
         case 2:
+            // No points
+            pnPlot_setPointSize(p, 0);
             break;
         case 3:
             // No lines
             pnPlot_setLineWidth(p, 0);
             break;
         case 4:
-            // No points
-            pnPlot_setPointSize(p, 0);
+            pnGraph_setView(w, -1.5, 1.5, -1.5, 1.5);
+        default:
     }       
-
-    pnGraph_setView(w, -1.05, 1.05, -1.05, 1.05);
 
     return w;
 }
@@ -95,7 +128,7 @@ static struct PnWidget *MakeGraph(bool (*plot)(struct PnWidget *g,
 
 int main(void) {
 
-    srand(4);
+    srand(5);
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
 
@@ -107,8 +140,8 @@ int main(void) {
 
     MakeGraph(Plot);
     MakeGraph(Plot2);
-    MakeGraph(Plot2);
-    MakeGraph(Plot2);
+    MakeGraph(Plot3);
+    MakeGraph(Plot4);
 
     pnWindow_show(win);
 

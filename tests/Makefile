@@ -3,6 +3,7 @@ root := ..
 include $(root)/config.make
 include $(root)/pkg-fontconfig.make
 include $(root)/pkg-cairo.make
+include $(root)/pkg-fftw3.make
 include $(root)/pkg-waylandclient.make
 
 PN_LIB := -L../lib -lpanels -Wl,-rpath=\$$ORIGIN/../lib
@@ -83,7 +84,7 @@ rand_widgets_cull_run_CPPFLAGS := -DRUN -DCULL
 052_rand_widgets_cull_LDFLAGS := $(PN_LIB)
 052_rand_widgets_cull_CPPFLAGS := -DCULL
 
-rand_SOURCES := rand.c ../lib/debug.c
+rand_SOURCES := rand.c $(root)/lib/debug.c
 
 060_align_widget_SOURCES := align_widget.c
 060_align_widget_LDFLAGS := $(PN_LIB)
@@ -133,6 +134,9 @@ vsplitter_run_CPPFLAGS := -DRUN -DVERTICAL
 078_vsplitter_SOURCES := splitter.c
 078_vsplitter_LDFLAGS := $(PN_LIB)
 078_vsplitter_CPPFLAGS := -DVERTICAL
+
+tone_run_SOURCES := tone.c ../lib/debug.c
+tone_run_LDFLAGS := -lm
 
 ifdef WITH_FONTCONFIG
 081_findFont_SOURCES := 081_findFont.c
@@ -255,7 +259,15 @@ scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 # Also, needs to directly link with libwayland-client.
 scopeWithMic_run_SOURCES := scopeWithMic.c
 scopeWithMic_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
-scopeWithMic_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS) $(WL_CFLAGS)
+scopeWithMic_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS)
+
+
+ifdef FFTW3_LDFLAGS
+scopeWithMicFFT_run_SOURCES := scopeWithMicFFT.c
+scopeWithMicFFT_run_LDFLAGS :=\
+ $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) $(FFTW3_LDFLAGS)  -lm
+scopeWithMicFFT_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS) $(FFTW3_CFLAGS)
+endif
 
 graph_run_SOURCES := graph.c
 graph_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
