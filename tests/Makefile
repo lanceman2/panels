@@ -261,6 +261,11 @@ scopeWithMic_run_SOURCES := scopeWithMic.c
 scopeWithMic_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
 scopeWithMic_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS)
 
+scope3stringTune_run_SOURCES := scope3stringTune.c
+scope3stringTune_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
+scope3stringTune_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS)
+
+
 
 ifdef FFTW3_LDFLAGS
 scopeWithMicFFT_run_SOURCES := scopeWithMicFFT.c

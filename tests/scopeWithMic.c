@@ -65,7 +65,7 @@ static const char command[] =
 
 static pid_t pid = 0;
 typedef int32_t snd_t;
-static const snd_t triggerHeight = 2000000;
+static const snd_t triggerHeight = 5000000;
 
 static struct PnWidget *graph = 0;
 static int pipe_fd = -1;
