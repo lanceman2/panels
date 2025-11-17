@@ -61,6 +61,9 @@ bool pnDisplay_dispatch(void) {
 
 // Return true on failure.
 //
+// This is a little make gtk_main() except that: we can call it more than
+// once, and we can cleanup the under laying objects.
+//
 bool pnDisplay_run() {
 
     if(Init()) return true;
