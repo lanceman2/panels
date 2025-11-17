@@ -1,6 +1,7 @@
 // The use of pnDisplay_run() is not required to use libpanels.so.
-// Requiring the use of pnDisplay_run() would be considered bad form.
-// See ../README.md
+// Requiring the use of pnDisplay_run() would be considered bad form.  See
+// ../README.md.  Users of libpanels.so can make their own main loop code
+// and the use of pnDisplay_run() is not required.
 
 #define _GNU_SOURCE
 #include <link.h>
