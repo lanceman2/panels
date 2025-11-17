@@ -66,7 +66,10 @@ bool pnDisplay_dispatch(void) {
 //
 bool pnDisplay_run() {
 
-    if(Init()) return true;
+    if(Init()) return true; // error case.
+
+    // Run the main loop until the GUI user causes it to stop.
+    while(pnDisplay_dispatch());
 
     return false;
 }

@@ -615,8 +615,17 @@ struct PnOutput {
     uint32_t physical_width, physical_height; // in mm (millimeters)
 };
 
+
+// Used to add file descriptors to the optional main loop stuff.
+struct PnFD {
+
+    int fd; // could be a reading or writing file descriptor.
+    void *userData;
+    bool (*callback)(int fd, void *userData);
+};
+
 // It looks like most GUI (graphical user interface) based programs
-// (Wayland compositor included), as we shrink a window, cull out the
+// (Wayland compositor included), as we shrink a window cull out the
 // parts of the window to the right and bottom, keeping the left and top
 // most part of the window.  This is just convention, and "panels" follows
 // this convention.  Hence, we cull out widgets to the right and bottom as
@@ -760,6 +769,14 @@ struct PnDisplay {
 
     struct PnMenu *topMenu;
     struct PnWidget *bottomMenuButton;
+
+    // TODO: We are using select(2).  Do we want to use epoll_wait(2)?
+    //
+    // Optional main loop stuff:
+    struct PnFD *readers; // Realloc() allocated array
+    struct PnFD *writers; // Realloc() allocated array
+    // PnFD array lengths.
+    int numReaders, numWriters;
 };
 
 
