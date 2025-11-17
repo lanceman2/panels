@@ -7,6 +7,9 @@ pnDisplay_getWaylandDisplay
 pnDisplay_haveXDGDecoration
 pnDisplay_haveWindow
 pnDisplay_setTheme
+pnDisplay_run
+pnDisplay_addReader
+pnDisplay_removeReader
 pnFindFont
 pnGeneric_create
 pnGraph_create

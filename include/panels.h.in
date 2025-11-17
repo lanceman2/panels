@@ -414,6 +414,11 @@ PN_EXPORT void pnDisplay_destroy(void);
 PN_EXPORT bool pnDisplay_dispatch(void);
 PN_EXPORT bool pnDisplay_haveXDGDecoration(void);
 PN_EXPORT bool pnDisplay_haveWindow(void);
+PN_EXPORT bool pnDisplay_run();
+PN_EXPORT bool pnDisplay_addReader(int fd,
+        bool (*read)(int fd, void *userData), void *userData);
+PN_EXPORT bool pnDisplay_removeReader(int fd);
+
 
 // TODO: Should this exist?
 struct wl_display;

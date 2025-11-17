@@ -38,13 +38,13 @@
 
 static struct PnWidget *graph = 0;
 static int pipe_fd = -1;
-#define LEN  (1024)
+#define LEN  (1024 *8)
 typedef int32_t snd_t;
 static snd_t buf[LEN];
 
 static bool triggered = false;
 
-#define NUM_POINTS 1024*4
+#define NUM_POINTS 1024 * 8
 static const size_t pointsPerDraw = NUM_POINTS/2;
 static fftw_complex in[NUM_POINTS];
 static fftw_complex out[NUM_POINTS];
@@ -69,7 +69,7 @@ static double df;
 // -f FORMAT -c numChannels -r Hz
 // -B microseconds (buffer length)  1s/60 = 0.01666...seconds.
 const char command[] =
-        "arecord -f " ARECORD_FMT " -c1 -r" STR(RATE) " -B500000";
+        "arecord -f " ARECORD_FMT " -c1 -r" STR(RATE) " -B1000000";
 
 
 

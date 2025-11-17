@@ -98,7 +98,6 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
     // apt install libwayland-doc  gives a large page 'man wl_display'
     // but not 'man wl_display_dispatch'
     //
-    // wl_display_flush(d) Flushes write commands to compositor.
     errno = 0;
     // wl_display_flush(d) Flushes write commands to compositor.
 
@@ -253,7 +252,7 @@ static inline void Run(struct PnWidget *win) {
                 if(FD_ISSET(wl_fd, &rfds)) {
                     if(wl_display_dispatch(d) == -1 ||
                             !pnDisplay_haveWindow())
-                        // Got running window based GUI.
+                        // Got no running window based GUI.
                         return;
                 }
                 if(FD_ISSET(pipe_fd, &rfds)) {
@@ -355,6 +354,7 @@ int main(void) {
     Run(win);
 
     if(pid) {
+        // Cleanup children processes.
         ASSERT(kill(pid, SIGTERM) == 0);
         ASSERT(waitpid(pid, 0, 0) == pid);
     }

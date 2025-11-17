@@ -795,6 +795,8 @@ static inline bool CheckDisplay(void) {
 }
 
 
+extern int _pnDisplay_create(void);
+
 // We act on just the farthest upper and left cell for a given
 // surface (widget).  Widgets can span more than one cell; so this
 // selects one of a particular widget per grid looping of all cells

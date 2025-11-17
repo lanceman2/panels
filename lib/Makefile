@@ -71,7 +71,8 @@ libpanels.so_SOURCES :=\
  splitter.c\
  generic.c\
  menu.c\
- window_set.c
+ window_set.c\
+ run.c
 
 ifdef WITH_FONTCONFIG
 libpanels.so_SOURCES +=\

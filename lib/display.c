@@ -610,8 +610,7 @@ struct libdecor_interface libdecor_interface = {
 #endif
 
 
-
-static int _pnDisplay_create(void) {
+int _pnDisplay_create(void) {
 
     DASSERT(!d.wl_display);
 
@@ -827,41 +826,6 @@ bool pnDisplay_haveXDGDecoration(void) {
     return (bool) d.zxdg_decoration_manager;
 }
 
-
-struct wl_display *pnDisplay_getWaylandDisplay(void) {
-
-    if(!d.wl_display) {
-        if(_pnDisplay_create())
-            return 0;
-    }
-
-    return d.wl_display;
-}
-
-
-bool pnDisplay_haveWindow(void) {
-    return (d.wl_display && d.windows)?true:false;
-}
-
-
-// This can block.
-//
-// Return true if we can keep running.
-//
-bool pnDisplay_dispatch(void) {
-
-    if(!d.wl_display) {
-        if(_pnDisplay_create())
-            return false;
-    }
-
-    if(wl_display_dispatch(d.wl_display) != -1 &&
-            d.windows/*we have at least one window*/)
-        // We can keep going.
-        return true;
-
-    return false;
-}
 
 void pnDisplay_setTheme(const char *theme) {
 

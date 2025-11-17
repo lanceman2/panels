@@ -2,6 +2,10 @@
 
 If your not a C developer, go away.  This project is just starting.
 
+## Brief description
+
+Panels is a small C library widget API.
+
 ## Design decisions
 
 This is the story of an inquisitive C computer programmer.  This
@@ -28,7 +32,18 @@ operating systems.  Unless you pay me a lot.
 
 This programmer sees that there are some simple and basic libraries that
 form the basis for free desktops.  Hence "panels" depends on a small
-number of popular and robust libraries.
+number of popular (but hidden under the covers) and robust libraries.
+
+### Down one software layer
+
+We considered, can we build software below or at the Wayland Compositor
+layer.  The Wayland protocol seems to be robust and unopinionated.  My
+biggest gripe about it is that the libwayland-client API makes the
+display object a singleton.  Why?  Why did they do that?
+
+I have found that the libwayland-client display object can be created and
+destroyed any number of times in a given process, so that's good; at least
+for the Wayland Compositor that I'm developing with.
 
 
 ## What is Panels?
@@ -49,6 +64,8 @@ don't wish to write our on linker loader to work around that.
 Panels provides a C API (application programming interface) library
 and utility programs.  It can be used with C++.
 
+We strive to make panels a unopinionated software framework.
+
 The libpanels API lets developers have simple windows that they can draw
 raw 32 bit [true color] (https://en.wikipedia.org/wiki/Color_depth) pixels
 on; with or without a drawing API.  Sometimes you can draw much faster and
@@ -66,13 +83,13 @@ Mostly "panels" is minimalistic.  We wanted to:
 5. make a minimal set of widget types, and
 6. keep it small.
 
-We also wanted to be able to create simple windows and draw to "raw"
-pixels, without a ton of dependencies.  Of course this screams of
+We also wanted to be able to use panels to create simple windows and draw
+to "raw" pixels, without a ton of dependencies.  Of course this screams of
 needing/wanting/having OpenGL/Wayland (EGL or whatever it's called) pixel
 rendering stuff, but currently it's just using xdg_wm_base for making
-usable window pixel surfaces.  I currently don't know why we need
-XDG when we have EGL.  Isn't EGL more performant.  Why not make EGL
-the default Wayland-client window pixel thingy?
+usable window pixel surfaces.  I currently don't know why we need XDG when
+we have EGL.  Isn't EGL more performant.  Why not make EGL the default
+Wayland-client window pixel thingy?  I just don't know.
 
 
 ## Dependencies
@@ -155,14 +172,14 @@ hack to do it (in the same process without changing GTK codes), but if GTK
 was not designed to be the main loop controller of your code it would have
 been trivial to do; taking hours instead of weeks to code; and it would
 have been much more efficient had they not required using their main loop
-code in order to use GTK GUIs (also I was told it could not be done, so I
-did it out of spite).  gthreads may wrap all of pthreads (and I don't
+code in order to use GTK GUIs (also I was told it could not be done, so
+I did it out of spite).  gthreads may wrap all of pthreads (and I don't
 think it does) but it's not as standard and robust as pthreads, and it
-can't be, it's built on pthreads.  Qt is much worse, if you develop with
-Qt you are married to the Qt development framework.  Qt even has it's own,
-unique, develop language called MOC which compiles into C++.  It's been
-said that C++ will likely get enough functionality to replace MOC in the
-future.
+can't be, it's built on pthreads (at least on GNU/Linux).  Qt is much
+worse, if you develop with Qt you are married to the Qt development
+framework.  Qt even has it's own, unique, develop language called MOC
+which compiles into C++.  It's been said that C++ will likely get enough
+functionality to replace MOC in the future.
 
 Don't get me wrong.  GTK and Qt are great things.  But, they are what they
 are, large and dominate.  You can't develop with either one of them
@@ -171,15 +188,23 @@ without it dominating many aspects of your projects coding design.
 Put simply, libpanels strives to be unopinionated software.  Clearly, GTK
 and Qt are very opinionated.
 
-I'm under the impression that unopinionated software tend to be more
+I'm under the impression that unopinionated software tends to be more
 robust than opinionated software.  As a simple example of robustness, you
 will have a hard time using two independent opinionated software packages
-together (would likely make a complex mess), but using two independent
-unopinionated software packages together should be easy (kind-of by
-definition).
+together (would likely make a buggy complex mess), but using two
+independent unopinionated software packages together should be easy
+(kind-of by definition).
 
 A challenge: write a widget API that can be used with widgets from another
-widget API in the same process.
+widget API in the same process.  That would be so cool; powerful.
+
+Bottom line: I'm working on a series of software projects that requires
+that I be able to develop multi-process and multi-threaded code that can
+have code that can have code modules unloaded.  Both the GTK and Qt
+libraries can't be unloaded, unless you write our own linker/loader
+system.  I think that writing a linker/loader system is a bad idea, that
+would turn the software's into an unnecessarily large and complex pile of
+shit; why not write my own kernel too.
 
 
 ## Development notes:
