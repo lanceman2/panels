@@ -3,7 +3,8 @@
 
 SUBDIRS :=\
  include\
- lib
+ lib\
+ bin
 
 
 # There are two scripts that need to run to make this GNU makefile

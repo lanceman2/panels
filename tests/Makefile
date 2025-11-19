@@ -255,12 +255,6 @@ scope_run_SOURCES := scope.c
 scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
-# Uses inline function in panels.h that needs libcario.
-# Also, needs to directly link with libwayland-client.
-scopeWithMic_run_SOURCES := scopeWithMic.c
-scopeWithMic_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
-scopeWithMic_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS)
-
 scope3stringTune_run_SOURCES := scope3stringTune.c
 scope3stringTune_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
 scope3stringTune_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS)
