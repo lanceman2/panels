@@ -48,20 +48,31 @@ static inline bool InitDisplay(void) {
     }
     return false;
 }
+
+// Because the wayland-client only lets us have one wayland display
+// we can have this, "wl_fd", as a global static variable.
+static int wl_fd = -1;
+
 // This function may need to have some ASSERT() calls replaced with
 // an error check and a return.
 //
 // We do this before we call a blocking call like select(2) or
 // epoll_wait(2); with the Wayland client fd.
 //
-static inline bool preDispatch(int wl_fd) {
+// Returns 0 on success and continue calling
+// Returns 1 on success and finish calling
+// Returns -1 on error and finish calling
+//
+static int PreDispatch(void *userData) {
 
     DASSERT(d.wl_display);
+    DASSERT(wl_fd >= 0);
+    DASSERT(d.mainLoop);
 
     if(wl_display_dispatch_pending(d.wl_display) < 0) {
         // TODO: Handle failure modes.
         ERROR("wl_display_dispatch_pending() failed");
-        return true; // fail
+        return -1; // fail
     }
 
     // See
@@ -86,12 +97,18 @@ static inline bool preDispatch(int wl_fd) {
         switch(ret) {
             case -1:
                 ERROR("select failed");
-                exit(1);
+                return -1;
             case 1:
-                ASSERT(FD_ISSET(wl_fd, &wfds));
+                DASSERT(FD_ISSET(wl_fd, &wfds));
+                if(!FD_ISSET(wl_fd, &wfds)) {
+                    ERROR("select failed to set fd=%d", wl_fd);
+                    return -1;
+                }
                 break;
             default:
-                ASSERT(0, "select() returned %d", ret);
+                DASSERT(0, "select() returned %d", ret);
+                ERROR("select() returned %d", ret);
+                return -1;
         }
 
         errno = 0;
@@ -99,9 +116,9 @@ static inline bool preDispatch(int wl_fd) {
     }
     if(ret == -1) {
         ERROR("wl_display_flush() failed");
-        return true;
+        return -1;
     }
-    return false; // success.
+    return 0; // success.
 }
 
 
@@ -116,7 +133,8 @@ static bool Wayland_Read(int fd, void *userData) {
     if(wl_display_dispatch(d.wl_display) == -1 ||
             !pnDisplay_haveWindow())
         // Got no running window based GUI.
-        // Return true to remove the wayland fd.
+        // Return true to remove the wayland fd from the epoll_wait() file
+        // descriptor group.
         return true;
 
     return false;
@@ -132,7 +150,7 @@ static inline bool Init(void) {
         return true;
     }
 
-    int wl_fd = wl_display_get_fd(d.wl_display);
+    wl_fd = wl_display_get_fd(d.wl_display);
     ASSERT(wl_fd >= 0);
 
     if(pnMainLoop_addReader(d.mainLoop, wl_fd, false/*edge_trigger*/,
@@ -164,24 +182,7 @@ bool pnDisplay_dispatch(void) {
     return false;
 }
 
-
-static inline bool EpollRun(void) {
-
-    DASSERT(d.wl_display);
-    DASSERT(d.mainLoop);
-
-
-    int wl_fd = wl_display_get_fd(d.wl_display);
-    ASSERT(wl_fd >= 0);
-    DASSERT(wl_fd == d.mainLoop->readers->fd);
-
-    // Run the main loop until the GUI user causes it to stop.
-    while(true) {
-
-        if(preDispatch(wl_fd)) return true;
-
-        if(pnMainLoop_wait(d.mainLoop))
-            return true;
+static int PostDispatch(void *userData) {
 
         // If this Wayland client is still running there must
         // be a Wayland reader file descriptor in use.
@@ -189,8 +190,49 @@ static inline bool EpollRun(void) {
         if(!d.wl_display || !d.mainLoop ||
                 // the Wayland_Read() function can make the following so:
                 !d.mainLoop->readers || wl_fd != d.mainLoop->readers->fd)
-            return false; // The Wayland display stopped.
+            return 1; // The Wayland display stopped.
+
+    return 0; // keep running.
+}
+
+
+static inline bool EpollRun(void) {
+
+    DASSERT(d.wl_display);
+    DASSERT(d.mainLoop);
+    DASSERT(d.mainLoop->epollFd >= 0);
+
+    wl_fd = wl_display_get_fd(d.wl_display);
+    ASSERT(wl_fd >= 0);
+    DASSERT(wl_fd == d.mainLoop->readers->fd);
+
+#if 1
+    return pnMainLoop_run(d.mainLoop, PreDispatch, 0, PostDispatch, 0);
+#else
+    // This is the same as calling pnMainLoop_run():
+    //
+    // Run the main loop until the GUI user causes it to stop.
+    while(true) {
+
+        int ret;
+
+        if((ret = PreDispatch(0))) {
+            if(ret > 0)
+                return false; // no error
+            else
+                return true; // error
+        }
+
+        if(pnMainLoop_wait(d.mainLoop)) return true;
+
+        if((ret = PostDispatch(0))) {
+            if(ret > 0)
+                return false; // no error
+            else
+                return true; // error
+        }
     }
+#endif
 
     return false; // success
 }
@@ -198,7 +240,7 @@ static inline bool EpollRun(void) {
 // Return true on failure.
 //
 // This is a little like gtk_main() except that: we can call it more than
-// once, and we can cleanup, the under laying objects, and system
+// once, and we can cleanup, the under laying objects and system
 // resources.
 //
 bool pnDisplay_run() {
@@ -235,8 +277,16 @@ bool pnDisplay_addReader(int fd, bool edge_trigger,
 //
 bool pnDisplay_removeReader(int fd) {
 
+    DASSERT(fd >= 0);
+
     if(Init()) return true;
 
-    return false;
+    if(!d.mainLoop) {
+        ERROR("No mainloop present");
+        return true;
+    }
+
+    return
+        pnMainLoop_removeReader(d.mainLoop, fd);
 }
 

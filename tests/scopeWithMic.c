@@ -6,12 +6,13 @@
 
 /*
 
-  I have found that the arecord program makes sound files (sound data) that
-  has the "wrong" sample rate.  In this example the play back sounds like
-  it is playing very fast.  And now, today, (Tue Nov 11 10:53:22 AM EST
-  2025) it works, WTF!
+  I have found that the arecord program makes sound files (sound data)
+  that has the "wrong" sample rate.  In this example the play back sounds
+  like it is playing very fast.  And now, today, (Tue Nov 11 10:53:22 AM
+  EST 2025) it works, WTF!
 
-  Testing reading and writing sound:  Run in a bash shell or whatever:
+  For testing reading and writing sound:  Run in a bash shell or
+  whatever:
 
 arecord -r 384000 -f S32_LE -t raw -c1 -d 5 -B20000  xxx
 aplay -r 384000  -f S32_LE -c1 -t raw  xxx
@@ -81,60 +82,7 @@ static const size_t pointsPerDraw = 2000;
 static double dt; // dt is time between samples in seconds
 
 
-
-static inline bool preDispatch(struct wl_display *d, int wl_fd) {
-
-    if(wl_display_dispatch_pending(d) < 0)
-        // TODO: Handle failure modes.
-        return true; // fail
-
-        // TODO: Add code (with poll(2)) to handle the errno == EAGAIN
-        // case.  I think the wl_fd is a bi-directional (r/w) file
-        // descriptor.
-
-    // See
-    // https://www.systutorials.com/docs/linux/man/3-wl_display_flush/
-    //
-    // apt install libwayland-doc  gives a large page 'man wl_display'
-    // but not 'man wl_display_dispatch'
-    //
-    errno = 0;
-    // wl_display_flush(d) Flushes write commands to compositor.
-
-    int ret = wl_display_flush(d);
-
-    while(ret == -1 && errno == EAGAIN) {
-
-        fd_set wfds;
-        FD_ZERO(&wfds);
-        FD_SET(wl_fd, &wfds);
-        // This may never happen, so lets see it if it does.
-        DSPEW("waiting to flush wayland display");
-        ret = select(wl_fd+1, 0, &wfds, 0, 0);
-        switch(ret) {
-            case -1:
-                ERROR("select failed");
-                exit(1);
-            case 1:
-                ASSERT(FD_ISSET(wl_fd, &wfds));
-                break;
-            default:
-                ASSERT(0, "select() returned %d", ret);
-        }
-
-        errno = 0;
-        ret = wl_display_flush(d);
-    }
-    if(ret == -1) {
-        ERROR("wl_display_flush() failed");
-        return true;
-    }
-    return false; // success.
-}
-
-// Returns the pipe input file descriptor.
-static inline int Spawn(void) {
-
+static inline void Spawn(void) {
 
     int fd[2] = { -1, -1 };
     ASSERT(pipe(fd) == 0);
@@ -166,10 +114,9 @@ static inline int Spawn(void) {
     // We need a non-blocking read to it does not hang forever
     // in a read(2) call.
     ASSERT(fcntl(fd[0], F_SETFL, flags|O_NONBLOCK) != -1);
-    return fd[0]; // Return read fd.
+
+    pipe_fd = fd[0]; // pipe read fd.
 }
-
-
 
 
 static inline void Init(void) {
@@ -189,7 +136,10 @@ static inline void Init(void) {
 }
 
 
-static inline void ReadSound(void) {
+static inline bool ReadSound(int fd, void *userData) {
+
+    DASSERT(fd >= 0);
+    DASSERT(fd == pipe_fd);
 
     ssize_t rd;
     size_t lenRd = 0;
@@ -219,52 +169,10 @@ static inline void ReadSound(void) {
 
     if(samples >= pointsPerDraw)
         pnWidget_queueDraw(graph, 0);
+
+    return false;
 }
 
-
-static inline void Run(struct PnWidget *win) {
-    
-    struct wl_display *d = pnDisplay_getWaylandDisplay();
-    ASSERT(d);
-    int wl_fd = wl_display_get_fd(d);
-    ASSERT(wl_fd == 3);
-
-    pipe_fd = Spawn();
-    ASSERT(pipe_fd > wl_fd);
-
-    // Run the main loop until the GUI user causes it to stop.
-    while(true) {
-
-        if(preDispatch(d, wl_fd)) return;
-
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(wl_fd, &rfds);
-        FD_SET(pipe_fd, &rfds);
-        int ret = select(pipe_fd+1, &rfds, 0, 0, 0);
-        switch(ret) {
-            case -1:
-                ERROR("select failed");
-                exit(1);
-            case 1:
-            case 2:
-                ASSERT(FD_ISSET(wl_fd, &rfds) ||
-                        FD_ISSET(pipe_fd, &rfds));
-                if(FD_ISSET(wl_fd, &rfds)) {
-                    if(wl_display_dispatch(d) == -1 ||
-                            !pnDisplay_haveWindow())
-                        // Got no running window based GUI.
-                        return;
-                }
-                if(FD_ISSET(pipe_fd, &rfds)) {
-                    ReadSound();
-                }
-                break;
-            default:
-                ASSERT(0, "select() returned %d", ret);
-        }
-    }
-}
 
 static
 void catcher(int sig) {
@@ -278,7 +186,11 @@ double t = 0.0;
 bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
         double xMin, double xMax, double yMin, double yMax) {
 
+    // Note: This trigger idea/stuff could be done in the sound read
+    // function, ReadSound(), which could make it so that the what is
+    // already plotted stays plotted when there is no trigger event.
 
+    // If there is no trigger than there will be nothing plotted.
     size_t i = 1;
     for(;!triggered && i < samples; ++i) {
 
@@ -289,7 +201,10 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
         break;
     }
     --i;
-    if(!triggered || i >= samples) return false;
+
+    if(!triggered || i >= samples)
+        // Plot nothing in this case.
+        return false;
 
     // t0 is the time that a linear interpolation shows the sound would
     // pass through zero in both time and signal.  buf[i] is below or
@@ -340,21 +255,28 @@ int main(void) {
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(graph, 0xA0101010, 0);
 
-    struct PnPlot *p = pnScopePlot_create(graph, Plot, catcher);
+    struct PnPlot *p = pnScopePlot_create(graph, Plot, 0);
     ASSERT(p);
-    // This plot, p, is owned by the graph, w.
+    // This plot, "p", is owned by "graph".
     pnPlot_setLineColor(p, 0xFFFF0000);
     pnPlot_setPointColor(p, 0xFF00FFFF);
     pnPlot_setLineWidth(p, 2.2);
     pnPlot_setPointSize(p, 2.1);
 
+    Init();
+    Spawn();
     pnWindow_show(win);
 
-    Init();
+    ASSERT(pnDisplay_addReader(pipe_fd, 0/*edge_trigger*/,
+            ReadSound, 0) == false);
 
-    Run(win);
+    if(pnDisplay_run()) {
+        ERROR("pnDisplay_run() failed");
+        ASSERT(0);
+    }
 
     if(pid) {
+        printf("Cleaning up children processes\n");
         // Cleanup children processes.
         ASSERT(kill(pid, SIGTERM) == 0);
         ASSERT(waitpid(pid, 0, 0) == pid);

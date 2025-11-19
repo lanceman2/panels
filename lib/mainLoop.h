@@ -220,13 +220,14 @@ DoWriter(struct PnMainLoop *ml, struct PnFD *f) {
 
 #define MAX_EVENTS  (7) // for epoll_wait().
 
-
+// This just does one loop iteration.
+//
 static inline bool pnMainLoop_wait(struct PnMainLoop *ml) {
 
     DASSERT(ml);
     DASSERT(ml->epollFd >= 0);
-
     DASSERT(ml->readers || ml->writers);
+
     if(!ml->readers && !ml->writers) {
         ERROR("No readers or writers loaded");
         return true; // error
@@ -241,7 +242,7 @@ static inline bool pnMainLoop_wait(struct PnMainLoop *ml) {
     DASSERT(nfds != 0);
     if(nfds < 0) {
         ERROR("epoll_wait(%d,,,) failed", ml->epollFd);
-        return false;
+        return true; // error
     }
     for(int i=0; i<nfds; ++i) {
         struct PnFD *f = ev[i].data.ptr;
@@ -252,4 +253,37 @@ static inline bool pnMainLoop_wait(struct PnMainLoop *ml) {
     }
 
     return false; // success
+}
+
+
+static inline bool pnMainLoop_run(struct PnMainLoop *ml,
+        int (*PreWait) (void *preData), void *preData,
+        int (*PostWait) (void *postData), void *postData) {
+
+    DASSERT(ml);
+    DASSERT(ml->epollFd >= 0);
+    DASSERT(ml->readers || ml->writers);
+
+    do {
+        int ret;
+        if(PreWait)
+            if((ret = PreWait(preData))) {
+                if(ret > 0)
+                    return false; // success
+                else
+                    return true; // error
+            }
+
+        if(pnMainLoop_wait(ml))
+            return true; // error
+
+        if(PostWait)
+            if((ret = PostWait(postData))) {
+                if(ret > 0)
+                    return false; // success
+                else
+                    return true; // error
+            }
+
+    } while(true);
 }
