@@ -71,7 +71,12 @@ int main(void) {
 
     pnWindow_show(win);
 
+#ifdef RUN
+    // Needed to test pnDisplay_run().
+    pnDisplay_run();
+#else
     Run(win);
+#endif
 
     return 0;
 }

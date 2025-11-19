@@ -616,13 +616,7 @@ struct PnOutput {
 };
 
 
-// Used to add file descriptors to the optional main loop stuff.
-struct PnFD {
-
-    int fd; // could be a reading or writing file descriptor.
-    void *userData;
-    bool (*callback)(int fd, void *userData);
-};
+struct PnMainLoop;
 
 // It looks like most GUI (graphical user interface) based programs
 // (Wayland compositor included), as we shrink a window cull out the
@@ -770,23 +764,8 @@ struct PnDisplay {
     struct PnMenu *topMenu;
     struct PnWidget *bottomMenuButton;
 
-    // TODO: We are using select(2).  Do we want to use epoll_wait(2)?  We
-    // loop through all the readers and writers for each select(2) call.
-    // epoll_wait(2) returns user data that makes it so we do not have to
-    // loop through all the readers and writers.  We are expecting less
-    // than three file descriptors, so it may be okay.  Using epoll_wait(2)
-    // requires a bit more code, and there should be no performance gain
-    // if there is three (4, 5, ?) or less file descriptors.
-    //
-    // TODO: There's also the question of whither to use the blocking or
-    // non-blocking read and write calls.  For now we'll use blocking.
-    // I thinking that non-blocking is preferred for using epoll_wait(2).
-    //
     // Optional main loop stuff:
-    struct PnFD *readers; // Realloc() allocated array
-    struct PnFD *writers; // Realloc() allocated array
-    // PnFD array lengths.
-    int numReaders, numWriters;
+    struct PnMainLoop *mainLoop;
 };
 
 

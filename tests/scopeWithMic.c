@@ -197,7 +197,8 @@ static inline void ReadSound(void) {
     // likely errno is 11 WOULDBLOCK on failure.
     // TODO: We could deal with errno. 
     //
-    while((rd = read(pipe_fd, buf + lenRd, SAMPLE_BYTES * (LEN - lenRd))) > 0) {
+    while((rd = read(pipe_fd, buf + lenRd,
+                    SAMPLE_BYTES * (LEN - lenRd))) > 0) {
         ASSERT(rd % SAMPLE_BYTES == 0,
                 "read non-multiple of " STR(SAMPLE_BYTES) " bytes");
         lenRd += rd;

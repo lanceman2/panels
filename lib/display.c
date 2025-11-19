@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include <link.h>
-
+#include <sys/epoll.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 #include "../include/panels.h"
 #include "debug.h"
 #include "display.h"
-
+#include "mainLoop.h"
 
 
 // Convert the Linux event button values to a number from between
@@ -757,6 +758,9 @@ static void _pnDisplay_destroy(void) {
     wl_display_disconnect(d.wl_display);
 
     FreeTheme();
+
+    if(d.mainLoop)
+        pnMainLoop_destroy(d.mainLoop);
 
     memset(&d, 0, sizeof(d));
 }

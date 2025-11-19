@@ -44,7 +44,7 @@ static snd_t buf[LEN];
 
 static bool triggered = false;
 
-#define NUM_POINTS 1024 * 8
+#define NUM_POINTS   (1024 * 8)
 static const size_t pointsPerDraw = NUM_POINTS/2;
 static fftw_complex in[NUM_POINTS];
 static fftw_complex out[NUM_POINTS];
@@ -53,9 +53,9 @@ static double measure[NUM_POINTS/2];
 static fftw_plan plan;
 
 static pid_t pid = 0;
-#define SND_FMT  PRIi32
-#define YMIN ((double) - 0.01)
-#define YMAX ((double)   1.01)
+#define SND_FMT       PRIi32
+#define YMIN          ((double) - 0.01)
+#define YMAX          ((double)   1.01)
 #define SAMPLE_BYTES  (sizeof(snd_t))
 #define ARECORD_FMT   "S32_LE"
 
@@ -91,7 +91,6 @@ static inline bool preDispatch(struct wl_display *d, int wl_fd) {
     //
     // wl_display_flush(d) Flushes write commands to compositor.
     errno = 0;
-    // wl_display_flush(d) Flushes write commands to compositor.
 
     int ret = wl_display_flush(d);
 

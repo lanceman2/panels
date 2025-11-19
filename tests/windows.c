@@ -14,6 +14,12 @@ static void CreateWindow(uint32_t w, uint32_t h) {
     pnWindow_show(win);
 }
 
+#ifdef RUN
+static bool DummyReader(int fd, void *userData) {
+    return false;
+}
+#endif
+
 
 int main(void) {
 
@@ -21,7 +27,17 @@ int main(void) {
     CreateWindow(700, 300);
     CreateWindow(200, 500);
 
+#ifdef RUN
+    // Needed to test pnDisplay_run() with epoll code in it.
+    //
+    // We add a dummy reader that never gets its' callback called.
+    // That will force it to use the code with epoll_wait(), thinking
+    // that we have a file reader.
+    ASSERT(pnDisplay_addReader(0, 0, DummyReader, 0) == false);
+    pnDisplay_run();
+#else
     Run(win);
+#endif
 
     return 0;
 }

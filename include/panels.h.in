@@ -415,7 +415,7 @@ PN_EXPORT bool pnDisplay_dispatch(void);
 PN_EXPORT bool pnDisplay_haveXDGDecoration(void);
 PN_EXPORT bool pnDisplay_haveWindow(void);
 PN_EXPORT bool pnDisplay_run();
-PN_EXPORT bool pnDisplay_addReader(int fd,
+PN_EXPORT bool pnDisplay_addReader(int fd, bool edge_trigger,
         bool (*read)(int fd, void *userData), void *userData);
 PN_EXPORT bool pnDisplay_removeReader(int fd);
 
