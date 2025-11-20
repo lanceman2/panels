@@ -9,7 +9,13 @@ struct PnFD {
 
     int fd; // could be a reading or writing file descriptor.
     void *userData;
-    bool (*callback)(int fd, void *userData);
+
+    // Read or Write callback function:
+    //
+    // returns 0 to keep going
+    // returns 1 to have callback removed
+    // returns 2 to have callback removed and not call all other
+    int (*callback)(int fd, void *userData);
 
     // We keep a list of struct PnFD:
     struct PnFD *next;
@@ -118,7 +124,7 @@ static inline struct PnMainLoop *pnMainLoop_create() {
 }
 
 static inline struct PnFD *AddFD(struct PnFD **l, int fd,
-        bool (*callback)(int fd, void *userData), void *userData) {
+        int (*callback)(int fd, void *userData), void *userData) {
 
     struct PnFD *n = calloc(1, sizeof(*n));
     ASSERT(n, "calloc(1, %zu) failed", sizeof(*n));
@@ -145,7 +151,7 @@ static inline struct PnFD *AddFD(struct PnFD **l, int fd,
 
 static inline bool pnMainLoop_addReader(struct PnMainLoop *ml,
         int fd, bool edge_trigger,
-        bool (*read)(int fd, void *userData), void *userData) {
+        int (*read)(int fd, void *userData), void *userData) {
 
     DASSERT(ml);
     DASSERT(ml->epollFd >= 0);
@@ -189,7 +195,7 @@ pnMainLoop_removeReader(struct PnMainLoop *ml, int fd) {
     return false; // success.
 }
 
-static inline void
+static inline bool
 DoReader(struct PnMainLoop *ml, struct PnFD *f) {
 
     DASSERT(ml);
@@ -199,11 +205,18 @@ DoReader(struct PnMainLoop *ml, struct PnFD *f) {
     DASSERT(f->callback);
     DASSERT(ml->readers);
 
-    if(f->callback(f->fd, f->userData))
-        RemoveFd(ml, &ml->readers, f);
+    switch(f->callback(f->fd, f->userData)) {
+        case 1:
+            RemoveFd(ml, &ml->readers, f);
+            return false;
+        case 2:
+            RemoveFd(ml, &ml->readers, f);
+            return true;
+    }
+    return false;
 }
 
-static inline void
+static inline bool
 DoWriter(struct PnMainLoop *ml, struct PnFD *f) {
 
     DASSERT(ml);
@@ -213,8 +226,16 @@ DoWriter(struct PnMainLoop *ml, struct PnFD *f) {
     DASSERT(f->callback);
     DASSERT(ml->writers);
 
-    if(f->callback(f->fd, f->userData))
-        RemoveFd(ml, &ml->writers, f);
+    switch(f->callback(f->fd, f->userData)) {
+        case 1:
+            RemoveFd(ml, &ml->writers, f);
+            return false;
+        case 2:
+            RemoveFd(ml, &ml->writers, f);
+            return true;
+    }
+    return false;
+
 }
 
 
@@ -246,10 +267,13 @@ static inline bool pnMainLoop_wait(struct PnMainLoop *ml) {
     }
     for(int i=0; i<nfds; ++i) {
         struct PnFD *f = ev[i].data.ptr;
-        if(f->isReader)
-            DoReader(ml, f);
-        else
-            DoWriter(ml, f);
+        if(f->isReader) {
+            if(DoReader(ml, f))
+                break;
+        } else {
+            if(DoWriter(ml, f))
+                break;
+        }
     }
 
     return false; // success

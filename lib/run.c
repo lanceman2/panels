@@ -122,22 +122,30 @@ static int PreDispatch(void *userData) {
 }
 
 
-static bool Wayland_Read(int fd, void *userData) {
+static int Wayland_Read(int fd, void *userData) {
 
-    if(!d.wl_display || !pnDisplay_haveWindow())
+    if(!d.wl_display || !pnDisplay_haveWindow()) {
         // Got no running window based GUI before
         // calling wl_display_dispatch().
         // Return true to remove the wayland fd.
-        return true;
+        DSPEW("Cleaning up wl_display d.wl_display=%p "
+                "pnDisplay_haveWindow()=%d",
+                d.wl_display, pnDisplay_haveWindow());
+        return 2; // 2 -> stop all callbacks
+    }
 
     if(wl_display_dispatch(d.wl_display) == -1 ||
-            !pnDisplay_haveWindow())
+            !pnDisplay_haveWindow()) {
+        DSPEW("Cleaning up wl_display d.wl_display=%p "
+                "pnDisplay_haveWindow()=%d",
+                d.wl_display, pnDisplay_haveWindow());
         // Got no running window based GUI.
         // Return true to remove the wayland fd from the epoll_wait() file
         // descriptor group.
-        return true;
+        return 2; // 2 -> stop all callbacks
+    }
 
-    return false;
+    return 0;
 }
 
 
@@ -263,7 +271,7 @@ bool pnDisplay_run() {
 // Return true on failure.
 //
 bool pnDisplay_addReader(int fd, bool edge_trigger,
-        bool (*Read)(int fd, void *userData), void *userData) {
+        int (*Read)(int fd, void *userData), void *userData) {
 
     if(Init()) return true;
 

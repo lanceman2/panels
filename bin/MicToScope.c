@@ -136,7 +136,7 @@ static inline void Init(void) {
 }
 
 
-static inline bool ReadSound(int fd, void *userData) {
+static inline int ReadSound(int fd, void *userData) {
 
     DASSERT(fd >= 0);
     DASSERT(fd == pipe_fd);
@@ -144,7 +144,6 @@ static inline bool ReadSound(int fd, void *userData) {
     ssize_t rd;
     size_t lenRd = 0;
 
-    // likely errno is 11 WOULDBLOCK on failure.
     // TODO: We could deal with errno. 
     //
     while((rd = read(pipe_fd, buf + lenRd,
@@ -170,7 +169,7 @@ static inline bool ReadSound(int fd, void *userData) {
     if(samples >= pointsPerDraw)
         pnWidget_queueDraw(graph, 0);
 
-    return false;
+    return 0;
 }
 
 

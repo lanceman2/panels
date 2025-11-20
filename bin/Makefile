@@ -13,6 +13,11 @@ BUILD_NO_INSTALL :=
 ifdef WITH_CAIRO
 ifdef CAIRO_LDFLAGS # We need to link to libcairo.so directly too.
 
+BUILD_NO_INSTALL += SquareWaveToSpeaker
+
+SquareWaveToSpeaker_SOURCES := SquareWaveToSpeaker.c $(root)/lib/debug.c
+
+
 MicToScope_SOURCES := MicToScope.c
 MicToScope_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS)
 MicToScope_CPPFLAGS := $(CAIRO_CFLAGS)

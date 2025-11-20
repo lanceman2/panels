@@ -15,8 +15,8 @@ static void CreateWindow(uint32_t w, uint32_t h) {
 }
 
 #ifdef RUN
-static bool DummyReader(int fd, void *userData) {
-    return false;
+static int DummyReader(int fd, void *userData) {
+    return 0;
 }
 #endif
 
