@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
+#include <cairo/cairo.h>
 
 #include "../include/panels.h"
 
@@ -10,6 +11,7 @@
 
 #include "../lib/debug.h"
 #include "../lib/display.h"
+#include "../lib/plot.h"
 #include "../lib/graph.h"
 
 #include "run.h"

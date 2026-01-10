@@ -15,6 +15,7 @@
 
 #include "debug.h"
 #include "display.h"
+#include "plot.h"
 #include "graph.h"
 #include "SetColor.h"
 

@@ -92,7 +92,8 @@ libpanels.so_SOURCES +=\
  scopePlot.c\
  plot.c\
  graphSet.c\
- check.c
+ check.c\
+ plot_drawPoint.c
 endif
 
 

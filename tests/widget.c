@@ -1,5 +1,6 @@
 #include <signal.h>
 
+#include <cairo/cairo.h>
 #include "../include/panels.h"
 
 #include "../lib/debug.h"

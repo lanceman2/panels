@@ -88,18 +88,14 @@ extern "C" {
 #define PN_MIN_WIDGET_HEIGHT (1)
 
 
-// We are putting this in libpanels API users C/C++ code.
 // We define the PN_WITH_CAIRO and PN_WITH_FONTCONFIG
-// when the libpanels library has additional interfaces that
-// require it to be linked with libcairo and other libraries.
+// when the libpanels library linked with libcairo and other libraries.
+//
+// The libpanels user can use the CAIRO interfaces with libpanels: see
+// pnWidget_setCairoDraw().
 //
 @define_WITH_FONTCONFIG@
 @define_WITH_CAIRO@
-
-
-#ifdef PN_WITH_CAIRO
-#include <cairo/cairo.h>
-#endif
 
 // We make default enumeration values be 0.  That saves a ton of
 // development time.
@@ -380,33 +376,8 @@ struct PnCallback {
     struct PnCallback *prev, *next;
 };
 
-struct PnPlot {
 
-    struct PnCallback callback; // inherit first.
-
-    struct PnGraph *graph;
-    // For a static or scope plot these are connected to the appropriate
-    // object at the start of a plot draw.
-    // This is just so we do not deference one more pointer, like
-    // p->pointCr and not p->g->pointCr, in a tight loop.
-    cairo_t *lineCr, *pointCr;
-
-    struct PnZoom *zoom;
-
-    enum PnPlotType type;
-
-    // Just for scope plots.  Is zero for static plots.
-    uint32_t shiftX, shiftY;
-
-    uint32_t lineColor, pointColor;
-
-    double lineWidth, pointSize;
-    // The last point drawn is needed to draw lines when
-    // there is a line being drawn in the future.
-    double x, y; // last point
-};
-
-
+struct PnPlot;
 struct PnWidget;
 
 
@@ -654,9 +625,17 @@ PN_EXPORT char *pnFindFont(const char *exp);
 // If libpanels.so is built with libcairo.so
 #ifdef PN_WITH_CAIRO
 
+
+#ifdef CAIRO_H
+// If the user included cairo.h then use it, else not.
+//
+// This is the one libpanels API function that requires the user
+// to use a Cairo API interface.
 PN_EXPORT void pnWidget_setCairoDraw(struct PnWidget *widget,
         int (*draw)(struct PnWidget *w, cairo_t *cr, void *userData),
         void *userData);
+#endif // #ifndef CAIRO_H
+
 
 PN_EXPORT struct PnWidget *pnButton_create(struct PnWidget *parent,
         uint32_t width, uint32_t height,
@@ -783,51 +762,8 @@ static inline bool CullLine(struct PnGraph *g,
 }
 
 
-// TODO: This is likely a (tight loop) bottle-neck in most user code, so
-// we need to make it faster.  In-lining is step one.
-//
-// TODO: Add non-Cairo versions of point and line drawing; just directly
-// writing to the mapped pixel memory.
-//
-static inline void
-pnPlot_drawPoint(struct PnPlot *p, double x, double y) {
-
-    // TODO: It would be nice to have some assertions here;
-    // maybe with DEBUG mode.
-
-    const double hw = p->pointSize;
-    const double w = 2.0*hw;
-
-    struct PnZoom *z = p->zoom;
-    cairo_t *cr = p->lineCr;
-
-    // The p->shiftX and p->shiftY is only non-zero for the scope plot
-    // because the scope plot is drawn on the widget surface, which is
-    // smaller than the static plotting and grid surface.
-    x = xToPix(x, z) - p->shiftX;
-    y = yToPix(y, z) - p->shiftY;
-
-    if(p->x != DBL_MAX) {
-
-        // TODO: maybe remove these ifs by using different functions.
-        if(p->lineWidth > 0) {
-            cairo_move_to(cr, p->x, p->y);
-            cairo_line_to(cr, x, y);
-            // Calling this often must save having to store all
-            // those points in the cairo_t object.
-            cairo_stroke(cr);
-        }
-
-        if(p->pointSize) {
-            // Draw the last x, y point.
-            cairo_rectangle(p->pointCr, p->x - hw, p->y - hw, w, w);
-            cairo_fill(p->pointCr);
-        }
-    }
-
-    p->x = x;
-    p->y = y;
-}
+PN_EXPORT void 
+pnPlot_drawPoint(struct PnPlot *p, double x, double y);
 
 // Set the cursor immediately.  Put this cursor in a stack
 // so we may reset it back with pnWindow_popCursor().
