@@ -34,8 +34,6 @@ aplay -r 384000  -f S32_LE -c1 -t raw  xxx
 #include <limits.h>
 #include <math.h>
 
-#include <wayland-client.h>
-
 #include "../include/panels.h"
 #include "../lib/debug.h"
 
@@ -136,7 +134,7 @@ static inline void Init(void) {
 }
 
 
-static inline int ReadSound(int fd, void *userData) {
+static int ReadSound(int fd, void *userData) {
 
     DASSERT(fd >= 0);
     DASSERT(fd == pipe_fd);
