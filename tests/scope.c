@@ -66,6 +66,6 @@ int main(void) {
 
     pnWindow_show(win);
 
-    Run(win);
+    pnDisplay_run();
     return 0;
 }
