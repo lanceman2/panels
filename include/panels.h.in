@@ -340,11 +340,6 @@ enum PnAlign {
     PnAlign_JJ = (PN_ALIGN_X_JUSTIFIED | PN_ALIGN_Y_JUSTIFIED)
 };
 
-enum PnPlotType {
-
-    PnPlotType_static,
-    PnPlotType_dynamic
-};
 
 struct PnZoom {
 

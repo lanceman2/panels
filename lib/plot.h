@@ -1,3 +1,10 @@
+enum PnPlotType {
+
+    PnPlotType_static,
+    PnPlotType_dynamic
+};
+
+
 struct PnPlot {
 
     struct PnCallback callback; // inherit first.

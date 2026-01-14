@@ -35,7 +35,6 @@ static inline void CreateCairo(struct PnBuffer *buffer,
     DASSERT(s->allocation.height > 0);
     DASSERT(s->allocation.height < (uint32_t) -50);
 
-
     s->cairo_surface = cairo_image_surface_create_for_data(
         (void *) (buffer->pixels +
             s->allocation.y * buffer->stride +

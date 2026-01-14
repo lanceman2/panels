@@ -29,6 +29,7 @@ void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
 
     // Set the plot default settings:
     struct PnPlot *p = (void *) callback;
+    p->type = PnPlotType_static;
     //                 A R G B
     p->lineColor =  0xFFF0F030;
     p->pointColor = 0xFFFF0000;
@@ -55,6 +56,8 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(userCallback);
 
     struct PnPlot *p = (void *) callback;
+    DASSERT(p);
+    DASSERT(p->type == PnPlotType_static);
 
     // Initialize the last plotted x value.
     p->x = DBL_MAX;

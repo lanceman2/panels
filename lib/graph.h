@@ -287,5 +287,3 @@ extern bool ScopeDrawAction(struct PnGraph *p,
                 double xMin, double xMax, double yMin, double yMax),
         void *userData, uint32_t actionIndex, void *actionData);
 
-
-

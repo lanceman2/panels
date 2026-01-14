@@ -28,17 +28,15 @@
 void 
 pnPlot_drawPoint(struct PnPlot *p, double x, double y) {
 
-    // TODO: It would be nice to have some assertions here;
-    // maybe with DEBUG mode.
-
     const double hw = p->pointSize;
     const double w = 2.0*hw;
 
     struct PnZoom *z = p->zoom;
     cairo_t *cr = p->lineCr;
 
+
     // The p->shiftX and p->shiftY is only non-zero for the scope plot
-    // because the scope plot is drawn on the widget surface, which is
+    // because the scope plot is drawn on the widget surface which can be
     // smaller than the static plotting and grid surface.
     x = xToPix(x, z) - p->shiftX;
     y = yToPix(y, z) - p->shiftY;

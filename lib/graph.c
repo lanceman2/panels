@@ -103,9 +103,10 @@ static inline void DestroyGraphSurfaces(struct PnGraph *g) {
         cairo_destroy(g->cr);
         g->cr = 0;
         DestroyGraphSurface(g, &g->bgSurface);
-        if(g->scopeSurface.surface)
+        if(g->scopeSurface.surface) {
             DestroyGraphSurface(g, &g->scopeSurface);
-        else {
+            g->scopeSurface.surface = 0;
+        } else {
             DASSERT(!g->scopeSurface.pointCr);
             DASSERT(!g->scopeSurface.lineCr);
         }
@@ -176,6 +177,9 @@ static inline void CreateSurfaces(struct PnGraph *g) {
 
     if(g->have_scopes) {
         DASSERT(g->widget.cairo_surface);
+        DASSERT(!g->scopeSurface.surface);
+        DASSERT(!g->scopeSurface.lineCr);
+        DASSERT(!g->scopeSurface.pointCr);
         // The scope plots will use the widget cairo_surface to draw
         // points and/or lines to.
         CreateGraphSurface(g, &g->scopeSurface, g->widget.cairo_surface);
@@ -960,8 +964,8 @@ void GetPadding(uint32_t width, uint32_t height,
     //DSPEW("                padX=%d  padY=%d", *padX, *padY);
 }
 
-// The width and/or height of the drawing Area changed and so must all the
-// zoom scaling.
+// The width and/or height of the drawing Area changed and so we must
+// change all the zoom scalings.
 //
 // This assumes that the displayed user values did not change, just the
 // drawing area changed size; i.e. there is a bigger or smaller user view
@@ -977,8 +981,10 @@ static inline void FixZoomsScale(struct PnGraph *g,
     DASSERT(g->yMin < g->yMax);
     DASSERT(g->width);
     DASSERT(g->height);
-    // The width and height should have changed.
-    DASSERT(g->width != width || g->height != height);
+
+    if(g->width == width && g->height == height)
+        // Nothing to fix.
+        return;
 
     // The padX and padY may or may not be changing.
     uint32_t padX, padY;
@@ -1017,10 +1023,12 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     ASSERT(h);
     DASSERT(widget == (void *) g);
 
-    if(g->bgSurface.surface && g->width == w && g->height == h) {
-        DASSERT(cairo_image_surface_get_data(g->bgSurface.surface));
-        return;
-    }
+    // Notice: This used to just return if the size did not change, but
+    // that was wrong, and a nasty bug to find:
+    // We still recreate the surfaces even if the width and height do not
+    // change, because the window can change size without changing the
+    // size of a child widget; which would cause there to be new buffer
+    // memory mappings made.
 
     DestroyGraphSurfaces(g);
 
@@ -1075,6 +1083,7 @@ static inline void ScopesDraw(struct PnGraph *g,
     DASSERT(g);
     DASSERT(g->have_scopes);
     DASSERT(g->scopeSurface.surface);
+    DASSERT(g->widget.cairo_surface == g->scopeSurface.surface);
 
     // Draw the scope surface
     pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);

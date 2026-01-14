@@ -31,6 +31,7 @@ void AddScopePlot(struct PnWidget *w, struct PnCallback *callback,
     // Set the plot default settings:
     struct PnPlot *p = (void *) callback;
     struct PnGraph *g = (void *) w;
+    p->type = PnPlotType_dynamic;
     //                 A R G B
     p->lineColor =  0xFFF0F030;
     p->pointColor = 0xFFFF0000;
@@ -63,6 +64,8 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(userCallback);
 
     struct PnPlot *p = (void *) callback;
+    DASSERT(p);
+    DASSERT(p->type == PnPlotType_dynamic);
 
     // Initialize the last plotted x value.
     p->x = DBL_MAX;
