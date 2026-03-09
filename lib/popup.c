@@ -56,11 +56,9 @@ static void configure(void *data,
 
 static void popup_done(void *data, struct xdg_popup *xdg_popup) {
 
-    //struct PnWindow *win = data;
+    struct PnWindow *win = data;
 
-    DSPEW();
-    //pnWidget_destroy(&win->widget);
-    DSPEW();
+    ASSERT(win->xdg_surface);
 }
 
 static void repositioned(void *data,
@@ -175,6 +173,8 @@ void pnPopup_hide(struct PnWidget *w) {
         FreeBuffer(&win->buffer);
 
     DestroyPopup(win);
+
+    // Call xdg_surface_destroy() before  wl_surface_destroy().
 
     if(win->xdg_surface) {
         xdg_surface_destroy(win->xdg_surface);

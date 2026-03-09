@@ -501,11 +501,15 @@ void _pnWindow_destroy(struct PnWidget *w) {
             DestroyPopup(win);
     }
 
-    if(win->xdg_surface)
+    if(win->xdg_surface) {
         xdg_surface_destroy(win->xdg_surface);
+        win->xdg_surface = 0;
+    }
 
-    if(win->wl_surface)
+    if(win->wl_surface) {
         wl_surface_destroy(win->wl_surface);
+        win->wl_surface = 0;
+    }
 
 
     memset(win, 0, sizeof(*win));

@@ -157,7 +157,7 @@ static inline
 void PopupDestroy(struct PnMenu *m) {
     DASSERT(m);
     struct PnWidget *popup = m->popup;
-    if(!m->popup) return;
+    if(!popup) return;
 
     pnWidget_destroy(popup);
     m->popup = 0;
