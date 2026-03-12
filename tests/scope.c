@@ -54,7 +54,7 @@ int main(void) {
     //                  Color Bytes:  A R G B
     pnWidget_setBackgroundColor(w, 0xA0101010, 0);
 
-    struct PnPlot *p = pnScopePlot_create(w, Plot, catcher);
+    struct PnPlot *p = pnScopePlot_create(w, Plot, 0);
     ASSERT(p);
     // This plot, p, is owned by the graph, w.
     pnPlot_setLineColor(p, 0xFFFF0000);
