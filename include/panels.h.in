@@ -34,7 +34,7 @@ extern "C" {
 #define PN_NUM_BUTTONS    (3)
 
 
-// List of action callback types:
+// List of CPP macro action callback types:
 //
 // These numbers are indexes into arrays, and have values that are
 // dependent on the order of widget inheritance.  It takes a test run to
@@ -65,7 +65,15 @@ extern "C" {
 // faster, just arrays of action callback functions with very simple
 // marshalling, which may be somewhat like the event marshalling in
 // Wayland client, but much simpler (so I think).  It does not matter,
-// this is not even close to being a performance bottle-neck.
+// this is not even close to being a performance bottle-neck.  The level
+// of complexity of this is an order of magnitude simpler than both Qt and
+// GTK signals.  The trade off is that we add making a CPP macro to the
+// workflow when we add a particular widget action thingy.  The code will
+// error check the CPP macro numbers at runtime, and make sure they are in
+// an increasing value sequence for each widget type, starting at 0.
+//
+// Like so:
+// PN_WIDGETNAME_CB_VERB
 //
 #define PN_GENERIC_CB_PRESS      0
 #define PN_GENERIC_CB_RELEASE    1

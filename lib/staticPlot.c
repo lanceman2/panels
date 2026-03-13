@@ -76,8 +76,8 @@ bool StaticDrawAction(struct PnGraph *g, struct PnCallback *callback,
     // have to add a extra pointer dereference at every
     // pnGraph_drawPoint() call.
     //
-    p->lineCr = g->bgSurface.lineCr;
-    p->pointCr = g->bgSurface.pointCr;
+    p->cairo.line = g->bgSurface.lineCr;
+    p->cairo.point = g->bgSurface.pointCr;
     p->zoom = g->zoom;
 
     SetColor(pcr, p->pointColor);

@@ -19,8 +19,8 @@
 #include "graph.h"
 
 
-// TODO: This is likely a (tight loop) bottle-neck in most user code, so
-// we need to make it faster.  In-lining is step one.
+// TODO: This is likely called in a (tight loop) bottle-neck in most user
+// code, so we need to make it faster.  In-lining is step one?
 //
 // TODO: Add non-Cairo versions of point and line drawing; just directly
 // writing to the mapped pixel memory.
@@ -32,7 +32,7 @@ pnPlot_drawPoint(struct PnPlot *p, double x, double y) {
     const double w = 2.0*hw;
 
     struct PnZoom *z = p->zoom;
-    cairo_t *cr = p->lineCr;
+    cairo_t *cr = p->cairo.line;
 
 
     // The p->shiftX and p->shiftY is only non-zero for the scope plot
@@ -54,8 +54,8 @@ pnPlot_drawPoint(struct PnPlot *p, double x, double y) {
 
         if(p->pointSize) {
             // Draw the last x, y point.
-            cairo_rectangle(p->pointCr, p->x - hw, p->y - hw, w, w);
-            cairo_fill(p->pointCr);
+            cairo_rectangle(p->cairo.point, p->x - hw, p->y - hw, w, w);
+            cairo_fill(p->cairo.point);
         }
     }
 

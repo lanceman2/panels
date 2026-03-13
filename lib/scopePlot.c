@@ -91,8 +91,8 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     // having to add many pointer dereferences, or having the user pass
     // a pointer to the graph (just the plot pointer is passed).
     //
-    p->lineCr = g->scopeSurface.lineCr;
-    p->pointCr = g->scopeSurface.pointCr;
+    p->cairo.line = g->scopeSurface.lineCr;
+    p->cairo.point = g->scopeSurface.pointCr;
     p->zoom = g->zoom;
 
     SetColor(pcr, p->pointColor);
