@@ -90,6 +90,7 @@ libpanels.so_SOURCES +=\
  graph.h\
  staticPlot.c\
  scopePlot.c\
+ beamPlot.c\
  plot.c\
  graphSet.c\
  check.c\

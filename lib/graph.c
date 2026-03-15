@@ -916,9 +916,8 @@ drawGrid:
 
     pnWidget_callAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW);
 
-    g->pushBGSurface = true;
-
-    //pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
+    if(!g->pushBGSurface)
+        g->pushBGSurface = true;
 }
 
 static
@@ -1053,6 +1052,7 @@ static void Config(struct PnWidget *widget, uint32_t *pixels,
     }
 
     CreateSurfaces(g);
+    g->pushBGSurface = true;
     _pnGraph_drawGrids(g, g->cr);
 }
 
@@ -1062,7 +1062,7 @@ static inline void OverlayGridSurface(struct PnGraph *g,
     // Transfer the bgSurface to this cr (and its surface).
     //
     // IMPORTANT note: Tests show this uses 1/2 the CPU usage as redrawing
-    // the grid lines every time; so that's what we seem to have extra
+    // the grid lines every time; so that's why we seem to have extra
     // buffers with 2D plotter graph stuff.
     // This gives us graph left mouse pointer button grab and slide.
     //
@@ -1072,21 +1072,6 @@ static inline void OverlayGridSurface(struct PnGraph *g,
     cairo_set_source_surface(cr, g->bgSurface.surface,
             - g->padX + g->slideX, - g->padY + g->slideY);
     cairo_paint(cr);
-}
-
-// Call the scope plot callbacks and then put the scopeSurface
-// on the 
-static inline void ScopesDraw(struct PnGraph *g,
-        cairo_t *cr) {
-
-    DASSERT(cr);
-    DASSERT(g);
-    DASSERT(g->have_scopes);
-    DASSERT(g->scopeSurface.surface);
-    DASSERT(g->widget.cairo_surface == g->scopeSurface.surface);
-
-    // Draw the scope surface
-    pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
 }
 
 
@@ -1100,14 +1085,45 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
     // PnGraph::bgSurface::surface
 
     // Put PnGraph::bgSurface::surface on to this cr.
-    if(g->pushBGSurface)
-        OverlayGridSurface(g, cr);
+    if(g->pushBGSurface ||
+            g->boxX != INT32_MAX /*we have a zoom box to draw*/) {
+        // Development note: this adds about 15% CPU (from %1); with just
+        // the beam scope.  So basically this next function call is a CPU
+        // bottleneck.  Of course that's just on my computer, but it's
+        // likely to be the bottleneck on all computers even if the CPU
+        // usage is not the same.  This shows me that using the Cairo API
+        // to draw the grid is not a big resource cost so long as we do
+        // not keep painting it to the pixel buffer at a high rate (like
+        // 60 Hz).  The graph bgSurface surface does not need to change
+        // unless the desktop user interacts with the graph widget (like
+        // in zooming actions), which if a relatively infrequent event
+        // compared to scope drawing events.
+        //
+        OverlayGridSurface(g, cr); // CPU bottleneck call
+        g->pushBGSurface = false;
+    }
 
-    if(g->have_scopes)
-        ScopesDraw(g, cr);
+    // This checks that there are userCallbacks for PN_GRAPH_CB_SCOPE_DRAW
+    // set and only then calls them.
+    pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW);
+
+    // Now any fading beam scope plots get drawn on Cairo surface, but
+    // does not necessarily use the Cairo API to draw (it may use
+    // something cruder and faster than the Cairo API).  We are kind of
+    // stuck using the Cairo surface since that is where the widget graph
+    // grid is now, how else could we get the zooming function with all
+    // the different plot types and plot methods?
+    //
+    // TODO: Well, we could have two ways to draw: with Cairo and without.
+    // But, it looks like that just having the Cairo surface widget does
+    // not add a lot of CPU if we do not draw on it with the Cairo API in
+    // every scope draw frame.
+    //
+    pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_BEAM);
 
     if(g->boxX != INT32_MAX) {
-        // Draw a zoom box.
+        // Draw a zoom box on top of everything.
+        //
         //cairo_set_operator(cr, CAIRO_OPERATOR_XOR);
         cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
         //cairo_set_operator(cr, CAIRO_OPERATOR_EXCLUSION);
@@ -1117,6 +1133,7 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
                     g->boxWidth, g->boxHeight);
         cairo_fill(cr);
     }
+
     // return 0 -> done; return 1 -> to call again next frame like in (1
     // second)/60.  Your frame period depends on many things.  This is using
     // a wayland compositor server which determines the frame rate.
@@ -1190,6 +1207,11 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     pnWidget_addAction(&g->widget, PN_GRAPH_CB_SCOPE_DRAW,
             (void *) ScopeDrawAction, AddScopePlot, 0/*actionData*/,
             sizeof(struct PnScopePlot));
+
+    pnWidget_addAction(&g->widget, PN_GRAPH_CB_SCOPE_BEAM,
+            (void *) ScopeBeamDrawAction, AddScopeBeamPlot, 0/*actionData*/,
+            sizeof(struct PnScopePlot));
+
 
     // floating point scaled size exposed pixels without the padX and
     // padY added (not in number of pixels):

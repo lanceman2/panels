@@ -20,7 +20,8 @@
 #include "SetColor.h"
 
 
-
+// Add a scope plot that uses Cairo to draw.
+//
 void AddScopePlot(struct PnWidget *w, struct PnCallback *callback,
         uint32_t actionIndex, void *actionData) {
 
@@ -44,6 +45,8 @@ void AddScopePlot(struct PnWidget *w, struct PnCallback *callback,
 }
 
 
+// Call the users callback for the Cairo drawn scope plot.
+//
 bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
         bool (*userCallback)(struct PnWidget *g, struct PnPlot *p,
                 void *userData,
@@ -62,6 +65,9 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
     DASSERT(g->scopeSurface.surface);
     ASSERT(IS_TYPE1(g->widget.type, PnWidgetType_graph));
     DASSERT(userCallback);
+    DASSERT(g->have_scopes);
+    DASSERT(g->widget.cairo_surface == g->scopeSurface.surface);
+
 
     struct PnPlot *p = (void *) callback;
     DASSERT(p);
@@ -112,6 +118,13 @@ bool ScopeDrawAction(struct PnGraph *g, struct PnCallback *callback,
         cairo_rectangle(pcr, p->x - hw, p->y - hw, w, w);
         cairo_fill(pcr);
     }
+
+    // See file graph.c function cairoDraw() and comments there-in where
+    // this flag g->pushBGSurface has an effect.
+    //
+    // Maybe we can change this and get better performance.
+    //
+    g->pushBGSurface = true;
 
     return ret;
 }

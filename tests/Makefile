@@ -255,6 +255,11 @@ scope_run_SOURCES := scope.c
 scope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
 scope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
 
+beamScope_run_SOURCES := beamScope.c
+beamScope_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) -lm
+beamScope_run_CPPFLAGS := -DRUN $(CAIRO_CFLAGS)
+
+
 scope3stringTune_run_SOURCES := scope3stringTune.c
 scope3stringTune_run_LDFLAGS := $(PN_LIB) $(CAIRO_LDFLAGS) $(WL_LDFLAGS) -lm
 scope3stringTune_run_CPPFLAGS := $(CAIRO_CFLAGS) $(WL_CFLAGS)

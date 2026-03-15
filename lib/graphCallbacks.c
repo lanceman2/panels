@@ -128,6 +128,8 @@ finish:
     cairo_t *cr = cairo_create(g->bgSurface.surface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
+
+    g->pushBGSurface = true;
     pnWidget_queueDraw(&g->widget, 0);
 }
 
@@ -164,6 +166,8 @@ static inline void FinishDragZoom(
     cairo_t *cr = cairo_create(g->bgSurface.surface);
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
+
+    g->pushBGSurface = true;
     pnWidget_queueDraw(&g->widget, 0);
 }
 
@@ -193,6 +197,8 @@ bool motion(struct PnWidget *w, int32_t x, int32_t y,
         // may need to make a zoom action.  We can have a mouse button
         // press event without having motion.
         state |= MOVED;
+
+    g->pushBGSurface = true;
 
     switch(action) {
         case ACTION_DRAG: {
@@ -422,6 +428,7 @@ bool axis(struct PnWidget *w,
     _pnGraph_drawGrids(g, cr);
     cairo_destroy(cr);
 
+    g->pushBGSurface = true;
     pnWidget_queueDraw(&g->widget, 0);
     return true;
 }

@@ -26,7 +26,7 @@
   |                       V                       |
   -------------------------------------------------
 
-  The user of this Cairo Surface can slide this
+  The desktop user of this Cairo Surface can slide this
   surface relative to the VIEW BOX with:
         cairo_set_source_surface(cr, grid_surface, padX, padY);
         cairo_set_source_surface(cr, grid_surface,
@@ -206,11 +206,8 @@ struct PnGraph {
     uint32_t zoomCount;
 
     // pushBGSurface is a flag used to say that the bgSurface (declared
-    // above in this structure) changed and needs to be painted onto the
-    // graph widget surface.  This is so we do not bother painting the
-    // bgSurface onto graph widget surface at every draw cycle.  The scope
-    // plots may make many draws for a single bgSurface draw.  If not for
-    // scope plots this flag, pushBGSurface, would not be needed.
+    // above in this structure) needs to be painted onto the graph widget
+    // surface.
     //
     bool pushBGSurface;
     // needScopeDraw is set by pnPlot_queueScopeDraw().
@@ -287,3 +284,13 @@ extern bool ScopeDrawAction(struct PnGraph *p,
                 double xMin, double xMax, double yMin, double yMax),
         void *userData, uint32_t actionIndex, void *actionData);
 
+extern void AddScopeBeamPlot(struct PnWidget *w,
+        struct PnCallback *callback, uint32_t actionIndex,
+        void *actionData);
+
+extern bool ScopeBeamDrawAction(struct PnGraph *p,
+        struct PnCallback *callback,
+        bool (*userCallback)(struct PnWidget *graph,
+                struct PnPlot *plot, void *userData,
+                double xMin, double xMax, double yMin, double yMax),
+        void *userData, uint32_t actionIndex, void *actionData);

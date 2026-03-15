@@ -110,7 +110,6 @@ struct PnPlot {
             cairo_t *line, *point;
         } cairo;
 
-
         struct PnBeam beam;
 
         struct {
@@ -122,7 +121,7 @@ struct PnPlot {
     // TODO: make this a bool.
     enum PnPlotType type; // static or scope
 
-    enum PnDrawMethod drawMethod; // Cairo, beam, or raw.
+    //enum PnDrawMethod drawMethod; // Cairo, beam, or raw.
 
     // Just for scope plots.  Is zero for static plots.
     uint32_t shiftX, shiftY;
