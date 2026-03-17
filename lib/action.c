@@ -45,7 +45,7 @@ void pnWidget_addAction(struct PnWidget *w,
         // The passed callback pointer is a unique ID and opaque pointer
         // to the struct PnCallback.
         void (*add)(struct PnWidget *w, struct PnCallback *callback,
-                uint32_t actionIndex, void *actionData),
+                uint32_t actionIndex, void *actionData, void *addData),
         void *actionData, size_t callbackSize) {
 
     DASSERT(w);
@@ -103,7 +103,7 @@ void *pnWidget_addCallback(struct PnWidget *w, uint32_t index,
         // The callback function prototype varies with particular widget
         // and index.  The widget maker must publish a list of function
         // prototypes and indexes; example: PN_BUTTON_CB_CLICK.
-        void *userCallback, void *userData) {
+        void *userCallback, void *userData, void *addData) {
     DASSERT(w);
     // Some assertions are not just for debug builds.
     ASSERT(index < w->numActions);
@@ -132,6 +132,6 @@ void *pnWidget_addCallback(struct PnWidget *w, uint32_t index,
     if(a->add)
         // Tell the particular widget that we are adding a widget user
         // callback for action with index "index".
-        a->add(w, c, index, a->actionData);
+        a->add(w, c, index, a->actionData, addData);
     return c;
 }

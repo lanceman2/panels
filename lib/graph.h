@@ -102,6 +102,9 @@ struct PnGraphSurface {
 };
 
 
+struct PnBeamPoint; // plot.h
+
+
 // A 2D plotter has a lot of parameters.  This "graph" thingy is just the
 // parameters that we choose to draw the background line grid of a 2D
 // graph (plotter).  It has a "zoom" object in it that is parametrization
@@ -174,6 +177,13 @@ struct PnGraph {
     struct PnZoom *top; // first zoom level
     // zoom is the current zoom we are using.
     struct PnZoom *zoom; // current zoom level
+
+    // For optional fading beam plots.
+    // An allocated array of beamPoints[width * y + x].
+    //
+    struct PnBeamPoint *beamPoints;
+    uint32_t beamPoints_width, beamPoints_height;
+    bool beamReset;
 
     // Plotted X and Y values on the edges of the drawing area.
     //
@@ -264,7 +274,7 @@ extern bool axis(struct PnWidget *w,
 
 extern void AddStaticPlot(struct PnWidget *w,
         struct PnCallback *callback, uint32_t actionIndex,
-        void *actionData);
+        void *actionData, void *addData);
 
 extern bool StaticDrawAction(struct PnGraph *p,
         struct PnCallback *callback,
@@ -275,7 +285,7 @@ extern bool StaticDrawAction(struct PnGraph *p,
 
 extern void AddScopePlot(struct PnWidget *w,
         struct PnCallback *callback, uint32_t actionIndex,
-        void *actionData);
+        void *actionData, void *addData);
 
 extern bool ScopeDrawAction(struct PnGraph *p,
         struct PnCallback *callback,
@@ -286,7 +296,7 @@ extern bool ScopeDrawAction(struct PnGraph *p,
 
 extern void AddScopeBeamPlot(struct PnWidget *w,
         struct PnCallback *callback, uint32_t actionIndex,
-        void *actionData);
+        void *actionData, void *addData);
 
 extern bool ScopeBeamDrawAction(struct PnGraph *p,
         struct PnCallback *callback,

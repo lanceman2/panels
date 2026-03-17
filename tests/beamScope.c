@@ -13,23 +13,32 @@
 #include "run.h"
 
 
+static volatile sig_atomic_t running = 1;
+
 static
 void catcher(int sig) {
 
     ASSERT(0, "caught signal number %d", sig);
 }
 
-double t = 0.0;
+static
+void quit(int sig) {
+
+    INFO("caught signal number %d.  Cleaning up.", sig);
+    running = 0;
+}
+
+
+static double t = 0.0;
 
 bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
         double xMin, double xMax, double yMin, double yMax) {
 
-#if 0
-    for( uint32_t n = 100; n; t += 0.1, n--) {
-        //double a = 1.0 - t/tMax;
-        //double a = cos(0.34 + t/(540.2 * M_PI));
-        //pnPlot_drawPoint(p, a * cos(t), a * sin(2.01*t));
-        t += 0.1;
+#if 1
+    for( uint32_t n = 5; n; t += 0.001, n--) {
+        double a = cos(0.34 + t/(1.2 * M_PI));
+        //double a = 0.9;
+        pnPlot_drawPoint(p, a * cos(t*10.0), a * sin(t*10.0));
     }
 #endif
     pnWidget_queueDraw(g, 0);
@@ -41,12 +50,15 @@ bool Plot(struct PnWidget *g, struct PnPlot *p, void *userData,
 int main(void) {
 
     ASSERT(SIG_ERR != signal(SIGSEGV, catcher));
+    ASSERT(SIG_ERR != signal(SIGTERM, quit));
+    ASSERT(SIG_ERR != signal(SIGINT, quit));
 
-    struct PnWidget *win = pnWindow_create(0, 10, 10,
+    struct PnWidget *win = pnWindow_create(0, 20, 20,
             0/*x*/, 0/*y*/, PnLayout_LR/*layout*/, 0,
             PnExpand_HV);
     ASSERT(win);
     pnWindow_setPreferredSize(win, 1100, 900);
+    //pnWindow_setPreferredSize(win, 400, 380);
 
     // The auto 2D plotter grid (graph)
     struct PnWidget *w = pnGraph_create(
@@ -55,9 +67,11 @@ int main(void) {
             PnExpand_HV/*expand*/);
     ASSERT(w);
     //                  Color Bytes:  A R G B
-    pnWidget_setBackgroundColor(w, 0xA0101010, 0);
+    pnWidget_setBackgroundColor(w, 0xFF000000, 0);
 
-    struct PnPlot *p = pnScopePlot_createWithBeam(w, Plot, 0);
+    struct PnPlot *p = pnScopePlot_createWithBeam(w,
+            3000/*maxPoints displayed, 0 is infinite*/, 1000/*number of fade points*/,
+            Plot, 0);
     ASSERT(p);
     // This plot, p, is owned by the graph, w.
     pnPlot_setLineColor(p, 0xFFFF0000);
@@ -69,6 +83,7 @@ int main(void) {
 
     pnWindow_show(win);
 
-    pnDisplay_run();
+    while(running && pnDisplay_dispatch());
+
     return 0;
 }

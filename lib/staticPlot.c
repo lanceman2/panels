@@ -21,7 +21,7 @@
 
 
 void AddStaticPlot(struct PnWidget *w, struct PnCallback *callback,
-        uint32_t actionIndex, void *actionData) {
+        uint32_t actionIndex, void *actionData, void *addData) {
 
     DASSERT(actionIndex == PN_GRAPH_CB_STATIC_DRAW);
     DASSERT(w);

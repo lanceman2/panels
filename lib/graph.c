@@ -1101,6 +1101,7 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
         //
         OverlayGridSurface(g, cr); // CPU bottleneck call
         g->pushBGSurface = false;
+        g->beamReset = true;
     }
 
     // This checks that there are userCallbacks for PN_GRAPH_CB_SCOPE_DRAW
@@ -1120,6 +1121,8 @@ static int cairoDraw(struct PnWidget *w, cairo_t *cr,
     // every scope draw frame.
     //
     pnWidget_callAction(&g->widget, PN_GRAPH_CB_SCOPE_BEAM);
+    g->beamReset = false;
+
 
     if(g->boxX != INT32_MAX) {
         // Draw a zoom box on top of everything.
@@ -1198,7 +1201,7 @@ struct PnWidget *pnGraph_create(struct PnWidget *parent,
     pnWidget_setPress(&g->widget,   (void *) press, g);
     pnWidget_setRelease(&g->widget, (void *) release, g);
     pnWidget_setMotion(&g->widget,  (void *) motion, g);
-    pnWidget_setAxis(&g->widget,  (void *) axis, g);
+    pnWidget_setAxis(&g->widget,    (void *) axis, g);
 
     pnWidget_addAction(&g->widget, PN_GRAPH_CB_STATIC_DRAW,
             (void *) StaticDrawAction, AddStaticPlot, 0/*actionData*/,

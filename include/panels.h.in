@@ -576,7 +576,7 @@ PN_EXPORT void pnWidget_addAction(struct PnWidget *widget,
         // opaque pointer to the struct PnCallback.
         void (*add)(struct PnWidget *w,
                     struct PnCallback *callback, uint32_t actionIndex,
-                    void *actionData),
+                    void *actionData, void *addData),
         void *actionData, size_t callbackSize);
 
 PN_EXPORT void pnWidget_callAction(struct PnWidget *widget,
@@ -587,7 +587,7 @@ PN_EXPORT void *pnWidget_addCallback(struct PnWidget *widget,
         // The callback function prototype varies with particular widget
         // and index.  The widget maker must declare (publish) a list of
         // function prototypes and indexes; example: PN_BUTTON_CB_CLICK.
-        void *callback, void *userData);
+        void *callback, void *userData, void *addData);
 
 static inline struct PnPlot *pnStaticPlot_create(struct PnWidget *graph,
         bool (*plotter)(struct PnWidget *graph, struct PnPlot *plot,
@@ -595,7 +595,7 @@ static inline struct PnPlot *pnStaticPlot_create(struct PnWidget *graph,
         void *userData) {
     // TODO: Add type check here for graph?  Like ASSERT().
     return pnWidget_addCallback(graph, PN_GRAPH_CB_STATIC_DRAW,
-            plotter, userData);
+            plotter, userData, 0);
 }
 
 static inline struct PnPlot *pnScopePlot_create(struct PnWidget *graph,
@@ -604,18 +604,14 @@ static inline struct PnPlot *pnScopePlot_create(struct PnWidget *graph,
         void *userData) {
     // TODO: Add type check here for graph?  Like ASSERT().
     return pnWidget_addCallback(graph, PN_GRAPH_CB_SCOPE_DRAW,
-            plotter, userData);
+            plotter, userData, 0);
 }
 
-static inline struct PnPlot *pnScopePlot_createWithBeam(struct PnWidget *graph,
+PN_EXPORT struct PnPlot *pnScopePlot_createWithBeam(struct PnWidget *graph,
+        int32_t numBeamPoints, int32_t beamLife,/*beam Life in number of frames*/
         bool (*plotter)(struct PnWidget *graph, struct PnPlot *plot,
             void *userData, double xMin, double xMax, double yMin, double yMax),
-        void *userData) {
-    // TODO: Add type check here for graph?  Like ASSERT().
-    return pnWidget_addCallback(graph, PN_GRAPH_CB_SCOPE_BEAM,
-            plotter, userData);
-}
-
+        void *userData);
 
 
 PN_EXPORT bool pnWidget_isInSurface(const struct PnWidget *w,

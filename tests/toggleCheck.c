@@ -116,9 +116,9 @@ w = pnCheck_create(b->button/*parent*/,
     b->buttonNum = buttonCount++;
 
     pnWidget_addCallback(b->button,
-            PN_BUTTON_CB_CLICK, click, b);
+            PN_BUTTON_CB_CLICK, click, b, 0);
     pnWidget_addCallback(b->button,
-            PN_BUTTON_CB_PRESS, press, b);
+            PN_BUTTON_CB_PRESS, press, b, 0);
     pnWidget_addDestroy(b->button, destroy, b);
     pnWidget_setBackgroundColor(b->button, 0xFF707070, 0);
 }

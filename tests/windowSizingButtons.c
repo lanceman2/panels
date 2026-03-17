@@ -73,7 +73,7 @@ static void Button(
     uint32_t color = 0xDA000000 | (0x00FFFFFF & Color());
     pnWidget_setBackgroundColor(l, color, 0);
     pnWidget_setBackgroundColor(button, color, 0);
-    pnWidget_addCallback(button, PN_BUTTON_CB_CLICK, click, func);
+    pnWidget_addCallback(button, PN_BUTTON_CB_CLICK, click, func, 0);
 }
 
 

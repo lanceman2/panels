@@ -71,7 +71,7 @@ static void Button(void) {
 
     pnWidget_setBackgroundColor(button, color, true/*recurse*/);
     pnWidget_addCallback(button,
-            PN_BUTTON_CB_CLICK, click, button);
+            PN_BUTTON_CB_CLICK, click, button, 0);
 }
 
 

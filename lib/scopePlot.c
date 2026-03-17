@@ -23,7 +23,7 @@
 // Add a scope plot that uses Cairo to draw.
 //
 void AddScopePlot(struct PnWidget *w, struct PnCallback *callback,
-        uint32_t actionIndex, void *actionData) {
+        uint32_t actionIndex, void *actionData, void *addData) {
 
     DASSERT(actionIndex == PN_GRAPH_CB_SCOPE_DRAW);
     DASSERT(w);

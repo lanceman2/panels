@@ -218,7 +218,7 @@ struct PnAction {
             uint32_t actionIndex, void *actionData);
     // add() is called when pnWidget_addCallback() is called.
     void (*add)(struct PnWidget *w, struct PnCallback *callback,
-            uint32_t actionIndex, void *actionData);
+            uint32_t actionIndex, void *actionData, void *addData);
     void *actionData;
 
     // Ordered list of callbacks:

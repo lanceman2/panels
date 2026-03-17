@@ -30,6 +30,7 @@ pnPlot_setPointColor
 pnPlot_setPointSize
 pnPopup_hide
 pnPopup_show
+pnScopePlot_createWithBeam
 pnSplitter_create
 pnToggleButton_create
 pnToggleButton_addCheck

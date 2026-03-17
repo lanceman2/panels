@@ -13,15 +13,22 @@ enum PnPlotType {
 
 enum PnDrawMethod {
 
-    PnDrawMethod_cairo,
+    PnDrawMethod_cairo = 0,
     PnDrawMethod_beam,
     PnDrawMethod_raw
 };
 
+
+
+// TODO: this is too large.  It will cause us to allocate a lot of memory.
+//
 struct PnBeamPoint {
 
-    struct PnBeamPoint *next;
-    uint32_t color;
+    struct PnBeamPoint *next, *prev;
+    uint32_t *pixel; // the mapped pixel
+    struct PnBeam *beam;
+    int32_t time; // the beam time when this was written
+    uint32_t orgColor;
 };
 
 
@@ -38,28 +45,18 @@ struct PnBeamPoint {
 // widget.
 //
 // Drawing more than the BeamPoint list in a frame will simply overwrite
-// the oldest values of the BeamPoint circular buffer.  It's up to the API
-// user to make the BeamPoint circular buffer long enough to display what
-// they want to see.
+// the older values of the BeamPoint buffer.
 //
-// 1. The Bad: It could just end up just drawing at just one X,Y pixel
-// position for many points in the list.  It would be stupid about that,
-// but it would still work.  Or, the list could be too short and not
-// enough points are drawn; but that's more of a API user choose, they
-// get what they ask for.  The list memory should not exceed the memory
-// needed to cover all the pixels in the graph widget; otherwise they
-// should use method 2 shown next (if it's implemented).
-//
-// 2. An alternative is to make (more memory) an array of points that maps
-// one to one to all the available pixels in the graph widget. The linked
-// list is embedded in the array.  When points in the array are
-// overwritten (by user plotting) the color, and prev (and next?) of that
-// point and it's neighboring points are patched.  This could keep us from
-// redundant pixel coloring, but at a cost of using lots of unused memory
-// given that we are coloring only a small portion of all the pixels that
-// the graph widget has.  We'd copy the embedded list to the graph widget
-// pixel buffer for every draw frame, as this does now.  The old
-// quickscope project does this.
+// We make (more memory) an array of points that maps one to one to all
+// the available pixels in the graph widget. The linked list is embedded
+// in the array.  When points in the array are overwritten (by user
+// plotting) the color, and prev (and next?) of that point and it's
+// neighboring points are patched.  This could keep us from redundant
+// pixel coloring, but at a cost of using lots of unused memory given that
+// we are coloring only a small portion of all the pixels that the graph
+// widget has.  We'd copy the embedded list to the graph widget pixel
+// buffer for every draw frame, as this does now.  The old quickscope
+// project does this.
 //
 // We should be able to keep a user (and underlying) interfaces the same
 // for both of the two methods (1, 2 above).  So, we could seamlessly
@@ -67,20 +64,30 @@ struct PnBeamPoint {
 //
 struct PnBeam {
 
-    // The list of allocated points in this beam.
-    struct PnBeamPoint *first, *last;
+    uint32_t *pixels;
+    uint32_t stride;
 
-    uint32_t brightColor, dimColor;
+    // These point to the graph struct PnBeamPoint *beamPoints array
+    // elements.
+    struct PnBeamPoint
+        *first, // the oldest point in this beam
+        *last;  // the newest point in this beam
 
-    // A looping age (frame) counter.
-    uint32_t age;
+    // A looping age point counter.  We assume that the points come in at
+    // a regular rate, so time is proportional to the current point count.
+    // Though if there is a trigger and it skips drawing frames this will
+    // not be proportional to time.
+    int32_t time;
 
-    // An allocated array.
-    struct PnBeamPoint *points;
+    // The maximum number of points displayed.
+    //
+    // We have maxPoints as 0 to be like infinity; then it does not fade
+    // the beam.
+    int32_t maxPoints;
 
-    // The number of points allocated in points array.
-    // This limits the number of points that can 
-    size_t numPoints;
+    // The number of points that are faded at the end of the stored
+    // points that are displayed.  The length of the fading tail.
+    int32_t fadePoints;
 };
 
 
@@ -110,7 +117,7 @@ struct PnPlot {
             cairo_t *line, *point;
         } cairo;
 
-        struct PnBeam beam;
+        struct PnBeam *beam;
 
         struct {
         } raw;
@@ -121,7 +128,7 @@ struct PnPlot {
     // TODO: make this a bool.
     enum PnPlotType type; // static or scope
 
-    //enum PnDrawMethod drawMethod; // Cairo, beam, or raw.
+    enum PnDrawMethod drawMethod; // Cairo, beam, or raw.
 
     // Just for scope plots.  Is zero for static plots.
     uint32_t shiftX, shiftY;

@@ -56,9 +56,9 @@ static void Generic(void) {
 
     pnWidget_setBackgroundColor(w, Color(), 0);
     pnWidget_addCallback(w, PN_GENERIC_CB_PRESS,
-            pressAction, myUserData);
+            pressAction, myUserData, 0);
     pnWidget_addCallback(w, PN_GENERIC_CB_RELEASE,
-            releaseAction, myUserData);
+            releaseAction, myUserData, 0);
 }
 
 

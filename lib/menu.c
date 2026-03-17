@@ -241,9 +241,9 @@ struct PnWidget *pnMenu_create(struct PnWidget *parent,
     pnWidget_addDestroy(m->button, (void *) destroy, m);
     pnWidget_setBackgroundColor(m->button, 0xFFCDCDCD, true);
     pnWidget_addCallback(m->button,
-            PN_BUTTON_CB_ENTER, enterAction, m);
+            PN_BUTTON_CB_ENTER, enterAction, m, 0);
     pnWidget_addCallback(m->button,
-            PN_BUTTON_CB_LEAVE, leaveAction, m);
+            PN_BUTTON_CB_LEAVE, leaveAction, m, 0);
     pnWidget_setUserData(m->button, m);
     // The user gets the button, but it's augmented.
     return m->button;
