@@ -70,7 +70,11 @@ int main(void) {
     pnWidget_setBackgroundColor(w, 0xFF000000, 0);
 
     struct PnPlot *p = pnScopePlot_createWithBeam(w,
-            3000/*maxPoints displayed, 0 is infinite*/, 1000/*number of fade points*/,
+            3000/*maxPoints displayed, 0 is infinite*/,
+            // NOTE: fade points are CPU usage intense.
+            // Run htop and change the below and see for yourself:
+            // 1000/*number of fade points*/,
+            10/*number of fade points*/,
             Plot, 0);
     ASSERT(p);
     // This plot, p, is owned by the graph, w.

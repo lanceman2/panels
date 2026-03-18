@@ -32,6 +32,7 @@ static void configure(void *data,
 	int32_t width, int32_t height) {
 
     DASSERT(data);
+#ifdef DEBUG
     struct PnWindow *win = data;
     DASSERT(xdg_popup);
     DASSERT(xdg_popup == win->popup.xdg_popup);
@@ -51,6 +52,7 @@ static void configure(void *data,
                 x, y, width, height);
     }
 */
+#endif
 }
 
 
