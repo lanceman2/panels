@@ -113,11 +113,16 @@ static void configure(struct PnWindow *win,
         // We had active pop-up menus, so now hide them.
         HidePopupMenus();
 
-    if(win->widget.type & POPUP)
+    if(win->widget.type & POPUP) {
         // TODO: We're not sure that this works if we show and then hide
         // and then show again.
-        DrawAll(win, 0);
-    else if(win->needDraw)
+        //
+        // TODO: We added this if() here to fix a bug for popups.  I'm
+        // not to sure if it's really correct yet.
+        //
+        if(win->needDraw)
+            DrawAll(win, 0);
+    } else if(win->needDraw)
         // We need to wait for the wayland compositor to tell us we can
         // draw.
         _pnWindow_addCallback(win);

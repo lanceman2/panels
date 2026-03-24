@@ -45,7 +45,10 @@ PRE_BUILD :=\
 
 BUILD_NO_INSTALL :=\
  xdg-shell-protocol.c\
- xdg-decoration-protocol.c
+ xdg-decoration-protocol.c\
+ xdg-shell-protocol.h\
+ xdg-decoration-protocol.h
+
 
 libpanels.so_SOURCES :=\
  xdg-shell-protocol.c\
