@@ -106,7 +106,7 @@ static void Button(void) {
     pnWidget_addCallback(b->button,
             PN_BUTTON_CB_PRESS, press, b, 0);
     pnWidget_addDestroy(b->button, destroy, b);
-    pnWidget_setBackgroundColor(b->button, 0xFF707070, 0);
+    pnWidget_setBackgroundColor(b->button, 0xFF90FF90, 0);
 }
 
 
