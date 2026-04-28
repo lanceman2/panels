@@ -1,10 +1,3 @@
-/*
-
-./tone_run | aplay -f S32_LE -c1 -r 44100
-
-
-*/
-
 // STR(X) turns any CPP macro number into a string by using two macros.
 #define STR(s) XSTR(s)
 #define XSTR(s) #s
